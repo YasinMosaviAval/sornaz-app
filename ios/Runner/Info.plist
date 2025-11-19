@@ -2,6 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>اجازه دسترسی به میکروفون برای ضبط صدا.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>اجازه دسترسی به گالری برای انتخاب فایل.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>این اپ نیاز به دسترسی میکروفون برای ضبط و تحلیل صدا داره.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

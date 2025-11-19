@@ -1,36 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:sornaz/helpers/app_data.dart';
+import 'package:sornaz/helpers/app_images.dart';
+import 'package:sornaz/screens/Articles/articles.dart';
+import 'dart:async';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Timer(const Duration(seconds: 2), () {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const ArticlesPage()),
+      );
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      // title: 'Flutter Demo',
-      // theme: ThemeData(
-      //   colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      //   useMaterial3: true,
-      // ),
-      home: Scaffold(
-        appBar: AppBar(
-          title: Row(
-            children: [
-              Text("Sornaz"),
-              Image.asset("assets/images/sornaz_logo.png"),
-              Icon(
-                Icons.menu,
-                color: Colors.black,
-                size: 24,
-              ),
-            ],
-          ),
-        ),
-        body: Center(
-          child: Text(
-            "Onboarding -> Splash Screen",
-            style: TextStyle(fontSize: 40),
-          ),
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    return Scaffold(
+      backgroundColor: isDark ? Colors.black : Colors.white,
+      body: Center(
+        child: Image.asset(
+          isDark ? AppImages.logo_dark : AppImages.logo_light,
+          fit: BoxFit.contain,
+          width: 300,
+          height: 300,
         ),
       ),
     );
