@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
+  static const Color clicked_light = Color.fromARGB(30, 31, 31, 31);
+  static const Color hovered_light = Color.fromARGB(15, 31, 31, 31);
   static const Color border_light = Color.fromARGB(30, 31, 31, 31);
   static const Color primary_light = Color.fromARGB(255, 0, 100, 251);
   static const Color secondary_light = Color.fromARGB(255, 193, 158, 50);
@@ -18,6 +20,8 @@ class AppColors {
   );
   static const Color text_secondary_light = Color.fromARGB(155, 31, 31, 31);
 
+  static const Color clicked_dark = Color.fromARGB(30, 241, 241, 241);
+  static const Color hovered_dark = Color.fromARGB(15, 241, 241, 241);
   static const Color border_dark = Color.fromARGB(30, 241, 241, 241);
   static const Color primary_dark = Color.fromARGB(255, 193, 158, 50);
   static const Color secondary_dark = Color.fromARGB(255, 0, 100, 251);

@@ -285,7 +285,7 @@ Future<List<dynamic>> fetchRecentPosts() async {
 class FakeBlogCarousel extends StatelessWidget {
   const FakeBlogCarousel({super.key});
 
-  get listSize => 4;
+  int get listSize => 4;
 
   @override
   Widget build(BuildContext context) {

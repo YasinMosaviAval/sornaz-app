@@ -566,9 +566,7 @@ class MyApp extends StatelessWidget {
     final appData = Provider.of<AppData>(context);
 
     final GoRouter router = GoRouter(
-      routes: [
-        // GoRoute(path: '/', builder: (context, state) => HomePage()),
-      ],
+      routes: [GoRoute(path: '/', builder: (context, state) => HomePage())],
     );
 
     MaterialApp.router(routerConfig: router);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppSpacing {
   static const double space_0 = 0;
+  static const double space_2 = 2;
   static const double space_4 = 4;
   static const double space_8 = 8;
   static const double space_16 = 16;
