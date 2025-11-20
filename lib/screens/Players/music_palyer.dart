@@ -268,92 +268,12 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                         final durationText = audio.duration.inSeconds > 0
                             ? _formatDuration(audio.duration)
                             : '--:--';
-
-                        return Container(
-                          // اگر این فایل در حال پخش است → بک‌گراند رنگی
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              width: 0.8,
-                              color: isDark
-                                  ? AppColors.border_dark
-                                  : AppColors.border_light,
-                            ),
-                            color: isCurrentlyPlaying
-                                ? isDark
-                                      ? AppColors.clicked_dark
-                                      : AppColors.clicked_light
-                                // ? AppColors.clicked_dark
-                                // : AppColors.clicked_light
-                                : Colors.transparent,
-                          ),
-                          child: ListTile(
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: AppSpacing.space_24,
-                              vertical: AppSpacing.space_2,
-                            ),
-                            minTileHeight: AppSpacing.space_24,
-                            title: isCurrentlyPlaying
-                                ? MarqueeText(
-                                    text: audio.fileName,
-                                    textStyle: TextStyle(
-                                      fontSize: 14,
-                                      color: isDark
-                                          ? AppColors.text_primary_dark
-                                          : AppColors.text_primary_light,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  )
-                                : Text(
-                                    audio.fileName,
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
-                                    textDirection: TextDirection.ltr,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: isDark
-                                          ? AppColors.text_primary_dark
-                                          : AppColors.text_primary_light,
-                                      fontWeight: isCurrentlyPlaying
-                                          ? FontWeight.w900
-                                          : FontWeight.normal,
-                                    ),
-                                  ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(height: AppSpacing.space_4),
-                                Row(
-                                  children: [
-                                    Text(
-                                      durationText,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: isDark
-                                            ? AppColors.text_secondary_dark
-                                            : AppColors.text_secondary_light,
-                                      ),
-                                    ),
-                                    SizedBox(width: AppSpacing.space_16),
-                                    Expanded(
-                                      child: Text(
-                                        audio.folderName.substring(1),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                        textDirection: TextDirection.ltr,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: isDark
-                                              ? AppColors.text_secondary_dark
-                                              : AppColors.text_secondary_light,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            onTap: () => _playAudio(index),
-                          ),
+                        return musicListItem(
+                          isDark,
+                          isCurrentlyPlaying,
+                          audio,
+                          durationText,
+                          index,
                         );
                       },
                     ),
@@ -457,6 +377,97 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
         ),
       ),
       bottomNavigationBar: const BottomNavBarWidget(),
+    );
+  }
+
+  Container musicListItem(
+    bool isDark,
+    bool isCurrentlyPlaying,
+    AudioFile audio,
+    String durationText,
+    int index,
+  ) {
+    return Container(
+      // اگر این فایل در حال پخش است → بک‌گراند رنگی
+      decoration: BoxDecoration(
+        border: Border.all(
+          width: 0.8,
+          color: isDark ? AppColors.border_dark : AppColors.border_light,
+        ),
+        color: isCurrentlyPlaying
+            ? isDark
+                  ? AppColors.clicked_dark
+                  : AppColors.clicked_light
+            : Colors.transparent,
+      ),
+      child: ListTile(
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.space_24,
+          vertical: AppSpacing.space_2,
+        ),
+        minTileHeight: AppSpacing.space_24,
+        title: isCurrentlyPlaying
+            ? MarqueeText(
+                text: audio.fileName,
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  color: isDark
+                      ? AppColors.text_primary_dark
+                      : AppColors.text_primary_light,
+                  fontWeight: FontWeight.w500,
+                ),
+              )
+            : Text(
+                audio.fileName,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                textDirection: TextDirection.ltr,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark
+                      ? AppColors.text_primary_dark
+                      : AppColors.text_primary_light,
+                  fontWeight: isCurrentlyPlaying
+                      ? FontWeight.w900
+                      : FontWeight.normal,
+                ),
+              ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: AppSpacing.space_4),
+            Row(
+              children: [
+                Text(
+                  durationText,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark
+                        ? AppColors.text_secondary_dark
+                        : AppColors.text_secondary_light,
+                  ),
+                ),
+                SizedBox(width: AppSpacing.space_16),
+                Expanded(
+                  child: Text(
+                    audio.folderName.substring(1),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    textDirection: TextDirection.ltr,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark
+                          ? AppColors.text_secondary_dark
+                          : AppColors.text_secondary_light,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        onTap: () => _playAudio(index),
+      ),
     );
   }
 }
