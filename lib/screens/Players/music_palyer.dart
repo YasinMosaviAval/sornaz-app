@@ -287,36 +287,71 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                                 : Colors.transparent,
                           ),
                           child: ListTile(
-                            title: Text(
-                              audio.fileName,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: isDark
-                                    ? AppColors.text_primary_dark
-                                    : AppColors.text_primary_light,
-                              ),
-                            ),
                             contentPadding: EdgeInsets.symmetric(
                               horizontal: AppSpacing.space_24,
                               vertical: AppSpacing.space_2,
                             ),
                             minTileHeight: AppSpacing.space_24,
+                            title: isCurrentlyPlaying
+                                ? MarqueeText(
+                                    text: audio.fileName,
+                                    textStyle: TextStyle(
+                                      fontSize: 14,
+                                      color: isDark
+                                          ? AppColors.text_primary_dark
+                                          : AppColors.text_primary_light,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  )
+                                : Text(
+                                    audio.fileName,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    textDirection: TextDirection.ltr,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: isDark
+                                          ? AppColors.text_primary_dark
+                                          : AppColors.text_primary_light,
+                                      fontWeight: isCurrentlyPlaying
+                                          ? FontWeight.w900
+                                          : FontWeight.normal,
+                                    ),
+                                  ),
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 SizedBox(height: AppSpacing.space_4),
-                                Text(
-                                  '${audio.folderName} • $durationText',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: isDark
-                                        ? AppColors.text_secondary_dark
-                                        : AppColors.text_secondary_light,
-                                  ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      durationText,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: isDark
+                                            ? AppColors.text_secondary_dark
+                                            : AppColors.text_secondary_light,
+                                      ),
+                                    ),
+                                    SizedBox(width: AppSpacing.space_16),
+                                    Expanded(
+                                      child: Text(
+                                        audio.folderName.substring(1),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                        textDirection: TextDirection.ltr,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: isDark
+                                              ? AppColors.text_secondary_dark
+                                              : AppColors.text_secondary_light,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-
                             onTap: () => _playAudio(index),
                           ),
                         );
@@ -348,7 +383,6 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                       child: Row(
                         children: [
                           Text(_formatDuration(duration)),
-
                           Expanded(
                             child: Directionality(
                               textDirection: TextDirection.ltr,
@@ -382,7 +416,6 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                               ),
                             ),
                           ),
-
                           Text(_formatDuration(position)),
                         ],
                       ),
@@ -424,6 +457,120 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
         ),
       ),
       bottomNavigationBar: const BottomNavBarWidget(),
+    );
+  }
+}
+
+class MarqueeText extends StatefulWidget {
+  final String text;
+  final TextStyle textStyle;
+  final double speed; // پیکسل در ثانیه
+  final double gap; // فاصله بین انتها و شروع دوباره
+
+  const MarqueeText({
+    super.key,
+    required this.text,
+    required this.textStyle,
+    this.speed = 60,
+    this.gap = 50,
+  });
+
+  @override
+  State<MarqueeText> createState() => _MarqueeTextState();
+}
+
+class _MarqueeTextState extends State<MarqueeText>
+    with SingleTickerProviderStateMixin {
+  late ScrollController _scrollController;
+  late AnimationController _animationController;
+  double _textWidth = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _animationController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 10))
+          ..addListener(() {
+            if (_scrollController.hasClients) {
+              final maxScroll = _scrollController.position.maxScrollExtent;
+              final position = _scrollController.offset;
+              final newOffset = position + (widget.speed / 60); // 60fps
+
+              if (maxScroll > 0 && newOffset >= maxScroll) {
+                _scrollController.jumpTo(0);
+              } else {
+                _scrollController.jumpTo(newOffset);
+              }
+            }
+          });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _startAnimationIfNeeded();
+      }
+    });
+  }
+
+  void _startAnimationIfNeeded() {
+    if (!mounted) return;
+    final renderBox = context.findRenderObject() as RenderBox?;
+    final containerWidth = renderBox?.size.width ?? 0;
+
+    final textPainter = TextPainter(
+      text: TextSpan(text: widget.text, style: widget.textStyle),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    _textWidth = textPainter.width;
+
+    if (_textWidth > containerWidth - widget.gap) {
+      _animationController.repeat();
+    }
+  }
+
+  @override
+  void didUpdateWidget(MarqueeText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.text != widget.text ||
+        oldWidget.textStyle != widget.textStyle) {
+      _scrollController.jumpTo(0);
+      _startAnimationIfNeeded();
+    }
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SizedBox(
+          // height: 20,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            controller: _scrollController,
+            physics: const NeverScrollableScrollPhysics(),
+            child: Row(
+              children: [
+                Text(
+                  widget.text,
+                  textDirection: TextDirection.ltr,
+                  style: widget.textStyle,
+                ),
+                SizedBox(width: widget.gap),
+                if (_textWidth > constraints.maxWidth) ...{
+                  Text(widget.text, style: widget.textStyle),
+                },
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
