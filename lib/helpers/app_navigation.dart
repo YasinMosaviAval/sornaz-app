@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_underscores
+
 import 'package:flutter/material.dart';
 
 /// متدی برای رفتن به صفحه با انیمیشن Fade (محو شدن)

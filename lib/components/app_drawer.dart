@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_images.dart';
+import 'package:sornaz/helpers/app_navigation.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/screens/Others/about_us.dart';
@@ -158,16 +159,7 @@ class AppDrawerItem extends StatelessWidget {
               ),
               child: Text(message, style: TextStyle(color: Colors.white)),
             ),
-
-      onTap: () => Navigator.push(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (_, __, ___) => link,
-          transitionDuration: const Duration(milliseconds: 250),
-          transitionsBuilder: (_, animation, __, child) =>
-              FadeTransition(opacity: animation, child: child),
-        ),
-      ),
+      onTap: () => navigateWithFade(context, link),
     );
   }
 }

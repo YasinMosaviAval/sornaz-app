@@ -19,6 +19,7 @@ class AppColors {
     255,
   );
   static const Color text_secondary_light = Color.fromARGB(155, 31, 31, 31);
+  static const Color unselected_item_light = Color.fromARGB(75, 31, 31, 31);
 
   static const Color clicked_dark = Color.fromARGB(30, 241, 241, 241);
   static const Color hovered_dark = Color.fromARGB(15, 241, 241, 241);
@@ -31,11 +32,12 @@ class AppColors {
   static const Color text_primary_dark = Color.fromARGB(255, 255, 255, 255);
   static const Color button_text_primary_dark = Color.fromARGB(255, 0, 0, 0);
   static const Color text_secondary_dark = Color.fromARGB(155, 241, 241, 241);
+  static const Color unselected_item_dark = Color.fromARGB(100, 241, 241, 241);
 
   static const Color error = Color.fromRGBO(244, 67, 54, 1);
   static const Color success = Color.fromRGBO(76, 175, 80, 1);
   static const Color warning = Color.fromRGBO(255, 152, 0, 1);
-  static const Color info = Color.fromRGBO(100, 181, 246, 1);
+  static const Color info = Color.fromRGBO(75, 181, 246, 1);
 
   // static const MaterialColor primary_dark_material = Color.fromARGB(255, 193, 158, 50);
 

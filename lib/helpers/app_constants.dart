@@ -23,7 +23,6 @@ class AppConstants {
 
   // ثابت‌های تم
   static const String fontFamily = 'Vazir';
-
   // می‌تونی ثابت‌های بیشتری اضافه کنی (مثل enums برای انواع موسیقی: pop, rock, etc.)
 }
 

@@ -848,8 +848,8 @@ class _TunerPageState extends State<TunerPage> {
   final FlutterPitchDetection _pitch = FlutterPitchDetection();
 
   double frequency = 0.0;
-  String note = "--";
-  double a4 = 440.0; // فرکانس مبنا
+  String note = "";
+  double a4 = 440.0;
   bool initialized = false;
   double noteFreq = 0.0;
 
@@ -869,8 +869,6 @@ class _TunerPageState extends State<TunerPage> {
     "B",
   ];
 
-  double ln2 = 0.69314718056;
-
   double centDifference(double detectedFreq, double targetFreq) {
     return 1200 * (log(detectedFreq / targetFreq) / log(2));
   }
@@ -883,7 +881,7 @@ class _TunerPageState extends State<TunerPage> {
 
     String noteName = notes[midiNote % 12];
 
-    double targetFreq = a4 * pow(2, (midiNote - 69) / 12);
+    double targetFreq = a4 * pow(2, (midiNote - 69) / 12).toDouble();
 
     return {"note": noteName, "targetFreq": targetFreq};
   }
@@ -923,13 +921,14 @@ class _TunerPageState extends State<TunerPage> {
     String noteName = notes[midiNote % 12];
 
     // اختلاف سنت با نزدیک‌ترین نت
-    double cents = 1200 * log(freq / (a4 * pow(2, (midiNote - 69) / 12))) / ln2;
+    double cents =
+        1200 * log(freq / (a4 * pow(2, (midiNote - 69) / 12).toDouble())) / ln2;
 
     return {"note": noteName, "cents": cents.clamp(-50, 50)};
   }
 
   void _onPitchDetected(result) {
-    double freq = result['frequency'] ?? 0.0;
+    double freq = result['frequency'].toDouble() ?? 0.0;
 
     final analyzed = _analyzePitch(freq);
 
@@ -941,7 +940,13 @@ class _TunerPageState extends State<TunerPage> {
   }
 
   int getOctave(double frequency) {
-    return (log(frequency / 440) / log(2)).floor() + 4;
+    if (frequency <= 0) return 4;
+
+    // فرمول استاندارد MIDI برای اکتاو
+    final double octave = log(frequency / 440.0) / log(2) + 4;
+
+    // استفاده از floor یا round بر اساس استاندارد
+    return octave.floor(); // یا octave.round() اگر می‌خوای دقیق‌تر باشه
   }
 
   @override
@@ -949,7 +954,8 @@ class _TunerPageState extends State<TunerPage> {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
     final analyzed = _analyzePitch(frequency);
-    double cents = analyzed["cents"];
+    double cents = analyzed["cents"].toDouble();
+    // double cents = (analyzed["cents"] as num).toDouble();
 
     bool inRange = cents.abs() <= 20;
 
@@ -1029,10 +1035,12 @@ class _TunerPageState extends State<TunerPage> {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
-                              centDifference(
-                                frequency,
-                                noteFreq,
-                              ).toStringAsFixed(2),
+                              (note == "")
+                                  ? "0.00"
+                                  : centDifference(
+                                      frequency,
+                                      noteFreq,
+                                    ).toStringAsFixed(2),
                               textDirection: TextDirection.ltr,
                               style: TextStyle(
                                 fontSize: 20,
@@ -1059,7 +1067,9 @@ class _TunerPageState extends State<TunerPage> {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
-                              getOctave(noteFreq).toString(),
+                              (note == "")
+                                  ? ""
+                                  : getOctave(noteFreq).toString(),
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
@@ -1183,5 +1193,3 @@ class _TunerPageState extends State<TunerPage> {
     );
   }
 }
-
-const double ln2 = 0.69314718056;

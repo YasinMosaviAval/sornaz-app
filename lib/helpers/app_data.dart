@@ -557,6 +557,24 @@ class AppData extends ChangeNotifier {
   }
 
   // FAQ - Settings End
+
+  // Bottom Nav Bar
+
+  // bool _isDark = false;
+  int _bottomNavIndex = 0; // اضافه شد
+
+  // bool get isDark => _isDark;
+  int get bottomNavIndex => _bottomNavIndex;
+
+  void toggleTheme() {
+    _isDark = !_isDark;
+    notifyListeners();
+  }
+
+  void setBottomNavIndex(int index) {
+    _bottomNavIndex = index;
+    notifyListeners(); // مهم: برای آپدیت رنگ
+  }
 }
 
 class MyApp extends StatelessWidget {

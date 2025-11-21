@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sornaz/components/bottom_nav.dart';
 import 'package:metronome/metronome.dart';
+import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_data.dart';
 
 class MetronomePage extends StatefulWidget {
   const MetronomePage({super.key});
@@ -58,6 +61,8 @@ class _MetronomePageState extends State<MetronomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
     return Scaffold(
       appBar: AppBar(title: const Text("مترونوم")),
       body: Center(
@@ -117,11 +122,51 @@ class _MetronomePageState extends State<MetronomePage> {
             ),
             ElevatedButton(
               onPressed: isInitialized ? stopMetronome : null,
-              child: const Text('توقف کامل'),
+              child: Text(
+                'توقف کامل',
+                style: TextStyle(
+                  color: isDark
+                      ? AppColors.text_secondary_dark
+                      : AppColors.text_secondary_light,
+                ),
+              ),
             ),
           ],
         ),
       ),
+      /*
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: isDark ? Colors.grey[900] : Colors.white,
+        selectedItemColor: isDark ? Colors.yellow[700] : Colors.blue,
+        unselectedItemColor: Colors.grey,
+        currentIndex: _currentIndex, // ← آیکن فعلی هایلایت می‌شود
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index; // ← تغییر ایندکس
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.library_music),
+            label: 'Music Player',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.punch_clock),
+            label: 'Metronome',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.tune_rounded),
+            label: 'Tuner',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.record_voice_over),
+            label: 'Voice Recorder',
+          ),
+        ],
+      ),
+      */
       bottomNavigationBar: const BottomNavBarWidget(),
     );
   }

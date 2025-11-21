@@ -215,9 +215,9 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                       // css: "object-fit: contain;", // کوچک کردن اگر بزرگتر بود
                     ),
                   },
-                  onLinkTap: (url, _, __) {
-                    // if (url != null) _navigateToArticle(url, context); // tap معمولی
-                  },
+                  // onLinkTap: (url, _, __) {
+                  // if (url != null) _navigateToArticle(url, context); // tap معمولی
+                  // },
                 ),
               ),
               const SizedBox(height: 32),
