@@ -135,4 +135,12 @@ class AppStrings extends ChangeNotifier {
   static const String music_player_searchbar_hint = "Search in audio files ...";
   static const String music_player_searchbar_hint_fa =
       "جستجو در فایل‌ های صوتی ...";
+
+  static const String audio_file_not_found = 'Audio Files Not Found!';
+  static const String audio_file_not_found_fa = 'فایل صوتی یافت‌ نشد!';
+
+  static const String two_times_press_back_button_for_exit_application =
+      'Press again BACK Button for Exit Application';
+  static const String two_times_press_back_button_for_exit_application_fa =
+      'برای خروج دوباره دکمه برگشت را بزنید';
 }

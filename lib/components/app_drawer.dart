@@ -23,7 +23,6 @@ class AppDrawer extends StatelessWidget {
           UserAccountsDrawerHeader(
             accountName: Text(
               AppStrings.applicationFullname,
-              // AppStrings.sample_username,
               style: TextStyle(
                 color: isDark
                     ? AppColors.text_primary_dark
@@ -32,7 +31,6 @@ class AppDrawer extends StatelessWidget {
             ),
             accountEmail: Text(
               AppStrings.applicationEmail,
-              // AppStrings.sample_email,
               style: TextStyle(
                 color: isDark
                     ? AppColors.text_secondary_dark
@@ -40,58 +38,26 @@ class AppDrawer extends StatelessWidget {
               ),
             ),
             currentAccountPicture: SizedBox(
-              // CircleAvatar(
-              // backgroundImage: AssetImage(AppImages.logo_light),
               child: Image.asset(
                 isDark ? AppImages.logo_dark : AppImages.logo_light,
               ),
-              // NetworkImage(
-              //   AppImages.logo_light,
-              //   // AppImages.sample_online_images,
-              // ), // جایگزین با تصویر واقعی
             ),
             decoration: BoxDecoration(
               color: isDark
                   ? AppColors.background_dark
                   : AppColors.background_light,
             ),
-            /*
-            otherAccountsPictures: [
-              SwitchListTile(
-                title: const Text(AppStrings.dark_mode),
-                subtitle: const Text(AppStrings.dark_mode_description),
-                value: isDark,
-                onChanged: appData.toggleDarkMode,
-              ),
-            ],
-            */
           ),
           AppDrawerItem(
             icon: Icons.info,
             text: AppStrings.aboutUsTitle,
             link: AboutUsPage(),
           ),
-          // AppDrawerItem(icon: Icons.bookmark, text: AppStrings.bookmark, link: BookmarkPage()),
-          // AppDrawerItem(icon: Icons.share, text: AppStrings.share_app, link: ShareAppPage()),
-          // AppDrawerItem(icon: Icons.help, text: AppStrings.faqTitle, link: FaqPage()),
           AppDrawerItem(
             icon: Icons.settings,
             text: AppStrings.settingsTitle,
             link: SettingsPage(),
           ),
-          // AppDrawerItem(icon: Icons.emoji_events, text: AppStrings.achievements, link: AchievementsPage(), message: '2 New', messageColor: Colors.blue),
-          // AppDrawerItem(icon: Icons.privacy_tip, text: AppStrings.privacyPolicyTitle, link: PrivacyPage(), message: 'Action Needed', messageColor: AppColors.error),
-
-          // const Divider(),
-          // HeaderItemPart(text: AppStrings.community),
-          // AppDrawerItem(icon: Icons.feedback, text: AppStrings.share_feedback, link: ShareFeedbackPage()),
-          // AppDrawerItem(icon: Icons.contact_mail, text: AppStrings.contactUsTitle, link: ContactUsPage(), ),
-          // AppDrawerItem(icon: Icons.card_membership, text: AppStrings.membership, link: PaymentPage()),
-
-          // const Divider(),
-          // HeaderItemPart(text: AppStrings.my_account),
-          // SwitchAcountItem(text: AppStrings.switch_acount, color: AppColors.info),
-          // SwitchAcountItem(text: AppStrings.logout, color: AppColors.error),
         ],
       ),
     );

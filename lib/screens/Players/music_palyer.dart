@@ -234,6 +234,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
+        automaticallyImplyLeading: false,
         title: TextField(
           textDirection: TextDirection.ltr,
           onChanged: _filterAudioFiles,
@@ -259,7 +260,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
               child: isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : filteredAudioFiles.isEmpty
-                  ? const Center(child: Text('بدون فایل صوتی یافت‌شده'))
+                  ? const Center(child: Text(AppStrings.audio_file_not_found))
                   : ListView.builder(
                       itemCount: filteredAudioFiles.length,
                       itemBuilder: (context, index) {
@@ -287,17 +288,6 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                     : AppColors.hovered_light,
                 child: Column(
                   children: [
-                    /*
-                    Text(
-                      filteredAudioFiles[currentIndex].fileName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-                    */
                     SizedBox(
                       height: AppSpacing.space_24,
                       child: Row(

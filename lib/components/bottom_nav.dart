@@ -3,14 +3,16 @@ import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_navigation.dart';
+import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/screens/Articles/articles.dart';
 import 'package:sornaz/screens/Players/music_palyer.dart';
 import 'package:sornaz/screens/Practice/metronome_page.dart';
 import 'package:sornaz/screens/Practice/tuner_page.dart';
 import 'package:sornaz/screens/Profile/voice_recorder.dart';
+import 'package:flutter/services.dart';
 
-class BottomNavBarWidget extends StatelessWidget {
-  const BottomNavBarWidget({super.key});
+class BottomNavBarWidget3 extends StatelessWidget {
+  const BottomNavBarWidget3({super.key});
 
   // لیست صفحات — مهم: ترتیب باید دقیقاً با آیتم‌ها یکی باشه
   static const List<Widget> _pages = [
@@ -22,180 +24,194 @@ class BottomNavBarWidget extends StatelessWidget {
   ];
 
   void _onItemTapped(BuildContext context, int index) {
-    // ذخیره ایندکس فعلی در Provider
     Provider.of<AppData>(context, listen: false).setBottomNavIndex(index);
 
-    // رفتن به صفحه با انیمیشن
     navigateWithFade(context, _pages[index]);
   }
-  /*
-  void _onItemTapped(BuildContext context, int index) {
-    Widget targetPage;
-
-    switch (index) {
-      case 0:
-        // targetPage = const HomePage();
-        targetPage = const ArticlesPage();
-        break;
-      case 1:
-        // targetPage = const MusicSheetsPage();
-        targetPage = const MusicPlayerPage();
-        break;
-      case 2:
-        targetPage = const MetronomePage();
-        break;
-      case 3:
-        targetPage = const TunerPage();
-        break;
-      case 4:
-        targetPage = const VoiceRecorderPage();
-        // targetPage = const ProfilePage();
-        break;
-      default:
-        // targetPage = const HomePage();
-        targetPage = const ArticlesPage();
-    }
-
-    navigateWithFade(context, targetPage);
-  }
-  */
 
   @override
   Widget build(BuildContext context) {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
-    final currentIndex = appData.bottomNavIndex; // این خط کلید حل مشکله!
+    final currentIndex = appData.bottomNavIndex;
 
-    return BottomNavigationBar(
-      currentIndex: currentIndex, // این خط باعث تغییر رنگ می‌شه!
-      type: BottomNavigationBarType.fixed,
-      backgroundColor: isDark
-          ? AppColors.background_dark
-          : AppColors.background_light,
-      selectedItemColor: isDark
-          ? AppColors.primary_dark
-          : AppColors.primary_light,
-      unselectedItemColor: isDark
-          ? AppColors.unselected_item_dark
-          : AppColors.unselected_item_light,
-      selectedFontSize: 11,
-      unselectedFontSize: 11,
-      onTap: (index) => _onItemTapped(context, index),
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          activeIcon: Icon(Icons.home),
-          label: 'Home',
-        ),
-        // BottomNavigationBarItem(
-        //   icon: Icon(Icons.music_note),
-        //   label: 'Music Sheet',
-        // ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.library_music_outlined),
-          activeIcon: Icon(Icons.library_music),
-          label: 'Music Player',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.punch_clock_outlined),
-          activeIcon: Icon(Icons.punch_clock),
-          label: 'Metronome',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.tune_outlined),
-          activeIcon: Icon(Icons.tune_rounded),
-          label: 'Tuner',
-        ),
-        // BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.keyboard_voice_outlined),
-          activeIcon: Icon(Icons.keyboard_voice),
-          label: 'Voice Recorder',
-        ),
-      ],
-    );
-  }
-}
-
-
-/*
-class MainApp extends StatefulWidget {
-  const MainApp({super.key});
-
-  @override
-  State<MainApp> createState() => _MainAppState();
-}
-
-class _MainAppState extends State<MainApp> {
-  int _currentIndex = 0; // مدیریت ایندکس فعلی
-
-  // لیست صفحات
-  final List<Widget> _pages = [
-    // const HomePage(),
-    const ArticlesPage(),
-    // const MusicSheetsPage(),
-    const MusicPlayerPage(),
-    const MetronomePage(),
-    const TunerPage(),
-    // const ProfilePage(),
-    const VoiceRecorderPage(),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final appData = Provider.of<AppData>(context);
-    final isDark = appData.isDark;
-
-    return Scaffold(
-      body: IndexedStack(
-        // نمایش صفحه فعلی بدون از دست دادن state
-        index: _currentIndex,
-        children: _pages,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+        if (currentIndex != 0) {
+          appData.setBottomNavIndex(0);
+        }
+      },
+      child: BottomNavigationBar(
+        currentIndex: currentIndex,
         type: BottomNavigationBarType.fixed,
-        backgroundColor: isDark ? Colors.grey[900] : Colors.white,
-        selectedItemColor: isDark ? Colors.yellow[700] : Colors.blue,
-        unselectedItemColor: Colors.grey,
-        currentIndex: _currentIndex, // هایلایت آیتم فعلی
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index; // تغییر ایندکس و صفحه
-          });
-        },
+        backgroundColor: isDark
+            ? AppColors.background_dark
+            : AppColors.background_light,
+        selectedItemColor: isDark
+            ? AppColors.primary_dark
+            : AppColors.primary_light,
+        unselectedItemColor: isDark
+            ? AppColors.unselected_item_dark
+            : AppColors.unselected_item_light,
+        selectedFontSize: 11,
+        unselectedFontSize: 11,
+        onTap: (index) => _onItemTapped(context, index),
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-            backgroundColor: Colors.red,
-            activeIcon: Icon(Icons.home_filled),
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: AppStrings.homeTitle,
           ),
           // BottomNavigationBarItem(
-          //   icon: Icon(Icons.music_note),
-          //   label: 'Music Sheet',
+          //   icon: Icon(Icons.music_note_outlined),
+          //   activeIcon: Icon(Icons.music_note),
+          //   label: AppStrings.musicSheetTitle,
           // ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.library_music),
-            label: 'Music Player',
+            icon: Icon(Icons.library_music_outlined),
+            activeIcon: Icon(Icons.library_music),
+            label: AppStrings.musicPlayerTitle,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.punch_clock),
-            label: 'Metronome',
+            icon: Icon(Icons.punch_clock_outlined),
+            activeIcon: Icon(Icons.punch_clock),
+            label: AppStrings.metronomeTitle,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.tune_rounded),
-            label: 'Tuner',
+            icon: Icon(Icons.tune_outlined),
+            activeIcon: Icon(Icons.tune_rounded),
+            label: AppStrings.tunerTitle,
           ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.person_outlined),
+          //   activeIcon: Icon(Icons.person),
+          //   label: AppStrings.profileTitle,
+          // ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.record_voice_over),
-            label: 'Voice Recorder',
-            backgroundColor: Colors.deepPurple,
-            activeIcon: Icon(Icons.home_filled),
+            icon: Icon(Icons.keyboard_voice_outlined),
+            activeIcon: Icon(Icons.keyboard_voice),
+            label: AppStrings.voiceRecorderTitle,
           ),
-          // BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );
   }
 }
-*/
+
+class BottomNavBarWidget extends StatefulWidget {
+  const BottomNavBarWidget({super.key});
+  @override
+  State<BottomNavBarWidget> createState() => _BottomNavBarWidgetState();
+}
+
+class _BottomNavBarWidgetState extends State<BottomNavBarWidget> {
+  DateTime? _lastBackPressed;
+
+  // لیست صفحات — مهم: ترتیب باید دقیقاً با آیتم‌ها یکی باشه
+  static const List<Widget> _pages = [
+    ArticlesPage(),
+    MusicPlayerPage(),
+    MetronomePage(),
+    TunerPage(),
+    VoiceRecorderPage(),
+  ];
+
+  void _onItemTapped(BuildContext context, int index) {
+    Provider.of<AppData>(context, listen: false).setBottomNavIndex(index);
+
+    navigateWithFade(context, _pages[index]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    final currentIndex = appData.bottomNavIndex;
+
+    return PopScope(
+      // canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+
+        if (currentIndex == 0) {
+          // در صفحه اصلی هستیم
+          final now = DateTime.now();
+          if (_lastBackPressed == null ||
+              now.difference(_lastBackPressed!) > const Duration(seconds: 2)) {
+            _lastBackPressed = now;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  AppStrings.two_times_press_back_button_for_exit_application,
+                ),
+                duration: Duration(seconds: 2),
+                backgroundColor: Colors.black87,
+              ),
+            );
+            return;
+          }
+          // دوبار در ۲ ثانیه → خروج کامل
+          SystemNavigator.pop(); // فقط اندروید
+        } else {
+          // در صفحه دیگه → برگرد به خانه
+          appData.setBottomNavIndex(0);
+        }
+      },
+      child: BottomNavigationBar(
+        currentIndex: currentIndex,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: isDark
+            ? AppColors.background_dark
+            : AppColors.background_light,
+        selectedItemColor: isDark
+            ? AppColors.primary_dark
+            : AppColors.primary_light,
+        unselectedItemColor: isDark
+            ? AppColors.unselected_item_dark
+            : AppColors.unselected_item_light,
+        selectedFontSize: 11,
+        unselectedFontSize: 11,
+        onTap: (index) => _onItemTapped(context, index),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: AppStrings.homeTitle,
+          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.music_note_outlined),
+          //   activeIcon: Icon(Icons.music_note),
+          //   label: AppStrings.musicSheetTitle,
+          // ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.library_music_outlined),
+            activeIcon: Icon(Icons.library_music),
+            label: AppStrings.musicPlayerTitle,
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.punch_clock_outlined),
+            activeIcon: Icon(Icons.punch_clock),
+            label: AppStrings.metronomeTitle,
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.tune_outlined),
+            activeIcon: Icon(Icons.tune_rounded),
+            label: AppStrings.tunerTitle,
+          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.person_outlined),
+          //   activeIcon: Icon(Icons.person),
+          //   label: AppStrings.profileTitle,
+          // ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.keyboard_voice_outlined),
+            activeIcon: Icon(Icons.keyboard_voice),
+            label: AppStrings.voiceRecorderTitle,
+          ),
+        ],
+      ),
+    );
+  }
+}
