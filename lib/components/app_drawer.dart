@@ -6,6 +6,7 @@ import 'package:sornaz/helpers/app_images.dart';
 import 'package:sornaz/helpers/app_navigation.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/screens/Others/about_us.dart';
 import 'package:sornaz/screens/Others/settings.dart';
 
@@ -22,7 +23,7 @@ class AppDrawer extends StatelessWidget {
         children: [
           UserAccountsDrawerHeader(
             accountName: Text(
-              AppStrings.applicationFullname,
+              AppStrings.application_fullname.translate(context),
               style: TextStyle(
                 color: isDark
                     ? AppColors.text_primary_dark
@@ -30,7 +31,7 @@ class AppDrawer extends StatelessWidget {
               ),
             ),
             accountEmail: Text(
-              AppStrings.applicationEmail,
+              AppStrings.application_email.translate(context),
               style: TextStyle(
                 color: isDark
                     ? AppColors.text_secondary_dark
@@ -50,12 +51,12 @@ class AppDrawer extends StatelessWidget {
           ),
           AppDrawerItem(
             icon: Icons.info,
-            text: AppStrings.aboutUsTitle,
+            text: AppStrings.about_us_title.translate(context),
             link: AboutUsPage(),
           ),
           AppDrawerItem(
             icon: Icons.settings,
-            text: AppStrings.settingsTitle,
+            text: AppStrings.settings_title.translate(context),
             link: SettingsPage(),
           ),
         ],
@@ -118,7 +119,9 @@ class AppDrawerItem extends StatelessWidget {
       trailing: message == ''
           ? SizedBox()
           : Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.space_8,
+              ),
               decoration: BoxDecoration(
                 color: messageColor,
                 borderRadius: BorderRadius.circular(20),

@@ -1,20 +1,25 @@
 // ignore_for_file: non_constant_identifier_names
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/screens/Home/home.dart';
 import 'package:sornaz/screens/Onboarding/splash.dart';
 import 'package:sornaz/screens/Others/about_us.dart';
 import 'package:sornaz/screens/Others/settings.dart';
 import 'package:sornaz/screens/Players/music_palyer.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 // گسترش AppData برای صفحات جدید
 class AppData extends ChangeNotifier {
   bool _isDark = false;
+  bool _isPersian = true;
   bool get isDark => _isDark;
+  bool get isPersian => _isPersian;
   double textSize = 14.0;
   bool pushNotifications = true;
   bool newCourseAlerts = false;
@@ -27,6 +32,15 @@ class AppData extends ChangeNotifier {
   String profileTitle = 'Freelance student';
   int profileCourses = 3205;
   String profileImage = 'https://via.placeholder.com/100?text=Profile';
+
+  String _fontFamily = AppTypography.default_font_family;
+
+  String get fontFamily => _fontFamily;
+
+  void updateFontFamily(String font) {
+    _fontFamily = font;
+    notifyListeners();
+  }
 
   // لیست Saved Courses
   final List<Map<String, dynamic>> savedCourses = List.generate(
@@ -106,6 +120,11 @@ class AppData extends ChangeNotifier {
 
   void toggleDarkMode(bool value) {
     _isDark = value;
+    notifyListeners();
+  }
+
+  void toggleLanguageMode(bool value) {
+    _isPersian = value;
     notifyListeners();
   }
 
@@ -559,17 +578,19 @@ class AppData extends ChangeNotifier {
   // FAQ - Settings End
 
   // Bottom Nav Bar
-
-  // bool _isDark = false;
   int _bottomNavIndex = 0; // اضافه شد
 
-  // bool get isDark => _isDark;
   int get bottomNavIndex => _bottomNavIndex;
 
   void toggleTheme() {
     _isDark = !_isDark;
     notifyListeners();
   }
+
+  // void toggleLanguage() {
+  //   _isPersian = !_isPersian;
+  //   notifyListeners();
+  // }
 
   void setBottomNavIndex(int index) {
     _bottomNavIndex = index;
@@ -581,27 +602,63 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
-    final appData = Provider.of<AppData>(context);
+    // final GoRouter router = GoRouter(
+    //   routes: [GoRoute(path: '/', builder: (context, state) => HomePage())],
+    // );
 
-    final GoRouter router = GoRouter(
-      routes: [GoRoute(path: '/', builder: (context, state) => HomePage())],
-    );
+    // MaterialApp.router(routerConfig: router);
 
-    MaterialApp.router(routerConfig: router);
-
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: AppStrings.applicationFullname,
-      theme: lightTheme(appData),
-      darkTheme: darkTheme(appData),
-      themeMode: appData.isDark ? ThemeMode.dark : ThemeMode.light,
-      home: const SplashScreen(),
-      routes: {
-        // صفحات اصلی و تنظیمات (از کدهای اولیه):
-        '/home': (_) => const HomePage(),
-        '/about': (_) => const AboutUsPage(),
-        '/settings': (_) => const SettingsPage(),
-        '/music_player': (_) => const MusicPlayerPage(),
+    return Consumer2<LocaleProvider, AppData>(
+      builder: (context, localeProvider, appData, child) {
+        // final GoRouter router = GoRouter(
+        //   routes: [
+        //     GoRoute(
+        //       path: '/',
+        //       builder: (context, state) => const SplashScreen(),
+        //     ),
+        //     GoRoute(
+        //       path: '/home',
+        //       builder: (context, state) => const HomePage(),
+        //     ),
+        //     GoRoute(
+        //       path: '/settings',
+        //       builder: (context, state) => const SettingsPage(),
+        //     ),
+        //     GoRoute(
+        //       path: '/about',
+        //       builder: (context, state) => const AboutUsPage(),
+        //     ),
+        //     GoRoute(
+        //       path: '/music_player',
+        //       builder: (context, state) => const MusicPlayerPage(),
+        //     ),
+        //   ],
+        // );
+        return MaterialApp(
+          // routerConfig: router,
+          debugShowCheckedModeBanner: false,
+          title: AppStrings.application_fullname.translate(context),
+          locale: localeProvider.locale,
+          supportedLocales: const [Locale('en', ''), Locale('fa', '')],
+          localeResolutionCallback: (deviceLocale, supportedLocales) {
+            return localeProvider.locale;
+          },
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          theme: lightTheme(appData),
+          darkTheme: darkTheme(appData),
+          themeMode: appData.isDark ? ThemeMode.dark : ThemeMode.light,
+          home: const SplashScreen(),
+          routes: {
+            '/home': (_) => const HomePage(),
+            '/about': (_) => const AboutUsPage(),
+            '/settings': (_) => const SettingsPage(),
+            '/music_player': (_) => const MusicPlayerPage(),
+          },
+        );
       },
     );
   }
@@ -614,6 +671,7 @@ class MyApp extends StatelessWidget {
       brightness: Brightness.dark,
       scaffoldBackgroundColor: AppColors.background_dark,
       cardColor: AppColors.background_dark,
+      fontFamily: appData.fontFamily,
       textTheme: TextTheme(
         headlineMedium: const TextStyle(
           color: AppColors.text_primary_dark,
@@ -635,6 +693,7 @@ class MyApp extends StatelessWidget {
       brightness: Brightness.light,
       scaffoldBackgroundColor: AppColors.background_light,
       cardColor: AppColors.background_light,
+      fontFamily: appData.fontFamily,
       textTheme: TextTheme(
         headlineMedium: const TextStyle(
           color: AppColors.text_primary_light,

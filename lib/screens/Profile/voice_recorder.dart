@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -7,9 +9,19 @@ import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:shamsi_date/shamsi_date.dart';
+// import 'package:sornaz/components/advanced_waveform.dart';
+import 'package:sornaz/components/basic_waveform.dart';
 import 'package:sornaz/components/bottom_nav.dart';
+// import 'package:sornaz/components/db_meter.dart';
+import 'package:sornaz/components/no_file_found.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
+import 'package:sornaz/helpers/app_locale_provider.dart';
+import 'package:sornaz/helpers/app_spacing.dart';
+import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/helpers/app_typography.dart';
+import 'package:sornaz/screens/Profile/record_details_page.dart';
 
 class VoiceRecorderPage extends StatefulWidget {
   const VoiceRecorderPage({super.key});
@@ -30,12 +42,14 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
   List<File> _recordings = [];
   String? _currentlyPlayingPath;
   String? _currentFilePath;
+  bool isJalaliDate = false;
 
   // برای نمودار شدت صوت زنده
-  List<double> _amplitudes = [];
+  final List<double> _amplitudes = [];
   StreamSubscription? _amplitudeSubscription;
 
-  double? _lastDB; // آخرین مقدار دسی‌بل دریافتی
+  // ignore: unused_field
+  double? _lastDB;
 
   @override
   void initState() {
@@ -52,8 +66,11 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('اجازه دسترسی به میکروفون و حافظه لازم است'),
+          SnackBar(
+            content: Text(
+              'اجازه دسترسی به میکروفون و حافظه لازم است',
+              style: AppTypography.caption(),
+            ),
           ),
         );
       }
@@ -96,45 +113,6 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
     });
   }
 
-  /*
-  Future<void> _startRecording() async {
-    if (await _recorder.hasPermission()) {
-      final dir = await getApplicationDocumentsDirectory();
-      _currentFilePath =
-          '${dir.path}/Recordings/${DateTime.now().toString().replaceAll('-', '').replaceAll(':', '').replaceAll(' ', '').substring(0, 14)}.m4a';
-
-      await _recorder.start(
-        const RecordConfig(
-          encoder: AudioEncoder.aacLc,
-          bitRate: 128000,
-          sampleRate: 44100,
-        ),
-        path: _currentFilePath!,
-      );
-
-      setState(() {
-        _isRecording = true;
-        _isPaused = false;
-        _amplitudes.clear();
-      });
-      _startTimer();
-
-      // دریافت شدت صوت زنده
-      _amplitudeSubscription?.cancel();
-      _amplitudeSubscription = _recorder
-          .onAmplitudeChanged(const Duration(milliseconds: 80))
-          .listen((amp) {
-            if (mounted && _isRecording && !_isPaused) {
-              setState(() {
-                final normalized = (-amp.current + 60).abs() / 60; // 0 تا 1
-                _amplitudes.add(normalized.clamp(0.0, 1.0));
-                if (_amplitudes.length > 120) _amplitudes.removeAt(0);
-              });
-            }
-          });
-    }
-  }
-*/
   Future<void> _pauseRecording() async {
     await _recorder.pause();
     setState(() => _isPaused = true);
@@ -195,62 +173,35 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
     return '${jalali.year}/${jalali.month.toString().padLeft(2, '0')}/${jalali.day.toString().padLeft(2, '0')} - ${jalali.hour.toString().padLeft(2, '0')}:${jalali.minute.toString().padLeft(2, '0')}';
   }
 
-  /*
   Future<void> _startRecording() async {
     if (await _recorder.hasPermission()) {
       final dir = await getApplicationDocumentsDirectory();
+      DateTime gregorianDate = DateTime.now();
+      String gregorianFilename =
+          gregorianDate.year.toString() +
+          gregorianDate.month.toString().padLeft(2, '0') +
+          gregorianDate.day.toString().padLeft(2, '0') +
+          gregorianDate.hour.toString().padLeft(2, '0') +
+          gregorianDate.minute.toString().padLeft(2, '0') +
+          gregorianDate.second.toString().padLeft(2, '0');
+
+      Jalali jalaliDate = gregorianDate.toJalali();
+      String jalaliFilename =
+          jalaliDate.year.toString() +
+          jalaliDate.month.toString().padLeft(2, '0') +
+          jalaliDate.day.toString().padLeft(2, '0') +
+          jalaliDate.hour.toString().padLeft(2, '0') +
+          jalaliDate.minute.toString().padLeft(2, '0') +
+          jalaliDate.second.toString().padLeft(2, '0');
+
       _currentFilePath =
-          '${dir.path}/Recordings/ضبط_${DateTime.now().millisecondsSinceEpoch}.m4a';
+          '${dir.path}/Recordings/${isJalaliDate ? jalaliFilename : gregorianFilename}.m4a';
 
       await _recorder.start(
         const RecordConfig(
           encoder: AudioEncoder.aacLc,
           bitRate: 128000,
-          sampleRate: 44100,
-        ),
-        path: _currentFilePath!,
-      );
-
-      setState(() {
-        _isRecording = true;
-        _isPaused = false;
-        _amplitudes.clear();
-      });
-      _startTimer();
-
-      // دریافت شدت صدا هر 10 میلی‌ثانیه
-      _amplitudeSubscription?.cancel();
-      _amplitudeSubscription = _recorder
-          .onAmplitudeChanged(const Duration(milliseconds: 10))
-          .listen((amp) {
-            if (!mounted || !_isRecording || _isPaused) return;
-
-            setState(() {
-              // تبدیل دسی‌بل به مقدار 0-1 (دقیق و روان)
-              final db = amp.current; // دسی‌بل (معمولاً بین -60 تا 0)
-              final normalized = db < -60 ? 0.0 : (db + 60) / 60; // 0 تا 1
-
-              _amplitudes.add(normalized);
-
-              // حداکثر 300 نقطه (برای 3 ثانیه نمایش)
-              if (_amplitudes.length > 300) {
-                _amplitudes.removeAt(0);
-              }
-            });
-          });
-    }
-  }
-*/
-  Future<void> _startRecording() async {
-    if (await _recorder.hasPermission()) {
-      final dir = await getApplicationDocumentsDirectory();
-      _currentFilePath =
-          '${dir.path}/Recordings/ضبط_${DateTime.now().millisecondsSinceEpoch}.m4a';
-
-      await _recorder.start(
-        const RecordConfig(
-          encoder: AudioEncoder.aacLc,
-          bitRate: 128000,
+          // bitRate: 128000,
           sampleRate: 44100,
         ),
         path: _currentFilePath!,
@@ -297,695 +248,347 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
   Widget build(BuildContext context) {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          title: TabBar(
-            dividerHeight: 2,
-            indicatorColor: AppColors.text_primary_light,
-            labelColor: AppColors.text_primary_light,
-            unselectedLabelColor: AppColors.text_secondary_light,
-            dividerColor: AppColors.border_light,
-            tabs: const [
-              Tab(icon: Icon(Icons.mic, size: 32)),
-              Tab(icon: Icon(Icons.list, size: 32)),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          children: [
-            // TAB 1: ضبط صدا
-            Column(
-              children: [
-                // const SizedBox(height: 40),
-                Text(
-                  _timerText,
-                  style: const TextStyle(
-                    fontSize: 56,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.text_primary_light,
-                  ),
-                ),
-                // const SizedBox(height: 30),
 
-                // نمودار شدت صوت زنده
-                Container(
-                  height: 250,
-                  // width: double.infinity,
-                  // margin: const EdgeInsets.symmetric(horizontal: 24),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.background_dark
-                        : AppColors.background_light,
-                    // borderRadius: BorderRadius.circular(4),
-                    border: Border.symmetric(
-                      horizontal: BorderSide(
-                        width: 1,
-                        color: AppColors.border_light,
-                      ),
-                    ),
-                  ),
-                  child: ClipRRect(
-                    // borderRadius: BorderRadius.circular(24),
-                    child: CustomPaint(
-                      painter: WaveformPainter(
-                        _amplitudes,
-                        _isRecording && !_isPaused,
-                      ),
-                      size: Size.infinite,
-                    ),
-                  ),
-                ),
+    final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
+    // final theme = Theme.of(context);
+    final bool isEnglish = localeProvider.locale.languageCode == 'en';
 
-                // جایگزین کامل قسمت CustomPaint در Tab 1
-                Container(
-                  height: 180,
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 16,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.06),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.grey.shade300, width: 1),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
-                    child: Row(
-                      children: [
-                        // نمودار اصلی موج صوتی
-                        Expanded(
-                          child: CustomPaint(
-                            painter: AdvancedWaveformPainter(
-                              amplitudes: _amplitudes,
-                              isActive: _isRecording && !_isPaused,
-                              recordingSeconds: _seconds,
-                            ),
-                            size: Size.infinite,
-                          ),
-                        ),
-
-                        // متر دسی‌بل در سمت راست
-                        Container(
-                          width: 80,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          child: CustomPaint(
-                            painter: DBMeterPainter(
-                              currentDB: _lastDB ?? -60,
-                              isActive: _isRecording && !_isPaused,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // const SizedBox(height: 50),
-
-                // دکمه‌های کنترل
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (_isRecording)
-                      FloatingActionButton(
-                        heroTag: "pause",
-                        backgroundColor: _isPaused
-                            ? Colors.orange
-                            : Colors.grey,
-                        onPressed: _isPaused
-                            ? _resumeRecording
-                            : _pauseRecording,
-                        child: Icon(
-                          _isPaused ? Icons.play_arrow : Icons.pause,
-                          size: 36,
-                        ),
-                      ),
-                    const SizedBox(width: 30),
-                    // دکمه اصلی (شروع / توقف)
-                    FloatingActionButton.large(
-                      heroTag: "main",
-                      backgroundColor: _isRecording
-                          ? Colors.red
-                          : AppColors.text_primary_light,
-                      onPressed: _isRecording
-                          ? _stopRecording
-                          : _startRecording,
-                      child: Icon(
-                        _isRecording ? Icons.stop : Icons.mic,
-                        size: 44,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
+    return Directionality(
+      textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
+      child: DefaultTabController(
+        length: 2,
+        child: Scaffold(
+          appBar: AppBar(
+            automaticallyImplyLeading: false,
+            title: TabBar(
+              dividerHeight: 2,
+              indicatorColor: AppColors.text_primary_light,
+              labelColor: AppColors.text_primary_light,
+              unselectedLabelColor: AppColors.text_secondary_light,
+              dividerColor: AppColors.border_light,
+              tabs: const [
+                Tab(icon: Icon(Icons.mic, size: 32)),
+                Tab(icon: Icon(Icons.list, size: 32)),
               ],
             ),
+          ),
+          body: TabBarView(
+            children: [
+              // TAB 1: ضبط صدا
+              Column(
+                children: [
+                  RecordingTimer(timerText: _timerText),
 
-            // TAB 2: لیست فایل‌ها
-            _recordings.isEmpty
-                ? const Center(
-                    child: Text(
-                      'هیچ ضبطی انجام نشده',
-                      style: TextStyle(fontSize: 20, color: Colors.grey),
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(12),
-                    itemCount: _recordings.length,
-                    itemBuilder: (context, index) {
-                      final file = _recordings[index];
-                      final fileName = file.path
-                          .split('/')
-                          .last
-                          .replaceAll('.m4a', '');
-                      final date = _formatJalaliDate(file.lastModifiedSync());
-
-                      return Card(
-                        elevation: 3,
-                        child: ListTile(
-                          leading: IconButton(
-                            iconSize: 50,
-                            icon: Icon(
-                              _currentlyPlayingPath == file.path && _isPlaying
-                                  ? Icons.pause_circle_filled
-                                  : Icons.play_circle_fill,
-                              color: Colors.blue,
-                            ),
-                            onPressed: () => _playPause(file),
-                          ),
-                          title: Text(
-                            fileName,
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          subtitle: Text(date),
-                          trailing: IconButton(
-                            icon: const Icon(
-                              Icons.delete_forever,
-                              color: Colors.red,
-                            ),
-                            onPressed: () => _deleteRecording(file),
-                          ),
-                        ),
-                      );
-                    },
+                  BasicWaveformWidget(
+                    isDark: isDark,
+                    amplitudes: _amplitudes,
+                    isRecording: _isRecording,
+                    isPaused: _isPaused,
                   ),
-          ],
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (_isRecording) playPauseButton(),
+                      const SizedBox(width: 30),
+                      recordingButton(),
+                    ],
+                  ),
+                ],
+              ),
+
+              // TAB 2: لیست فایل‌ها
+              _recordings.isEmpty
+                  ? NoFilesFoundWidget(
+                      message: AppStrings.no_records_file.translate(context),
+                    )
+                  : voiceRecordsList(),
+            ],
+          ),
+          bottomNavigationBar: const BottomNavBarWidget(),
         ),
-        bottomNavigationBar: const BottomNavBarWidget(),
       ),
     );
   }
-}
 
-class WaveformPainter extends CustomPainter {
-  final List<double> amplitudes;
-  final bool isActive;
+  ListView voiceRecordsList() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(12),
+      itemCount: _recordings.length,
+      itemBuilder: (context, index) {
+        final file = _recordings[index];
+        final fileName = file.path.split('/').last.replaceAll('.m4a', '');
+        final date = _formatJalaliDate(file.lastModifiedSync());
 
-  WaveformPainter(this.amplitudes, this.isActive);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = isActive ? const Color(0xFF00E676) : Colors.grey.shade400
-      ..strokeWidth = 0.8
-      // ..strokeWidth = 2.5
-      ..strokeCap = StrokeCap.round;
-
-    if (amplitudes.isEmpty) {
-      final centerY = size.height / 2;
-      canvas.drawLine(
-        Offset(0, centerY),
-        Offset(size.width, centerY),
-        paint..color = Colors.grey.shade300,
-      );
-      return;
-    }
-
-    final double barWidth = size.width / 200;
-    final double centerY = size.height / 2;
-    final int startIndex = 0;
-    // final int startIndex = amplitudes.length > 300 ? 200 : 0;
-
-    for (int i = startIndex; i < amplitudes.length; i++) {
-      final double amplitude = amplitudes[i];
-      final double height = amplitude * size.height * 2;
-      final double x = (i - startIndex) * barWidth;
-
-      canvas.drawLine(
-        Offset(x, centerY - height / 5),
-        Offset(x, centerY + height / 5),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}
-
-class AdvancedWaveformPainter extends CustomPainter {
-  final List<double> amplitudes;
-  final bool isActive;
-  final int recordingSeconds;
-
-  AdvancedWaveformPainter({
-    required this.amplitudes,
-    required this.isActive,
-    required this.recordingSeconds,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final wavePaint = Paint()
-      ..color = isActive ? const Color(0xFF00E676) : Colors.grey.shade400
-      ..strokeWidth = 2.8
-      ..strokeCap = StrokeCap.round;
-
-    final gridPaint = Paint()
-      ..color = Colors.grey.shade300
-      ..strokeWidth = 1;
-
-    final textPainter = TextPainter(textDirection: TextDirection.ltr);
-    final centerY = size.height / 2;
-
-    // رسم خط‌کشی زمان
-    const int samplesPerSecond = 100; // 10ms = 100 نمونه در ثانیه
-    final int totalSamples = recordingSeconds * samplesPerSecond;
-    final double pxPerSample = size.width / 400; // 400 نمونه نمایش داده میشه
-
-    // خطوط عمودی هر 250ms (4 تا در ثانیه)
-    for (int i = 0; i <= recordingSeconds * 4; i++) {
-      final double x = (i * 25) * pxPerSample; // هر 25 نمونه = 250ms
-      if (x > size.width) break;
-
-      if (i % 4 == 0) {
-        // خط اصلی هر ثانیه
-        canvas.drawLine(
-          Offset(x, 0),
-          Offset(x, size.height),
-          gridPaint..strokeWidth = 1.5,
-        );
-
-        // عدد ثانیه
-        final seconds = i ~/ 4;
-        textPainter.text = TextSpan(
-          text: '$seconds',
-          style: const TextStyle(color: Colors.grey, fontSize: 11),
-        );
-        textPainter.layout();
-        textPainter.paint(canvas, Offset(x - 8, 8));
-      } else {
-        // خطوط فرعی
-        canvas.drawLine(
-          Offset(x, centerY - 10),
-          Offset(x, centerY + 10),
-          gridPaint,
-        );
-      }
-    }
-
-    // رسم موج صوتی
-    if (amplitudes.isEmpty) return;
-
-    final int startIndex = amplitudes.length > 400
-        ? amplitudes.length - 400
-        : 0;
-
-    for (int i = startIndex; i < amplitudes.length; i++) {
-      final double amplitude = amplitudes[i];
-      final double height = amplitude * size.height * 0.9;
-      final double x = (i - startIndex) * pxPerSample;
-
-      canvas.drawLine(
-        Offset(x, centerY - height / 2),
-        Offset(x, centerY + height / 2),
-        wavePaint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter old) => true;
-}
-
-class DBMeterPainter extends CustomPainter {
-  final double currentDB;
-  final bool isActive;
-
-  DBMeterPainter({required this.currentDB, required this.isActive});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final centerX = size.width / 2;
-    final centerY = size.height / 2;
-
-    // پس‌زمینه
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(8, 16, size.width - 16, size.height - 32),
-        const Radius.circular(12),
-      ),
-      Paint()..color = Colors.black.withOpacity(0.1),
-    );
-
-    // مقیاس دسی‌بل
-    final labels = ['-60', '-40', '-20', '-10', '0'];
-    final textPainter = TextPainter(textDirection: TextDirection.ltr);
-
-    for (int i = 0; i < labels.length; i++) {
-      final double y = 20 + (i * (size.height - 40) / 4);
-      textPainter.text = TextSpan(
-        text: labels[i],
-        style: TextStyle(color: Colors.grey.shade600, fontSize: 10),
-      );
-      textPainter.layout();
-      textPainter.paint(canvas, Offset(4, y - 8));
-    }
-
-    // نشانگر فعلی
-    final double normalized = (currentDB + 60) / 60; // 0 تا 1
-    final double barHeight = (size.height - 40) * normalized;
-    final double barY = size.height - 20 - barHeight;
-
-    final Color barColor = currentDB > -10
-        ? Colors.red
-        : currentDB > -20
-        ? Colors.orange
-        : Colors.green;
-
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(16, barY, size.width - 32, barHeight),
-        const Radius.circular(8),
-      ),
-      Paint()..color = barColor.withOpacity(isActive ? 0.9 : 0.4),
-    );
-
-    // عدد فعلی
-    if (isActive) {
-      textPainter.text = TextSpan(
-        text: '${currentDB.toStringAsFixed(1)} dB',
-        style: const TextStyle(
-          color: Colors.black,
-          fontWeight: FontWeight.bold,
-          fontSize: 12,
-        ),
-      );
-      textPainter.layout();
-      textPainter.paint(
-        canvas,
-        Offset(centerX - textPainter.width / 2, size.height - 50),
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter old) => true;
-}
-
-/*
-import 'dart:io';
-import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:record/record.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:audioplayers/audioplayers.dart';
-import 'package:shamsi_date/shamsi_date.dart';
-import 'package:sornaz/components/bottom_nav.dart';
-import 'package:sornaz/helpers/app_colors.dart';
-import 'package:sornaz/helpers/app_spacing.dart';
-
-class VoiceRecorderPage extends StatefulWidget {
-  const VoiceRecorderPage({super.key});
-  @override
-  State<VoiceRecorderPage> createState() => _VoiceRecorderPageState();
-}
-
-class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
-  final AudioRecorder _recorder = AudioRecorder();
-  final AudioPlayer _player = AudioPlayer();
-
-  bool _isRecording = false;
-  bool _isPlaying = false;
-  String _timerText = '00:00';
-  int _seconds = 0;
-  Timer? _timer;
-  List<File> _recordings = [];
-  String? _currentlyPlayingPath;
-
-  List<double> amplitudes = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _checkPermissionsAndLoad();
-  }
-
-  Future<void> _checkPermissionsAndLoad() async {
-    final mic = await Permission.microphone.request();
-    final storage = await Permission.storage.request();
-
-    if (mic.isGranted && storage.isGranted) {
-      await _loadRecordings();
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('اجازه دسترسی به میکروفون و حافظه لازم است'),
+        return AnimatedSwitcher(
+          duration: Duration(milliseconds: 350),
+          transitionBuilder: (child, animation) =>
+              SizeTransition(sizeFactor: animation, child: child),
+          child: Card(
+            key: ValueKey(file.path),
+            elevation: 2,
+            child: ListTile(
+              onTap: () => _openDetailsPage(file),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: AppSpacing.space_16,
+              ),
+              horizontalTitleGap: 8,
+              leading: IconButton(
+                iconSize: AppSpacing.space_48,
+                icon: Icon(
+                  _currentlyPlayingPath == file.path && _isPlaying
+                      ? Icons.pause_circle_filled
+                      : Icons.play_circle_fill,
+                  color: Colors.blue,
+                ),
+                onPressed: () => _playPause(file),
+              ),
+              title: Text(fileName, style: AppTypography.headline6()),
+              subtitle: Text(date, style: AppTypography.caption()),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    iconSize: AppSpacing.space_24,
+                    icon: Icon(
+                      Icons.edit,
+                      color: Colors.orange,
+                      size: AppSpacing.space_24,
+                    ),
+                    onPressed: () => _renameRecording(file),
+                  ),
+                  IconButton(
+                    iconSize: AppSpacing.space_24,
+                    icon: Icon(
+                      Icons.delete_forever,
+                      color: Colors.red,
+                      size: AppSpacing.space_24,
+                    ),
+                    onPressed: () => _confirmDelete(file),
+                  ),
+                ],
+              ),
+            ),
           ),
         );
-      }
+      },
+    );
+  }
+
+  Future<void> _openDetailsPage(File file) async {
+    final modifiedDate = file.lastModifiedSync();
+    final jalaliDate = _formatJalaliDate(modifiedDate);
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => RecordDetailsPage(
+          file: file,
+          jalaliDate: jalaliDate,
+          onRename: (newName) async {
+            final dir = file.parent.path;
+            final newPath = "$dir/$newName.m4a";
+            await file.rename(newPath);
+            await _loadRecordings();
+          },
+          onDelete: () async {
+            await _deleteRecording(file);
+            await _loadRecordings();
+          },
+        ),
+      ),
+    );
+
+    if (result != null && result["deleted"] == true) {
+      final bytes = result["bytes"] as List<int>;
+      final path = result["path"] as String;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("فایل حذف شد", style: AppTypography.caption()),
+          action: SnackBarAction(
+            label: "UNDO",
+            onPressed: () async {
+              final restored = File(path);
+              await restored.writeAsBytes(bytes);
+
+              await _loadRecordings(); // 🔥 فوراً آیتم برمی‌گردد
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    "فایل برگردانده شد",
+                    style: AppTypography.caption(),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      );
     }
   }
 
-  Future<void> _loadRecordings() async {
-    final dir = await getApplicationDocumentsDirectory();
-    final recordDir = Directory('${dir.path}/Recordings');
+  Future<void> _confirmDelete(File file) async {
+    final fileName = file.path.split('/').last.replaceAll('.m4a', '');
 
-    if (!await recordDir.exists()) {
-      await recordDir.create(recursive: true);
-    }
+    bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          "حذف ضبط",
+          textAlign: TextAlign.center,
+          style: AppTypography.headline5(),
+        ),
+        content: Text(
+          "آیا از حذف فایل «$fileName» مطمئن هستید؟",
+          textAlign: TextAlign.center,
+          style: AppTypography.body1(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text("خیر", style: AppTypography.body2()),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text("بله، حذف کن", style: AppTypography.body2()),
+          ),
+        ],
+      ),
+    );
 
-    final files =
-        recordDir
-            .listSync()
-            .whereType<File>()
-            .where((f) => f.path.endsWith('.m4a'))
-            .toList()
-          ..sort(
-            (a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()),
-          );
+    if (confirm == true) {
+      // 1) خواندن محتوا جهت امکان Undo
+      final bytes = await file.readAsBytes();
+      final originalPath = file.path;
 
-    if (mounted) {
-      setState(() => _recordings = files.cast<File>());
+      // 2) حذف فایل
+      await _deleteRecording(file);
+
+      // 3) Snackbar با دکمه Undo
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "فایل «$fileName» حذف شد",
+            style: AppTypography.caption(),
+          ),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(
+            label: "Undo",
+            textColor: Colors.yellow,
+            onPressed: () async {
+              // فایل را دوباره ایجاد می‌کنیم
+              final restored = File(originalPath);
+              await restored.writeAsBytes(bytes);
+
+              // لیست را دوباره لود کن
+              await _loadRecordings();
+            },
+          ),
+        ),
+      );
     }
   }
 
-  void _startTimer() {
-    _timer?.cancel();
-    _seconds = 0;
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!_isRecording) {
-        timer.cancel();
-        return;
-      }
-      setState(() {
-        _seconds++;
-        final m = _seconds ~/ 60;
-        final s = _seconds % 60;
-        _timerText =
-            '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
-      });
-    });
-  }
+  Future<void> _renameRecording(File file) async {
+    final oldName = file.path.split('/').last.replaceAll(".m4a", "");
+    final controller = TextEditingController(text: oldName);
 
-  Future<void> _startRecording() async {
-    if (await _recorder.hasPermission()) {
-      final dir = await getApplicationDocumentsDirectory();
-      final filePath =
-          '${dir.path}/Recordings/${DateTime.now().toString().replaceAll('-', '').replaceAll(' ', '').replaceAll(':', '').substring(0, 14)}.m4a';
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("تغییر نام فایل", style: AppTypography.headline5()),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: "نام جدید",
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, null),
+            child: Text("انصراف", style: AppTypography.body2()),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.trim().isEmpty) return;
+              Navigator.pop(context, controller.text.trim());
+            },
+            child: Text("ذخیره", style: AppTypography.body1()),
+          ),
+        ],
+      ),
+    );
 
-      await _recorder.start(const RecordConfig(), path: filePath);
-      setState(() => _isRecording = true);
-      _startTimer();
-    }
-  }
+    if (newName == null) return;
 
-  Future<void> _stopRecording() async {
-    final path = await _recorder.stop();
-    _timer?.cancel();
-    setState(() {
-      _isRecording = false;
-      _timerText = '00:00';
-    });
-    if (path != null) {
+    // مسیر جدید
+    final dir = file.parent.path;
+    final newPath = "$dir/$newName.m4a";
+
+    try {
+      await file.rename(newPath);
       await _loadRecordings();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "نام فایل به «$newName» تغییر کرد.",
+            style: AppTypography.caption(),
+          ),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("خطا در تغییر نام!", style: AppTypography.caption()),
+          backgroundColor: AppColors.error,
+        ),
+      );
     }
   }
 
-  Future<void> _playPause(File file) async {
-    if (_currentlyPlayingPath == file.path && _isPlaying) {
-      await _player.stop();
-      setState(() => _isPlaying = false);
-      return;
-    }
-
-    await _player.play(DeviceFileSource(file.path));
-    setState(() {
-      _isPlaying = true;
-      _currentlyPlayingPath = file.path;
-    });
-
-    _player.onPlayerComplete.listen((_) {
-      if (mounted) setState(() => _isPlaying = false);
-    });
+  FloatingActionButton recordingButton() {
+    return FloatingActionButton.large(
+      heroTag: "main",
+      backgroundColor: _isRecording ? Colors.red : AppColors.text_primary_light,
+      onPressed: _isRecording ? _stopRecording : _startRecording,
+      child: Icon(
+        _isRecording ? Icons.stop : Icons.mic,
+        size: 44,
+        color: Colors.white,
+      ),
+    );
   }
 
-  Future<void> _deleteRecording(File file) async {
-    if (_currentlyPlayingPath == file.path) {
-      await _player.stop();
-      setState(() => _isPlaying = false);
-    }
-    await file.delete();
-    await _loadRecordings();
+  FloatingActionButton playPauseButton() {
+    return FloatingActionButton(
+      heroTag: "pause",
+      backgroundColor: _isPaused ? Colors.orange : Colors.grey,
+      onPressed: _isPaused ? _resumeRecording : _pauseRecording,
+      child: Icon(_isPaused ? Icons.play_arrow : Icons.pause, size: 36),
+    );
   }
+}
 
-  // تابع تبدیل تاریخ میلادی به شمسی
-  String _formatJalaliDate(DateTime date) {
-    final jalali = Jalali.fromDateTime(date);
-    return '${jalali.year}/${jalali.month.toString().padLeft(2, '0')}/${jalali.day.toString().padLeft(2, '0')} - ${jalali.hour.toString().padLeft(2, '0')}:${jalali.minute.toString().padLeft(2, '0')}';
-  }
+class RecordingTimer extends StatelessWidget {
+  const RecordingTimer({super.key, required String timerText})
+    : _timerText = timerText;
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _recorder.dispose();
-    _player.dispose();
-    super.dispose();
-  }
+  final String _timerText;
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          title: TabBar(
-            dividerHeight: 2,
-            indicatorColor: AppColors.text_primary_light,
-            labelColor: AppColors.text_primary_light,
-            unselectedLabelColor: AppColors.text_secondary_light,
-            dividerColor: AppColors.border_light,
-            tabs: [
-              Tab(
-                icon: Icon(Icons.mic, size: AppSpacing.space_32),
-                height: AppSpacing.space_56,
-              ),
-              Tab(
-                icon: Icon(Icons.list, size: AppSpacing.space_32),
-                height: AppSpacing.space_56,
-              ),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          children: [
-            /// ---------------- TAB 1 : Recorder ----------------
-            Column(
-              children: [
-                SizedBox(height: AppSpacing.space_32),
-                Text(
-                  _timerText,
-                  style: const TextStyle(
-                    color: AppColors.text_primary_light,
-                    fontSize: 32,
-                    fontWeight: FontWeight.w400,
-                    letterSpacing: 1,
-                  ),
-                ),
-                SizedBox(height: AppSpacing.space_24),
-                SizedBox(height: AppSpacing.space_24),
-                SizedBox(
-                  height: 60,
-                  width: 60,
-                  child: FloatingActionButton(
-                    backgroundColor: _isRecording
-                        ? AppColors.background_light
-                        : AppColors.error,
-                    elevation: 1,
-                    splashColor: AppColors.surface_light,
-                    onPressed: _isRecording ? _stopRecording : _startRecording,
-                    foregroundColor: AppColors.text_primary_light,
-                    child: Icon(
-                      _isRecording ? Icons.stop : Icons.mic,
-                      size: AppSpacing.space_32,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            /// ---------------- TAB 2 : Recordings List ----------------
-            _recordings.isEmpty
-                ? const Center(
-                    child: Text(
-                      'هیچ ضبطی انجام نشده',
-                      style: TextStyle(fontSize: 20, color: Colors.grey),
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(12),
-                    itemCount: _recordings.length,
-                    itemBuilder: (context, index) {
-                      final file = _recordings[index];
-                      final fileName = file.path.substring(55);
-                      // .split('/')
-                      // .last
-                      // .replaceAll('.m4a', '');
-                      final modifiedDate = file.lastModifiedSync();
-                      final jalaliDate = _formatJalaliDate(modifiedDate);
-
-                      return Card(
-                        elevation: 2,
-                        child: ListTile(
-                          leading: IconButton(
-                            iconSize: 48,
-                            icon: Icon(
-                              _currentlyPlayingPath == file.path && _isPlaying
-                                  ? Icons.pause_circle_filled
-                                  : Icons.play_circle_fill,
-                              color: Colors.blue,
-                            ),
-                            onPressed: () => _playPause(file),
-                          ),
-                          title: Text(
-                            fileName,
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          subtitle: Text(jalaliDate),
-                          trailing: IconButton(
-                            icon: const Icon(
-                              Icons.delete_forever,
-                              color: Colors.red,
-                            ),
-                            onPressed: () => _deleteRecording(file),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-          ],
-        ),
-        bottomNavigationBar: BottomNavBarWidget(),
-      ),
-    );
+    return Text(_timerText, style: AppTypography.headline3());
   }
 }
-*/

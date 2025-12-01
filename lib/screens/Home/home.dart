@@ -7,7 +7,10 @@ import 'package:sornaz/components/search_bar.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_images.dart';
+import 'package:sornaz/helpers/app_locale_provider.dart';
+import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_translations.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -16,25 +19,35 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
+    final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
     // final theme = Theme.of(context);
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        fontFamily: 'Vazir',
-        scaffoldBackgroundColor: isDark
+    final bool isEnglish = localeProvider.locale.languageCode == 'en';
+
+    return
+    //  MaterialApp(
+    //   debugShowCheckedModeBanner: false,
+    //   theme: ThemeData(
+    //     fontFamily: 'Vazir',
+    //     // scaffoldBackgroundColor: isDark
+    //     //     ? AppColors.background_dark
+    //     //     : AppColors.background_light,
+    //   ),
+    //   home:
+    Directionality(
+      textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: isDark
             ? AppColors.background_dark
             : AppColors.background_light,
-      ),
-      home: Scaffold(
         appBar: AppBar(
           backgroundColor: isDark
-              ? AppColors.background_dark
-              : AppColors.background_light,
+              ? AppColors.surface_dark
+              : AppColors.surface_light,
           elevation: 0,
           automaticallyImplyLeading: false,
-          leadingWidth: 48,
-          titleSpacing: 16,
-          actionsPadding: const EdgeInsets.only(right: 24),
+          leadingWidth: AppSpacing.space_48,
+          titleSpacing: AppSpacing.space_16,
+          actionsPadding: const EdgeInsets.only(right: AppSpacing.space_24),
 
           leading: HeaderMenuIcon(isDark: isDark),
           title: ApplicationTitle(isDark: isDark),
@@ -56,6 +69,7 @@ class HomePage extends StatelessWidget {
         ),
         bottomNavigationBar: const BottomNavBarWidget(),
       ),
+      // ),
     );
   }
 }
@@ -70,7 +84,7 @@ class ApplicationLogo extends StatelessWidget {
     return Center(
       child: Image.asset(
         isDark ? AppImages.logo_dark : AppImages.logo_light,
-        height: 30,
+        height: AppSpacing.space_32,
       ),
     );
   }
@@ -84,9 +98,9 @@ class ApplicationTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      AppStrings.applicationName,
+      AppStrings.application_name.translate(context),
       style: TextStyle(
-        fontSize: 18,
+        fontSize: AppSpacing.space_18,
         color: isDark
             ? AppColors.text_primary_dark
             : AppColors.text_primary_light,
@@ -106,7 +120,7 @@ class HeaderMenuIcon extends StatelessWidget {
     return Builder(
       builder: (context) {
         return Padding(
-          padding: const EdgeInsets.only(left: 16),
+          padding: const EdgeInsets.only(left: AppSpacing.space_16),
           child: IconButton(
             icon: Icon(
               Icons.menu,

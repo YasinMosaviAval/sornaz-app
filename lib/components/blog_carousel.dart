@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/section_title.dart';
@@ -6,6 +8,7 @@ import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_functions.dart';
 import 'package:sornaz/helpers/app_navigation.dart';
 import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/screens/Articles/article_detail_page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -28,14 +31,15 @@ class RealBlogCarousel extends StatelessWidget {
           Padding(
             padding: EdgeInsets.fromLTRB(24, 0, 24, 16),
             child: SectionTitle(
-              title: AppStrings.last_blog_title,
-              viewAll: AppStrings.view_all_link,
+              title: AppStrings.last_blog_title.translate(context),
+              viewAll: AppStrings.view_all_link.translate(context),
               viewAllLink: ArticlesPage(),
             ),
           ),
 
+          // Text("data", style: TextStyle(fontSize: 48 , color: AppColors.error)),
           FutureBuilder<List<dynamic>>(
-            future: fetchRecentPosts(),
+            future: fetchRecentPosts(context),
             // future: _getPosts(), // تغییر: از لوکال یا آنلاین بگیر
             builder: (context, snapshot) {
               if (snapshot.hasData) {
@@ -49,7 +53,8 @@ class RealBlogCarousel extends StatelessWidget {
                       itemBuilder: (context, index) {
                         final post = snapshot.data![index];
                         final title =
-                            post['title']['rendered'] ?? AppStrings.no_title;
+                            post['title']['rendered'] ??
+                            AppStrings.no_title.translate(context);
                         // final excerpt =
                         //     (post['excerpt']['rendered'] as String?)?.replaceAll(
                         //       RegExp(r'<[^>]*>'),
@@ -69,7 +74,7 @@ class RealBlogCarousel extends StatelessWidget {
                         //     (post['date'] as String?)?.substring(0, 10) ?? 'نامشخص';
 
                         final isoDate =
-                            post['date'] as String? ?? AppStrings.epmtyText;
+                            post['date'] as String? ?? AppStrings.epmty_text;
                         return RealBlogCard(
                           post: post,
                           imageUrl: imageUrl,
@@ -87,7 +92,7 @@ class RealBlogCarousel extends StatelessWidget {
                 return Center(
                   // child: Text('خطا در بارگذاری مقالات: ${snapshot.error}'),
                   child: Text(
-                    AppStrings.error_in_loading,
+                    AppStrings.error_in_loading.translate(context),
                     style: TextStyle(
                       color: isDark
                           ? AppColors.text_primary_dark
@@ -269,118 +274,13 @@ class RealBlogInformation extends StatelessWidget {
 }
 
 // فانکشن برای گرفتن ۱۰ پست آخر
-Future<List<dynamic>> fetchRecentPosts() async {
+Future<List<dynamic>> fetchRecentPosts(BuildContext context) async {
   final response = await http.get(
     Uri.parse('https://sornaz.com/wp-json/wp/v2/posts?per_page=10&_embed'),
   );
   if (response.statusCode == 200) {
     return json.decode(response.body);
   } else {
-    throw Exception(AppStrings.faild_to_load_posts);
-  }
-}
-
-// ---------------------------
-
-class FakeBlogCarousel extends StatelessWidget {
-  const FakeBlogCarousel({super.key});
-
-  int get listSize => 4;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 190,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: listSize,
-        itemBuilder: (context, index) {
-          return FakeBlogCard(index: index);
-        },
-        padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
-      ),
-    );
-  }
-}
-
-class FakeBlogCard extends StatelessWidget {
-  final int index;
-
-  const FakeBlogCard({super.key, required this.index});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Color.fromRGBO(240, 240, 240, 0.6),
-        border: Border.all(color: Color.fromRGBO(31, 31, 31, 0.1)),
-        borderRadius: BorderRadius.all(Radius.circular(8)),
-      ),
-      margin: EdgeInsets.only(left: 8, right: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          FakeBlogImage(index: index),
-          FakeBlogInformation(index: index),
-        ],
-      ),
-    );
-  }
-}
-
-class FakeBlogInformation extends StatelessWidget {
-  final int index;
-
-  const FakeBlogInformation({super.key, required this.index});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 160,
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'How to maintain calorie intake & worry less $index',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              '5 mins read',
-              style: TextStyle(color: Colors.grey, fontSize: 10),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class FakeBlogImage extends StatelessWidget {
-  final int index;
-
-  const FakeBlogImage({super.key, required this.index});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 100,
-      width: 160,
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/images/blog_$index.png'),
-          fit: BoxFit.cover,
-        ),
-        color: Colors.greenAccent,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(8),
-          topRight: Radius.circular(8),
-        ),
-      ),
-    );
+    throw Exception(AppStrings.failed_to_load_posts.translate(context));
   }
 }

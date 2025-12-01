@@ -5,7 +5,13 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:provider/provider.dart';
+import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_functions.dart';
+import 'package:sornaz/helpers/app_spacing.dart';
+import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_translations.dart';
 
 class ArticleDetailPage extends StatefulWidget {
   final Map<String, dynamic> post;
@@ -41,7 +47,6 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
     super.dispose();
   }
 
-  // واکشی کامنت‌ها با pagination
   Future<void> _fetchComments({bool loadMore = false}) async {
     if (!loadMore) {
       setState(() {
@@ -78,7 +83,6 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
     }
   }
 
-  // لود بیشتر کامنت‌ها با اسکرول
   void _scrollListener() {
     if (_scrollController.offset >=
             _scrollController.position.maxScrollExtent - 200 &&
@@ -89,7 +93,6 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
     }
   }
 
-  // ارسال کامنت (فرض بدون auth - اگر نیاز به auth داشت، JWT اضافه کن)
   Future<void> _sendComment() async {
     final postId = widget.post['id'];
     final content = commentController.text;
@@ -99,7 +102,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
     final body = json.encode({
       'post': postId,
       'content': content,
-      'author_name': 'کاربر مهمان', // اگر auth داشت، نام واقعی
+      'author_name': AppStrings.guest_user.translate(context),
     });
 
     try {
@@ -110,20 +113,25 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
       );
       if (response.statusCode == 201) {
         commentController.clear();
-        _fetchComments(); // رفرش کامنت‌ها
+        _fetchComments();
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('خطا در ارسال کامنت')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppStrings.error_in_sending_comment.translate(context),
+            ),
+          ),
+        );
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('خطا در ارسال کامنت')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppStrings.error_in_sending_comment.translate(context)),
+        ),
+      );
     }
   }
 
-  // واکشی مقالات پیشنهادی (دو تا از دسته مشابه)
   Future<void> _fetchRelatedPosts() async {
     setState(() {
       isLoadingRelated = true;
@@ -136,7 +144,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
       });
       return;
     }
-    final catId = categories[0]; // اولین دسته
+    final catId = categories[0];
     final url =
         'https://sornaz.com/wp-json/wp/v2/posts?categories=$catId&per_page=2&exclude=$postId&_embed';
 
@@ -161,203 +169,356 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final title = widget.post['title']['rendered'] ?? 'بدون عنوان';
-    final content = widget.post['content']['rendered'] ?? 'بدون محتوا';
+    final title =
+        widget.post['title']['rendered'] ??
+        AppStrings.without_title.translate(context);
+    final content =
+        widget.post['content']['rendered'] ??
+        AppStrings.without_content.translate(context);
     final imageUrl =
-        widget.post['_embedded']?['wp:featuredmedia']?[0]?['source_url'] ?? '';
-    final author = widget.post['_embedded']?['author']?[0]?['name'] ?? 'ناشناس';
-    final isoDate = widget.post['date'] as String? ?? '';
-
+        widget.post['_embedded']?['wp:featuredmedia']?[0]?['source_url'] ??
+        AppStrings.epmty_text;
+    final author =
+        widget.post['_embedded']?['author']?[0]?['name'] ??
+        AppStrings.unknown.translate(context);
+    final isoDate = widget.post['date'] as String? ?? AppStrings.epmty_text;
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
+        title: ArticlesPageTitleWidget(title: title, isDark: isDark),
       ),
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: SingleChildScrollView(
-          controller: _scrollController, // اضافه برای اسکرول روان
-          physics: const BouncingScrollPhysics(), // اسکرول نرم و bounce
-          padding: const EdgeInsets.all(16.0),
+          controller: _scrollController,
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.all(AppSpacing.space_16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (imageUrl.isNotEmpty)
-                Image.network(
-                  imageUrl,
-                  fit: BoxFit.contain,
-                  height: 200,
-                  width: double.infinity,
-                ),
-              const SizedBox(height: 16),
-              Text(
-                'نویسنده: $author',
-                style: const TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-              Text(
-                formatJalaliDate(isoDate),
-                style: const TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-              const SizedBox(height: 16),
-              GestureDetector(
-                onLongPress: () {
-                  // long press: تولتیپ باز کن (برای لینک‌ها نیاز به detect هست، اما برای ساده، فرض همه لینک‌ها)
-                  // برای دقیق، از onLinkLongPress در Html استفاده کن (در نسخه جدید flutter_html 3.0+ اضافه شده)
-                },
-                child: Html(
-                  data: content,
-                  style: {
-                    'img': Style(
-                      // maxWidth: MaxWidth(MediaQuery.of(context).size.width, 100.0),
-                      height: Height.auto(),
-                      // css: "object-fit: contain;", // کوچک کردن اگر بزرگتر بود
-                    ),
-                  },
-                  // onLinkTap: (url, _, __) {
-                  // if (url != null) _navigateToArticle(url, context); // tap معمولی
-                  // },
-                ),
-              ),
-              const SizedBox(height: 32),
-              // مقالات پیشنهادی با کارت
+              if (imageUrl.isNotEmpty) ArticlesImageWidget(imageUrl: imageUrl),
+              const SizedBox(height: AppSpacing.space_16),
+              ArticlesAuthorWidget(author: author, isDark: isDark),
+              ArticlesReleasedDateWidget(isoDate: isoDate, isDark: isDark),
+              const SizedBox(height: AppSpacing.space_16),
+              ArticlesContentWidget(content: content),
+              const SizedBox(height: AppSpacing.space_32),
               if (isLoadingRelated)
                 const Center(child: CircularProgressIndicator())
-              else if (relatedPosts.isNotEmpty) ...[
-                const Text(
-                  'مقالات پیشنهادی:',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                ...relatedPosts.map((related) {
-                  final relTitle = related['title']['rendered'] ?? 'بدون عنوان';
-                  final relImage =
-                      related['_embedded']?['wp:featuredmedia']?[0]?['source_url'] ??
-                      '';
-                  final relDate = related['date'] as String? ?? '';
-                  return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    child: ListTile(
-                      leading: relImage.isNotEmpty
-                          ? Image.network(
-                              relImage,
-                              width: 100,
-                              fit: BoxFit.cover,
-                            )
-                          : const Icon(Icons.image),
-                      title: Text(relTitle),
-                      subtitle: Text(formatJalaliDate(relDate)),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ArticleDetailPage(post: related),
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-              ],
-              const SizedBox(height: 32),
-              // نظرسنجی ۵ ستاره
-              const Text(
-                'امتیاز شما به مقاله:',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              RatingBar.builder(
-                initialRating: rating,
-                minRating: 1,
-                direction: Axis.horizontal,
-                allowHalfRating: true,
-                itemCount: 5,
-                itemPadding: const EdgeInsets.symmetric(horizontal: 4.0),
-                itemBuilder: (context, _) =>
-                    const Icon(Icons.star, color: Colors.amber),
-                onRatingUpdate: (r) {
-                  setState(() {
-                    rating = r;
-                  });
-                  // می‌تونی به API ارسال کنی (اختیاری)
-                },
-              ),
-              const SizedBox(height: 16),
-              // باکس کامنت‌گذاری
-              const Text(
-                'نظر خود را بنویسید:',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              TextField(
-                controller: commentController,
-                decoration: InputDecoration(
-                  hintText: 'کامنت...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: _sendComment,
-                child: const Text('ارسال کامنت'),
-              ),
-              const SizedBox(height: 32),
-              // لیست کامنت‌ها با پروفایل و زمان
+              else if (relatedPosts.isNotEmpty)
+                ...similarArticles(context),
+              const SizedBox(height: AppSpacing.space_32),
+              sendStarPointForArticles(isDark),
+              const SizedBox(height: AppSpacing.space_16),
+              sendCommentBox(),
+              const SizedBox(height: AppSpacing.space_32),
               if (isLoadingComments)
                 const Center(child: CircularProgressIndicator())
               else ...[
-                const Text(
-                  'کامنت‌ها:',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                if (comments.isEmpty)
-                  const Text('بدون کامنت')
-                else
-                  ...comments.map((comment) {
-                    final comContent = comment['content']['rendered']
-                        .replaceAll(RegExp(r'<[^>]*>'), '');
-                    final comAuthor = comment['author_name'] ?? 'ناشناس';
-                    final comAvatar =
-                        comment['author_avatar_urls']?['96'] ??
-                        ''; // عکس پروفایل 96px
-                    final comDate = comment['date'] as String? ?? '';
-
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundImage: comAvatar.isNotEmpty
-                            ? NetworkImage(comAvatar)
-                            : null,
-                        child: comAvatar.isEmpty
-                            ? const Icon(Icons.person)
-                            : null,
-                      ),
-                      title: Text(comAuthor),
-                      subtitle: Text(comContent),
-                      trailing: Text(
-                        formatJalaliDate(comDate),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    );
-                  }),
+                articlesCommentsList(isDark),
               ],
               if (hasMoreComments && !isLoadingComments)
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      commentPage++;
-                      _fetchComments(loadMore: true);
-                    },
-                    child: const Text('لود بیشتر کامنت‌ها'),
-                  ),
-                ),
+                loadMoreArticleComments(),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Padding loadMoreArticleComments() {
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.space_16),
+      child: ElevatedButton(
+        onPressed: () {
+          commentPage++;
+          _fetchComments(loadMore: true);
+        },
+        child: Text(AppStrings.load_more_comments.translate(context)),
+      ),
+    );
+  }
+
+  Column articlesCommentsList(bool isDark) {
+    return Column(
+      children: [
+        Text(
+          '${AppStrings.comments.translate(context)}:',
+          style: const TextStyle(
+            fontSize: AppSpacing.space_18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.space_8),
+        if (comments.isEmpty)
+          Text(AppStrings.without_comments.translate(context))
+        else
+          ...comments.map((comment) {
+            final comContent = comment['content']['rendered'].replaceAll(
+              RegExp(r'<[^>]*>'),
+              '',
+            );
+            final comAuthor =
+                comment['author_name'] ?? AppStrings.unknown.translate(context);
+            final comAvatar = comment['author_avatar_urls']?['96'] ?? '';
+            final comDate = comment['date'] as String? ?? '';
+
+            return ArticleCommentsListWidget(
+              comAvatar: comAvatar,
+              comAuthor: comAuthor,
+              comContent: comContent,
+              comDate: comDate,
+              isDark: isDark,
+            );
+          }),
+      ],
+    );
+  }
+
+  Column sendStarPointForArticles(bool isDark) {
+    return Column(
+      children: [
+        Text(
+          '${AppStrings.take_your_point_to_article.translate(context)}:',
+          style: TextStyle(
+            fontSize: AppSpacing.space_16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        RatingBar.builder(
+          initialRating: rating,
+          minRating: 1,
+          direction: Axis.horizontal,
+          allowHalfRating: true,
+          itemCount: 5,
+          itemPadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.space_4,
+          ),
+          itemBuilder: (context, _) => Icon(
+            Icons.star,
+            color: isDark ? AppColors.surface_dark : AppColors.surface_light,
+          ),
+          onRatingUpdate: (r) {
+            setState(() {
+              rating = r;
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  Column sendCommentBox() {
+    return Column(
+      children: [
+        Text(
+          '${AppStrings.write_your_comments.translate(context)}:',
+          style: const TextStyle(
+            fontSize: AppSpacing.space_16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        TextField(
+          controller: commentController,
+          decoration: InputDecoration(
+            hintText: '${AppStrings.comment.translate(context)}...',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.space_8),
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.space_8),
+        ElevatedButton(
+          onPressed: _sendComment,
+          child: Text(AppStrings.send_comment.translate(context)),
+        ),
+      ],
+    );
+  }
+
+  List<Widget> similarArticles(BuildContext context) {
+    return [
+      Text(
+        '${AppStrings.similar_articles.translate(context)}:',
+        style: TextStyle(
+          fontSize: AppSpacing.space_18,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      const SizedBox(height: AppSpacing.space_8),
+      ...relatedPosts.map((related) {
+        final relTitle =
+            related['title']['rendered'] ??
+            AppStrings.without_title.translate(context);
+        final relImage =
+            related['_embedded']?['wp:featuredmedia']?[0]?['source_url'] ?? '';
+        final relDate = related['date'] as String? ?? AppStrings.epmty_text;
+        return Card(
+          margin: const EdgeInsets.symmetric(vertical: AppSpacing.space_8),
+          child: ListTile(
+            leading: relImage.isNotEmpty
+                ? Image.network(
+                    relImage,
+                    width: AppSpacing.space_100,
+                    fit: BoxFit.cover,
+                  )
+                : const Icon(Icons.image),
+            title: Text(relTitle),
+            subtitle: Text(formatJalaliDate(relDate)),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ArticleDetailPage(post: related),
+              ),
+            ),
+          ),
+        );
+      }),
+    ];
+  }
+}
+
+class ArticlesPageTitleWidget extends StatelessWidget {
+  const ArticlesPageTitleWidget({
+    super.key,
+    required this.title,
+    required this.isDark,
+  });
+
+  final dynamic title;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: AppSpacing.space_18,
+        fontWeight: FontWeight.bold,
+        color: isDark
+            ? AppColors.text_primary_dark
+            : AppColors.text_primary_light,
+      ),
+    );
+  }
+}
+
+class ArticleCommentsListWidget extends StatelessWidget {
+  const ArticleCommentsListWidget({
+    super.key,
+    required this.comAvatar,
+    required this.comAuthor,
+    required this.comContent,
+    required this.comDate,
+    required this.isDark,
+  });
+
+  final dynamic comAvatar;
+  final dynamic comAuthor;
+  final dynamic comContent;
+  final String comDate;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundImage: comAvatar.isNotEmpty ? NetworkImage(comAvatar) : null,
+        child: comAvatar.isEmpty ? const Icon(Icons.person) : null,
+      ),
+      title: Text(comAuthor),
+      subtitle: Text(comContent),
+      trailing: Text(
+        formatJalaliDate(comDate),
+        style: TextStyle(
+          fontSize: AppSpacing.space_12,
+          color: isDark
+              ? AppColors.text_secondary_dark
+              : AppColors.text_secondary_light,
+        ),
+      ),
+    );
+  }
+}
+
+class ArticlesContentWidget extends StatelessWidget {
+  const ArticlesContentWidget({super.key, required this.content});
+
+  final dynamic content;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onLongPress: () {},
+      child: Html(
+        data: content,
+        style: {'img': Style(height: Height.auto())},
+      ),
+    );
+  }
+}
+
+class ArticlesReleasedDateWidget extends StatelessWidget {
+  const ArticlesReleasedDateWidget({
+    super.key,
+    required this.isoDate,
+    required this.isDark,
+  });
+
+  final String isoDate;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      formatJalaliDate(isoDate),
+      style: TextStyle(
+        fontSize: AppSpacing.space_14,
+        color: isDark
+            ? AppColors.text_secondary_dark
+            : AppColors.text_secondary_light,
+      ),
+    );
+  }
+}
+
+class ArticlesAuthorWidget extends StatelessWidget {
+  const ArticlesAuthorWidget({
+    super.key,
+    required this.author,
+    required this.isDark,
+  });
+
+  final dynamic author;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      '${AppStrings.writer.translate(context)}: $author',
+      style: TextStyle(
+        fontSize: AppSpacing.space_14,
+        color: isDark
+            ? AppColors.text_secondary_dark
+            : AppColors.text_secondary_light,
+      ),
+    );
+  }
+}
+
+class ArticlesImageWidget extends StatelessWidget {
+  const ArticlesImageWidget({super.key, required this.imageUrl});
+
+  final dynamic imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.network(
+      imageUrl,
+      fit: BoxFit.contain,
+      height: AppSpacing.space_200,
+      width: double.infinity,
     );
   }
 }

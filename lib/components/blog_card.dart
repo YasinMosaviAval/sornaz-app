@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:sornaz/helpers/app_spacing.dart';
 
 class BlogCard extends StatelessWidget {
   final String image;
@@ -24,23 +25,29 @@ class BlogCard extends StatelessWidget {
         children: [
           CachedNetworkImage(
             imageUrl: image,
-            width: 150,
-            height: 100,
+            width: AppSpacing.space_150,
+            height: AppSpacing.space_100,
             fit: BoxFit.cover,
             placeholder: (context, url) => const CircularProgressIndicator(),
             errorWidget: (context, url, error) => const Icon(Icons.error),
-            memCacheHeight: 200, // بهینه‌سازی حافظه برای تصاویر
+            memCacheHeight: 200,
             memCacheWidth: 300,
           ),
           Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(title, style: const TextStyle(fontSize: 12)),
+            padding: const EdgeInsets.all(AppSpacing.space_8),
+            child: Text(
+              title,
+              style: const TextStyle(fontSize: AppSpacing.space_12),
+            ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_8),
             child: Text(
               time,
-              style: const TextStyle(fontSize: 10, color: Colors.grey),
+              style: const TextStyle(
+                fontSize: AppSpacing.space_10,
+                color: Colors.grey,
+              ),
             ),
           ),
         ],

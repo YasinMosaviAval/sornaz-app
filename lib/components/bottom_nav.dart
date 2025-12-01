@@ -4,6 +4,7 @@ import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_navigation.dart';
 import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/screens/Articles/articles.dart';
 import 'package:sornaz/screens/Players/music_palyer.dart';
 import 'package:sornaz/screens/Practice/metronome_page.dart';
@@ -37,6 +38,7 @@ class BottomNavBarWidget3 extends StatelessWidget {
 
     return PopScope(
       canPop: false,
+      // ignore: deprecated_member_use
       onPopInvoked: (didPop) {
         if (didPop) return;
         if (currentIndex != 0) {
@@ -58,41 +60,41 @@ class BottomNavBarWidget3 extends StatelessWidget {
         selectedFontSize: 11,
         unselectedFontSize: 11,
         onTap: (index) => _onItemTapped(context, index),
-        items: const [
+        items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home),
-            label: AppStrings.homeTitle,
+            label: AppStrings.home_title.translate(context),
           ),
           // BottomNavigationBarItem(
           //   icon: Icon(Icons.music_note_outlined),
           //   activeIcon: Icon(Icons.music_note),
-          //   label: AppStrings.musicSheetTitle,
+          //   label: AppStrings.musicSheetTitle.translate(context),
           // ),
           BottomNavigationBarItem(
             icon: Icon(Icons.library_music_outlined),
             activeIcon: Icon(Icons.library_music),
-            label: AppStrings.musicPlayerTitle,
+            label: AppStrings.music_player_title.translate(context),
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.punch_clock_outlined),
             activeIcon: Icon(Icons.punch_clock),
-            label: AppStrings.metronomeTitle,
+            label: AppStrings.metronome_title.translate(context),
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.tune_outlined),
             activeIcon: Icon(Icons.tune_rounded),
-            label: AppStrings.tunerTitle,
+            label: AppStrings.tuner_title.translate(context),
           ),
           // BottomNavigationBarItem(
           //   icon: Icon(Icons.person_outlined),
           //   activeIcon: Icon(Icons.person),
-          //   label: AppStrings.profileTitle,
+          //   label: AppStrings.profile_title.translate(context),
           // ),
           BottomNavigationBarItem(
             icon: Icon(Icons.keyboard_voice_outlined),
             activeIcon: Icon(Icons.keyboard_voice),
-            label: AppStrings.voiceRecorderTitle,
+            label: AppStrings.voice_recorder_title.translate(context),
           ),
         ],
       ),
@@ -142,9 +144,10 @@ class _BottomNavBarWidgetState extends State<BottomNavBarWidget> {
               now.difference(_lastBackPressed!) > const Duration(seconds: 2)) {
             _lastBackPressed = now;
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
+              SnackBar(
                 content: Text(
-                  AppStrings.two_times_press_back_button_for_exit_application,
+                  AppStrings.two_times_press_back_button_for_exit_application
+                      .translate(context),
                 ),
                 duration: Duration(seconds: 2),
                 backgroundColor: Colors.black87,
@@ -174,41 +177,41 @@ class _BottomNavBarWidgetState extends State<BottomNavBarWidget> {
         selectedFontSize: 11,
         unselectedFontSize: 11,
         onTap: (index) => _onItemTapped(context, index),
-        items: const [
+        items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home),
-            label: AppStrings.homeTitle,
+            label: AppStrings.home_title.translate(context),
           ),
           // BottomNavigationBarItem(
           //   icon: Icon(Icons.music_note_outlined),
           //   activeIcon: Icon(Icons.music_note),
-          //   label: AppStrings.musicSheetTitle,
+          //   label: AppStrings.music_sheet_title.translate(context),
           // ),
           BottomNavigationBarItem(
             icon: Icon(Icons.library_music_outlined),
             activeIcon: Icon(Icons.library_music),
-            label: AppStrings.musicPlayerTitle,
+            label: AppStrings.music_player_title.translate(context),
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.punch_clock_outlined),
             activeIcon: Icon(Icons.punch_clock),
-            label: AppStrings.metronomeTitle,
+            label: AppStrings.metronome_title.translate(context),
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.tune_outlined),
             activeIcon: Icon(Icons.tune_rounded),
-            label: AppStrings.tunerTitle,
+            label: AppStrings.tuner_title.translate(context),
           ),
           // BottomNavigationBarItem(
           //   icon: Icon(Icons.person_outlined),
           //   activeIcon: Icon(Icons.person),
-          //   label: AppStrings.profileTitle,
+          //   label: AppStrings.profile_title.translate(context),
           // ),
           BottomNavigationBarItem(
             icon: Icon(Icons.keyboard_voice_outlined),
             activeIcon: Icon(Icons.keyboard_voice),
-            label: AppStrings.voiceRecorderTitle,
+            label: AppStrings.voice_recorder_title.translate(context),
           ),
         ],
       ),

@@ -4,6 +4,10 @@ import 'package:sornaz/components/bottom_nav.dart';
 import 'package:metronome/metronome.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
+import 'package:sornaz/helpers/app_locale_provider.dart';
+import 'package:sornaz/helpers/app_spacing.dart';
+import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_translations.dart';
 
 class MetronomePage extends StatefulWidget {
   const MetronomePage({super.key});
@@ -22,14 +26,14 @@ class _MetronomePageState extends State<MetronomePage> {
 
   @override
   void dispose() {
-    metronome.destroy(); // تمیز کردن منابع
+    metronome.destroy();
     super.dispose();
   }
 
   Future<void> initMetronome() async {
     await metronome.init(
-      'assets/audio/tick.wav', // مسیر فایل صدای تیک معمولی – اضافه کن به assets
-      accentedPath: 'assets/audio/accent.wav', // صدای accent – اضافه کن
+      'assets/audio/tick.wav',
+      accentedPath: 'assets/audio/accent.wav',
       bpm: bpm,
       volume: volume.toInt(),
       enableTickCallback: true,
@@ -63,111 +67,227 @@ class _MetronomePageState extends State<MetronomePage> {
   Widget build(BuildContext context) {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
-    return Scaffold(
-      appBar: AppBar(title: const Text("مترونوم")),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('BPM: $bpm', style: const TextStyle(fontSize: 24)),
-            Slider(
-              value: bpm.toDouble(),
-              min: 40,
-              max: 200,
-              onChanged: (value) {
-                setState(() {
-                  bpm = value.toInt();
-                });
-                if (isInitialized) {
-                  metronome.setBPM(bpm);
-                }
-              },
+
+    final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
+    // final theme = Theme.of(context);
+    final bool isEnglish = localeProvider.locale.languageCode == 'en';
+
+    return Directionality(
+      textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: isDark
+            ? AppColors.background_dark
+            : AppColors.background_light,
+
+        appBar: AppBar(
+          title: Text(
+            AppStrings.metronome_title.translate(context),
+            style: TextStyle(
+              color: isDark
+                  ? AppColors.text_primary_dark
+                  : AppColors.text_primary_light,
             ),
-            Text('زمان‌بندی: $timeSignature/4'),
-            Slider(
-              value: timeSignature.toDouble(),
-              min: 2,
-              max: 8,
-              divisions: 6,
-              onChanged: (value) {
-                setState(() {
-                  timeSignature = value.toInt();
-                });
-                if (isInitialized) {
-                  metronome.setTimeSignature(timeSignature);
-                }
-              },
-            ),
-            Text('ولوم: ${volume.toInt()}%'),
-            Slider(
-              value: volume,
-              min: 0,
-              max: 100,
-              onChanged: (value) {
-                setState(() {
-                  volume = value;
-                });
-                if (isInitialized) {
-                  metronome.setVolume(volume.toInt());
-                }
-              },
-            ),
-            ElevatedButton(
-              onPressed: initMetronome,
-              child: Text(isInitialized ? 'راه‌اندازی مجدد' : 'راه‌اندازی'),
-            ),
-            ElevatedButton(
-              onPressed: isInitialized ? togglePlayPause : null,
-              child: Text(isPlaying ? 'توقف موقت' : 'پخش'),
-            ),
-            ElevatedButton(
-              onPressed: isInitialized ? stopMetronome : null,
-              child: Text(
-                'توقف کامل',
+          ),
+
+          backgroundColor: isDark
+              ? AppColors.surface_dark
+              : AppColors.surface_light,
+          iconTheme: IconThemeData(
+            color: isDark
+                ? AppColors.text_primary_dark
+                : AppColors.text_primary_light,
+          ),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '${AppStrings.bpm.translate(context)}: $bpm',
                 style: TextStyle(
+                  fontSize: AppSpacing.space_24,
                   color: isDark
-                      ? AppColors.text_secondary_dark
-                      : AppColors.text_secondary_light,
+                      ? AppColors.text_primary_dark
+                      : AppColors.text_primary_light,
                 ),
               ),
-            ),
-          ],
+              setBPM(),
+              Text(
+                '${AppStrings.timing.translate(context)}: $timeSignature/4',
+                style: TextStyle(
+                  color: isDark
+                      ? AppColors.text_primary_dark
+                      : AppColors.text_primary_light,
+                ),
+              ),
+              setTimeSignature(),
+              Text(
+                '${AppStrings.volume.translate(context)}: ${volume.toInt()}%',
+                style: TextStyle(
+                  color: isDark
+                      ? AppColors.text_primary_dark
+                      : AppColors.text_primary_light,
+                ),
+              ),
+              setVolume(),
+              SizedBox(height: AppSpacing.space_8),
+              launchButton(isDark),
+              SizedBox(height: AppSpacing.space_8),
+              playButton(isDark),
+              SizedBox(height: AppSpacing.space_8),
+              stopButton(isDark),
+            ],
+          ),
+        ),
+        bottomNavigationBar: const BottomNavBarWidget(),
+      ),
+    );
+  }
+
+  Slider setBPM() {
+    return Slider(
+      value: bpm.toDouble(),
+      min: 40,
+      max: 200,
+      onChanged: (value) {
+        setState(() {
+          bpm = value.toInt();
+        });
+        if (isInitialized) {
+          metronome.setBPM(bpm);
+        }
+      },
+    );
+  }
+
+  Slider setTimeSignature() {
+    return Slider(
+      value: timeSignature.toDouble(),
+      min: 2,
+      max: 8,
+      divisions: 6,
+      onChanged: (value) {
+        setState(() {
+          timeSignature = value.toInt();
+        });
+        if (isInitialized) {
+          metronome.setTimeSignature(timeSignature);
+        }
+      },
+    );
+  }
+
+  Slider setVolume() {
+    return Slider(
+      value: volume,
+      min: 0,
+      max: 100,
+      onChanged: (value) {
+        setState(() {
+          volume = value;
+        });
+        if (isInitialized) {
+          metronome.setVolume(volume.toInt());
+        }
+      },
+    );
+  }
+
+  ElevatedButton launchButton(bool isDark) {
+    return ElevatedButton(
+      onPressed: initMetronome,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isDark
+            ? AppColors.surface_dark
+            : AppColors.surface_light,
+        // foregroundColor: isDark
+        //     ? AppColors.text_primary_dark
+        //     : AppColors.text_primary_light, // رنگ متن
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.space_24,
+          vertical: AppSpacing.space_12,
+        ), // پدینگ
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(
+            AppSpacing.space_4,
+          ), // گوشه‌های گرد
         ),
       ),
-      /*
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: isDark ? Colors.grey[900] : Colors.white,
-        selectedItemColor: isDark ? Colors.yellow[700] : Colors.blue,
-        unselectedItemColor: Colors.grey,
-        currentIndex: _currentIndex, // ← آیکن فعلی هایلایت می‌شود
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index; // ← تغییر ایندکس
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.library_music),
-            label: 'Music Player',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.punch_clock),
-            label: 'Metronome',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.tune_rounded),
-            label: 'Tuner',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.record_voice_over),
-            label: 'Voice Recorder',
-          ),
-        ],
+      child: Text(
+        isInitialized
+            ? AppStrings.launch_again.translate(context)
+            : AppStrings.launch.translate(context),
+        style: TextStyle(
+          color: isDark
+              ? AppColors.text_primary_dark
+              : AppColors.text_primary_light,
+        ),
       ),
-      */
-      bottomNavigationBar: const BottomNavBarWidget(),
+    );
+  }
+
+  ElevatedButton playButton(bool isDark) {
+    return ElevatedButton(
+      onPressed: isInitialized ? togglePlayPause : null,
+
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isDark
+            ? AppColors.surface_dark
+            : AppColors.surface_light,
+        // foregroundColor: isDark
+        //     ? AppColors.text_primary_dark
+        //     : AppColors.text_primary_light, // رنگ متن
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.space_24,
+          vertical: AppSpacing.space_12,
+        ), // پدینگ
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(
+            AppSpacing.space_4,
+          ), // گوشه‌های گرد
+        ),
+      ),
+      child: Text(
+        isPlaying
+            ? AppStrings.pause.translate(context)
+            : AppStrings.play.translate(context),
+        style: TextStyle(
+          color: isDark
+              ? AppColors.text_primary_dark
+              : AppColors.text_primary_light,
+        ),
+      ),
+    );
+  }
+
+  ElevatedButton stopButton(bool isDark) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isDark
+            ? AppColors.surface_dark
+            : AppColors.surface_light,
+        // foregroundColor: isDark
+        //     ? AppColors.text_primary_dark
+        //     : AppColors.text_primary_light, // رنگ متن
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.space_24,
+          vertical: AppSpacing.space_12,
+        ), // پدینگ
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(
+            AppSpacing.space_4,
+          ), // گوشه‌های گرد
+        ),
+      ),
+      onPressed: isInitialized ? stopMetronome : null,
+      child: Text(
+        AppStrings.stop.translate(context),
+        style: TextStyle(
+          color: isDark
+              ? AppColors.text_secondary_dark
+              : AppColors.text_secondary_light,
+        ),
+      ),
     );
   }
 }

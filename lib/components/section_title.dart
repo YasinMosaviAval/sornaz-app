@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_navigation.dart';
+import 'package:sornaz/helpers/app_spacing.dart';
 
 class SectionTitle extends StatelessWidget {
   final String title;
@@ -27,7 +28,7 @@ class SectionTitle extends StatelessWidget {
         Text(
           title,
           style: TextStyle(
-            fontSize: 18,
+            fontSize: AppSpacing.space_18,
             color: isDark
                 ? AppColors.text_primary_dark
                 : AppColors.text_primary_light,

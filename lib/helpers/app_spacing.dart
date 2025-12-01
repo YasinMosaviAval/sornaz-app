@@ -5,11 +5,24 @@ class AppSpacing {
   static const double space_2 = 2;
   static const double space_4 = 4;
   static const double space_8 = 8;
+  static const double space_10 = 10;
+  static const double space_12 = 12;
+  static const double space_14 = 14;
   static const double space_16 = 16;
+  static const double space_18 = 18;
+  static const double space_20 = 20;
+  static const double space_22 = 22;
   static const double space_24 = 24;
   static const double space_32 = 32;
+  static const double space_36 = 36;
+  static const double space_40 = 40;
   static const double space_48 = 48;
+  static const double space_50 = 50;
   static const double space_56 = 56;
+  static const double space_100 = 100;
+  static const double space_150 = 150;
+  static const double space_200 = 200;
+  static const double space_300 = 300;
 
   static const double zero = 0;
   static const double xxSmall = 4;

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:sornaz/helpers/app_spacing.dart';
+import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_translations.dart';
 
 class HeaderSection extends StatelessWidget {
   final String title;
@@ -10,12 +13,18 @@ class HeaderSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.space_16,
+          vertical: AppSpacing.space_8,
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(title, style: theme.textTheme.headlineMedium),
-            TextButton(onPressed: () {}, child: const Text('View all')),
+            TextButton(
+              onPressed: () {},
+              child: Text(AppStrings.view_all_link.translate(context)),
+            ),
           ],
         ),
       ),

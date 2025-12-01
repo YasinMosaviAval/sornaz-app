@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sornaz/helpers/app_spacing.dart';
 
 class HorizontalList extends StatelessWidget {
   final double height;
@@ -19,10 +20,10 @@ class HorizontalList extends StatelessWidget {
         height: height,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_16),
           itemCount: itemCount,
           itemBuilder: (context, index) => Padding(
-            padding: const EdgeInsets.only(right: 16.0),
+            padding: const EdgeInsets.only(right: AppSpacing.space_16),
             child: builder(index),
           ),
         ),

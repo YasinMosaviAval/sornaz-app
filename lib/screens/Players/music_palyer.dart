@@ -1,17 +1,22 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, non_constant_identifier_names
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sornaz/classes/audio_file.dart';
 import 'package:sornaz/components/bottom_nav.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:sornaz/components/marquee_text.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
+import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'dart:io';
 import 'dart:async';
+
+import 'package:sornaz/helpers/app_translations.dart';
 
 class MusicPlayerPage extends StatefulWidget {
   const MusicPlayerPage({super.key});
@@ -20,21 +25,10 @@ class MusicPlayerPage extends StatefulWidget {
   State<MusicPlayerPage> createState() => _MusicPlayerPageState();
 }
 
-class AudioFile {
-  final File file;
-  final Duration duration;
-
-  AudioFile(this.file, this.duration);
-
-  String get fileName => file.path.split('/').last;
-  String get folderName => file.parent.path;
-  // String get folderName => file.parent.path.split('/').last;
-}
-
 class _MusicPlayerPageState extends State<MusicPlayerPage> {
   List<AudioFile> allAudioFiles = [];
   List<AudioFile> filteredAudioFiles = [];
-  String searchQuery = '';
+  String searchQuery = AppStrings.epmty_text;
 
   final AudioPlayer _audioPlayer = AudioPlayer();
 
@@ -67,7 +61,6 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
       setState(() => duration = d);
     });
 
-    // آپدیت موقعیت هر 500ms
     Timer.periodic(const Duration(milliseconds: 500), (_) async {
       if (mounted && isPlaying) {
         final p = await _audioPlayer.getCurrentPosition();
@@ -85,7 +78,6 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
     super.dispose();
   }
 
-  // شروع تایمر 10 ثانیه‌ای برای ریست حالت undo
   void _startResetUndoModeTimer() {
     _resetUndoModeTimer?.cancel();
     _resetUndoModeTimer = Timer(const Duration(seconds: 10), () {
@@ -106,10 +98,8 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
       await _loadAudioFiles();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'لطفاً اجازه دسترسی به فایل‌های صوتی را در تنظیمات اپ بدهید',
-          ),
+        SnackBar(
+          content: Text(AppStrings.grant_audio_permission.translate(context)),
         ),
       );
       openAppSettings();
@@ -151,9 +141,13 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
         isLoading = false;
       });
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('خطا در لود فایل‌ها: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${AppStrings.error_in_loading.translate(context)}: $e',
+          ),
+        ),
+      );
       setState(() => isLoading = false);
     }
   }
@@ -195,23 +189,19 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
 
   void _handlePreviousOrUndo() {
     if (isInUndoMode && seekHistory.isNotEmpty) {
-      // undo مرحله به مرحله: pop آخرین موقعیت و seek به قبلی
       final previousPosition = seekHistory.removeLast();
       _audioPlayer.seek(previousPosition);
 
-      // اگر history خالی شد، ریست حالت
       if (seekHistory.isEmpty) {
         setState(() {
           isInUndoMode = false;
         });
         _resetUndoModeTimer?.cancel();
       } else {
-        // تایمر رو ری‌استارت کن برای فرصت دوباره 10 ثانیه
         _startResetUndoModeTimer();
       }
       setState(() {});
     } else {
-      // رفتار عادی
       if (position > const Duration(seconds: 3)) {
         _audioPlayer.seek(Duration.zero);
       } else if (currentIndex > 0) {
@@ -231,142 +221,161 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
   Widget build(BuildContext context) {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: TextField(
-          textDirection: TextDirection.ltr,
-          onChanged: _filterAudioFiles,
-          decoration: InputDecoration(
-            hintText: AppStrings.music_player_searchbar_hint,
-            hintTextDirection: TextDirection.ltr,
-            prefixIcon: const Icon(Icons.search),
-            border: InputBorder.none,
-            fillColor: isDark
-                ? AppColors.surface_dark
-                : AppColors.surface_light,
-            focusColor: isDark
-                ? AppColors.clicked_dark
-                : AppColors.clicked_light,
+    final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
+    // final theme = Theme.of(context);
+    final bool isEnglish = localeProvider.locale.languageCode == 'en';
+
+    return Directionality(
+      textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: isDark
+            ? AppColors.background_dark
+            : AppColors.background_light,
+        appBar: appBarSearchBox(isDark),
+        body: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Column(
+            children: [
+              showAudioFileList(isDark),
+              if (currentIndex != -1) ...[audioWidget(isDark)],
+            ],
           ),
         ),
+        bottomNavigationBar: const BottomNavBarWidget(),
       ),
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
-          children: [
-            Expanded(
-              child: isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : filteredAudioFiles.isEmpty
-                  ? const Center(child: Text(AppStrings.audio_file_not_found))
-                  : ListView.builder(
-                      itemCount: filteredAudioFiles.length,
-                      itemBuilder: (context, index) {
-                        final audio = filteredAudioFiles[index];
-                        final bool isCurrentlyPlaying = (index == currentIndex);
-                        final durationText = audio.duration.inSeconds > 0
-                            ? _formatDuration(audio.duration)
-                            : '--:--';
-                        return musicListItem(
-                          isDark,
-                          isCurrentlyPlaying,
-                          audio,
-                          durationText,
-                          index,
-                        );
-                      },
-                    ),
-            ),
+    );
+  }
 
-            if (currentIndex != -1) ...[
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.space_16),
-                color: isDark
-                    ? AppColors.hovered_dark
-                    : AppColors.hovered_light,
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: AppSpacing.space_24,
-                      child: Row(
-                        children: [
-                          Text(_formatDuration(duration)),
-                          Expanded(
-                            child: Directionality(
-                              textDirection: TextDirection.ltr,
-                              child: Slider(
-                                value: position.inSeconds.toDouble().clamp(
-                                  0,
-                                  duration.inSeconds.toDouble(),
-                                ),
-                                max: duration.inSeconds.toDouble() > 0
-                                    ? duration.inSeconds.toDouble()
-                                    : 1,
-                                onChangeStart: (value) {
-                                  if (seekHistory.isEmpty ||
-                                      seekHistory.last != position) {
-                                    seekHistory.add(position);
-                                  }
-                                  setState(() => isInUndoMode = true);
-                                  _startResetUndoModeTimer();
-                                },
-                                onChanged: (value) {
-                                  setState(() {
-                                    position = Duration(seconds: value.toInt());
-                                  });
-                                },
-                                onChangeEnd: (value) async {
-                                  await _audioPlayer.seek(
-                                    Duration(seconds: value.toInt()),
-                                  );
-                                  _startResetUndoModeTimer();
-                                },
-                              ),
-                            ),
-                          ),
-                          Text(_formatDuration(position)),
-                        ],
-                      ),
-                    ),
-                    SizedBox(
-                      height: 36,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.skip_next),
-                            iconSize: 36,
-                            onPressed: _playNext,
-                          ),
-                          IconButton(
-                            iconSize: 36,
-                            icon: Icon(
-                              isPlaying ? Icons.pause : Icons.play_arrow,
-                            ),
-                            onPressed: isPlaying
-                                ? _pauseAudio
-                                : () => _playAudio(currentIndex),
-                          ),
-                          IconButton(
-                            icon: Icon(
-                              isInUndoMode ? Icons.undo : Icons.skip_previous,
-                            ),
-                            iconSize: 36,
-                            onPressed: _handlePreviousOrUndo,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
+  Container audioWidget(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.space_16),
+      color: isDark ? AppColors.hovered_dark : AppColors.hovered_light,
+      child: Column(
+        children: [AudioWidgetTimesAndSlider(), audioWidgetButtons()],
+      ),
+    );
+  }
+
+  AppBar appBarSearchBox(bool isDark) {
+    return AppBar(
+      elevation: 0,
+      automaticallyImplyLeading: false,
+      title: TextField(
+        textDirection: TextDirection.ltr,
+        onChanged: _filterAudioFiles,
+        decoration: InputDecoration(
+          hintText: AppStrings.music_player_search_hint.translate(context),
+          hintTextDirection: TextDirection.ltr,
+          prefixIcon: const Icon(Icons.search),
+          border: InputBorder.none,
+          fillColor: isDark ? AppColors.surface_dark : AppColors.surface_light,
+          focusColor: isDark ? AppColors.clicked_dark : AppColors.clicked_light,
         ),
       ),
-      bottomNavigationBar: const BottomNavBarWidget(),
+      backgroundColor: isDark
+          ? AppColors.surface_dark
+          : AppColors.surface_light,
+      iconTheme: IconThemeData(
+        color: isDark
+            ? AppColors.text_primary_dark
+            : AppColors.text_primary_light,
+      ),
+    );
+  }
+
+  SizedBox AudioWidgetTimesAndSlider() {
+    return SizedBox(
+      height: AppSpacing.space_24,
+      child: Row(
+        children: [
+          Text(_formatDuration(duration)),
+          Expanded(
+            child: Directionality(
+              textDirection: TextDirection.ltr,
+              child: Slider(
+                value: position.inSeconds.toDouble().clamp(
+                  0,
+                  duration.inSeconds.toDouble(),
+                ),
+                max: duration.inSeconds.toDouble() > 0
+                    ? duration.inSeconds.toDouble()
+                    : 1,
+                onChangeStart: (value) {
+                  if (seekHistory.isEmpty || seekHistory.last != position) {
+                    seekHistory.add(position);
+                  }
+                  setState(() => isInUndoMode = true);
+                  _startResetUndoModeTimer();
+                },
+                onChanged: (value) {
+                  setState(() {
+                    position = Duration(seconds: value.toInt());
+                  });
+                },
+                onChangeEnd: (value) async {
+                  await _audioPlayer.seek(Duration(seconds: value.toInt()));
+                  _startResetUndoModeTimer();
+                },
+              ),
+            ),
+          ),
+          Text(_formatDuration(position)),
+        ],
+      ),
+    );
+  }
+
+  SizedBox audioWidgetButtons() {
+    return SizedBox(
+      height: AppSpacing.space_36,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.skip_next),
+            iconSize: AppSpacing.space_36,
+            onPressed: _playNext,
+          ),
+          IconButton(
+            iconSize: AppSpacing.space_36,
+            icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
+            onPressed: isPlaying ? _pauseAudio : () => _playAudio(currentIndex),
+          ),
+          IconButton(
+            icon: Icon(isInUndoMode ? Icons.undo : Icons.skip_previous),
+            iconSize: AppSpacing.space_36,
+            onPressed: _handlePreviousOrUndo,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Expanded showAudioFileList(bool isDark) {
+    return Expanded(
+      child: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : filteredAudioFiles.isEmpty
+          ? Center(
+              child: Text(AppStrings.audio_file_not_found.translate(context)),
+            )
+          : ListView.builder(
+              itemCount: filteredAudioFiles.length,
+              itemBuilder: (context, index) {
+                final audio = filteredAudioFiles[index];
+                final bool isCurrentlyPlaying = (index == currentIndex);
+                final durationText = audio.duration.inSeconds > 0
+                    ? _formatDuration(audio.duration)
+                    : AppStrings.empty_duration_time;
+                return musicListItem(
+                  isDark,
+                  isCurrentlyPlaying,
+                  audio,
+                  durationText,
+                  index,
+                );
+              },
+            ),
     );
   }
 
@@ -378,7 +387,6 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
     int index,
   ) {
     return Container(
-      // اگر این فایل در حال پخش است → بک‌گراند رنگی
       decoration: BoxDecoration(
         border: Border.all(
           width: 0.8,
@@ -400,7 +408,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
             ? MarqueeText(
                 text: audio.fileName,
                 textStyle: TextStyle(
-                  fontSize: 14,
+                  fontSize: AppSpacing.space_14,
                   color: isDark
                       ? AppColors.text_primary_dark
                       : AppColors.text_primary_light,
@@ -413,7 +421,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                 maxLines: 1,
                 textDirection: TextDirection.ltr,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: AppSpacing.space_14,
                   color: isDark
                       ? AppColors.text_primary_dark
                       : AppColors.text_primary_light,
@@ -431,7 +439,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                 Text(
                   durationText,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: AppSpacing.space_12,
                     color: isDark
                         ? AppColors.text_secondary_dark
                         : AppColors.text_secondary_light,
@@ -445,7 +453,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                     maxLines: 1,
                     textDirection: TextDirection.ltr,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: AppSpacing.space_12,
                       color: isDark
                           ? AppColors.text_secondary_dark
                           : AppColors.text_secondary_light,
@@ -458,120 +466,6 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
         ),
         onTap: () => _playAudio(index),
       ),
-    );
-  }
-}
-
-class MarqueeText extends StatefulWidget {
-  final String text;
-  final TextStyle textStyle;
-  final double speed; // پیکسل در ثانیه
-  final double gap; // فاصله بین انتها و شروع دوباره
-
-  const MarqueeText({
-    super.key,
-    required this.text,
-    required this.textStyle,
-    this.speed = 60,
-    this.gap = 50,
-  });
-
-  @override
-  State<MarqueeText> createState() => _MarqueeTextState();
-}
-
-class _MarqueeTextState extends State<MarqueeText>
-    with SingleTickerProviderStateMixin {
-  late ScrollController _scrollController;
-  late AnimationController _animationController;
-  double _textWidth = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController = ScrollController();
-    _animationController =
-        AnimationController(vsync: this, duration: const Duration(seconds: 10))
-          ..addListener(() {
-            if (_scrollController.hasClients) {
-              final maxScroll = _scrollController.position.maxScrollExtent;
-              final position = _scrollController.offset;
-              final newOffset = position + (widget.speed / 60); // 60fps
-
-              if (maxScroll > 0 && newOffset >= maxScroll) {
-                _scrollController.jumpTo(0);
-              } else {
-                _scrollController.jumpTo(newOffset);
-              }
-            }
-          });
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _startAnimationIfNeeded();
-      }
-    });
-  }
-
-  void _startAnimationIfNeeded() {
-    if (!mounted) return;
-    final renderBox = context.findRenderObject() as RenderBox?;
-    final containerWidth = renderBox?.size.width ?? 0;
-
-    final textPainter = TextPainter(
-      text: TextSpan(text: widget.text, style: widget.textStyle),
-      textDirection: TextDirection.ltr,
-    )..layout();
-
-    _textWidth = textPainter.width;
-
-    if (_textWidth > containerWidth - widget.gap) {
-      _animationController.repeat();
-    }
-  }
-
-  @override
-  void didUpdateWidget(MarqueeText oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.text != widget.text ||
-        oldWidget.textStyle != widget.textStyle) {
-      _scrollController.jumpTo(0);
-      _startAnimationIfNeeded();
-    }
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SizedBox(
-          // height: 20,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            controller: _scrollController,
-            physics: const NeverScrollableScrollPhysics(),
-            child: Row(
-              children: [
-                Text(
-                  widget.text,
-                  textDirection: TextDirection.ltr,
-                  style: widget.textStyle,
-                ),
-                SizedBox(width: widget.gap),
-                if (_textWidth > constraints.maxWidth) ...{
-                  Text(widget.text, style: widget.textStyle),
-                },
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }

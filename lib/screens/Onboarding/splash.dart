@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_images.dart';
+import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/screens/Articles/articles.dart';
 import 'dart:async';
 
@@ -28,13 +30,15 @@ class _SplashScreenState extends State<SplashScreen> {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : Colors.white,
+      backgroundColor: isDark
+          ? AppColors.background_dark
+          : AppColors.background_light,
       body: Center(
         child: Image.asset(
           isDark ? AppImages.logo_dark : AppImages.logo_light,
           fit: BoxFit.contain,
-          width: 300,
-          height: 300,
+          width: AppSpacing.space_300,
+          height: AppSpacing.space_300,
         ),
       ),
     );
