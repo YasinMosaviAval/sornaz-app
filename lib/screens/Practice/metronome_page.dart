@@ -8,6 +8,7 @@ import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 
 class MetronomePage extends StatefulWidget {
   const MetronomePage({super.key});
@@ -82,11 +83,7 @@ class _MetronomePageState extends State<MetronomePage> {
         appBar: AppBar(
           title: Text(
             AppStrings.metronome_title.translate(context),
-            style: TextStyle(
-              color: isDark
-                  ? AppColors.text_primary_dark
-                  : AppColors.text_primary_light,
-            ),
+            style: AppTypography.metronomeAppBar,
           ),
 
           backgroundColor: isDark
@@ -104,30 +101,17 @@ class _MetronomePageState extends State<MetronomePage> {
             children: [
               Text(
                 '${AppStrings.bpm.translate(context)}: $bpm',
-                style: TextStyle(
-                  fontSize: AppSpacing.space_24,
-                  color: isDark
-                      ? AppColors.text_primary_dark
-                      : AppColors.text_primary_light,
-                ),
+                style: AppTypography.metronomeBPM,
               ),
               setBPM(),
               Text(
                 '${AppStrings.timing.translate(context)}: $timeSignature/4',
-                style: TextStyle(
-                  color: isDark
-                      ? AppColors.text_primary_dark
-                      : AppColors.text_primary_light,
-                ),
+                style: AppTypography.metronomeTiming,
               ),
               setTimeSignature(),
               Text(
                 '${AppStrings.volume.translate(context)}: ${volume.toInt()}%',
-                style: TextStyle(
-                  color: isDark
-                      ? AppColors.text_primary_dark
-                      : AppColors.text_primary_light,
-                ),
+                style: AppTypography.metronomeVolume,
               ),
               setVolume(),
               SizedBox(height: AppSpacing.space_8),
@@ -217,11 +201,7 @@ class _MetronomePageState extends State<MetronomePage> {
         isInitialized
             ? AppStrings.launch_again.translate(context)
             : AppStrings.launch.translate(context),
-        style: TextStyle(
-          color: isDark
-              ? AppColors.text_primary_dark
-              : AppColors.text_primary_light,
-        ),
+        style: AppTypography.metronomeLaunchButton,
       ),
     );
   }
@@ -251,11 +231,7 @@ class _MetronomePageState extends State<MetronomePage> {
         isPlaying
             ? AppStrings.pause.translate(context)
             : AppStrings.play.translate(context),
-        style: TextStyle(
-          color: isDark
-              ? AppColors.text_primary_dark
-              : AppColors.text_primary_light,
-        ),
+        style: AppTypography.metronomePlayPauseButton,
       ),
     );
   }
@@ -282,11 +258,7 @@ class _MetronomePageState extends State<MetronomePage> {
       onPressed: isInitialized ? stopMetronome : null,
       child: Text(
         AppStrings.stop.translate(context),
-        style: TextStyle(
-          color: isDark
-              ? AppColors.text_secondary_dark
-              : AppColors.text_secondary_light,
-        ),
+        style: AppTypography.metronomeStopButton,
       ),
     );
   }

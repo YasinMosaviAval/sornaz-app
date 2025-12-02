@@ -99,39 +99,3 @@ class AppPadding {
     );
   }
 }
-
-
-
-
-
-
-/*
-Use Case
-
-Column(
-  children: [
-    Text('عنوان'),
-    AppSpacing.vertical(AppSpacing.medium, context: context), // فاصله عمودی 16px (responsive)
-    Text('توضیحات'),
-    AppSpacing.horizontal(AppSpacing.large, context: context), // فاصله افقی 24px
-    AppSpacing.spacer(flex: 2), // Spacer با flex 2
-  ],
-),
-
-Container(
-  padding: AppPadding.cardPadding(), // پدینگ کارت (16h + 8v)
-  child: Text('محتوا'),
-),
-
-Padding(
-  padding: AppPadding.responsiveAll(context, AppSpacing.large), // پدینگ responsive 24px همه طرف
-  child: ElevatedButton(
-    onPressed: () {},
-    style: ElevatedButton.styleFrom(
-      padding: AppPadding.buttonPadding(), // پدینگ باتن (24h + 8v)
-    ),
-    child: const Text('دکمه'),
-  ),
-),
-
-*/

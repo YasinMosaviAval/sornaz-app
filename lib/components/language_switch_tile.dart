@@ -5,6 +5,7 @@ import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 
 class LanguageSwitchTile extends StatelessWidget {
   const LanguageSwitchTile({super.key});
@@ -21,7 +22,7 @@ class LanguageSwitchTile extends StatelessWidget {
           leading: const Icon(Icons.language),
           title: Text(
             AppStrings.language_mode.translate(context),
-            style: TextStyle(fontWeight: FontWeight.w500),
+            style: AppTypography.languageSwitchTileTitle,
           ),
           iconColor: isDark
               ? AppColors.text_primary_dark
@@ -31,11 +32,7 @@ class LanguageSwitchTile extends StatelessWidget {
               : AppColors.text_primary_light,
           subtitle: Text(
             AppStrings.language_mode_description.translate(context),
-            style: TextStyle(
-              color: isDark
-                  ? AppColors.text_secondary_dark
-                  : AppColors.text_secondary_light,
-            ),
+            style: AppTypography.languageSwitchTileSubtitle,
           ),
           trailing: Switch(
             value: isEnglish,

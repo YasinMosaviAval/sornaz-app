@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/screens/home/home.dart';
 import 'package:sornaz/screens/onboarding/splash.dart';
 import 'package:sornaz/screens/others/about_us.dart';
@@ -7,8 +8,14 @@ import 'package:sornaz/screens/others/about_us.dart';
 final GoRouter router = GoRouter(
   initialLocation: '/notation',
   debugLogDiagnostics: true,
-  errorBuilder: (context, state) =>
-      Scaffold(body: Center(child: Text('Page not found: ${state.uri}'))),
+  errorBuilder: (context, state) => Scaffold(
+    body: Center(
+      child: Text(
+        'Page not found: ${state.uri}',
+        style: AppTypography.routerPageNotFound,
+      ),
+    ),
+  ),
   /* format: off */
   routes: [
     GoRoute(

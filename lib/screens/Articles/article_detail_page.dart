@@ -12,6 +12,7 @@ import 'package:sornaz/helpers/app_functions.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 
 class ArticleDetailPage extends StatefulWidget {
   final Map<String, dynamic> post;
@@ -119,6 +120,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
           SnackBar(
             content: Text(
               AppStrings.error_in_sending_comment.translate(context),
+              style: AppTypography.articlesDetailPageErrorInSendingComment,
             ),
           ),
         );
@@ -126,7 +128,10 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppStrings.error_in_sending_comment.translate(context)),
+          content: Text(
+            AppStrings.error_in_sending_comment.translate(context),
+            style: AppTypography.articlesDetailPageErrorInSendingComment,
+          ),
         ),
       );
     }
@@ -235,7 +240,10 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
           commentPage++;
           _fetchComments(loadMore: true);
         },
-        child: Text(AppStrings.load_more_comments.translate(context)),
+        child: Text(
+          AppStrings.load_more_comments.translate(context),
+          style: AppTypography.articlesDetailPageLoadMoreComments,
+        ),
       ),
     );
   }
@@ -245,14 +253,14 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
       children: [
         Text(
           '${AppStrings.comments.translate(context)}:',
-          style: const TextStyle(
-            fontSize: AppSpacing.space_18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: AppTypography.articlesDetailPageCommentsListTitle,
         ),
         const SizedBox(height: AppSpacing.space_8),
         if (comments.isEmpty)
-          Text(AppStrings.without_comments.translate(context))
+          Text(
+            AppStrings.without_comments.translate(context),
+            style: AppTypography.articlesDetailPageCommentsListEmptyTitle,
+          )
         else
           ...comments.map((comment) {
             final comContent = comment['content']['rendered'].replaceAll(
@@ -281,10 +289,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
       children: [
         Text(
           '${AppStrings.take_your_point_to_article.translate(context)}:',
-          style: TextStyle(
-            fontSize: AppSpacing.space_16,
-            fontWeight: FontWeight.bold,
-          ),
+          style: AppTypography.articlesDetailPageSendStarPoint,
         ),
         RatingBar.builder(
           initialRating: rating,
@@ -314,10 +319,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
       children: [
         Text(
           '${AppStrings.write_your_comments.translate(context)}:',
-          style: const TextStyle(
-            fontSize: AppSpacing.space_16,
-            fontWeight: FontWeight.bold,
-          ),
+          style: AppTypography.articlesDetailPageWriteComment,
         ),
         TextField(
           controller: commentController,
@@ -331,7 +333,10 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
         const SizedBox(height: AppSpacing.space_8),
         ElevatedButton(
           onPressed: _sendComment,
-          child: Text(AppStrings.send_comment.translate(context)),
+          child: Text(
+            AppStrings.send_comment.translate(context),
+            style: AppTypography.articlesDetailPageSendCommentButton,
+          ),
         ),
       ],
     );
@@ -341,10 +346,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
     return [
       Text(
         '${AppStrings.similar_articles.translate(context)}:',
-        style: TextStyle(
-          fontSize: AppSpacing.space_18,
-          fontWeight: FontWeight.bold,
-        ),
+        style: AppTypography.articlesDetailPageSimilarArticlesTitle,
       ),
       const SizedBox(height: AppSpacing.space_8),
       ...relatedPosts.map((related) {
@@ -364,8 +366,15 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                     fit: BoxFit.cover,
                   )
                 : const Icon(Icons.image),
-            title: Text(relTitle),
-            subtitle: Text(formatJalaliDate(relDate)),
+            title: Text(
+              relTitle,
+              style: AppTypography.articlesDetailPageSimilarArticlesItemTitle,
+            ),
+            subtitle: Text(
+              formatJalaliDate(relDate),
+              style:
+                  AppTypography.articlesDetailPageSimilarArticlesItemSubtitle,
+            ),
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
@@ -391,16 +400,7 @@ class ArticlesPageTitleWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontSize: AppSpacing.space_18,
-        fontWeight: FontWeight.bold,
-        color: isDark
-            ? AppColors.text_primary_dark
-            : AppColors.text_primary_light,
-      ),
-    );
+    return Text(title, style: AppTypography.articlesDetailPageArticlesTitle);
   }
 }
 
@@ -427,16 +427,17 @@ class ArticleCommentsListWidget extends StatelessWidget {
         backgroundImage: comAvatar.isNotEmpty ? NetworkImage(comAvatar) : null,
         child: comAvatar.isEmpty ? const Icon(Icons.person) : null,
       ),
-      title: Text(comAuthor),
-      subtitle: Text(comContent),
+      title: Text(
+        comAuthor,
+        style: AppTypography.articlesDetailPageArticleCommentsListTitle,
+      ),
+      subtitle: Text(
+        comContent,
+        style: AppTypography.articlesDetailPageArticleCommentsListSubtitle,
+      ),
       trailing: Text(
         formatJalaliDate(comDate),
-        style: TextStyle(
-          fontSize: AppSpacing.space_12,
-          color: isDark
-              ? AppColors.text_secondary_dark
-              : AppColors.text_secondary_light,
-        ),
+        style: AppTypography.articlesDetailPageArticleCommentsListDate,
       ),
     );
   }
@@ -473,12 +474,7 @@ class ArticlesReleasedDateWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       formatJalaliDate(isoDate),
-      style: TextStyle(
-        fontSize: AppSpacing.space_14,
-        color: isDark
-            ? AppColors.text_secondary_dark
-            : AppColors.text_secondary_light,
-      ),
+      style: AppTypography.articlesDetailPageArticleCommentsListReleaseDate,
     );
   }
 }
@@ -497,12 +493,7 @@ class ArticlesAuthorWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       '${AppStrings.writer.translate(context)}: $author',
-      style: TextStyle(
-        fontSize: AppSpacing.space_14,
-        color: isDark
-            ? AppColors.text_secondary_dark
-            : AppColors.text_secondary_light,
-      ),
+      style: AppTypography.articlesDetailPageArticlesAuthorsName,
     );
   }
 }

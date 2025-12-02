@@ -424,7 +424,7 @@ class AppStrings {
         'Please grant permission to access audio files in the app settings.',
     error_loading_files: 'Error loading files',
 
-    set_base_frequency: 'Set Base Frequency (A4)',
+    set_base_frequency: 'Set Base Frequency (A4) : ',
     hz: 'Hz',
     hertz: 'HERTZ',
     cents: 'CENTS',
@@ -564,7 +564,7 @@ class AppStrings {
 
     grant_audio_permission: 'لطفا اجازه دسترسی به فایل‌های صوتی را بدهید',
     error_loading_files: 'خطا در بارگذاری فایل‌ها',
-    set_base_frequency: 'تنظیم فرکانس مبنا (A4)',
+    set_base_frequency: ': تنظیم فرکانس مبنا (A4) ',
     hz: 'هرتز',
     hertz: 'هرتز',
     cents: 'سنت',

@@ -17,6 +17,7 @@ import 'dart:io';
 import 'dart:async';
 
 import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 
 class MusicPlayerPage extends StatefulWidget {
   const MusicPlayerPage({super.key});
@@ -99,7 +100,10 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppStrings.grant_audio_permission.translate(context)),
+          content: Text(
+            AppStrings.grant_audio_permission.translate(context),
+            style: AppTypography.musicPlayerNotGrantedPermissionSnackBar,
+          ),
         ),
       );
       openAppSettings();
@@ -145,6 +149,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
         SnackBar(
           content: Text(
             '${AppStrings.error_in_loading.translate(context)}: $e',
+            style: AppTypography.musicPlayerErrorInLoadingSnackBar,
           ),
         ),
       );
@@ -288,7 +293,10 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
       height: AppSpacing.space_24,
       child: Row(
         children: [
-          Text(_formatDuration(duration)),
+          Text(
+            _formatDuration(duration),
+            style: AppTypography.musicPlayerAudioWidgetDurationTime,
+          ),
           Expanded(
             child: Directionality(
               textDirection: TextDirection.ltr,
@@ -319,7 +327,10 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
               ),
             ),
           ),
-          Text(_formatDuration(position)),
+          Text(
+            _formatDuration(position),
+            style: AppTypography.musicPlayerAudioWidgetPositionTime,
+          ),
         ],
       ),
     );
@@ -357,7 +368,10 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
           ? const Center(child: CircularProgressIndicator())
           : filteredAudioFiles.isEmpty
           ? Center(
-              child: Text(AppStrings.audio_file_not_found.translate(context)),
+              child: Text(
+                AppStrings.audio_file_not_found.translate(context),
+                style: AppTypography.musicPlayerAudioFileNotFound,
+              ),
             )
           : ListView.builder(
               itemCount: filteredAudioFiles.length,
@@ -407,28 +421,14 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
         title: isCurrentlyPlaying
             ? MarqueeText(
                 text: audio.fileName,
-                textStyle: TextStyle(
-                  fontSize: AppSpacing.space_14,
-                  color: isDark
-                      ? AppColors.text_primary_dark
-                      : AppColors.text_primary_light,
-                  fontWeight: FontWeight.w500,
-                ),
+                textStyle: AppTypography.musicPlayerPlayingAudioFile,
               )
             : Text(
                 audio.fileName,
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
                 textDirection: TextDirection.ltr,
-                style: TextStyle(
-                  fontSize: AppSpacing.space_14,
-                  color: isDark
-                      ? AppColors.text_primary_dark
-                      : AppColors.text_primary_light,
-                  fontWeight: isCurrentlyPlaying
-                      ? FontWeight.w900
-                      : FontWeight.normal,
-                ),
+                style: AppTypography.musicPlayerNotPlayingAudioFile,
               ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -438,12 +438,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
               children: [
                 Text(
                   durationText,
-                  style: TextStyle(
-                    fontSize: AppSpacing.space_12,
-                    color: isDark
-                        ? AppColors.text_secondary_dark
-                        : AppColors.text_secondary_light,
-                  ),
+                  style: AppTypography.musicPlayerAudioItemDurationTime,
                 ),
                 SizedBox(width: AppSpacing.space_16),
                 Expanded(
@@ -452,12 +447,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
                     textDirection: TextDirection.ltr,
-                    style: TextStyle(
-                      fontSize: AppSpacing.space_12,
-                      color: isDark
-                          ? AppColors.text_secondary_dark
-                          : AppColors.text_secondary_light,
-                    ),
+                    style: AppTypography.musicPlayerAudioItemAddress,
                   ),
                 ),
               ],

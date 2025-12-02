@@ -4,6 +4,7 @@ import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 
 class AboutUsPage extends StatelessWidget {
   const AboutUsPage({super.key});
@@ -11,9 +12,11 @@ class AboutUsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appData = Provider.of<AppData>(context);
-    final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(AppStrings.about_us_title.translate(context))),
+      appBar: AppBar(
+        title: Text(AppStrings.about_us_title.translate(context)),
+        titleTextStyle: AppTypography.aboutUsAppBarTitle,
+      ),
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
@@ -24,17 +27,17 @@ class AboutUsPage extends StatelessWidget {
                 children: [
                   Text(
                     appData.aboutUsTitle1,
-                    style: theme.textTheme.headlineMedium,
+                    style: AppTypography.aboutUsTitle,
                   ),
                   const SizedBox(height: AppSpacing.space_8),
-                  Text(appData.aboutUsText1, style: theme.textTheme.bodyMedium),
+                  Text(appData.aboutUsText1, style: AppTypography.aboutUsBody),
                   const SizedBox(height: AppSpacing.space_16),
                   Text(
                     appData.aboutUsTitle2,
-                    style: theme.textTheme.headlineMedium,
+                    style: AppTypography.aboutUsTitle,
                   ),
                   const SizedBox(height: AppSpacing.space_8),
-                  Text(appData.aboutUsText2, style: theme.textTheme.bodyMedium),
+                  Text(appData.aboutUsText2, style: AppTypography.aboutUsBody),
                 ],
               ),
             ),

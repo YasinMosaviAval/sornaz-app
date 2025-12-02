@@ -12,6 +12,7 @@ import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 
 class TunerPage extends StatefulWidget {
   const TunerPage({super.key});
@@ -186,24 +187,12 @@ class _TunerPageState extends State<TunerPage> {
                               noteFreq,
                             ).toStringAsFixed(2),
                       // textDirection: TextDirection.ltr,
-                      style: TextStyle(
-                        fontSize: AppSpacing.space_20,
-                        fontWeight: FontWeight.w500,
-                        color: isDark
-                            ? AppColors.text_primary_dark
-                            : AppColors.text_primary_light,
-                      ),
+                      style: AppTypography.tunerCentDifference,
                     ),
                     Text(
                       AppStrings.cents.translate(context),
                       // textDirection: TextDirection.ltr,
-                      style: TextStyle(
-                        fontSize: AppSpacing.space_16,
-                        fontWeight: FontWeight.w300,
-                        color: isDark
-                            ? AppColors.text_secondary_dark
-                            : AppColors.text_secondary_light,
-                      ),
+                      style: AppTypography.tunerCentUnitTitle,
                     ),
                   ],
                 ),
@@ -214,25 +203,10 @@ class _TunerPageState extends State<TunerPage> {
                       (note == AppStrings.epmty_text)
                           ? AppStrings.epmty_text
                           : getOctave(noteFreq).toString(),
-                      style: TextStyle(
-                        fontSize: AppSpacing.space_24,
-                        fontWeight: FontWeight.bold,
-                        color: isDark
-                            ? AppColors.text_primary_dark
-                            : AppColors.text_primary_light,
-                      ),
+                      style: AppTypography.tunerNoteOctave,
                     ),
                     SizedBox(width: AppSpacing.space_4),
-                    Text(
-                      note,
-                      style: TextStyle(
-                        fontSize: AppSpacing.space_48,
-                        fontWeight: FontWeight.bold,
-                        color: isDark
-                            ? AppColors.text_primary_dark
-                            : AppColors.text_primary_light,
-                      ),
-                    ),
+                    Text(note, style: AppTypography.tunerNoteName),
                   ],
                 ),
                 Column(
@@ -241,24 +215,12 @@ class _TunerPageState extends State<TunerPage> {
                     Text(
                       noteFreq.toStringAsFixed(2),
                       // textDirection: TextDirection.ltr,
-                      style: TextStyle(
-                        fontSize: AppSpacing.space_20,
-                        fontWeight: FontWeight.w500,
-                        color: isDark
-                            ? AppColors.text_primary_dark
-                            : AppColors.text_primary_light,
-                      ),
+                      style: AppTypography.tunerNearNoteFrequency,
                     ),
                     Text(
                       AppStrings.hertz.translate(context),
                       // textDirection: TextDirection.ltr,
-                      style: TextStyle(
-                        fontSize: AppSpacing.space_16,
-                        fontWeight: FontWeight.w300,
-                        color: isDark
-                            ? AppColors.text_secondary_dark
-                            : AppColors.text_secondary_light,
-                      ),
+                      style: AppTypography.tunerHertzUnitTitle,
                     ),
                   ],
                 ),
@@ -372,12 +334,7 @@ class DetectedFrequencyWidget extends StatelessWidget {
     return Text(
       "${frequency.toStringAsFixed(1)} ${AppStrings.hz.translate(context)}",
       // textDirection: TextDirection.ltr,
-      style: TextStyle(
-        fontSize: AppSpacing.space_24,
-        color: isDark
-            ? AppColors.text_primary_dark
-            : AppColors.text_primary_light,
-      ),
+      style: AppTypography.tunerDetectedFrequency,
     );
   }
 }
@@ -404,26 +361,15 @@ class ChangeFrequencyTitleWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "${a4.toStringAsFixed(0)} ${AppStrings.hz.translate(context)}",
+                  ": ${a4.toStringAsFixed(0)} ${AppStrings.hz.translate(context)}",
                   // textDirection: TextDirection.ltr,
-                  style: TextStyle(
-                    fontSize: AppSpacing.space_16,
-                    fontWeight: FontWeight.w700,
-                    color: isDark
-                        ? AppColors.text_primary_dark
-                        : AppColors.text_primary_light,
-                  ),
+                  style: AppTypography.tunerA4Frequency,
                 ),
                 SizedBox(width: AppSpacing.space_4),
                 Text(
                   AppStrings.set_base_frequency.translate(context),
                   // textDirection: TextDirection.ltr,
-                  style: TextStyle(
-                    fontSize: AppSpacing.space_16,
-                    color: isDark
-                        ? AppColors.text_primary_dark
-                        : AppColors.text_primary_light,
-                  ),
+                  style: AppTypography.tunerSetBaseFrequency,
                 ),
               ],
             ),

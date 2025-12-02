@@ -7,6 +7,7 @@ import 'package:sornaz/helpers/app_navigation.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/screens/Others/about_us.dart';
 import 'package:sornaz/screens/Others/settings.dart';
 
@@ -24,19 +25,11 @@ class AppDrawer extends StatelessWidget {
           UserAccountsDrawerHeader(
             accountName: Text(
               AppStrings.application_fullname.translate(context),
-              style: TextStyle(
-                color: isDark
-                    ? AppColors.text_primary_dark
-                    : AppColors.text_primary_light,
-              ),
+              style: AppTypography.appDrawerApplicationFullname,
             ),
             accountEmail: Text(
               AppStrings.application_email.translate(context),
-              style: TextStyle(
-                color: isDark
-                    ? AppColors.text_secondary_dark
-                    : AppColors.text_secondary_light,
-              ),
+              style: AppTypography.appDrawerApplicationEmail,
             ),
             currentAccountPicture: SizedBox(
               child: Image.asset(
@@ -65,34 +58,34 @@ class AppDrawer extends StatelessWidget {
   }
 }
 
-class SwitchAcountItem extends StatelessWidget {
-  const SwitchAcountItem({required this.text, required this.color, super.key});
+// class SwitchAcountItem extends StatelessWidget {
+//   const SwitchAcountItem({required this.text, required this.color, super.key});
 
-  final String text;
-  final Color color;
+//   final String text;
+//   final Color color;
 
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(text, style: TextStyle(color: color)),
-      onTap: () {},
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return ListTile(
+//       title: Text(text, style: AppTypography.appDrawerSwitchAcountItem),
+//       onTap: () {},
+//     );
+//   }
+// }
 
-class HeaderItemPart extends StatelessWidget {
-  const HeaderItemPart({required this.text, super.key});
+// class HeaderItemPart extends StatelessWidget {
+//   const HeaderItemPart({required this.text, super.key});
 
-  final String text;
+//   final String text;
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: AppSpacing.space_16),
-      child: Text(text),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Padding(
+//       padding: EdgeInsets.symmetric(horizontal: AppSpacing.space_16),
+//       child: Text(text, style: AppTypography.appDrawerHeaderItemPart),
+//     );
+//   }
+// }
 
 class AppDrawerItem extends StatelessWidget {
   const AppDrawerItem({
@@ -114,7 +107,7 @@ class AppDrawerItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: Icon(icon),
-      title: Text(text),
+      title: Text(text, style: AppTypography.appDrawerItemTitle),
 
       trailing: message == ''
           ? SizedBox()
@@ -126,7 +119,7 @@ class AppDrawerItem extends StatelessWidget {
                 color: messageColor,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Text(message, style: TextStyle(color: Colors.white)),
+              child: Text(message, style: AppTypography.appDrawerItemsubtitle),
             ),
       onTap: () => navigateWithFade(context, link),
     );

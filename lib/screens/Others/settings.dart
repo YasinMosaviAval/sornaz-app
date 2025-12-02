@@ -30,11 +30,7 @@ class SettingsPage extends StatelessWidget {
         appBar: AppBar(
           title: Text(
             AppStrings.settings_title.translate(context),
-            style: TextStyle(
-              color: isDark
-                  ? AppColors.text_primary_dark
-                  : AppColors.text_primary_light,
-            ),
+            style: AppTypography.settingsAppBar,
           ),
           backgroundColor: isDark
               ? AppColors.surface_dark
@@ -54,18 +50,14 @@ class SettingsPage extends StatelessWidget {
               ),
               child: Text(
                 AppStrings.notification_title.translate(context),
-                style: TextStyle(
-                  color: isDark
-                      ? AppColors.text_primary_dark
-                      : AppColors.text_primary_light,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: AppTypography.settingsSectionTitle,
               ),
             ),
             // SwitchListTile(
-            //   title: const Text(AppStrings.push_notifications.translate(context)),
-            //   subtitle: const Text(AppStrings.push_notifications_subtitle.translate(context)),
+            //   title: Text(AppStrings.push_notifications.translate(context), style: AppTypography.settingsItemTitle,),
+            //   subtitle: Text(
+            //     AppStrings.push_notifications_subtitle.translate(context), style: AppTypography.settingsItemSubtitle
+            //   ),
             //   value: appData.pushNotifications,
             //   onChanged: appData.togglePushNotifications,
             // ),
@@ -80,15 +72,11 @@ class SettingsPage extends StatelessWidget {
                   : AppColors.text_primary_light,
               title: Text(
                 AppStrings.dark_mode.translate(context),
-                style: TextStyle(fontWeight: FontWeight.w500),
+                style: AppTypography.settingsItemTitle,
               ),
               subtitle: Text(
                 AppStrings.dark_mode_description.translate(context),
-                style: TextStyle(
-                  color: isDark
-                      ? AppColors.text_secondary_dark
-                      : AppColors.text_secondary_light,
-                ),
+                style: AppTypography.settingsItemSubtitle,
               ),
               trailing: Switch(
                 value: appData.isDark,
@@ -98,28 +86,31 @@ class SettingsPage extends StatelessWidget {
             ),
             LanguageSwitchTile(),
             // SwitchListTile(
-            //   title: const Text(AppStrings.new_course_alerts.translate(context)),
-            //   subtitle: const Text(AppStrings.new_course_alerts_description.translate(context)),
+            //   title: const Text(AppStrings.new_course_alerts.translate(context), style: AppTypography.settingsItemTitle),
+            //   subtitle: const Text(AppStrings.new_course_alerts_description.translate(context), style: AppTypography.settingsItemSubtitle),
             //   value: appData.newCourseAlerts,
             //   onChanged: appData.toggleNewCourseAlerts,
             // ),
             // const Divider(),
-            // const Padding(
-            //   padding: EdgeInsets.symmetric(
+            // Padding(
+            //   padding: const EdgeInsets.symmetric(
             //     horizontal: AppSpacing.space_16,
             //     vertical: AppSpacing.space_8,
             //   ),
-            //   child: Text(AppStrings.dataTitle.translate(context)),
+            //   child: Text(
+            //     AppStrings.dataTitle.translate(context),
+            //     style: AppTypography.settingsSectionTitle,
+            //   ),
             // ),
             // SwitchListTile(
-            //   title: const Text(AppStrings.use_wifi.translate(context)),
-            //   subtitle: const Text(AppStrings.use_wifi_description.translate(context)),
+            //   title: const Text(AppStrings.use_wifi.translate(context), style: AppTypography.settingsItemTitle),
+            //   subtitle: const Text(AppStrings.use_wifi_description.translate(context), style: AppTypography.settingsItemSubtitle),
             //   value: appData.useWifiOverData,
             //   onChanged: appData.toggleUseWifiOverData,
             // ),
             // SwitchListTile(
-            //   title: const Text(AppStrings.auto_download.translate(context)),
-            //   subtitle: const Text(AppStrings.auto_download_description.translate(context)),
+            //   title: const Text(AppStrings.auto_download.translate(context), style: AppTypography.settingsItemTitle),
+            //   subtitle: const Text(AppStrings.auto_download_description.translate(context), style: AppTypography.settingsItemSubtitle),
             //   value: appData.autoDownload,
             //   onChanged: appData.toggleAutoDownload,
             // ),
@@ -133,30 +124,20 @@ class SettingsPage extends StatelessWidget {
               ),
               child: Text(
                 AppStrings.elements.translate(context),
-                style: TextStyle(
-                  color: isDark
-                      ? AppColors.text_primary_dark
-                      : AppColors.text_primary_light,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: AppTypography.settingsSectionTitle,
               ),
             ),
             ListTile(
               title: Text(
                 AppStrings.text_size.translate(context),
-                style: TextStyle(fontWeight: FontWeight.w500),
+                style: AppTypography.settingsItemTitle,
               ),
               textColor: isDark
                   ? AppColors.text_primary_dark
                   : AppColors.text_primary_light,
               subtitle: Text(
                 AppStrings.text_size_description.translate(context),
-                style: TextStyle(
-                  color: isDark
-                      ? AppColors.text_secondary_dark
-                      : AppColors.text_secondary_light,
-                ),
+                style: AppTypography.settingsItemSubtitle,
               ),
               trailing: Container(
                 padding: const EdgeInsets.all(AppSpacing.space_8),
@@ -170,7 +151,10 @@ class SettingsPage extends StatelessWidget {
                       ? AppColors.surface_dark
                       : AppColors.surface_light,
                 ),
-                child: Text(appData.textSize.toInt().toString()),
+                child: Text(
+                  appData.textSize.toInt().toString(),
+                  style: AppTypography.settingsItemContent,
+                ),
               ),
             ),
 
@@ -198,69 +182,101 @@ class SettingsPage extends StatelessWidget {
             ListTile(
               title: Text(
                 "انتخاب فونت",
-                style: TextStyle(fontWeight: FontWeight.w500),
+                style: AppTypography.settingsItemTitle,
               ),
               subtitle: Text(
                 "فونت دلخواه خود را انتخاب کنید",
-                style: TextStyle(
-                  color: isDark
-                      ? AppColors.text_secondary_dark
-                      : AppColors.text_secondary_light,
-                ),
+                style: AppTypography.settingsItemSubtitle,
               ),
               trailing: DropdownButton<String>(
                 value: appData.fontFamily,
                 dropdownColor: isDark
                     ? AppColors.surface_dark
                     : AppColors.surface_light,
-                items: const [
+                items: [
                   DropdownMenuItem(
                     value: AppTypography.iran_sansx_fn,
-                    child: Text("ایران سنس FN"),
+                    child: Text(
+                      "ایران سنس FN",
+                      style: AppTypography.settingsDropdownItem,
+                    ),
                   ),
                   DropdownMenuItem(
                     value: AppTypography.iran_sansx,
-                    child: Text("ایران سنس"),
+                    child: Text(
+                      "ایران سنس",
+                      style: AppTypography.settingsDropdownItem,
+                    ),
                   ),
                   DropdownMenuItem(
                     value: AppTypography.iran_yekan,
-                    child: Text("ایران یکان"),
+                    child: Text(
+                      "ایران یکان",
+                      style: AppTypography.settingsDropdownItem,
+                    ),
                   ),
                   DropdownMenuItem(
                     value: AppTypography.iran_yekan_fn,
-                    child: Text("ایران یکان FN"),
+                    child: Text(
+                      "ایران یکان FN",
+                      style: AppTypography.settingsDropdownItem,
+                    ),
                   ),
                   DropdownMenuItem(
                     value: AppTypography.kalameh,
-                    child: Text("کلمه"),
+                    child: Text(
+                      "کلمه",
+                      style: AppTypography.settingsDropdownItem,
+                    ),
                   ),
                   DropdownMenuItem(
                     value: AppTypography.kalameh_fn,
-                    child: Text("کلمه FN"),
+                    child: Text(
+                      "کلمه FN",
+                      style: AppTypography.settingsDropdownItem,
+                    ),
                   ),
                   DropdownMenuItem(
                     value: AppTypography.peyda,
-                    child: Text("پیدا"),
+                    child: Text(
+                      "پیدا",
+                      style: AppTypography.settingsDropdownItem,
+                    ),
                   ),
                   DropdownMenuItem(
                     value: AppTypography.tahrir,
-                    child: Text("تحریر"),
+                    child: Text(
+                      "تحریر",
+                      style: AppTypography.settingsDropdownItem,
+                    ),
                   ),
                   DropdownMenuItem(
                     value: AppTypography.sahel,
-                    child: Text("ساحل"),
+                    child: Text(
+                      "ساحل",
+                      style: AppTypography.settingsDropdownItem,
+                    ),
                   ),
                   DropdownMenuItem(
                     value: AppTypography.sahel_fn,
-                    child: Text("ساحل FN"),
+                    child: Text(
+                      "ساحل FN",
+                      style: AppTypography.settingsDropdownItem,
+                    ),
                   ),
                   DropdownMenuItem(
                     value: AppTypography.vazir,
-                    child: Text("وزیر"),
+                    child: Text(
+                      "وزیر",
+                      style: AppTypography.settingsDropdownItem,
+                    ),
                   ),
                   DropdownMenuItem(
                     value: AppTypography.vazir_fn,
-                    child: Text("وزیر FN"),
+                    child: Text(
+                      "وزیر FN",
+                      style: AppTypography.settingsDropdownItem,
+                    ),
                   ),
                 ],
                 onChanged: (value) {

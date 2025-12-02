@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:sornaz/helpers/app_colors.dart';
-import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_navigation.dart';
-import 'package:sornaz/helpers/app_spacing.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 
 class SectionTitle extends StatelessWidget {
   final String title;
@@ -19,33 +16,14 @@ class SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final appData = Provider.of<AppData>(context);
-    final isDark = appData.isDark;
-    // final theme = Theme.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: AppSpacing.space_18,
-            color: isDark
-                ? AppColors.text_primary_dark
-                : AppColors.text_primary_light,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
+        Text(title, style: AppTypography.sectionTitleTitle),
         if (viewAll != null)
           TextButton(
             onPressed: () => navigateWithFade(context, viewAllLink!),
-            child: Text(
-              viewAll!,
-              style: TextStyle(
-                color: isDark
-                    ? AppColors.primary_dark
-                    : AppColors.primary_light,
-              ),
-            ),
+            child: Text(viewAll!, style: AppTypography.sectionTitleViewAllLink),
           ),
       ],
     );

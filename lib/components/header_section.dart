@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 
 class HeaderSection extends StatelessWidget {
   final String title;
@@ -20,10 +21,13 @@ class HeaderSection extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(title, style: theme.textTheme.headlineMedium),
+            Text(title, style: AppTypography.headerSectionTitle),
             TextButton(
               onPressed: () {},
-              child: Text(AppStrings.view_all_link.translate(context)),
+              child: Text(
+                AppStrings.view_all_link.translate(context),
+                style: AppTypography.headerSectionViewAllLink,
+              ),
             ),
           ],
         ),

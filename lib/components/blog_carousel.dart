@@ -9,6 +9,7 @@ import 'package:sornaz/helpers/app_functions.dart';
 import 'package:sornaz/helpers/app_navigation.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/screens/Articles/article_detail_page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -36,8 +37,6 @@ class RealBlogCarousel extends StatelessWidget {
               viewAllLink: ArticlesPage(),
             ),
           ),
-
-          // Text("data", style: TextStyle(fontSize: 48 , color: AppColors.error)),
           FutureBuilder<List<dynamic>>(
             future: fetchRecentPosts(context),
             // future: _getPosts(), // تغییر: از لوکال یا آنلاین بگیر
@@ -90,14 +89,9 @@ class RealBlogCarousel extends StatelessWidget {
                 );
               } else if (snapshot.hasError) {
                 return Center(
-                  // child: Text('خطا در بارگذاری مقالات: ${snapshot.error}'),
                   child: Text(
                     AppStrings.error_in_loading.translate(context),
-                    style: TextStyle(
-                      color: isDark
-                          ? AppColors.text_primary_dark
-                          : AppColors.text_primary_light,
-                    ),
+                    style: AppTypography.blogCarouselErrorInLoading,
                   ),
                 );
               } else {
@@ -242,24 +236,13 @@ class RealBlogInformation extends StatelessWidget {
                     title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                      color: isDark
-                          ? AppColors.text_primary_dark
-                          : AppColors.text_primary_light,
-                    ),
+                    style: AppTypography.blogCarouselTitle,
                   ),
                   SizedBox(
                     width: 170,
                     child: Text(
                       date,
-                      style: TextStyle(
-                        color: isDark
-                            ? AppColors.text_secondary_dark
-                            : AppColors.text_secondary_light,
-                        fontSize: 10,
-                      ),
+                      style: AppTypography.blogCarouselDate,
                       textAlign: TextAlign.end,
                     ),
                   ),

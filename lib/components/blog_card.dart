@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 
 class BlogCard extends StatelessWidget {
   final String image;
@@ -35,20 +36,11 @@ class BlogCard extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.all(AppSpacing.space_8),
-            child: Text(
-              title,
-              style: const TextStyle(fontSize: AppSpacing.space_12),
-            ),
+            child: Text(title, style: AppTypography.blogCardTitle),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_8),
-            child: Text(
-              time,
-              style: const TextStyle(
-                fontSize: AppSpacing.space_10,
-                color: Colors.grey,
-              ),
-            ),
+            child: Text(time, style: AppTypography.blogCardTime),
           ),
         ],
       ),

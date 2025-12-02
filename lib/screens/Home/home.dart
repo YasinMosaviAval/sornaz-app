@@ -11,6 +11,7 @@ import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -99,13 +100,7 @@ class ApplicationTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       AppStrings.application_name.translate(context),
-      style: TextStyle(
-        fontSize: AppSpacing.space_18,
-        color: isDark
-            ? AppColors.text_primary_dark
-            : AppColors.text_primary_light,
-        fontWeight: FontWeight.w700,
-      ),
+      style: AppTypography.homeApplicationTitle,
     );
   }
 }

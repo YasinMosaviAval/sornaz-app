@@ -11,6 +11,7 @@ import 'package:sornaz/helpers/app_navigation.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/screens/Articles/article_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:sornaz/components/bottom_nav.dart';
@@ -153,7 +154,10 @@ class _ArticlesPageState extends State<ArticlesPage> {
               ? const Center(child: CircularProgressIndicator())
               : hasError
               ? Center(
-                  child: Text(AppStrings.error_in_loading.translate(context)),
+                  child: Text(
+                    AppStrings.error_in_loading.translate(context),
+                    style: AppTypography.articlesErrorInLoading,
+                  ),
                 )
               : RefreshIndicator(
                   onRefresh: _fetchInitialData,
@@ -280,12 +284,7 @@ class ArticlesReleaseDateWidget extends StatelessWidget {
       width: MediaQuery.sizeOf(context).width,
       child: Text(
         formatJalaliDate(isoDate),
-        style: TextStyle(
-          fontSize: AppSpacing.space_10,
-          color: isDark
-              ? AppColors.text_secondary_dark
-              : AppColors.text_secondary_light,
-        ),
+        style: AppTypography.articlesReleaseDate,
         textAlign: TextAlign.end,
       ),
     );
@@ -309,12 +308,7 @@ class ArticlesBriefWidget extends StatelessWidget {
       excerpt.length > AppSpacing.space_100
           ? '${excerpt.substring(0, 100)}...'
           : excerpt,
-      style: TextStyle(
-        fontSize: AppSpacing.space_10,
-        color: isDark
-            ? AppColors.text_secondary_dark
-            : AppColors.text_secondary_light,
-      ),
+      style: AppTypography.articlesBrief,
     );
   }
 }
@@ -332,16 +326,7 @@ class ArticlesTitleWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontWeight: FontWeight.w800,
-        fontSize: AppSpacing.space_12,
-        color: isDark
-            ? AppColors.text_primary_dark
-            : AppColors.text_primary_light,
-      ),
-    );
+    return Text(title, style: AppTypography.articlesTitle);
   }
 }
 
