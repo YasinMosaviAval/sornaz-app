@@ -69,7 +69,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
           SnackBar(
             content: Text(
               'اجازه دسترسی به میکروفون و حافظه لازم است',
-              style: AppTypography.voiceRecorderNotGrantedPermissionSnackBar,
+              style: AppTypography.voiceRecorderNotGrantedPermissionSnackBar(),
             ),
           ),
         );
@@ -343,8 +343,11 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
                 ),
                 onPressed: () => _playPause(file),
               ),
-              title: Text(fileName, style: AppTypography.voiceRecorderFilename),
-              subtitle: Text(date, style: AppTypography.voiceRecorderDate),
+              title: Text(
+                fileName,
+                style: AppTypography.voiceRecorderFilename(),
+              ),
+              subtitle: Text(date, style: AppTypography.voiceRecorderDate()),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -407,7 +410,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
         SnackBar(
           content: Text(
             "فایل حذف شد",
-            style: AppTypography.voiceRecorderDeleteFileSnackBar,
+            style: AppTypography.voiceRecorderDeleteFileSnackBar(),
           ),
           action: SnackBarAction(
             label: "UNDO",
@@ -421,7 +424,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
                 SnackBar(
                   content: Text(
                     "فایل برگردانده شد",
-                    style: AppTypography.voiceRecorderRestoreFileSnackBar,
+                    style: AppTypography.voiceRecorderRestoreFileSnackBar(),
                   ),
                 ),
               );
@@ -441,19 +444,20 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
         title: Text(
           "حذف ضبط",
           textAlign: TextAlign.center,
-          style: AppTypography.voiceRecorderDeleteFileDialogueTitle,
+          style: AppTypography.voiceRecorderDeleteFileDialogueTitle(),
         ),
         content: Text(
           "آیا از حذف فایل «$fileName» مطمئن هستید؟",
           textAlign: TextAlign.center,
-          style: AppTypography.voiceRecorderDeleteFileDialogueContent,
+          style: AppTypography.voiceRecorderDeleteFileDialogueContent(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               "خیر",
-              style: AppTypography.voiceRecorderDeleteFileDialogueCancelButton,
+              style:
+                  AppTypography.voiceRecorderDeleteFileDialogueCancelButton(),
             ),
           ),
           ElevatedButton(
@@ -464,7 +468,8 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
             onPressed: () => Navigator.pop(context, true),
             child: Text(
               "بله، حذف کن",
-              style: AppTypography.voiceRecorderDeleteFileDialogueConfirmButton,
+              style:
+                  AppTypography.voiceRecorderDeleteFileDialogueConfirmButton(),
             ),
           ),
         ],
@@ -484,7 +489,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
         SnackBar(
           content: Text(
             "فایل «$fileName» حذف شد",
-            style: AppTypography.voiceRecorderDeleteFileMessageSnackBar,
+            style: AppTypography.voiceRecorderDeleteFileMessageSnackBar(),
           ),
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 4),
@@ -514,7 +519,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
       builder: (context) => AlertDialog(
         title: Text(
           "تغییر نام فایل",
-          style: AppTypography.voiceRecorderRenameFileDialogueTitle,
+          style: AppTypography.voiceRecorderRenameFileDialogueTitle(),
         ),
         content: TextField(
           controller: controller,
@@ -529,7 +534,8 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
             onPressed: () => Navigator.pop(context, null),
             child: Text(
               "انصراف",
-              style: AppTypography.voiceRecorderRenameFileDialogueCancelButton,
+              style:
+                  AppTypography.voiceRecorderRenameFileDialogueCancelButton(),
             ),
           ),
           ElevatedButton(
@@ -539,7 +545,8 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
             },
             child: Text(
               "ذخیره",
-              style: AppTypography.voiceRecorderRenameFileDialogueConfirmButton,
+              style:
+                  AppTypography.voiceRecorderRenameFileDialogueConfirmButton(),
             ),
           ),
         ],
@@ -560,7 +567,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
         SnackBar(
           content: Text(
             "نام فایل به «$newName» تغییر کرد.",
-            style: AppTypography.voiceRecorderRenameFileMessageSnackBar,
+            style: AppTypography.voiceRecorderRenameFileMessageSnackBar(),
           ),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
@@ -571,7 +578,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
         SnackBar(
           content: Text(
             "خطا در تغییر نام!",
-            style: AppTypography.voiceRecorderRenameFileErrorMessageSnackBar,
+            style: AppTypography.voiceRecorderRenameFileErrorMessageSnackBar(),
           ),
           backgroundColor: AppColors.error,
         ),
@@ -610,6 +617,6 @@ class RecordingTimer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(_timerText, style: AppTypography.voiceRecorderRecordingTimer);
+    return Text(_timerText, style: AppTypography.voiceRecorderRecordingTimer());
   }
 }

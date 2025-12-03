@@ -673,14 +673,8 @@ class MyApp extends StatelessWidget {
       cardColor: AppColors.background_dark,
       fontFamily: appData.fontFamily,
       textTheme: TextTheme(
-        headlineMedium: const TextStyle(
-          color: AppColors.text_primary_dark,
-          fontWeight: FontWeight.bold,
-        ),
-        bodyMedium: TextStyle(
-          color: AppColors.text_secondary_dark,
-          fontSize: appData.textSize,
-        ),
+        headlineMedium: AppTypography.myAppDarkThemeHeadlineMedium(),
+        bodyMedium: AppTypography.myAppDarkThemeBodyMedium(),
       ),
     );
   }
@@ -695,14 +689,8 @@ class MyApp extends StatelessWidget {
       cardColor: AppColors.background_light,
       fontFamily: appData.fontFamily,
       textTheme: TextTheme(
-        headlineMedium: const TextStyle(
-          color: AppColors.text_primary_light,
-          fontWeight: FontWeight.bold,
-        ),
-        bodyMedium: TextStyle(
-          color: AppColors.text_secondary_dark,
-          fontSize: appData.textSize,
-        ),
+        headlineMedium: AppTypography.myAppLightThemeHeadlineMedium(),
+        bodyMedium: AppTypography.myAppLightThemeBodyMedium(),
       ),
     );
   }

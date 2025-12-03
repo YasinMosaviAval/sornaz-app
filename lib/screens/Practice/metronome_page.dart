@@ -83,7 +83,7 @@ class _MetronomePageState extends State<MetronomePage> {
         appBar: AppBar(
           title: Text(
             AppStrings.metronome_title.translate(context),
-            style: AppTypography.metronomeAppBar,
+            style: AppTypography.metronomeAppBar(),
           ),
 
           backgroundColor: isDark
@@ -101,17 +101,17 @@ class _MetronomePageState extends State<MetronomePage> {
             children: [
               Text(
                 '${AppStrings.bpm.translate(context)}: $bpm',
-                style: AppTypography.metronomeBPM,
+                style: AppTypography.metronomeBPM(),
               ),
               setBPM(),
               Text(
                 '${AppStrings.timing.translate(context)}: $timeSignature/4',
-                style: AppTypography.metronomeTiming,
+                style: AppTypography.metronomeTiming(),
               ),
               setTimeSignature(),
               Text(
                 '${AppStrings.volume.translate(context)}: ${volume.toInt()}%',
-                style: AppTypography.metronomeVolume,
+                style: AppTypography.metronomeVolume(),
               ),
               setVolume(),
               SizedBox(height: AppSpacing.space_8),
@@ -201,7 +201,7 @@ class _MetronomePageState extends State<MetronomePage> {
         isInitialized
             ? AppStrings.launch_again.translate(context)
             : AppStrings.launch.translate(context),
-        style: AppTypography.metronomeLaunchButton,
+        style: AppTypography.metronomeLaunchButton(),
       ),
     );
   }
@@ -231,7 +231,7 @@ class _MetronomePageState extends State<MetronomePage> {
         isPlaying
             ? AppStrings.pause.translate(context)
             : AppStrings.play.translate(context),
-        style: AppTypography.metronomePlayPauseButton,
+        style: AppTypography.metronomePlayPauseButton(),
       ),
     );
   }
@@ -258,7 +258,7 @@ class _MetronomePageState extends State<MetronomePage> {
       onPressed: isInitialized ? stopMetronome : null,
       child: Text(
         AppStrings.stop.translate(context),
-        style: AppTypography.metronomeStopButton,
+        style: AppTypography.metronomeStopButton(),
       ),
     );
   }

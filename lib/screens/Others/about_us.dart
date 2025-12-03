@@ -15,7 +15,7 @@ class AboutUsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(AppStrings.about_us_title.translate(context)),
-        titleTextStyle: AppTypography.aboutUsAppBarTitle,
+        titleTextStyle: AppTypography.aboutUsAppBarTitle(),
       ),
       body: CustomScrollView(
         slivers: [
@@ -27,17 +27,23 @@ class AboutUsPage extends StatelessWidget {
                 children: [
                   Text(
                     appData.aboutUsTitle1,
-                    style: AppTypography.aboutUsTitle,
+                    style: AppTypography.aboutUsTitle(),
                   ),
                   const SizedBox(height: AppSpacing.space_8),
-                  Text(appData.aboutUsText1, style: AppTypography.aboutUsBody),
+                  Text(
+                    appData.aboutUsText1,
+                    style: AppTypography.aboutUsBody(),
+                  ),
                   const SizedBox(height: AppSpacing.space_16),
                   Text(
                     appData.aboutUsTitle2,
-                    style: AppTypography.aboutUsTitle,
+                    style: AppTypography.aboutUsTitle(),
                   ),
                   const SizedBox(height: AppSpacing.space_8),
-                  Text(appData.aboutUsText2, style: AppTypography.aboutUsBody),
+                  Text(
+                    appData.aboutUsText2,
+                    style: AppTypography.aboutUsBody(),
+                  ),
                 ],
               ),
             ),

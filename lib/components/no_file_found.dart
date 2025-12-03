@@ -9,7 +9,7 @@ class NoFilesFoundWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Text(message, style: AppTypography.noFileFoundMessage),
+      child: Text(message, style: AppTypography.noFileFoundMessage()),
     );
   }
 }

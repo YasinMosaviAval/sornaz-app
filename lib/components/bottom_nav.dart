@@ -149,7 +149,7 @@ class _BottomNavBarWidgetState extends State<BottomNavBarWidget> {
                 content: Text(
                   AppStrings.two_times_press_back_button_for_exit_application
                       .translate(context),
-                  style: AppTypography.bottomNavSnackBar,
+                  style: AppTypography.bottomNavSnackBar(),
                 ),
                 duration: Duration(seconds: 2),
                 backgroundColor: Colors.black87,

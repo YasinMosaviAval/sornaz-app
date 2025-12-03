@@ -25,11 +25,12 @@ class AppDrawer extends StatelessWidget {
           UserAccountsDrawerHeader(
             accountName: Text(
               AppStrings.application_fullname.translate(context),
-              style: AppTypography.appDrawerApplicationFullname,
+              // style: AppTypography.headline6(),
+              style: AppTypography.appDrawerApplicationFullname(),
             ),
             accountEmail: Text(
               AppStrings.application_email.translate(context),
-              style: AppTypography.appDrawerApplicationEmail,
+              style: AppTypography.appDrawerApplicationEmail(),
             ),
             currentAccountPicture: SizedBox(
               child: Image.asset(
@@ -107,7 +108,7 @@ class AppDrawerItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: Icon(icon),
-      title: Text(text, style: AppTypography.appDrawerItemTitle),
+      title: Text(text, style: AppTypography.appDrawerItemTitle()),
 
       trailing: message == ''
           ? SizedBox()
@@ -119,7 +120,10 @@ class AppDrawerItem extends StatelessWidget {
                 color: messageColor,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Text(message, style: AppTypography.appDrawerItemsubtitle),
+              child: Text(
+                message,
+                style: AppTypography.appDrawerItemsubtitle(),
+              ),
             ),
       onTap: () => navigateWithFade(context, link),
     );

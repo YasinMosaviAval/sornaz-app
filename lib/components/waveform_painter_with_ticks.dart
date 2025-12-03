@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 
 class WaveformPainterWithTicks extends CustomPainter {
   final List<double> amplitudes;
@@ -118,7 +119,7 @@ class WaveformPainterWithTicksAndTime extends CustomPainter {
         if (seconds > 0) {
           textPainter.text = TextSpan(
             text: "$seconds s",
-            style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+            style: AppTypography.waveformPainterSeconds(),
           );
 
           textPainter.layout(minWidth: 0, maxWidth: 40);

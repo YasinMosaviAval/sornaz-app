@@ -30,7 +30,7 @@ class SettingsPage extends StatelessWidget {
         appBar: AppBar(
           title: Text(
             AppStrings.settings_title.translate(context),
-            style: AppTypography.settingsAppBar,
+            style: AppTypography.settingsAppBar(),
           ),
           backgroundColor: isDark
               ? AppColors.surface_dark
@@ -50,7 +50,7 @@ class SettingsPage extends StatelessWidget {
               ),
               child: Text(
                 AppStrings.notification_title.translate(context),
-                style: AppTypography.settingsSectionTitle,
+                style: AppTypography.settingsSectionTitle(),
               ),
             ),
             // SwitchListTile(
@@ -72,11 +72,11 @@ class SettingsPage extends StatelessWidget {
                   : AppColors.text_primary_light,
               title: Text(
                 AppStrings.dark_mode.translate(context),
-                style: AppTypography.settingsItemTitle,
+                style: AppTypography.settingsItemTitle(),
               ),
               subtitle: Text(
                 AppStrings.dark_mode_description.translate(context),
-                style: AppTypography.settingsItemSubtitle,
+                style: AppTypography.settingsItemSubtitle(),
               ),
               trailing: Switch(
                 value: appData.isDark,
@@ -124,20 +124,20 @@ class SettingsPage extends StatelessWidget {
               ),
               child: Text(
                 AppStrings.elements.translate(context),
-                style: AppTypography.settingsSectionTitle,
+                style: AppTypography.settingsSectionTitle(),
               ),
             ),
             ListTile(
               title: Text(
                 AppStrings.text_size.translate(context),
-                style: AppTypography.settingsItemTitle,
+                style: AppTypography.settingsItemTitle(),
               ),
               textColor: isDark
                   ? AppColors.text_primary_dark
                   : AppColors.text_primary_light,
               subtitle: Text(
                 AppStrings.text_size_description.translate(context),
-                style: AppTypography.settingsItemSubtitle,
+                style: AppTypography.settingsItemSubtitle(),
               ),
               trailing: Container(
                 padding: const EdgeInsets.all(AppSpacing.space_8),
@@ -153,7 +153,7 @@ class SettingsPage extends StatelessWidget {
                 ),
                 child: Text(
                   appData.textSize.toInt().toString(),
-                  style: AppTypography.settingsItemContent,
+                  style: AppTypography.settingsItemContent(),
                 ),
               ),
             ),
@@ -182,11 +182,11 @@ class SettingsPage extends StatelessWidget {
             ListTile(
               title: Text(
                 "انتخاب فونت",
-                style: AppTypography.settingsItemTitle,
+                style: AppTypography.settingsItemTitle(),
               ),
               subtitle: Text(
                 "فونت دلخواه خود را انتخاب کنید",
-                style: AppTypography.settingsItemSubtitle,
+                style: AppTypography.settingsItemSubtitle(),
               ),
               trailing: DropdownButton<String>(
                 value: appData.fontFamily,
@@ -198,84 +198,84 @@ class SettingsPage extends StatelessWidget {
                     value: AppTypography.iran_sansx_fn,
                     child: Text(
                       "ایران سنس FN",
-                      style: AppTypography.settingsDropdownItem,
+                      style: AppTypography.settingsDropdownItem(),
                     ),
                   ),
                   DropdownMenuItem(
                     value: AppTypography.iran_sansx,
                     child: Text(
                       "ایران سنس",
-                      style: AppTypography.settingsDropdownItem,
+                      style: AppTypography.settingsDropdownItem(),
                     ),
                   ),
                   DropdownMenuItem(
                     value: AppTypography.iran_yekan,
                     child: Text(
                       "ایران یکان",
-                      style: AppTypography.settingsDropdownItem,
+                      style: AppTypography.settingsDropdownItem(),
                     ),
                   ),
                   DropdownMenuItem(
                     value: AppTypography.iran_yekan_fn,
                     child: Text(
                       "ایران یکان FN",
-                      style: AppTypography.settingsDropdownItem,
+                      style: AppTypography.settingsDropdownItem(),
                     ),
                   ),
                   DropdownMenuItem(
                     value: AppTypography.kalameh,
                     child: Text(
                       "کلمه",
-                      style: AppTypography.settingsDropdownItem,
+                      style: AppTypography.settingsDropdownItem(),
                     ),
                   ),
                   DropdownMenuItem(
                     value: AppTypography.kalameh_fn,
                     child: Text(
                       "کلمه FN",
-                      style: AppTypography.settingsDropdownItem,
+                      style: AppTypography.settingsDropdownItem(),
                     ),
                   ),
                   DropdownMenuItem(
                     value: AppTypography.peyda,
                     child: Text(
                       "پیدا",
-                      style: AppTypography.settingsDropdownItem,
+                      style: AppTypography.settingsDropdownItem(),
                     ),
                   ),
                   DropdownMenuItem(
                     value: AppTypography.tahrir,
                     child: Text(
                       "تحریر",
-                      style: AppTypography.settingsDropdownItem,
+                      style: AppTypography.settingsDropdownItem(),
                     ),
                   ),
                   DropdownMenuItem(
                     value: AppTypography.sahel,
                     child: Text(
                       "ساحل",
-                      style: AppTypography.settingsDropdownItem,
+                      style: AppTypography.settingsDropdownItem(),
                     ),
                   ),
                   DropdownMenuItem(
                     value: AppTypography.sahel_fn,
                     child: Text(
                       "ساحل FN",
-                      style: AppTypography.settingsDropdownItem,
+                      style: AppTypography.settingsDropdownItem(),
                     ),
                   ),
                   DropdownMenuItem(
                     value: AppTypography.vazir,
                     child: Text(
                       "وزیر",
-                      style: AppTypography.settingsDropdownItem,
+                      style: AppTypography.settingsDropdownItem(),
                     ),
                   ),
                   DropdownMenuItem(
                     value: AppTypography.vazir_fn,
                     child: Text(
                       "وزیر FN",
-                      style: AppTypography.settingsDropdownItem,
+                      style: AppTypography.settingsDropdownItem(),
                     ),
                   ),
                 ],

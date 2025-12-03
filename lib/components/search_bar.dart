@@ -5,6 +5,7 @@ import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 
 class ComponentSearchBar extends StatelessWidget {
   const ComponentSearchBar({super.key});
@@ -29,18 +30,10 @@ class ComponentSearchBar extends StatelessWidget {
           child: TextField(
             textAlignVertical: TextAlignVertical.center,
             textAlign: TextAlign.start,
-            style: TextStyle(
-              fontSize: AppSpacing.space_12,
-              fontWeight: FontWeight.w600,
-            ),
+            style: AppTypography.searchBarText(),
             decoration: InputDecoration(
               hintText: AppStrings.home_searchbar_hint.translate(context),
-              hintStyle: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: isDark
-                    ? AppColors.text_secondary_dark
-                    : AppColors.text_secondary_light,
-              ),
+              hintStyle: AppTypography.searchBarHint(),
               prefixIcon: Icon(
                 Icons.search,
                 size: AppSpacing.space_24,

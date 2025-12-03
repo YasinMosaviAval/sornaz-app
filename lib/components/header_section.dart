@@ -21,12 +21,12 @@ class HeaderSection extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(title, style: AppTypography.headerSectionTitle),
+            Text(title, style: AppTypography.headerSectionTitle()),
             TextButton(
               onPressed: () {},
               child: Text(
                 AppStrings.view_all_link.translate(context),
-                style: AppTypography.headerSectionViewAllLink,
+                style: AppTypography.headerSectionViewAllLink(),
               ),
             ),
           ],

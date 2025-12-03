@@ -91,7 +91,7 @@ class RealBlogCarousel extends StatelessWidget {
                 return Center(
                   child: Text(
                     AppStrings.error_in_loading.translate(context),
-                    style: AppTypography.blogCarouselErrorInLoading,
+                    style: AppTypography.blogCarouselErrorInLoading(),
                   ),
                 );
               } else {
@@ -236,13 +236,13 @@ class RealBlogInformation extends StatelessWidget {
                     title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTypography.blogCarouselTitle,
+                    style: AppTypography.blogCarouselTitle(),
                   ),
                   SizedBox(
                     width: 170,
                     child: Text(
                       date,
-                      style: AppTypography.blogCarouselDate,
+                      style: AppTypography.blogCarouselDate(),
                       textAlign: TextAlign.end,
                     ),
                   ),

@@ -187,12 +187,12 @@ class _TunerPageState extends State<TunerPage> {
                               noteFreq,
                             ).toStringAsFixed(2),
                       // textDirection: TextDirection.ltr,
-                      style: AppTypography.tunerCentDifference,
+                      style: AppTypography.tunerCentDifference(),
                     ),
                     Text(
                       AppStrings.cents.translate(context),
                       // textDirection: TextDirection.ltr,
-                      style: AppTypography.tunerCentUnitTitle,
+                      style: AppTypography.tunerCentUnitTitle(),
                     ),
                   ],
                 ),
@@ -203,10 +203,10 @@ class _TunerPageState extends State<TunerPage> {
                       (note == AppStrings.epmty_text)
                           ? AppStrings.epmty_text
                           : getOctave(noteFreq).toString(),
-                      style: AppTypography.tunerNoteOctave,
+                      style: AppTypography.tunerNoteOctave(),
                     ),
                     SizedBox(width: AppSpacing.space_4),
-                    Text(note, style: AppTypography.tunerNoteName),
+                    Text(note, style: AppTypography.tunerNoteName()),
                   ],
                 ),
                 Column(
@@ -215,12 +215,12 @@ class _TunerPageState extends State<TunerPage> {
                     Text(
                       noteFreq.toStringAsFixed(2),
                       // textDirection: TextDirection.ltr,
-                      style: AppTypography.tunerNearNoteFrequency,
+                      style: AppTypography.tunerNearNoteFrequency(),
                     ),
                     Text(
                       AppStrings.hertz.translate(context),
                       // textDirection: TextDirection.ltr,
-                      style: AppTypography.tunerHertzUnitTitle,
+                      style: AppTypography.tunerHertzUnitTitle(),
                     ),
                   ],
                 ),
@@ -334,7 +334,7 @@ class DetectedFrequencyWidget extends StatelessWidget {
     return Text(
       "${frequency.toStringAsFixed(1)} ${AppStrings.hz.translate(context)}",
       // textDirection: TextDirection.ltr,
-      style: AppTypography.tunerDetectedFrequency,
+      style: AppTypography.tunerDetectedFrequency(),
     );
   }
 }
@@ -363,13 +363,13 @@ class ChangeFrequencyTitleWidget extends StatelessWidget {
                 Text(
                   ": ${a4.toStringAsFixed(0)} ${AppStrings.hz.translate(context)}",
                   // textDirection: TextDirection.ltr,
-                  style: AppTypography.tunerA4Frequency,
+                  style: AppTypography.tunerA4Frequency(),
                 ),
                 SizedBox(width: AppSpacing.space_4),
                 Text(
                   AppStrings.set_base_frequency.translate(context),
                   // textDirection: TextDirection.ltr,
-                  style: AppTypography.tunerSetBaseFrequency,
+                  style: AppTypography.tunerSetBaseFrequency(),
                 ),
               ],
             ),

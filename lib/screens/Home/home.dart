@@ -100,7 +100,7 @@ class ApplicationTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       AppStrings.application_name.translate(context),
-      style: AppTypography.homeApplicationTitle,
+      style: AppTypography.homeApplicationTitle(),
     );
   }
 }

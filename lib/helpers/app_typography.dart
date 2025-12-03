@@ -1,10 +1,10 @@
 // ignore_for_file: constant_identifier_names
 
 import 'package:flutter/material.dart';
-import 'package:path/path.dart';
-import 'package:provider/provider.dart';
+// import 'package:path/path.dart';
+// import 'package:provider/provider.dart';
+// import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_colors.dart';
-import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 // import 'package:provider/provider.dart';
 // import 'package:sornaz/helpers/app_data.dart';
@@ -184,6 +184,7 @@ class AppTypography {
   static const String vazir_fn = 'vazir_fn';
   static const String vazir = 'vazir';
 
+  // primary text color
   static TextStyle headline1() {
     return TextStyle(
       fontFamily: default_font_family,
@@ -272,14 +273,15 @@ class AppTypography {
       color: isDark
           ? AppColors.text_primary_dark
           : AppColors.text_primary_light,
-      wordSpacing: 1,
-      letterSpacing: 0.5,
+      // wordSpacing: 1,
+      letterSpacing: -0.01,
       fontStyle: FontStyle.normal,
       textBaseline: TextBaseline.alphabetic,
       overflow: TextOverflow.visible,
     );
   }
 
+  // primary text color
   static TextStyle body1() {
     return TextStyle(
       fontFamily: default_font_family,
@@ -304,24 +306,25 @@ class AppTypography {
       color: isDark
           ? AppColors.text_primary_dark
           : AppColors.text_primary_light,
-      wordSpacing: 1,
-      letterSpacing: 0.5,
+      // wordSpacing: 1,
+      letterSpacing: -0.01,
       fontStyle: FontStyle.normal,
       textBaseline: TextBaseline.alphabetic,
       overflow: TextOverflow.visible,
     );
   }
 
+  // secondary text color
   static TextStyle subtitle1() {
     return TextStyle(
       fontFamily: default_font_family,
       fontSize: _responsiveSize(16),
       fontWeight: FontWeight.w500,
       color: isDark
-          ? AppColors.text_primary_dark
-          : AppColors.text_primary_light,
-      wordSpacing: 1,
-      letterSpacing: 0.5,
+          ? AppColors.text_secondary_dark
+          : AppColors.text_secondary_light,
+      // wordSpacing: 1,
+      // letterSpacing: 0.5,
       fontStyle: FontStyle.normal,
       textBaseline: TextBaseline.alphabetic,
       overflow: TextOverflow.visible,
@@ -334,10 +337,26 @@ class AppTypography {
       fontSize: _responsiveSize(14),
       fontWeight: FontWeight.w500,
       color: isDark
-          ? AppColors.text_primary_dark
-          : AppColors.text_primary_light,
-      wordSpacing: 1,
-      letterSpacing: 0.5,
+          ? AppColors.text_secondary_dark
+          : AppColors.text_secondary_light,
+      // wordSpacing: 1,
+      // letterSpacing: 0.5,
+      fontStyle: FontStyle.normal,
+      textBaseline: TextBaseline.alphabetic,
+      overflow: TextOverflow.visible,
+    );
+  }
+
+  static TextStyle subtitle3() {
+    return TextStyle(
+      fontFamily: default_font_family,
+      fontSize: _responsiveSize(12),
+      fontWeight: FontWeight.w500,
+      color: isDark
+          ? AppColors.text_secondary_dark
+          : AppColors.text_secondary_light,
+      // wordSpacing: 1,
+      // letterSpacing: 0.5,
       fontStyle: FontStyle.normal,
       textBaseline: TextBaseline.alphabetic,
       overflow: TextOverflow.visible,
@@ -418,191 +437,153 @@ class AppTypography {
     );
   }
 
-  // Helpers TextStyle
   static TextStyle routerPageNotFound = TextStyle();
-  // End Helpers TextStyle
 
-  // Component TextStyle
+  // ================================================================================================================================
+  // ================================================================================================================================
+  // ================================================================================================================================
+
   static TextStyle blogCardTitle = TextStyle(fontSize: AppSpacing.space_12);
   static TextStyle blogCardTime = TextStyle(
     fontSize: AppSpacing.space_10,
     color: Colors.grey,
   );
 
-  static TextStyle appDrawerApplicationFullname = TextStyle(
+  static TextStyle appDrawerApplicationFullname() => headline6();
+  static TextStyle appDrawerApplicationEmail() => subtitle2();
+  // static TextStyle appDrawerSwitchAcountItem() => body1();
+  // static TextStyle appDrawerHeaderItemPart() => body2();
+  static TextStyle appDrawerItemTitle() => body2();
+  static TextStyle appDrawerItemsubtitle() => subtitle2();
+
+  static TextStyle blogCarouselErrorInLoading() => TextStyle(
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle appDrawerApplicationEmail = TextStyle(
-    color: isDark
-        ? AppColors.text_secondary_dark
-        : AppColors.text_secondary_light,
-  );
-
-  static TextStyle appDrawerSwitchAcountItem = TextStyle(
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  );
-
-  static TextStyle appDrawerHeaderItemPart = TextStyle();
-  static TextStyle appDrawerItemTitle = TextStyle();
-  static TextStyle appDrawerItemsubtitle = TextStyle(color: Colors.white);
-
-  static TextStyle blogCarouselErrorInLoading = TextStyle(
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  );
-
-  static TextStyle blogCarouselTitle = TextStyle(
+  static TextStyle blogCarouselTitle() => TextStyle(
     fontWeight: FontWeight.w600,
     fontSize: 12,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle blogCarouselDate = TextStyle(
+  static TextStyle blogCarouselDate() => TextStyle(
     color: isDark
         ? AppColors.text_secondary_dark
         : AppColors.text_secondary_light,
     fontSize: 10,
   );
 
-  static TextStyle bottomNavSnackBar = TextStyle();
-  static TextStyle headerSectionTitle = TextStyle();
-  static TextStyle headerSectionViewAllLink = TextStyle();
+  static TextStyle bottomNavSnackBar() => TextStyle();
+  static TextStyle headerSectionTitle() => TextStyle();
+  static TextStyle headerSectionViewAllLink() => TextStyle();
 
-  static TextStyle languageSwitchTileTitle = TextStyle(
-    fontWeight: FontWeight.w500,
-  );
+  static TextStyle languageSwitchTileTitle() =>
+      TextStyle(fontWeight: FontWeight.w500);
 
-  static TextStyle languageSwitchTileSubtitle = TextStyle(
+  static TextStyle languageSwitchTileSubtitle() => TextStyle(
     color: isDark
         ? AppColors.text_secondary_dark
         : AppColors.text_secondary_light,
   );
 
-  static TextStyle noFileFoundMessage = TextStyle(
+  static TextStyle noFileFoundMessage() => TextStyle(
     fontSize: AppSpacing.space_20,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle sectionTitleTitle = TextStyle(
+  static TextStyle sectionTitleTitle() => TextStyle(
     fontSize: AppSpacing.space_18,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
     fontWeight: FontWeight.w900,
   );
 
-  static TextStyle sectionTitleViewAllLink = TextStyle(
+  static TextStyle sectionTitleViewAllLink() => TextStyle(
     color: isDark ? AppColors.primary_dark : AppColors.primary_light,
   );
-  // End Component TextStyle
 
-  // Screens TextStyle
-  static TextStyle homeApplicationTitle = TextStyle(
+  static TextStyle homeApplicationTitle() => TextStyle(
     fontSize: AppSpacing.space_18,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
     fontWeight: FontWeight.w700,
   );
 
-  static TextStyle aboutUsAppBarTitle = TextStyle();
-  static TextStyle aboutUsTitle = TextStyle();
-  static TextStyle aboutUsBody = TextStyle();
-  static TextStyle articlesErrorInLoading = TextStyle();
+  static TextStyle aboutUsAppBarTitle() => TextStyle();
+  static TextStyle aboutUsTitle() => TextStyle();
+  static TextStyle aboutUsBody() => TextStyle();
 
-  static TextStyle articlesReleaseDate = TextStyle(
+  static TextStyle articlesErrorInLoading() => TextStyle();
+  static TextStyle articlesReleaseDate() => TextStyle(
     fontSize: AppSpacing.space_10,
     color: isDark
         ? AppColors.text_secondary_dark
         : AppColors.text_secondary_light,
   );
-
-  static TextStyle articlesTitle = TextStyle(
+  static TextStyle articlesTitle() => TextStyle(
     fontWeight: FontWeight.w800,
     fontSize: AppSpacing.space_12,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
-
-  static TextStyle articlesBrief = TextStyle(
+  static TextStyle articlesBrief() => TextStyle(
     fontSize: AppSpacing.space_10,
     color: isDark
         ? AppColors.text_secondary_dark
         : AppColors.text_secondary_light,
   );
 
-  static TextStyle articlesDetailPageErrorInSendingComment = TextStyle();
-
-  static TextStyle articlesDetailPageLoadMoreComments = TextStyle();
-
-  static TextStyle articlesDetailPageCommentsListTitle = TextStyle(
-    fontSize: AppSpacing.space_18,
-    fontWeight: FontWeight.bold,
-  );
-
-  static TextStyle articlesDetailPageCommentsListEmptyTitle = TextStyle(
-    fontSize: AppSpacing.space_16,
-    fontWeight: FontWeight.bold,
-  );
-
-  static TextStyle articlesDetailPageSendStarPoint = TextStyle();
-
-  static TextStyle articlesDetailPageWriteComment = TextStyle();
-
-  static TextStyle articlesDetailPageSendCommentButton = TextStyle();
-
-  static TextStyle articlesDetailPageSimilarArticlesTitle = TextStyle(
-    fontSize: AppSpacing.space_18,
-    fontWeight: FontWeight.bold,
-  );
-
-  static TextStyle articlesDetailPageSimilarArticlesItemTitle = TextStyle();
-
-  static TextStyle articlesDetailPageSimilarArticlesItemSubtitle = TextStyle();
-
-  static TextStyle articlesDetailPageArticlesTitle = TextStyle(
+  static TextStyle articlesDetailPageErrorInSendingComment() => TextStyle();
+  static TextStyle articlesDetailPageLoadMoreComments() => TextStyle();
+  static TextStyle articlesDetailPageCommentsListTitle() =>
+      TextStyle(fontSize: AppSpacing.space_18, fontWeight: FontWeight.bold);
+  static TextStyle articlesDetailPageCommentsListEmptyTitle() =>
+      TextStyle(fontSize: AppSpacing.space_16, fontWeight: FontWeight.bold);
+  static TextStyle articlesDetailPageSendStarPoint() => TextStyle();
+  static TextStyle articlesDetailPageWriteComment() => TextStyle();
+  static TextStyle articlesDetailPageSendCommentButton() => TextStyle();
+  static TextStyle articlesDetailPageSimilarArticlesTitle() =>
+      TextStyle(fontSize: AppSpacing.space_18, fontWeight: FontWeight.bold);
+  static TextStyle articlesDetailPageSimilarArticlesItemTitle() => TextStyle();
+  static TextStyle articlesDetailPageSimilarArticlesItemSubtitle() =>
+      TextStyle();
+  static TextStyle articlesDetailPageArticlesTitle() => TextStyle(
     fontSize: AppSpacing.space_18,
     fontWeight: FontWeight.bold,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
-
-  static TextStyle articlesDetailPageArticleCommentsListTitle = TextStyle();
-
-  static TextStyle articlesDetailPageArticleCommentsListSubtitle = TextStyle();
-
-  static TextStyle articlesDetailPageArticleCommentsListDate = TextStyle(
+  static TextStyle articlesDetailPageArticleCommentsListTitle() => TextStyle();
+  static TextStyle articlesDetailPageArticleCommentsListSubtitle() =>
+      TextStyle();
+  static TextStyle articlesDetailPageArticleCommentsListDate() => TextStyle(
     fontSize: AppSpacing.space_12,
     color: isDark
         ? AppColors.text_secondary_dark
         : AppColors.text_secondary_light,
   );
-
-  static TextStyle articlesDetailPageArticleCommentsListReleaseDate = TextStyle(
+  static TextStyle articlesDetailPageArticleCommentsListReleaseDate() =>
+      TextStyle(
+        fontSize: AppSpacing.space_14,
+        color: isDark
+            ? AppColors.text_secondary_dark
+            : AppColors.text_secondary_light,
+      );
+  static TextStyle articlesDetailPageArticlesAuthorsName() => TextStyle(
     fontSize: AppSpacing.space_14,
     color: isDark
         ? AppColors.text_secondary_dark
         : AppColors.text_secondary_light,
   );
 
-  static TextStyle articlesDetailPageArticlesAuthorsName = TextStyle(
-    fontSize: AppSpacing.space_14,
-    color: isDark
-        ? AppColors.text_secondary_dark
-        : AppColors.text_secondary_light,
-  );
-
-  static TextStyle musicPlayerNotGrantedPermissionSnackBar = TextStyle();
-
-  static TextStyle musicPlayerErrorInLoadingSnackBar = TextStyle();
-
-  static TextStyle musicPlayerAudioWidgetDurationTime = TextStyle();
-
-  static TextStyle musicPlayerAudioWidgetPositionTime = TextStyle();
-
-  static TextStyle musicPlayerAudioFileNotFound = TextStyle();
-
-  static TextStyle musicPlayerPlayingAudioFile = TextStyle(
+  static TextStyle musicPlayerNotGrantedPermissionSnackBar() => TextStyle();
+  static TextStyle musicPlayerErrorInLoadingSnackBar() => TextStyle();
+  static TextStyle musicPlayerAudioWidgetDurationTime() => TextStyle();
+  static TextStyle musicPlayerAudioWidgetPositionTime() => TextStyle();
+  static TextStyle musicPlayerAudioFileNotFound() => TextStyle();
+  static TextStyle musicPlayerPlayingAudioFile() => TextStyle(
     fontSize: AppSpacing.space_14,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
     fontWeight: FontWeight.w500,
   );
 
-  static TextStyle musicPlayerNotPlayingAudioFile = TextStyle(
+  static TextStyle musicPlayerNotPlayingAudioFile() => TextStyle(
     fontSize: AppSpacing.space_14,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
     fontWeight: FontWeight.normal,
@@ -611,58 +592,58 @@ class AppTypography {
     //     : FontWeight.normal,
   );
 
-  static TextStyle musicPlayerAudioItemDurationTime = TextStyle(
+  static TextStyle musicPlayerAudioItemDurationTime() => TextStyle(
     fontSize: AppSpacing.space_12,
     color: isDark
         ? AppColors.text_secondary_dark
         : AppColors.text_secondary_light,
   );
 
-  static TextStyle musicPlayerAudioItemAddress = TextStyle(
+  static TextStyle musicPlayerAudioItemAddress() => TextStyle(
     fontSize: AppSpacing.space_12,
     color: isDark
         ? AppColors.text_secondary_dark
         : AppColors.text_secondary_light,
   );
 
-  static TextStyle metronomeAppBar = TextStyle(
+  static TextStyle metronomeAppBar() => TextStyle(
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle metronomeBPM = TextStyle(
+  static TextStyle metronomeBPM() => TextStyle(
     fontSize: AppSpacing.space_24,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle metronomeTiming = TextStyle(
+  static TextStyle metronomeTiming() => TextStyle(
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle metronomeVolume = TextStyle(
+  static TextStyle metronomeVolume() => TextStyle(
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle metronomeLaunchButton = TextStyle(
+  static TextStyle metronomeLaunchButton() => TextStyle(
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle metronomePlayPauseButton = TextStyle(
+  static TextStyle metronomePlayPauseButton() => TextStyle(
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle metronomeStopButton = TextStyle(
+  static TextStyle metronomeStopButton() => TextStyle(
     color: isDark
         ? AppColors.text_secondary_dark
         : AppColors.text_secondary_light,
   );
 
-  static TextStyle tunerCentDifference = TextStyle(
+  static TextStyle tunerCentDifference() => TextStyle(
     fontSize: AppSpacing.space_20,
     fontWeight: FontWeight.w500,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle tunerCentUnitTitle = TextStyle(
+  static TextStyle tunerCentUnitTitle() => TextStyle(
     fontSize: AppSpacing.space_16,
     fontWeight: FontWeight.w300,
     color: isDark
@@ -670,25 +651,25 @@ class AppTypography {
         : AppColors.text_secondary_light,
   );
 
-  static TextStyle tunerNoteOctave = TextStyle(
+  static TextStyle tunerNoteOctave() => TextStyle(
     fontSize: AppSpacing.space_24,
     fontWeight: FontWeight.bold,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle tunerNoteName = TextStyle(
+  static TextStyle tunerNoteName() => TextStyle(
     fontSize: AppSpacing.space_48,
     fontWeight: FontWeight.bold,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle tunerNearNoteFrequency = TextStyle(
+  static TextStyle tunerNearNoteFrequency() => TextStyle(
     fontSize: AppSpacing.space_20,
     fontWeight: FontWeight.w500,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle tunerHertzUnitTitle = TextStyle(
+  static TextStyle tunerHertzUnitTitle() => TextStyle(
     fontSize: AppSpacing.space_16,
     fontWeight: FontWeight.w300,
     color: isDark
@@ -696,84 +677,106 @@ class AppTypography {
         : AppColors.text_secondary_light,
   );
 
-  static TextStyle tunerDetectedFrequency = TextStyle(
+  static TextStyle tunerDetectedFrequency() => TextStyle(
     fontSize: AppSpacing.space_24,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle tunerA4Frequency = TextStyle(
+  static TextStyle tunerA4Frequency() => TextStyle(
     fontSize: AppSpacing.space_16,
     fontWeight: FontWeight.w700,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle tunerSetBaseFrequency = TextStyle(
+  static TextStyle tunerSetBaseFrequency() => TextStyle(
     fontSize: AppSpacing.space_16,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle voiceRecorderNotGrantedPermissionSnackBar = caption();
-  static TextStyle voiceRecorderFilename = headline6();
-  static TextStyle voiceRecorderDate = caption();
-  static TextStyle voiceRecorderDeleteFileSnackBar = caption();
-  static TextStyle voiceRecorderRestoreFileSnackBar = caption();
-  static TextStyle voiceRecorderDeleteFileDialogueTitle = headline5();
-  static TextStyle voiceRecorderDeleteFileDialogueContent = body1();
-  static TextStyle voiceRecorderDeleteFileDialogueCancelButton = body2();
-  static TextStyle voiceRecorderDeleteFileDialogueConfirmButton = body2();
-  static TextStyle voiceRecorderDeleteFileMessageSnackBar = caption();
-  static TextStyle voiceRecorderRenameFileDialogueTitle = headline5();
-  static TextStyle voiceRecorderRenameFileDialogueCancelButton = body2();
-  static TextStyle voiceRecorderRenameFileDialogueConfirmButton = body1();
-  static TextStyle voiceRecorderRenameFileMessageSnackBar = caption();
-  static TextStyle voiceRecorderRenameFileErrorMessageSnackBar = caption();
-  static TextStyle voiceRecorderRecordingTimer = headline3();
+  static TextStyle voiceRecorderNotGrantedPermissionSnackBar() => caption();
+  static TextStyle voiceRecorderFilename() => headline6();
+  static TextStyle voiceRecorderDate() => caption();
+  static TextStyle voiceRecorderDeleteFileSnackBar() => caption();
+  static TextStyle voiceRecorderRestoreFileSnackBar() => caption();
+  static TextStyle voiceRecorderDeleteFileDialogueTitle() => headline5();
+  static TextStyle voiceRecorderDeleteFileDialogueContent() => body1();
+  static TextStyle voiceRecorderDeleteFileDialogueCancelButton() => body2();
+  static TextStyle voiceRecorderDeleteFileDialogueConfirmButton() => body2();
+  static TextStyle voiceRecorderDeleteFileMessageSnackBar() => caption();
+  static TextStyle voiceRecorderRenameFileDialogueTitle() => headline5();
+  static TextStyle voiceRecorderRenameFileDialogueCancelButton() => body2();
+  static TextStyle voiceRecorderRenameFileDialogueConfirmButton() => body1();
+  static TextStyle voiceRecorderRenameFileMessageSnackBar() => caption();
+  static TextStyle voiceRecorderRenameFileErrorMessageSnackBar() => caption();
+  static TextStyle voiceRecorderRecordingTimer() => headline3();
 
-  static TextStyle recordDetailsAppBar = TextStyle();
-  static TextStyle recordDetailsFilenameTitle = TextStyle(
+  static TextStyle recordDetailsFilenameTitle() => TextStyle(
     fontSize: 18,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
-  static TextStyle recordDetailsFilename = TextStyle(
-    fontSize: 22,
-    fontWeight: FontWeight.bold,
-  );
-  static TextStyle recordDetailsRecordDateTitle = TextStyle(fontSize: 18);
-  static TextStyle recordDetailsRecordDate = TextStyle(
-    fontSize: 20,
-    color: Colors.grey,
-  );
-  static TextStyle recordDetailsRenameTitle = TextStyle();
-  static TextStyle recordDetailsRenameDialogueTitle = TextStyle();
-  static TextStyle recordDetailsRenameDialogueCancelButton = TextStyle();
-  static TextStyle recordDetailsRenameDialogueConfirmButton = TextStyle();
-  static TextStyle recordDetailsDeleteDialogueLabel = TextStyle();
-  static TextStyle recordDetailsDeleteDialogueTitle = TextStyle();
-  static TextStyle recordDetailsDeleteDialogueContent = TextStyle();
-  static TextStyle recordDetailsDeleteDialogueCancelButton = TextStyle();
-  static TextStyle recordDetailsDeleteDialogueConfirmButton = TextStyle();
+  static TextStyle recordDetailsFilename() =>
+      TextStyle(fontSize: 22, fontWeight: FontWeight.bold);
+  static TextStyle recordDetailsRecordDate() =>
+      TextStyle(fontSize: 20, color: Colors.grey);
+  static TextStyle recordDetailsAppBar() => TextStyle();
+  static TextStyle recordDetailsRecordDateTitle() => TextStyle(fontSize: 18);
+  static TextStyle recordDetailsRenameTitle() => TextStyle();
+  static TextStyle recordDetailsRenameDialogueTitle() => TextStyle();
+  static TextStyle recordDetailsRenameDialogueCancelButton() => TextStyle();
+  static TextStyle recordDetailsRenameDialogueConfirmButton() => TextStyle();
+  static TextStyle recordDetailsDeleteDialogueLabel() => TextStyle();
+  static TextStyle recordDetailsDeleteDialogueTitle() => TextStyle();
+  static TextStyle recordDetailsDeleteDialogueContent() => TextStyle();
+  static TextStyle recordDetailsDeleteDialogueCancelButton() => TextStyle();
+  static TextStyle recordDetailsDeleteDialogueConfirmButton() => TextStyle();
 
-  static TextStyle settingsAppBar = TextStyle(
+  static TextStyle settingsAppBar() => TextStyle(
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
-
-  static TextStyle settingsSectionTitle = TextStyle(
+  static TextStyle settingsSectionTitle() => TextStyle(
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
     fontSize: 18,
     fontWeight: FontWeight.w700,
   );
+  static TextStyle settingsItemTitle() =>
+      TextStyle(fontWeight: FontWeight.w500);
+  static TextStyle settingsItemSubtitle() => TextStyle(
+    color: isDark
+        ? AppColors.text_secondary_dark
+        : AppColors.text_secondary_light,
+  );
+  static TextStyle settingsItemContent() => TextStyle();
+  static TextStyle settingsDropdownItem() => TextStyle();
 
-  static TextStyle settingsItemTitle = TextStyle(fontWeight: FontWeight.w500);
+  static TextStyle? waveformPainterSeconds() =>
+      TextStyle(fontSize: 10, color: Colors.grey.shade500);
 
-  static TextStyle settingsItemSubtitle = TextStyle(
+  static TextStyle? searchBarText() =>
+      TextStyle(fontSize: AppSpacing.space_12, fontWeight: FontWeight.w600);
+  static TextStyle? searchBarHint() => TextStyle(
+    fontWeight: FontWeight.w500,
     color: isDark
         ? AppColors.text_secondary_dark
         : AppColors.text_secondary_light,
   );
 
-  static TextStyle settingsItemContent = TextStyle();
+  static TextStyle? myAppDarkThemeHeadlineMedium() => TextStyle(
+    color: AppColors.text_primary_dark,
+    fontWeight: FontWeight.bold,
+  );
+  static TextStyle? myAppDarkThemeBodyMedium() => TextStyle(
+    color: AppColors.text_secondary_dark,
+    fontSize: 12,
+    // fontSize: appData.textSize,
+  );
 
-  static TextStyle settingsDropdownItem = TextStyle();
-
-  // End Screens TextStyle
+  static TextStyle? myAppLightThemeHeadlineMedium() => TextStyle(
+    color: AppColors.text_primary_light,
+    fontWeight: FontWeight.bold,
+  );
+  static TextStyle? myAppLightThemeBodyMedium() => TextStyle(
+    color: AppColors.text_secondary_dark,
+    fontSize: 12,
+    // fontSize: appData.textSize,
+  );
 }
