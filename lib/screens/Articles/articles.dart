@@ -3,7 +3,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:path/path.dart';
 import 'package:provider/provider.dart';
-import 'package:sornaz/components/app_drawer.dart';
+import 'package:sornaz/screens/Home/app_drawer.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_functions.dart';
@@ -156,7 +156,7 @@ class _ArticlesPageState extends State<ArticlesPage> {
               ? Center(
                   child: Text(
                     AppStrings.error_in_loading.translate(context),
-                    style: AppTypography.articlesErrorInLoading(),
+                    style: AppTypography.articlesErrorInLoading(context),
                   ),
                 )
               : RefreshIndicator(
@@ -284,7 +284,7 @@ class ArticlesReleaseDateWidget extends StatelessWidget {
       width: MediaQuery.sizeOf(context).width,
       child: Text(
         formatJalaliDate(isoDate),
-        style: AppTypography.articlesReleaseDate(),
+        style: AppTypography.articlesReleaseDate(context),
         textAlign: TextAlign.end,
       ),
     );
@@ -308,7 +308,7 @@ class ArticlesBriefWidget extends StatelessWidget {
       excerpt.length > AppSpacing.space_100
           ? '${excerpt.substring(0, 100)}...'
           : excerpt,
-      style: AppTypography.articlesBrief(),
+      style: AppTypography.articlesBrief(context),
     );
   }
 }
@@ -326,7 +326,7 @@ class ArticlesTitleWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(title, style: AppTypography.articlesTitle());
+    return Text(title, style: AppTypography.articlesTitle(context));
   }
 }
 

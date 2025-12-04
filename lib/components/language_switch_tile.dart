@@ -22,7 +22,7 @@ class LanguageSwitchTile extends StatelessWidget {
           leading: const Icon(Icons.language),
           title: Text(
             AppStrings.language_mode.translate(context),
-            style: AppTypography.languageSwitchTileTitle(),
+            style: AppTypography.languageSwitchTileTitle(context),
           ),
           iconColor: isDark
               ? AppColors.text_primary_dark
@@ -32,7 +32,7 @@ class LanguageSwitchTile extends StatelessWidget {
               : AppColors.text_primary_light,
           subtitle: Text(
             AppStrings.language_mode_description.translate(context),
-            style: AppTypography.languageSwitchTileSubtitle(),
+            style: AppTypography.languageSwitchTileSubtitle(context),
           ),
           trailing: Switch(
             value: isEnglish,

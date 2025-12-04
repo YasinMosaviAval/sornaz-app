@@ -72,7 +72,10 @@ class _RecordDetailsPageState extends State<RecordDetailsPage> {
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
-          title: Text("جزئیات ضبط", style: AppTypography.recordDetailsAppBar()),
+          title: Text(
+            "جزئیات ضبط",
+            style: AppTypography.recordDetailsAppBar(context),
+          ),
         ),
         body: Padding(
           padding: const EdgeInsets.all(AppSpacing.space_16),
@@ -239,13 +242,19 @@ class RecordedVoiceInformationWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text("نام فایل:", style: AppTypography.recordDetailsFilenameTitle()),
+        Text(
+          "نام فایل:",
+          style: AppTypography.recordDetailsFilenameTitle(context),
+        ),
         const SizedBox(height: AppSpacing.space_8),
-        Text(fileName, style: AppTypography.recordDetailsFilename()),
+        Text(fileName, style: AppTypography.recordDetailsFilename(context)),
         const SizedBox(height: AppSpacing.space_16),
-        Text("تاریخ ضبط:", style: AppTypography.recordDetailsRecordDateTitle()),
+        Text(
+          "تاریخ ضبط:",
+          style: AppTypography.recordDetailsRecordDateTitle(context),
+        ),
         const SizedBox(height: AppSpacing.space_8),
-        Text(jalaliDate, style: AppTypography.recordDetailsRecordDate()),
+        Text(jalaliDate, style: AppTypography.recordDetailsRecordDate(context)),
       ],
     );
   }
@@ -268,7 +277,7 @@ class RenameButtonWidget extends StatelessWidget {
         icon: const Icon(Icons.edit),
         label: Text(
           "تغییر نام",
-          style: AppTypography.recordDetailsRenameTitle(),
+          style: AppTypography.recordDetailsRenameTitle(context),
         ),
         onPressed: () async {
           final newName = await showDialog<String>(
@@ -276,7 +285,7 @@ class RenameButtonWidget extends StatelessWidget {
             builder: (context) => AlertDialog(
               title: Text(
                 "تغییر نام فایل",
-                style: AppTypography.recordDetailsRenameDialogueTitle(),
+                style: AppTypography.recordDetailsRenameDialogueTitle(context),
               ),
               content: TextField(
                 controller: controller,
@@ -291,7 +300,9 @@ class RenameButtonWidget extends StatelessWidget {
                   child: Text(
                     "انصراف",
                     style:
-                        AppTypography.recordDetailsRenameDialogueCancelButton(),
+                        AppTypography.recordDetailsRenameDialogueCancelButton(
+                          context,
+                        ),
                   ),
                 ),
                 ElevatedButton(
@@ -300,7 +311,9 @@ class RenameButtonWidget extends StatelessWidget {
                   child: Text(
                     "ذخیره",
                     style:
-                        AppTypography.recordDetailsRenameDialogueConfirmButton(),
+                        AppTypography.recordDetailsRenameDialogueConfirmButton(
+                          context,
+                        ),
                   ),
                 ),
               ],
@@ -338,7 +351,7 @@ class DeleteButtonWidget extends StatelessWidget {
         style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
         label: Text(
           "حذف",
-          style: AppTypography.recordDetailsDeleteDialogueLabel(),
+          style: AppTypography.recordDetailsDeleteDialogueLabel(context),
         ),
         onPressed: () async {
           final confirm = await showDialog<bool>(
@@ -346,11 +359,13 @@ class DeleteButtonWidget extends StatelessWidget {
             builder: (context) => AlertDialog(
               title: Text(
                 "تأیید حذف",
-                style: AppTypography.recordDetailsDeleteDialogueTitle(),
+                style: AppTypography.recordDetailsDeleteDialogueTitle(context),
               ),
               content: Text(
                 "آیا از حذف فایل «$fileName» مطمئن هستی؟",
-                style: AppTypography.recordDetailsDeleteDialogueContent(),
+                style: AppTypography.recordDetailsDeleteDialogueContent(
+                  context,
+                ),
               ),
               actions: [
                 TextButton(
@@ -358,7 +373,9 @@ class DeleteButtonWidget extends StatelessWidget {
                   child: Text(
                     "خیر",
                     style:
-                        AppTypography.recordDetailsDeleteDialogueCancelButton(),
+                        AppTypography.recordDetailsDeleteDialogueCancelButton(
+                          context,
+                        ),
                   ),
                 ),
                 ElevatedButton(
@@ -367,7 +384,9 @@ class DeleteButtonWidget extends StatelessWidget {
                   child: Text(
                     "بله، حذف شود",
                     style:
-                        AppTypography.recordDetailsDeleteDialogueConfirmButton(),
+                        AppTypography.recordDetailsDeleteDialogueConfirmButton(
+                          context,
+                        ),
                   ),
                 ),
               ],

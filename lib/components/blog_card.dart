@@ -36,11 +36,11 @@ class BlogCard extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.all(AppSpacing.space_8),
-            child: Text(title, style: AppTypography.blogCardTitle),
+            child: Text(title, style: AppTypography.blogCardTitle(context)),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_8),
-            child: Text(time, style: AppTypography.blogCardTime),
+            child: Text(time, style: AppTypography.blogCardTime(context)),
           ),
         ],
       ),

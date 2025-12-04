@@ -102,7 +102,9 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
         SnackBar(
           content: Text(
             AppStrings.grant_audio_permission.translate(context),
-            style: AppTypography.musicPlayerNotGrantedPermissionSnackBar(),
+            style: AppTypography.musicPlayerNotGrantedPermissionSnackBar(
+              context,
+            ),
           ),
         ),
       );
@@ -149,7 +151,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
         SnackBar(
           content: Text(
             '${AppStrings.error_in_loading.translate(context)}: $e',
-            style: AppTypography.musicPlayerErrorInLoadingSnackBar(),
+            style: AppTypography.musicPlayerErrorInLoadingSnackBar(context),
           ),
         ),
       );
@@ -295,7 +297,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
         children: [
           Text(
             _formatDuration(duration),
-            style: AppTypography.musicPlayerAudioWidgetDurationTime(),
+            style: AppTypography.musicPlayerAudioWidgetDurationTime(context),
           ),
           Expanded(
             child: Directionality(
@@ -329,7 +331,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
           ),
           Text(
             _formatDuration(position),
-            style: AppTypography.musicPlayerAudioWidgetPositionTime(),
+            style: AppTypography.musicPlayerAudioWidgetPositionTime(context),
           ),
         ],
       ),
@@ -370,7 +372,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
           ? Center(
               child: Text(
                 AppStrings.audio_file_not_found.translate(context),
-                style: AppTypography.musicPlayerAudioFileNotFound(),
+                style: AppTypography.musicPlayerAudioFileNotFound(context),
               ),
             )
           : ListView.builder(
@@ -421,14 +423,14 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
         title: isCurrentlyPlaying
             ? MarqueeText(
                 text: audio.fileName,
-                textStyle: AppTypography.musicPlayerPlayingAudioFile(),
+                textStyle: AppTypography.musicPlayerPlayingAudioFile(context),
               )
             : Text(
                 audio.fileName,
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
                 textDirection: TextDirection.ltr,
-                style: AppTypography.musicPlayerNotPlayingAudioFile(),
+                style: AppTypography.musicPlayerNotPlayingAudioFile(context),
               ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -438,7 +440,9 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
               children: [
                 Text(
                   durationText,
-                  style: AppTypography.musicPlayerAudioItemDurationTime(),
+                  style: AppTypography.musicPlayerAudioItemDurationTime(
+                    context,
+                  ),
                 ),
                 SizedBox(width: AppSpacing.space_16),
                 Expanded(
@@ -447,7 +451,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
                     textDirection: TextDirection.ltr,
-                    style: AppTypography.musicPlayerAudioItemAddress(),
+                    style: AppTypography.musicPlayerAudioItemAddress(context),
                   ),
                 ),
               ],

@@ -88,6 +88,7 @@ class BasicWaveformWidget extends StatelessWidget {
             painter: WaveformPainterWithTicksAndTime(
               _amplitudes,
               _isRecording && !_isPaused,
+              context,
             ),
             size: Size.infinite,
           ),

@@ -9,7 +9,7 @@ class AppColors {
   static const Color primary_light = Color.fromARGB(255, 0, 100, 251);
   static const Color secondary_light = Color.fromARGB(255, 193, 158, 50);
   static const Color background_light = Color.fromARGB(255, 255, 255, 255);
-  static const Color surface_light = Color.fromARGB(155, 241, 241, 241);
+  static const Color surface_light = Color.fromARGB(255, 241, 241, 241);
   static const Color shadow_light = Color.fromARGB(30, 241, 241, 241);
   static const Color text_primary_light = Color.fromARGB(255, 0, 0, 0);
   static const Color button_text_primary_light = Color.fromARGB(

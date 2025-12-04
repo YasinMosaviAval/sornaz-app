@@ -120,7 +120,9 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
           SnackBar(
             content: Text(
               AppStrings.error_in_sending_comment.translate(context),
-              style: AppTypography.articlesDetailPageErrorInSendingComment(),
+              style: AppTypography.articlesDetailPageErrorInSendingComment(
+                context,
+              ),
             ),
           ),
         );
@@ -130,7 +132,9 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
         SnackBar(
           content: Text(
             AppStrings.error_in_sending_comment.translate(context),
-            style: AppTypography.articlesDetailPageErrorInSendingComment(),
+            style: AppTypography.articlesDetailPageErrorInSendingComment(
+              context,
+            ),
           ),
         ),
       );
@@ -242,7 +246,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
         },
         child: Text(
           AppStrings.load_more_comments.translate(context),
-          style: AppTypography.articlesDetailPageLoadMoreComments(),
+          style: AppTypography.articlesDetailPageLoadMoreComments(context),
         ),
       ),
     );
@@ -253,13 +257,15 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
       children: [
         Text(
           '${AppStrings.comments.translate(context)}:',
-          style: AppTypography.articlesDetailPageCommentsListTitle(),
+          style: AppTypography.articlesDetailPageCommentsListTitle(context),
         ),
         const SizedBox(height: AppSpacing.space_8),
         if (comments.isEmpty)
           Text(
             AppStrings.without_comments.translate(context),
-            style: AppTypography.articlesDetailPageCommentsListEmptyTitle(),
+            style: AppTypography.articlesDetailPageCommentsListEmptyTitle(
+              context,
+            ),
           )
         else
           ...comments.map((comment) {
@@ -289,7 +295,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
       children: [
         Text(
           '${AppStrings.take_your_point_to_article.translate(context)}:',
-          style: AppTypography.articlesDetailPageSendStarPoint(),
+          style: AppTypography.articlesDetailPageSendStarPoint(context),
         ),
         RatingBar.builder(
           initialRating: rating,
@@ -319,7 +325,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
       children: [
         Text(
           '${AppStrings.write_your_comments.translate(context)}:',
-          style: AppTypography.articlesDetailPageWriteComment(),
+          style: AppTypography.articlesDetailPageWriteComment(context),
         ),
         TextField(
           controller: commentController,
@@ -335,7 +341,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
           onPressed: _sendComment,
           child: Text(
             AppStrings.send_comment.translate(context),
-            style: AppTypography.articlesDetailPageSendCommentButton(),
+            style: AppTypography.articlesDetailPageSendCommentButton(context),
           ),
         ),
       ],
@@ -346,7 +352,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
     return [
       Text(
         '${AppStrings.similar_articles.translate(context)}:',
-        style: AppTypography.articlesDetailPageSimilarArticlesTitle(),
+        style: AppTypography.articlesDetailPageSimilarArticlesTitle(context),
       ),
       const SizedBox(height: AppSpacing.space_8),
       ...relatedPosts.map((related) {
@@ -368,12 +374,16 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                 : const Icon(Icons.image),
             title: Text(
               relTitle,
-              style: AppTypography.articlesDetailPageSimilarArticlesItemTitle(),
+              style: AppTypography.articlesDetailPageSimilarArticlesItemTitle(
+                context,
+              ),
             ),
             subtitle: Text(
               formatJalaliDate(relDate),
               style:
-                  AppTypography.articlesDetailPageSimilarArticlesItemSubtitle(),
+                  AppTypography.articlesDetailPageSimilarArticlesItemSubtitle(
+                    context,
+                  ),
             ),
             onTap: () => Navigator.push(
               context,
@@ -400,7 +410,10 @@ class ArticlesPageTitleWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(title, style: AppTypography.articlesDetailPageArticlesTitle());
+    return Text(
+      title,
+      style: AppTypography.articlesDetailPageArticlesTitle(context),
+    );
   }
 }
 
@@ -429,15 +442,19 @@ class ArticleCommentsListWidget extends StatelessWidget {
       ),
       title: Text(
         comAuthor,
-        style: AppTypography.articlesDetailPageArticleCommentsListTitle(),
+        style: AppTypography.articlesDetailPageArticleCommentsListTitle(
+          context,
+        ),
       ),
       subtitle: Text(
         comContent,
-        style: AppTypography.articlesDetailPageArticleCommentsListSubtitle(),
+        style: AppTypography.articlesDetailPageArticleCommentsListSubtitle(
+          context,
+        ),
       ),
       trailing: Text(
         formatJalaliDate(comDate),
-        style: AppTypography.articlesDetailPageArticleCommentsListDate(),
+        style: AppTypography.articlesDetailPageArticleCommentsListDate(context),
       ),
     );
   }
@@ -474,7 +491,9 @@ class ArticlesReleasedDateWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       formatJalaliDate(isoDate),
-      style: AppTypography.articlesDetailPageArticleCommentsListReleaseDate(),
+      style: AppTypography.articlesDetailPageArticleCommentsListReleaseDate(
+        context,
+      ),
     );
   }
 }
@@ -493,7 +512,7 @@ class ArticlesAuthorWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       '${AppStrings.writer.translate(context)}: $author',
-      style: AppTypography.articlesDetailPageArticlesAuthorsName(),
+      style: AppTypography.articlesDetailPageArticlesAuthorsName(context),
     );
   }
 }

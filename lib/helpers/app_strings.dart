@@ -3,6 +3,16 @@
 import 'package:sornaz/helpers/app_images.dart';
 
 class AppStrings {
+  static const font_iran_sans = 'font_iran_sans,';
+  static const font_iran_yekan = 'font_iran_yekan,';
+  static const font_kalameh = 'font_kalameh,';
+  static const font_tahrir = 'font_tahrir,';
+  static const font_sahel = 'font_sahel,';
+  static const font_vazir = 'font_vazir,';
+  static const font_peyda = 'font_peyda,';
+  static const select_font_description = 'select_font_description,';
+  static const select_font_title = 'select_font_title,';
+
   static const application_name = 'applicationName';
   static const application_fullname = 'applicationFullname';
   static const application_email = 'applicationEmail';
@@ -159,6 +169,18 @@ class AppStrings {
     ];
   }
 
+  static const String aboutUsTitle1 = 'Why are my courses gone?';
+  static const String aboutUsText1 =
+      'Sorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Curabitur tempus urna at turpis condimentum lobortis.';
+  static const String aboutUsTitle2 =
+      'What can I do if I downloaded them on my phone?';
+  static const String aboutUsText2 =
+      'Morem ipsum dolor sit amet, consectetur adipiscing elit. Etiam eu turpis molestie, dictum est a, mattis tellus. Sed dignissim, metus nec fringilla accumsan, risus sem sollicitudin lacus, ut interdum tellus elit sed risus. Maecenas eget condimentum velit, sit amet feugiat lectus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Praesent auctor purus luctus enim egestas, ac scelerisque ante pulvinar. Donec ut rhoncus ex. Suspendisse ac rhoncus nisl, eu tempor urna. Curabitur vel bibendum lorem. Morbi convallis convallis diam sit amet lacinia. Aliquam in elementum tellus.\n\nCurabitur tempor quis eros tempus lacinia. Nam bibendum pellentesque quam a convallis. Sed ut vulputate nisi. Integer in felis sed leo vestibulum venenatis. Suspendisse quis arcu sem. Aenean feugiat ex eu vestibulum vestibulum. Morbi a eleifend magna. Nam metus lacus, porttitor eu mauris a, blandit ultrices nibh. Mauris sit amet magna non ligula vestibulum eleifend. Nulla varius volutpat turpis sed lacinia. Nam eget mi in purus lobortis eleifend. Sed nec ante dictum sem condimentum ullamcorper quis venenatis nisi. Proin vitae facilisis nisi, ac posuere leo.';
+
+  static const String contactUsTitle = 'Why are my courses gone?';
+  static const String contactUsText =
+      'Sorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Curabitur tempus urna at turpis condimentum lobortis.';
+
   // ===============================================================
   // ===============================================================
   // ===============================================================
@@ -174,6 +196,15 @@ class AppStrings {
   // ===============================================================
 
   static const allKeys = [
+    select_font_title,
+    select_font_description,
+    font_iran_sans,
+    font_iran_yekan,
+    font_kalameh,
+    font_tahrir,
+    font_sahel,
+    font_vazir,
+    font_peyda,
     application_name,
     application_fullname,
     application_email,
@@ -294,6 +325,15 @@ class AppStrings {
   ];
 
   static const en = {
+    select_font_title: 'Select Font',
+    select_font_description: 'Select your Favorite Font',
+    font_iran_sans: 'Iran SansX',
+    font_iran_yekan: 'Iran Yekan',
+    font_kalameh: 'Kalameh',
+    font_tahrir: 'Tahrir',
+    font_sahel: 'Sahel',
+    font_vazir: 'Vazir',
+    font_peyda: 'Peyda',
     application_name: 'Sornaz',
     application_fullname: 'Sornaz Music App',
     application_email: 'sornaz.ac@gmail.com',
@@ -445,6 +485,15 @@ class AppStrings {
   };
 
   static const fa = {
+    select_font_title: 'انتخاب فونت',
+    select_font_description: 'فونت دلخواه خود را انتخاب کنید',
+    font_iran_sans: 'ایران سنس',
+    font_iran_yekan: 'ایران یکان',
+    font_kalameh: 'کلمه',
+    font_tahrir: 'تحریر',
+    font_sahel: 'ساحل',
+    font_vazir: 'وزیر',
+    font_peyda: 'پیدا',
     application_name: 'سرناز',
     application_fullname: 'اپلیکیشن موسیقی سرناز',
     application_email: 'sornaz.ac@gmail.com',

@@ -19,13 +19,13 @@ class SectionTitle extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title, style: AppTypography.sectionTitleTitle()),
+        Text(title, style: AppTypography.sectionTitleTitle(context)),
         if (viewAll != null)
           TextButton(
             onPressed: () => navigateWithFade(context, viewAllLink!),
             child: Text(
               viewAll!,
-              style: AppTypography.sectionTitleViewAllLink(),
+              style: AppTypography.sectionTitleViewAllLink(context),
             ),
           ),
       ],

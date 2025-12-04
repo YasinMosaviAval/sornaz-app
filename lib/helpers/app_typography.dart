@@ -1,279 +1,74 @@
 // ignore_for_file: constant_identifier_names
 
 import 'package:flutter/material.dart';
-// import 'package:path/path.dart';
-// import 'package:provider/provider.dart';
-// import 'package:sornaz/helpers/app_data.dart';
+import 'package:provider/provider.dart';
+import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
-// import 'package:provider/provider.dart';
-// import 'package:sornaz/helpers/app_data.dart';
 
-/*
-/// ----------------------------
-/// FONT FAMILY LIST
-/// ----------------------------
-class AppFonts {
-  static const String defaultFont = iran_sansx_fn;
-
-  static const String iran_sansx_fn = 'iran_sansx_fn';
-  static const String iran_sansx = 'iran_sansx';
-  static const String iran_yekan_fn = 'iran_yekan_fn';
-  static const String iran_yekan = 'iran_yekan';
-  static const String kalameh_fn = 'kalameh_fn';
-  static const String kalameh = 'kalameh';
-  static const String peyda = 'peyda';
-  static const String tahrir = 'tahrir';
-  static const String sahel_fn = 'sahel_fn';
-  static const String sahel = 'sahel';
-  static const String vazir_fn = 'vazir_fn';
-  static const String vazir = 'vazir';
-
-  /// 🟦 لیست فونت‌ها برای دراپ‌داون
-  static const List<String> allFonts = [
-    iran_sansx_fn,
-    iran_sansx,
-    iran_yekan_fn,
-    iran_yekan,
-    kalameh_fn,
-    kalameh,
-    peyda,
-    tahrir,
-    sahel_fn,
-    sahel,
-    vazir_fn,
-    vazir,
-  ];
-}
-
-/// --------------------------------------------------------
-///  DYNAMIC TYPOGRAPHY SYSTEM
-/// --------------------------------------------------------
 class AppTypography {
-  /// گرفتن فونت انتخاب شده از Provider
-  static String getFontFamily(BuildContext context) {
-    return context.watch<AppData>().selectedFontFamily;
-  }
-
-  /// گرفتن سایز متنی انتخاب شده
-  static double scale(BuildContext context) {
-    return context.watch<AppData>().textSize / 16; // نسبت‌دهی
-  }
-
-  /// رنگ داینامیک
-  static Color primaryColor(BuildContext context) {
-    final isDark = context.watch<AppData>().isDark;
-    return isDark ? AppColors.text_primary_dark : AppColors.text_primary_light;
-  }
-
-  static Color secondaryColor(BuildContext context) {
-    final isDark = context.watch<AppData>().isDark;
-    return isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light;
-  }
-
-  /// --------------------
-  /// HEADLINES
-  /// --------------------
-
-  static TextStyle headline1(BuildContext context) => TextStyle(
-        fontFamily: getFontFamily(context),
-        color: primaryColor(context),
-        fontSize: 32 * scale(context),
-        fontWeight: FontWeight.w900,
-      );
-
-  static TextStyle headline2(BuildContext context) => TextStyle(
-        fontFamily: getFontFamily(context),
-        color: primaryColor(context),
-        fontSize: 28 * scale(context),
-        fontWeight: FontWeight.w800,
-      );
-
-  static TextStyle headline3(BuildContext context) => TextStyle(
-        fontFamily: getFontFamily(context),
-        color: primaryColor(context),
-        fontSize: 24 * scale(context),
-        fontWeight: FontWeight.w700,
-      );
-
-  static TextStyle headline4(BuildContext context) => TextStyle(
-        fontFamily: getFontFamily(context),
-        color: primaryColor(context),
-        fontSize: 20 * scale(context),
-        fontWeight: FontWeight.w600,
-      );
-
-  /// --------------------
-  /// BODY TEXT
-  /// --------------------
-
-  static TextStyle body1(BuildContext context) => TextStyle(
-        fontFamily: getFontFamily(context),
-        color: primaryColor(context),
-        fontSize: 16 * scale(context),
-      );
-
-  static TextStyle body2(BuildContext context) => TextStyle(
-        fontFamily: getFontFamily(context),
-        color: primaryColor(context),
-        fontSize: 14 * scale(context),
-      );
-
-  /// --------------------
-  /// SUBTITLES
-  /// --------------------
-
-  static TextStyle subtitle1(BuildContext context) => TextStyle(
-        fontFamily: getFontFamily(context),
-        color: secondaryColor(context),
-        fontSize: 16 * scale(context),
-        fontWeight: FontWeight.w500,
-      );
-
-  static TextStyle subtitle2(BuildContext context) => TextStyle(
-        fontFamily: getFontFamily(context),
-        color: secondaryColor(context),
-        fontSize: 14 * scale(context),
-        fontWeight: FontWeight.w500,
-      );
-
-  /// --------------------
-  /// SMALL TEXTS
-  /// --------------------
-
-  static TextStyle caption(BuildContext context) => TextStyle(
-        fontFamily: getFontFamily(context),
-        color: secondaryColor(context),
-        fontSize: 12 * scale(context),
-      );
-
-  static TextStyle overline(BuildContext context) => TextStyle(
-        fontFamily: getFontFamily(context),
-        color: secondaryColor(context),
-        fontSize: 10 * scale(context),
-        letterSpacing: 1.5,
-      );
-
-  /// --------------------
-  /// BUTTON
-  /// --------------------
-
-  static TextStyle button(BuildContext context) => TextStyle(
-        fontFamily: getFontFamily(context),
-        color: primaryColor(context),
-        fontSize: 14 * scale(context),
-        fontWeight: FontWeight.w600,
-      );
-}
-
-*/
-class AppTypography {
-  // static final isDark = Provider.of<AppData>(context as BuildContext).isDark;
   static final isDark = false;
+  static const int default_font_size_type = 1;
+
   static const String default_font_family = 'iran_sansx_fn';
   static const String iran_sansx_fn = 'iran_sansx_fn';
-  static const String iran_sansx = 'iran_sansx';
   static const String iran_yekan_fn = 'iran_yekan_fn';
+  static const String iran_sansx = 'iran_sansx';
   static const String iran_yekan = 'iran_yekan';
   static const String kalameh_fn = 'kalameh_fn';
-  static const String kalameh = 'kalameh';
-  static const String peyda = 'peyda';
-  static const String tahrir = 'tahrir';
   static const String sahel_fn = 'sahel_fn';
-  static const String sahel = 'sahel';
   static const String vazir_fn = 'vazir_fn';
+  static const String kalameh = 'kalameh';
+  static const String tahrir = 'tahrir';
+  static const String sahel = 'sahel';
   static const String vazir = 'vazir';
+  static const String peyda = 'peyda';
 
-  // primary text color
-  static TextStyle headline1() {
+  //*** */ primary text color
+  static TextStyle headline1(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
     return TextStyle(
-      fontFamily: default_font_family,
-      fontSize: _responsiveSize(32),
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 24),
       fontWeight: FontWeight.w900,
       color: isDark
           ? AppColors.text_primary_dark
           : AppColors.text_primary_light,
-      wordSpacing: 1,
-      letterSpacing: 0.5,
+      letterSpacing: -0.01,
       fontStyle: FontStyle.normal,
       textBaseline: TextBaseline.alphabetic,
       overflow: TextOverflow.visible,
     );
   }
 
-  static TextStyle headline2() {
+  static TextStyle headline2(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
     return TextStyle(
-      fontFamily: default_font_family,
-      fontSize: _responsiveSize(28),
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 20),
       fontWeight: FontWeight.w800,
       color: isDark
           ? AppColors.text_primary_dark
           : AppColors.text_primary_light,
-      wordSpacing: 1,
-      letterSpacing: 0.5,
+      letterSpacing: -0.01,
       fontStyle: FontStyle.normal,
       textBaseline: TextBaseline.alphabetic,
       overflow: TextOverflow.visible,
     );
   }
 
-  static TextStyle headline3() {
+  static TextStyle headline3(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
     return TextStyle(
-      fontFamily: default_font_family,
-      fontSize: _responsiveSize(24),
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 18),
       fontWeight: FontWeight.w700,
       color: isDark
           ? AppColors.text_primary_dark
           : AppColors.text_primary_light,
-      wordSpacing: 1,
-      letterSpacing: 0.5,
-      fontStyle: FontStyle.normal,
-      textBaseline: TextBaseline.alphabetic,
-      overflow: TextOverflow.visible,
-    );
-  }
-
-  static TextStyle headline4() {
-    return TextStyle(
-      fontFamily: default_font_family,
-      fontSize: _responsiveSize(20),
-      fontWeight: FontWeight.w600,
-      color: isDark
-          ? AppColors.text_primary_dark
-          : AppColors.text_primary_light,
-      wordSpacing: 1,
-      letterSpacing: 0.5,
-      fontStyle: FontStyle.normal,
-      textBaseline: TextBaseline.alphabetic,
-      overflow: TextOverflow.visible,
-    );
-  }
-
-  static TextStyle headline5() {
-    return TextStyle(
-      fontFamily: default_font_family,
-      fontSize: _responsiveSize(18),
-      fontWeight: FontWeight.w500,
-      color: isDark
-          ? AppColors.text_primary_dark
-          : AppColors.text_primary_light,
-      wordSpacing: 1,
-      letterSpacing: 0.5,
-      fontStyle: FontStyle.normal,
-      textBaseline: TextBaseline.alphabetic,
-      overflow: TextOverflow.visible,
-    );
-  }
-
-  static TextStyle headline6() {
-    return TextStyle(
-      fontFamily: default_font_family,
-      fontSize: _responsiveSize(16),
-      fontWeight: FontWeight.w500,
-      color: isDark
-          ? AppColors.text_primary_dark
-          : AppColors.text_primary_light,
-      // wordSpacing: 1,
       letterSpacing: -0.01,
       fontStyle: FontStyle.normal,
       textBaseline: TextBaseline.alphabetic,
@@ -281,32 +76,16 @@ class AppTypography {
     );
   }
 
-  // primary text color
-  static TextStyle body1() {
+  static TextStyle headline4(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
     return TextStyle(
-      fontFamily: default_font_family,
-      fontSize: _responsiveSize(16),
-      fontWeight: FontWeight.normal,
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 16),
+      fontWeight: FontWeight.w600,
       color: isDark
           ? AppColors.text_primary_dark
           : AppColors.text_primary_light,
-      wordSpacing: 1,
-      letterSpacing: 0.5,
-      fontStyle: FontStyle.normal,
-      textBaseline: TextBaseline.alphabetic,
-      overflow: TextOverflow.visible,
-    );
-  }
-
-  static TextStyle body2() {
-    return TextStyle(
-      fontFamily: default_font_family,
-      fontSize: _responsiveSize(14),
-      fontWeight: FontWeight.normal,
-      color: isDark
-          ? AppColors.text_primary_dark
-          : AppColors.text_primary_light,
-      // wordSpacing: 1,
       letterSpacing: -0.01,
       fontStyle: FontStyle.normal,
       textBaseline: TextBaseline.alphabetic,
@@ -314,336 +93,474 @@ class AppTypography {
     );
   }
 
-  // secondary text color
-  static TextStyle subtitle1() {
+  static TextStyle headline5(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
     return TextStyle(
-      fontFamily: default_font_family,
-      fontSize: _responsiveSize(16),
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 14),
       fontWeight: FontWeight.w500,
       color: isDark
-          ? AppColors.text_secondary_dark
-          : AppColors.text_secondary_light,
-      // wordSpacing: 1,
-      // letterSpacing: 0.5,
+          ? AppColors.text_primary_dark
+          : AppColors.text_primary_light,
+      letterSpacing: -0.01,
       fontStyle: FontStyle.normal,
       textBaseline: TextBaseline.alphabetic,
       overflow: TextOverflow.visible,
     );
   }
 
-  static TextStyle subtitle2() {
+  static TextStyle headline6(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
     return TextStyle(
-      fontFamily: default_font_family,
-      fontSize: _responsiveSize(14),
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 14),
       fontWeight: FontWeight.w500,
       color: isDark
-          ? AppColors.text_secondary_dark
-          : AppColors.text_secondary_light,
-      // wordSpacing: 1,
-      // letterSpacing: 0.5,
+          ? AppColors.text_primary_dark
+          : AppColors.text_primary_light,
+      letterSpacing: -0.01,
       fontStyle: FontStyle.normal,
       textBaseline: TextBaseline.alphabetic,
       overflow: TextOverflow.visible,
     );
   }
 
-  static TextStyle subtitle3() {
+  //*** */ primary text color
+  static TextStyle body1(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
     return TextStyle(
-      fontFamily: default_font_family,
-      fontSize: _responsiveSize(12),
-      fontWeight: FontWeight.w500,
-      color: isDark
-          ? AppColors.text_secondary_dark
-          : AppColors.text_secondary_light,
-      // wordSpacing: 1,
-      // letterSpacing: 0.5,
-      fontStyle: FontStyle.normal,
-      textBaseline: TextBaseline.alphabetic,
-      overflow: TextOverflow.visible,
-    );
-  }
-
-  static TextStyle caption() {
-    return TextStyle(
-      fontFamily: default_font_family,
-      fontSize: _responsiveSize(12),
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 16),
       fontWeight: FontWeight.normal,
       color: isDark
           ? AppColors.text_primary_dark
           : AppColors.text_primary_light,
-      wordSpacing: 1,
-      letterSpacing: 0.5,
+      letterSpacing: -0.01,
       fontStyle: FontStyle.normal,
       textBaseline: TextBaseline.alphabetic,
       overflow: TextOverflow.visible,
     );
   }
 
-  static TextStyle overline() {
+  static TextStyle body2(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
     return TextStyle(
-      fontFamily: default_font_family,
-      fontSize: _responsiveSize(10),
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 14),
       fontWeight: FontWeight.normal,
       color: isDark
           ? AppColors.text_primary_dark
           : AppColors.text_primary_light,
-      wordSpacing: 1,
-      letterSpacing: 1.5,
+      letterSpacing: -0.01,
       fontStyle: FontStyle.normal,
       textBaseline: TextBaseline.alphabetic,
       overflow: TextOverflow.visible,
     );
   }
 
-  static TextStyle button() {
+  static TextStyle body3(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
     return TextStyle(
-      fontFamily: default_font_family,
-      fontSize: _responsiveSize(14),
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 12),
+      fontWeight: FontWeight.normal,
+      color: isDark
+          ? AppColors.text_primary_dark
+          : AppColors.text_primary_light,
+      letterSpacing: -0.01,
+      fontStyle: FontStyle.normal,
+      textBaseline: TextBaseline.alphabetic,
+      overflow: TextOverflow.visible,
+    );
+  }
+
+  //*** */ secondary text color
+  static TextStyle subtitle1(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    return TextStyle(
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 16),
+      fontWeight: FontWeight.w500,
+      color: isDark
+          ? AppColors.text_secondary_dark
+          : AppColors.text_secondary_light,
+      letterSpacing: -0.01,
+      fontStyle: FontStyle.normal,
+      textBaseline: TextBaseline.alphabetic,
+      overflow: TextOverflow.visible,
+    );
+  }
+
+  static TextStyle subtitle2(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    return TextStyle(
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 14),
+      fontWeight: FontWeight.w500,
+      color: isDark
+          ? AppColors.text_secondary_dark
+          : AppColors.text_secondary_light,
+      letterSpacing: -0.01,
+      fontStyle: FontStyle.normal,
+      textBaseline: TextBaseline.alphabetic,
+      overflow: TextOverflow.visible,
+    );
+  }
+
+  static TextStyle subtitle3(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    return TextStyle(
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 12),
+      fontWeight: FontWeight.w500,
+      color: isDark
+          ? AppColors.text_secondary_dark
+          : AppColors.text_secondary_light,
+      letterSpacing: -0.01,
+      fontStyle: FontStyle.normal,
+      textBaseline: TextBaseline.alphabetic,
+      overflow: TextOverflow.visible,
+    );
+  }
+
+  static TextStyle caption(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    return TextStyle(
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 12),
+      fontWeight: FontWeight.normal,
+      color: isDark
+          ? AppColors.text_primary_dark
+          : AppColors.text_primary_light,
+      letterSpacing: -0.01,
+      fontStyle: FontStyle.normal,
+      textBaseline: TextBaseline.alphabetic,
+      overflow: TextOverflow.visible,
+    );
+  }
+
+  static TextStyle overline(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    return TextStyle(
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 10),
+      fontWeight: FontWeight.normal,
+      color: isDark
+          ? AppColors.text_primary_dark
+          : AppColors.text_primary_light,
+      letterSpacing: -0.01,
+      fontStyle: FontStyle.normal,
+      textBaseline: TextBaseline.alphabetic,
+      overflow: TextOverflow.visible,
+    );
+  }
+
+  static TextStyle button(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    return TextStyle(
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 14),
       fontWeight: FontWeight.w600,
       color: isDark
           ? AppColors.text_primary_dark
           : AppColors.text_primary_light,
-      wordSpacing: 1,
-      letterSpacing: 0.5,
+      letterSpacing: -0.01,
       fontStyle: FontStyle.normal,
       textBaseline: TextBaseline.alphabetic,
       overflow: TextOverflow.visible,
     );
   }
 
-  static double _responsiveSize(double baseSize) {
-    // مثلاً بر اساس MediaQuery (در ویجت استفاده کن)
-    // return baseSize * (MediaQuery.of(context).size.width / 375); // 375 = iPhone SE
-    return baseSize; // ساده – می‌تونی responsive کنی
+  static double _responsiveSize(BuildContext context, double baseSize) {
+    final appData = Provider.of<AppData>(context);
+    return baseSize + appData.textSize;
   }
 
-  static void changeGlobalFont(String newFontFamily) {
-    // نیاز به rebuild اپ داره – می‌تونی در AppData ذخیره کنی
-  }
-
-  static TextStyle musicTitle() {
-    return TextStyle(
-      fontFamily: default_font_family,
-      fontSize: _responsiveSize(18),
-      fontWeight: FontWeight.w600,
-      color: isDark
-          ? AppColors.text_primary_dark
-          : AppColors.text_primary_light,
-      wordSpacing: 1,
-      letterSpacing: 0.5,
-      fontStyle: FontStyle.normal,
-      textBaseline: TextBaseline.alphabetic,
-      overflow: TextOverflow.visible,
-    );
-  }
-
+  // ================================================================================================================================
+  // ================================================================================================================================
+  // ================================================================================================================================
+  // ================================================================================================================================
   static TextStyle routerPageNotFound = TextStyle();
+  // ================================================================================================================================
+  // ================================================================================================================================
+  // ================================================================================================================================
+  // ================================================================================================================================
+  // ================================================================================================================================
+  static TextStyle appDrawerApplicationFullname(BuildContext context) =>
+      headline4(context);
+  static TextStyle appDrawerApplicationEmail(BuildContext context) =>
+      subtitle2(context);
+  // static TextStyle appDrawerSwitchAcountItem(BuildContext context)=> body1(context);
+  // static TextStyle appDrawerHeaderItemPart(BuildContext context)=> body2(context);
+  static TextStyle appDrawerItemTitle(BuildContext context) => body2(context);
+  static TextStyle appDrawerItemsubtitle(BuildContext context) =>
+      subtitle2(context);
+
+  static TextStyle aboutUsAppBarTitle(BuildContext context) =>
+      headline3(context);
+  static TextStyle aboutUsTitle(BuildContext context) => headline2(context);
+  static TextStyle aboutUsBody(BuildContext context) => body2(context);
+
+  static TextStyle settingsAppBarTitle(BuildContext context) =>
+      headline3(context);
+  static TextStyle settingsSectionTitle(BuildContext context) =>
+      headline6(context);
+  static TextStyle settingsItemTitle(BuildContext context) =>
+      headline5(context);
+  static TextStyle settingsItemSubtitle(BuildContext context) =>
+      subtitle3(context);
+
+  // // @formatter:off
+  static TextStyle settingsItemContent(BuildContext context) => body3(context);
+  static TextStyle settingsDropdownItem(BuildContext context) => body3(context);
+
+  // // @formatter:on
+
+  static TextStyle languageSwitchTileTitle(BuildContext context) =>
+      settingsItemTitle(context);
+  static TextStyle languageSwitchTileSubtitle(BuildContext context) =>
+      settingsItemSubtitle(context);
 
   // ================================================================================================================================
   // ================================================================================================================================
   // ================================================================================================================================
+  // ================================================================================================================================
+  // ================================================================================================================================
+  // ================================================================================================================================
+  // ================================================================================================================================
+  // ================================================================================================================================
+  // ================================================================================================================================
+  // ================================================================================================================================
+  // ================================================================================================================================
 
-  static TextStyle blogCardTitle = TextStyle(fontSize: AppSpacing.space_12);
-  static TextStyle blogCardTime = TextStyle(
-    fontSize: AppSpacing.space_10,
-    color: Colors.grey,
-  );
-
-  static TextStyle appDrawerApplicationFullname() => headline6();
-  static TextStyle appDrawerApplicationEmail() => subtitle2();
-  // static TextStyle appDrawerSwitchAcountItem() => body1();
-  // static TextStyle appDrawerHeaderItemPart() => body2();
-  static TextStyle appDrawerItemTitle() => body2();
-  static TextStyle appDrawerItemsubtitle() => subtitle2();
-
-  static TextStyle blogCarouselErrorInLoading() => TextStyle(
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  );
-
-  static TextStyle blogCarouselTitle() => TextStyle(
+  static TextStyle blogCardTitle(BuildContext context) =>
+      TextStyle(fontSize: AppSpacing.space_12);
+  static TextStyle blogCardTime(BuildContext context) =>
+      TextStyle(fontSize: AppSpacing.space_10, color: Colors.grey);
+  static TextStyle blogCarouselErrorInLoading(BuildContext context) =>
+      TextStyle(
+        color: isDark
+            ? AppColors.text_primary_dark
+            : AppColors.text_primary_light,
+      );
+  static TextStyle blogCarouselTitle(BuildContext context) => TextStyle(
     fontWeight: FontWeight.w600,
     fontSize: 12,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
-
-  static TextStyle blogCarouselDate() => TextStyle(
+  static TextStyle blogCarouselDate(BuildContext context) => TextStyle(
     color: isDark
         ? AppColors.text_secondary_dark
         : AppColors.text_secondary_light,
     fontSize: 10,
   );
 
-  static TextStyle bottomNavSnackBar() => TextStyle();
-  static TextStyle headerSectionTitle() => TextStyle();
-  static TextStyle headerSectionViewAllLink() => TextStyle();
+  static TextStyle bottomNavSnackBar(BuildContext context) => TextStyle();
+  static TextStyle headerSectionTitle(BuildContext context) => TextStyle();
+  static TextStyle headerSectionViewAllLink(BuildContext context) =>
+      TextStyle();
 
-  static TextStyle languageSwitchTileTitle() =>
-      TextStyle(fontWeight: FontWeight.w500);
-
-  static TextStyle languageSwitchTileSubtitle() => TextStyle(
-    color: isDark
-        ? AppColors.text_secondary_dark
-        : AppColors.text_secondary_light,
-  );
-
-  static TextStyle noFileFoundMessage() => TextStyle(
+  static TextStyle noFileFoundMessage(BuildContext context) => TextStyle(
     fontSize: AppSpacing.space_20,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle sectionTitleTitle() => TextStyle(
+  static TextStyle sectionTitleTitle(BuildContext context) => TextStyle(
     fontSize: AppSpacing.space_18,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
     fontWeight: FontWeight.w900,
   );
 
-  static TextStyle sectionTitleViewAllLink() => TextStyle(
+  static TextStyle sectionTitleViewAllLink(BuildContext context) => TextStyle(
     color: isDark ? AppColors.primary_dark : AppColors.primary_light,
   );
 
-  static TextStyle homeApplicationTitle() => TextStyle(
+  static TextStyle homeApplicationTitle(BuildContext context) => TextStyle(
     fontSize: AppSpacing.space_18,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
     fontWeight: FontWeight.w700,
   );
 
-  static TextStyle aboutUsAppBarTitle() => TextStyle();
-  static TextStyle aboutUsTitle() => TextStyle();
-  static TextStyle aboutUsBody() => TextStyle();
-
-  static TextStyle articlesErrorInLoading() => TextStyle();
-  static TextStyle articlesReleaseDate() => TextStyle(
+  static TextStyle articlesErrorInLoading(BuildContext context) => TextStyle();
+  static TextStyle articlesReleaseDate(BuildContext context) => TextStyle(
     fontSize: AppSpacing.space_10,
     color: isDark
         ? AppColors.text_secondary_dark
         : AppColors.text_secondary_light,
   );
-  static TextStyle articlesTitle() => TextStyle(
+  static TextStyle articlesTitle(BuildContext context) => TextStyle(
     fontWeight: FontWeight.w800,
     fontSize: AppSpacing.space_12,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
-  static TextStyle articlesBrief() => TextStyle(
+  static TextStyle articlesBrief(BuildContext context) => TextStyle(
     fontSize: AppSpacing.space_10,
     color: isDark
         ? AppColors.text_secondary_dark
         : AppColors.text_secondary_light,
   );
 
-  static TextStyle articlesDetailPageErrorInSendingComment() => TextStyle();
-  static TextStyle articlesDetailPageLoadMoreComments() => TextStyle();
-  static TextStyle articlesDetailPageCommentsListTitle() =>
-      TextStyle(fontSize: AppSpacing.space_18, fontWeight: FontWeight.bold);
-  static TextStyle articlesDetailPageCommentsListEmptyTitle() =>
-      TextStyle(fontSize: AppSpacing.space_16, fontWeight: FontWeight.bold);
-  static TextStyle articlesDetailPageSendStarPoint() => TextStyle();
-  static TextStyle articlesDetailPageWriteComment() => TextStyle();
-  static TextStyle articlesDetailPageSendCommentButton() => TextStyle();
-  static TextStyle articlesDetailPageSimilarArticlesTitle() =>
-      TextStyle(fontSize: AppSpacing.space_18, fontWeight: FontWeight.bold);
-  static TextStyle articlesDetailPageSimilarArticlesItemTitle() => TextStyle();
-  static TextStyle articlesDetailPageSimilarArticlesItemSubtitle() =>
+  static TextStyle articlesDetailPageErrorInSendingComment(
+    BuildContext context,
+  ) => TextStyle();
+  static TextStyle articlesDetailPageLoadMoreComments(BuildContext context) =>
       TextStyle();
-  static TextStyle articlesDetailPageArticlesTitle() => TextStyle(
-    fontSize: AppSpacing.space_18,
-    fontWeight: FontWeight.bold,
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  );
-  static TextStyle articlesDetailPageArticleCommentsListTitle() => TextStyle();
-  static TextStyle articlesDetailPageArticleCommentsListSubtitle() =>
+  static TextStyle articlesDetailPageCommentsListTitle(BuildContext context) =>
+      TextStyle(fontSize: AppSpacing.space_18, fontWeight: FontWeight.bold);
+  static TextStyle articlesDetailPageCommentsListEmptyTitle(
+    BuildContext context,
+  ) => TextStyle(fontSize: AppSpacing.space_16, fontWeight: FontWeight.bold);
+  static TextStyle articlesDetailPageSendStarPoint(BuildContext context) =>
       TextStyle();
-  static TextStyle articlesDetailPageArticleCommentsListDate() => TextStyle(
+  static TextStyle articlesDetailPageWriteComment(BuildContext context) =>
+      TextStyle();
+  static TextStyle articlesDetailPageSendCommentButton(BuildContext context) =>
+      TextStyle();
+  static TextStyle articlesDetailPageSimilarArticlesTitle(
+    BuildContext context,
+  ) => TextStyle(fontSize: AppSpacing.space_18, fontWeight: FontWeight.bold);
+  static TextStyle articlesDetailPageSimilarArticlesItemTitle(
+    BuildContext context,
+  ) => TextStyle();
+  static TextStyle articlesDetailPageSimilarArticlesItemSubtitle(
+    BuildContext context,
+  ) => TextStyle();
+  static TextStyle articlesDetailPageArticlesTitle(BuildContext context) =>
+      TextStyle(
+        fontSize: AppSpacing.space_18,
+        fontWeight: FontWeight.bold,
+        color: isDark
+            ? AppColors.text_primary_dark
+            : AppColors.text_primary_light,
+      );
+  static TextStyle articlesDetailPageArticleCommentsListTitle(
+    BuildContext context,
+  ) => TextStyle();
+  static TextStyle articlesDetailPageArticleCommentsListSubtitle(
+    BuildContext context,
+  ) => TextStyle();
+  static TextStyle articlesDetailPageArticleCommentsListDate(
+    BuildContext context,
+  ) => TextStyle(
     fontSize: AppSpacing.space_12,
     color: isDark
         ? AppColors.text_secondary_dark
         : AppColors.text_secondary_light,
   );
-  static TextStyle articlesDetailPageArticleCommentsListReleaseDate() =>
+  static TextStyle articlesDetailPageArticleCommentsListReleaseDate(
+    BuildContext context,
+  ) => TextStyle(
+    fontSize: AppSpacing.space_14,
+    color: isDark
+        ? AppColors.text_secondary_dark
+        : AppColors.text_secondary_light,
+  );
+  static TextStyle articlesDetailPageArticlesAuthorsName(
+    BuildContext context,
+  ) => TextStyle(
+    fontSize: AppSpacing.space_14,
+    color: isDark
+        ? AppColors.text_secondary_dark
+        : AppColors.text_secondary_light,
+  );
+
+  static TextStyle musicPlayerNotGrantedPermissionSnackBar(
+    BuildContext context,
+  ) => TextStyle();
+  static TextStyle musicPlayerErrorInLoadingSnackBar(BuildContext context) =>
+      TextStyle();
+  static TextStyle musicPlayerAudioWidgetDurationTime(BuildContext context) =>
+      TextStyle();
+  static TextStyle musicPlayerAudioWidgetPositionTime(BuildContext context) =>
+      TextStyle();
+  static TextStyle musicPlayerAudioFileNotFound(BuildContext context) =>
+      TextStyle();
+  static TextStyle musicPlayerPlayingAudioFile(BuildContext context) =>
       TextStyle(
         fontSize: AppSpacing.space_14,
+        color: isDark
+            ? AppColors.text_primary_dark
+            : AppColors.text_primary_light,
+        fontWeight: FontWeight.w500,
+      );
+
+  static TextStyle musicPlayerNotPlayingAudioFile(BuildContext context) =>
+      TextStyle(
+        fontSize: AppSpacing.space_14,
+        color: isDark
+            ? AppColors.text_primary_dark
+            : AppColors.text_primary_light,
+        fontWeight: FontWeight.normal,
+        // fontWeight: isCurrentlyPlaying
+        //     ? FontWeight.w900
+        //     : FontWeight.normal,
+      );
+
+  static TextStyle musicPlayerAudioItemDurationTime(BuildContext context) =>
+      TextStyle(
+        fontSize: AppSpacing.space_12,
         color: isDark
             ? AppColors.text_secondary_dark
             : AppColors.text_secondary_light,
       );
-  static TextStyle articlesDetailPageArticlesAuthorsName() => TextStyle(
-    fontSize: AppSpacing.space_14,
-    color: isDark
-        ? AppColors.text_secondary_dark
-        : AppColors.text_secondary_light,
-  );
 
-  static TextStyle musicPlayerNotGrantedPermissionSnackBar() => TextStyle();
-  static TextStyle musicPlayerErrorInLoadingSnackBar() => TextStyle();
-  static TextStyle musicPlayerAudioWidgetDurationTime() => TextStyle();
-  static TextStyle musicPlayerAudioWidgetPositionTime() => TextStyle();
-  static TextStyle musicPlayerAudioFileNotFound() => TextStyle();
-  static TextStyle musicPlayerPlayingAudioFile() => TextStyle(
-    fontSize: AppSpacing.space_14,
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-    fontWeight: FontWeight.w500,
-  );
+  static TextStyle musicPlayerAudioItemAddress(BuildContext context) =>
+      TextStyle(
+        fontSize: AppSpacing.space_12,
+        color: isDark
+            ? AppColors.text_secondary_dark
+            : AppColors.text_secondary_light,
+      );
 
-  static TextStyle musicPlayerNotPlayingAudioFile() => TextStyle(
-    fontSize: AppSpacing.space_14,
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-    fontWeight: FontWeight.normal,
-    // fontWeight: isCurrentlyPlaying
-    //     ? FontWeight.w900
-    //     : FontWeight.normal,
-  );
-
-  static TextStyle musicPlayerAudioItemDurationTime() => TextStyle(
-    fontSize: AppSpacing.space_12,
-    color: isDark
-        ? AppColors.text_secondary_dark
-        : AppColors.text_secondary_light,
-  );
-
-  static TextStyle musicPlayerAudioItemAddress() => TextStyle(
-    fontSize: AppSpacing.space_12,
-    color: isDark
-        ? AppColors.text_secondary_dark
-        : AppColors.text_secondary_light,
-  );
-
-  static TextStyle metronomeAppBar() => TextStyle(
+  static TextStyle metronomeAppBar(BuildContext context) => TextStyle(
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle metronomeBPM() => TextStyle(
+  static TextStyle metronomeBPM(BuildContext context) => TextStyle(
     fontSize: AppSpacing.space_24,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle metronomeTiming() => TextStyle(
+  static TextStyle metronomeTiming(BuildContext context) => TextStyle(
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle metronomeVolume() => TextStyle(
+  static TextStyle metronomeVolume(BuildContext context) => TextStyle(
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle metronomeLaunchButton() => TextStyle(
+  static TextStyle metronomeLaunchButton(BuildContext context) => TextStyle(
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle metronomePlayPauseButton() => TextStyle(
+  static TextStyle metronomePlayPauseButton(BuildContext context) => TextStyle(
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle metronomeStopButton() => TextStyle(
+  static TextStyle metronomeStopButton(BuildContext context) => TextStyle(
     color: isDark
         ? AppColors.text_secondary_dark
         : AppColors.text_secondary_light,
   );
 
-  static TextStyle tunerCentDifference() => TextStyle(
+  static TextStyle tunerCentDifference(BuildContext context) => TextStyle(
     fontSize: AppSpacing.space_20,
     fontWeight: FontWeight.w500,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle tunerCentUnitTitle() => TextStyle(
+  static TextStyle tunerCentUnitTitle(BuildContext context) => TextStyle(
     fontSize: AppSpacing.space_16,
     fontWeight: FontWeight.w300,
     color: isDark
@@ -651,25 +568,25 @@ class AppTypography {
         : AppColors.text_secondary_light,
   );
 
-  static TextStyle tunerNoteOctave() => TextStyle(
+  static TextStyle tunerNoteOctave(BuildContext context) => TextStyle(
     fontSize: AppSpacing.space_24,
     fontWeight: FontWeight.bold,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle tunerNoteName() => TextStyle(
+  static TextStyle tunerNoteName(BuildContext context) => TextStyle(
     fontSize: AppSpacing.space_48,
     fontWeight: FontWeight.bold,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle tunerNearNoteFrequency() => TextStyle(
+  static TextStyle tunerNearNoteFrequency(BuildContext context) => TextStyle(
     fontSize: AppSpacing.space_20,
     fontWeight: FontWeight.w500,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle tunerHertzUnitTitle() => TextStyle(
+  static TextStyle tunerHertzUnitTitle(BuildContext context) => TextStyle(
     fontSize: AppSpacing.space_16,
     fontWeight: FontWeight.w300,
     color: isDark
@@ -677,106 +594,132 @@ class AppTypography {
         : AppColors.text_secondary_light,
   );
 
-  static TextStyle tunerDetectedFrequency() => TextStyle(
+  static TextStyle tunerDetectedFrequency(BuildContext context) => TextStyle(
     fontSize: AppSpacing.space_24,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle tunerA4Frequency() => TextStyle(
+  static TextStyle tunerA4Frequency(BuildContext context) => TextStyle(
     fontSize: AppSpacing.space_16,
     fontWeight: FontWeight.w700,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle tunerSetBaseFrequency() => TextStyle(
+  static TextStyle tunerSetBaseFrequency(BuildContext context) => TextStyle(
     fontSize: AppSpacing.space_16,
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
-  static TextStyle voiceRecorderNotGrantedPermissionSnackBar() => caption();
-  static TextStyle voiceRecorderFilename() => headline6();
-  static TextStyle voiceRecorderDate() => caption();
-  static TextStyle voiceRecorderDeleteFileSnackBar() => caption();
-  static TextStyle voiceRecorderRestoreFileSnackBar() => caption();
-  static TextStyle voiceRecorderDeleteFileDialogueTitle() => headline5();
-  static TextStyle voiceRecorderDeleteFileDialogueContent() => body1();
-  static TextStyle voiceRecorderDeleteFileDialogueCancelButton() => body2();
-  static TextStyle voiceRecorderDeleteFileDialogueConfirmButton() => body2();
-  static TextStyle voiceRecorderDeleteFileMessageSnackBar() => caption();
-  static TextStyle voiceRecorderRenameFileDialogueTitle() => headline5();
-  static TextStyle voiceRecorderRenameFileDialogueCancelButton() => body2();
-  static TextStyle voiceRecorderRenameFileDialogueConfirmButton() => body1();
-  static TextStyle voiceRecorderRenameFileMessageSnackBar() => caption();
-  static TextStyle voiceRecorderRenameFileErrorMessageSnackBar() => caption();
-  static TextStyle voiceRecorderRecordingTimer() => headline3();
+  static TextStyle voiceRecorderNotGrantedPermissionSnackBar(
+    BuildContext context,
+  ) => caption(context);
+  static TextStyle voiceRecorderFilename(BuildContext context) =>
+      headline6(context);
+  static TextStyle voiceRecorderDate(BuildContext context) => caption(context);
+  static TextStyle voiceRecorderDeleteFileSnackBar(BuildContext context) =>
+      caption(context);
+  static TextStyle voiceRecorderRestoreFileSnackBar(BuildContext context) =>
+      caption(context);
+  static TextStyle voiceRecorderDeleteFileDialogueTitle(BuildContext context) =>
+      headline5(context);
+  static TextStyle voiceRecorderDeleteFileDialogueContent(
+    BuildContext context,
+  ) => body1(context);
+  static TextStyle voiceRecorderDeleteFileDialogueCancelButton(
+    BuildContext context,
+  ) => body2(context);
+  static TextStyle voiceRecorderDeleteFileDialogueConfirmButton(
+    BuildContext context,
+  ) => body2(context);
+  static TextStyle voiceRecorderDeleteFileMessageSnackBar(
+    BuildContext context,
+  ) => caption(context);
+  static TextStyle voiceRecorderRenameFileDialogueTitle(BuildContext context) =>
+      headline5(context);
+  static TextStyle voiceRecorderRenameFileDialogueCancelButton(
+    BuildContext context,
+  ) => body2(context);
+  static TextStyle voiceRecorderRenameFileDialogueConfirmButton(
+    BuildContext context,
+  ) => body1(context);
+  static TextStyle voiceRecorderRenameFileMessageSnackBar(
+    BuildContext context,
+  ) => caption(context);
+  static TextStyle voiceRecorderRenameFileErrorMessageSnackBar(
+    BuildContext context,
+  ) => caption(context);
+  static TextStyle voiceRecorderRecordingTimer(BuildContext context) =>
+      headline3(context);
 
-  static TextStyle recordDetailsFilenameTitle() => TextStyle(
-    fontSize: 18,
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  );
-  static TextStyle recordDetailsFilename() =>
+  static TextStyle recordDetailsFilenameTitle(BuildContext context) =>
+      TextStyle(
+        fontSize: 18,
+        color: isDark
+            ? AppColors.text_primary_dark
+            : AppColors.text_primary_light,
+      );
+  static TextStyle recordDetailsFilename(BuildContext context) =>
       TextStyle(fontSize: 22, fontWeight: FontWeight.bold);
-  static TextStyle recordDetailsRecordDate() =>
+  static TextStyle recordDetailsRecordDate(BuildContext context) =>
       TextStyle(fontSize: 20, color: Colors.grey);
-  static TextStyle recordDetailsAppBar() => TextStyle();
-  static TextStyle recordDetailsRecordDateTitle() => TextStyle(fontSize: 18);
-  static TextStyle recordDetailsRenameTitle() => TextStyle();
-  static TextStyle recordDetailsRenameDialogueTitle() => TextStyle();
-  static TextStyle recordDetailsRenameDialogueCancelButton() => TextStyle();
-  static TextStyle recordDetailsRenameDialogueConfirmButton() => TextStyle();
-  static TextStyle recordDetailsDeleteDialogueLabel() => TextStyle();
-  static TextStyle recordDetailsDeleteDialogueTitle() => TextStyle();
-  static TextStyle recordDetailsDeleteDialogueContent() => TextStyle();
-  static TextStyle recordDetailsDeleteDialogueCancelButton() => TextStyle();
-  static TextStyle recordDetailsDeleteDialogueConfirmButton() => TextStyle();
+  static TextStyle recordDetailsAppBar(BuildContext context) => TextStyle();
+  static TextStyle recordDetailsRecordDateTitle(BuildContext context) =>
+      TextStyle(fontSize: 18);
+  static TextStyle recordDetailsRenameTitle(BuildContext context) =>
+      TextStyle();
+  static TextStyle recordDetailsRenameDialogueTitle(BuildContext context) =>
+      TextStyle();
+  static TextStyle recordDetailsRenameDialogueCancelButton(
+    BuildContext context,
+  ) => TextStyle();
+  static TextStyle recordDetailsRenameDialogueConfirmButton(
+    BuildContext context,
+  ) => TextStyle();
+  static TextStyle recordDetailsDeleteDialogueLabel(BuildContext context) =>
+      TextStyle();
+  static TextStyle recordDetailsDeleteDialogueTitle(BuildContext context) =>
+      TextStyle();
+  static TextStyle recordDetailsDeleteDialogueContent(BuildContext context) =>
+      TextStyle();
+  static TextStyle recordDetailsDeleteDialogueCancelButton(
+    BuildContext context,
+  ) => TextStyle();
+  static TextStyle recordDetailsDeleteDialogueConfirmButton(
+    BuildContext context,
+  ) => TextStyle();
 
-  static TextStyle settingsAppBar() => TextStyle(
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  );
-  static TextStyle settingsSectionTitle() => TextStyle(
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-    fontSize: 18,
-    fontWeight: FontWeight.w700,
-  );
-  static TextStyle settingsItemTitle() =>
-      TextStyle(fontWeight: FontWeight.w500);
-  static TextStyle settingsItemSubtitle() => TextStyle(
-    color: isDark
-        ? AppColors.text_secondary_dark
-        : AppColors.text_secondary_light,
-  );
-  static TextStyle settingsItemContent() => TextStyle();
-  static TextStyle settingsDropdownItem() => TextStyle();
-
-  static TextStyle? waveformPainterSeconds() =>
+  static TextStyle? waveformPainterSeconds(BuildContext context) =>
       TextStyle(fontSize: 10, color: Colors.grey.shade500);
 
-  static TextStyle? searchBarText() =>
+  static TextStyle? searchBarText(BuildContext context) =>
       TextStyle(fontSize: AppSpacing.space_12, fontWeight: FontWeight.w600);
-  static TextStyle? searchBarHint() => TextStyle(
+  static TextStyle? searchBarHint(BuildContext context) => TextStyle(
     fontWeight: FontWeight.w500,
     color: isDark
         ? AppColors.text_secondary_dark
         : AppColors.text_secondary_light,
   );
 
-  static TextStyle? myAppDarkThemeHeadlineMedium() => TextStyle(
-    color: AppColors.text_primary_dark,
-    fontWeight: FontWeight.bold,
-  );
-  static TextStyle? myAppDarkThemeBodyMedium() => TextStyle(
-    color: AppColors.text_secondary_dark,
-    fontSize: 12,
-    // fontSize: appData.textSize,
-  );
+  // static TextStyle? myAppDarkThemeHeadlineMedium(BuildContext context) =>
+  //     TextStyle(
+  //       color: AppColors.text_primary_dark,
+  //       fontWeight: FontWeight.bold,
+  //     );
+  // static TextStyle? myAppDarkThemeBodyMedium(BuildContext context) => TextStyle(
+  //   color: AppColors.text_secondary_dark,
+  //   fontSize: 12,
+  //   // fontSize: appData.textSize,
+  // );
 
-  static TextStyle? myAppLightThemeHeadlineMedium() => TextStyle(
-    color: AppColors.text_primary_light,
-    fontWeight: FontWeight.bold,
-  );
-  static TextStyle? myAppLightThemeBodyMedium() => TextStyle(
-    color: AppColors.text_secondary_dark,
-    fontSize: 12,
-    // fontSize: appData.textSize,
-  );
+  // static TextStyle? myAppLightThemeHeadlineMedium(BuildContext context) =>
+  //     TextStyle(
+  //       color: AppColors.text_primary_light,
+  //       fontWeight: FontWeight.bold,
+  //     );
+  // static TextStyle? myAppLightThemeBodyMedium(BuildContext context) =>
+  //     TextStyle(
+  //       color: AppColors.text_secondary_dark,
+  //       fontSize: 12,
+  //       // fontSize: appData.textSize,
+  //     );
 }

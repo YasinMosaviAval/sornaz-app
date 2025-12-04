@@ -30,10 +30,10 @@ class ComponentSearchBar extends StatelessWidget {
           child: TextField(
             textAlignVertical: TextAlignVertical.center,
             textAlign: TextAlign.start,
-            style: AppTypography.searchBarText(),
+            style: AppTypography.searchBarText(context),
             decoration: InputDecoration(
               hintText: AppStrings.home_searchbar_hint.translate(context),
-              hintStyle: AppTypography.searchBarHint(),
+              hintStyle: AppTypography.searchBarHint(context),
               prefixIcon: Icon(
                 Icons.search,
                 size: AppSpacing.space_24,

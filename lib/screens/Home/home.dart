@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sornaz/components/app_drawer.dart';
 import 'package:sornaz/components/blog_carousel.dart';
 import 'package:sornaz/components/bottom_nav.dart';
 import 'package:sornaz/components/search_bar.dart';
@@ -12,6 +11,7 @@ import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
+import 'package:sornaz/screens/Home/app_drawer.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -100,7 +100,7 @@ class ApplicationTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       AppStrings.application_name.translate(context),
-      style: AppTypography.homeApplicationTitle(),
+      style: AppTypography.homeApplicationTitle(context),
     );
   }
 }

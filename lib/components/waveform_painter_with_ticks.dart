@@ -62,8 +62,13 @@ class WaveformPainterWithTicks extends CustomPainter {
 class WaveformPainterWithTicksAndTime extends CustomPainter {
   final List<double> amplitudes;
   final bool isRecording;
+  final BuildContext context;
 
-  WaveformPainterWithTicksAndTime(this.amplitudes, this.isRecording);
+  WaveformPainterWithTicksAndTime(
+    this.amplitudes,
+    this.isRecording,
+    this.context,
+  );
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -119,7 +124,8 @@ class WaveformPainterWithTicksAndTime extends CustomPainter {
         if (seconds > 0) {
           textPainter.text = TextSpan(
             text: "$seconds s",
-            style: AppTypography.waveformPainterSeconds(),
+            style: AppTypography.waveformPainterSeconds(context),
+            // ==================================================
           );
 
           textPainter.layout(minWidth: 0, maxWidth: 40);

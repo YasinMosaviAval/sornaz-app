@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sornaz/classes/my_app.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';

@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
@@ -11,11 +9,11 @@ class AboutUsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final appData = Provider.of<AppData>(context);
+    // final appData = Provider.of<AppData>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(AppStrings.about_us_title.translate(context)),
-        titleTextStyle: AppTypography.aboutUsAppBarTitle(),
+        titleTextStyle: AppTypography.aboutUsAppBarTitle(context),
       ),
       body: CustomScrollView(
         slivers: [
@@ -26,23 +24,23 @@ class AboutUsPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    appData.aboutUsTitle1,
-                    style: AppTypography.aboutUsTitle(),
+                    AppStrings.aboutUsTitle1,
+                    style: AppTypography.aboutUsTitle(context),
                   ),
                   const SizedBox(height: AppSpacing.space_8),
                   Text(
-                    appData.aboutUsText1,
-                    style: AppTypography.aboutUsBody(),
+                    AppStrings.aboutUsText1,
+                    style: AppTypography.aboutUsBody(context),
                   ),
                   const SizedBox(height: AppSpacing.space_16),
                   Text(
-                    appData.aboutUsTitle2,
-                    style: AppTypography.aboutUsTitle(),
+                    AppStrings.aboutUsTitle2,
+                    style: AppTypography.aboutUsTitle(context),
                   ),
                   const SizedBox(height: AppSpacing.space_8),
                   Text(
-                    appData.aboutUsText2,
-                    style: AppTypography.aboutUsBody(),
+                    AppStrings.aboutUsText2,
+                    style: AppTypography.aboutUsBody(context),
                   ),
                 ],
               ),
