@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
@@ -9,12 +12,24 @@ class AboutUsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final appData = Provider.of<AppData>(context);
+    final appData = Provider.of<AppData>(context);
+    final bool isDark = appData.isDark;
     return Scaffold(
       appBar: AppBar(
         title: Text(AppStrings.about_us_title.translate(context)),
         titleTextStyle: AppTypography.aboutUsAppBarTitle(context),
+        backgroundColor: isDark
+            ? AppColors.surface_dark
+            : AppColors.surface_light,
+        iconTheme: IconThemeData(
+          color: isDark
+              ? AppColors.text_primary_dark
+              : AppColors.text_primary_light,
+        ),
       ),
+      backgroundColor: isDark
+          ? AppColors.background_dark
+          : AppColors.background_light,
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
