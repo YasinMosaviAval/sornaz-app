@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sornaz/classes/accordion.dart';
+import 'package:sornaz/components/title_description.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
@@ -35,27 +37,15 @@ class AboutUsPage extends StatelessWidget {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.space_16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppStrings.aboutUsTitle1,
-                    style: AppTypography.aboutUsTitle(context),
+              child: Accordion(
+                items: [
+                  AccordionItem(
+                    title: AppStrings.aboutUsTitle1,
+                    description: AppStrings.aboutUsText1,
                   ),
-                  const SizedBox(height: AppSpacing.space_8),
-                  Text(
-                    AppStrings.aboutUsText1,
-                    style: AppTypography.aboutUsBody(context),
-                  ),
-                  const SizedBox(height: AppSpacing.space_16),
-                  Text(
-                    AppStrings.aboutUsTitle2,
-                    style: AppTypography.aboutUsTitle(context),
-                  ),
-                  const SizedBox(height: AppSpacing.space_8),
-                  Text(
-                    AppStrings.aboutUsText2,
-                    style: AppTypography.aboutUsBody(context),
+                  AccordionItem(
+                    title: AppStrings.aboutUsTitle2,
+                    description: AppStrings.aboutUsText2,
                   ),
                 ],
               ),

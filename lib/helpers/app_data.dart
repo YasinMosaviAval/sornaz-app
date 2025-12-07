@@ -1,5 +1,3 @@
-// ignore_for_file: non_constant_identifier_names
-
 import 'package:flutter/material.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 
@@ -20,7 +18,7 @@ class AppData extends ChangeNotifier {
     notifyListeners();
   }
 
-  double textSize = 14.0;
+  double textSize = 0;
 
   Future<void> updateTextSize(double value) async {
     textSize = value;

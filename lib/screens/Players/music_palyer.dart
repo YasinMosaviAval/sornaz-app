@@ -258,7 +258,12 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
       padding: const EdgeInsets.all(AppSpacing.space_16),
       color: isDark ? AppColors.hovered_dark : AppColors.hovered_light,
       child: Column(
-        children: [AudioWidgetTimesAndSlider(), audioWidgetButtons()],
+        children: [
+          AudioWidgetTimesAndSlider(),
+          audioWidgetButtons(
+            isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+          ),
+        ],
       ),
     );
   }
@@ -273,10 +278,37 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
         decoration: InputDecoration(
           hintText: AppStrings.music_player_search_hint.translate(context),
           hintTextDirection: TextDirection.ltr,
-          prefixIcon: const Icon(Icons.search),
+          prefixIcon: Icon(
+            Icons.search,
+            color: isDark
+                ? AppColors.text_secondary_dark
+                : AppColors.text_secondary_light,
+          ),
+          hintStyle: TextStyle(
+            color: isDark
+                ? AppColors.text_secondary_dark
+                : AppColors.text_secondary_light,
+          ),
+          // counterStyle: TextStyle(color: Colors.red),
+          // errorStyle: TextStyle(color: Colors.deepPurple),
+          // labelStyle: TextStyle(color: Colors.white),
+          // helperStyle: TextStyle(color: Colors.blue),
+          // prefixStyle: TextStyle(color: Colors.orange),
+          // suffixStyle: TextStyle(color: Colors.yellow),
+          // floatingLabelStyle: TextStyle(color: Colors.green),
           border: InputBorder.none,
-          fillColor: isDark ? AppColors.surface_dark : AppColors.surface_light,
-          focusColor: isDark ? AppColors.clicked_dark : AppColors.clicked_light,
+          // fillColor: isDark ? AppColors.surface_dark : AppColors.surface_light,
+          // focusColor: isDark ? AppColors.clicked_dark : AppColors.clicked_light,
+          // fillColor: Colors.red,
+          // focusColor: Colors.red,
+        ),
+        cursorColor: isDark
+            ? AppColors.text_secondary_dark
+            : AppColors.text_secondary_light,
+        style: TextStyle(
+          color: isDark
+              ? AppColors.text_primary_dark
+              : AppColors.text_primary_light,
         ),
       ),
       backgroundColor: isDark
@@ -338,24 +370,30 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
     );
   }
 
-  SizedBox audioWidgetButtons() {
+  SizedBox audioWidgetButtons(Color color) {
     return SizedBox(
       height: AppSpacing.space_36,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           IconButton(
-            icon: const Icon(Icons.skip_next),
+            icon: Icon(Icons.skip_next, color: color),
             iconSize: AppSpacing.space_36,
             onPressed: _playNext,
           ),
           IconButton(
             iconSize: AppSpacing.space_36,
-            icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
+            icon: Icon(
+              isPlaying ? Icons.pause : Icons.play_arrow,
+              color: color,
+            ),
             onPressed: isPlaying ? _pauseAudio : () => _playAudio(currentIndex),
           ),
           IconButton(
-            icon: Icon(isInUndoMode ? Icons.undo : Icons.skip_previous),
+            icon: Icon(
+              isInUndoMode ? Icons.undo : Icons.skip_previous,
+              color: color,
+            ),
             iconSize: AppSpacing.space_36,
             onPressed: _handlePreviousOrUndo,
           ),

@@ -60,7 +60,7 @@ class HomePage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ComponentSearchBar(),
-              RealBlogCarousel(),
+              BlogCarousel(),
               // NewCourseCardCarousel(),
               // UpdatedCoursesCarousel(),
               // ImportantCoursesList(),

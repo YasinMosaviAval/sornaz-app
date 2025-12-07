@@ -128,6 +128,23 @@ class AppTypography {
   }
 
   //*** */ primary text color
+  static TextStyle body0(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    return TextStyle(
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 48),
+      fontWeight: FontWeight.w700,
+      color: isDark
+          ? AppColors.text_primary_dark
+          : AppColors.text_primary_light,
+      letterSpacing: -0.01,
+      fontStyle: FontStyle.normal,
+      textBaseline: TextBaseline.alphabetic,
+      overflow: TextOverflow.visible,
+    );
+  }
+
   static TextStyle body1(BuildContext context) {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
@@ -288,6 +305,68 @@ class AppTypography {
   }
 
   // ================================================================================================================================
+  static TextStyle tunerCentDifference(BuildContext context) => body1(context);
+  static TextStyle tunerCentUnitTitle(BuildContext context) =>
+      subtitle1(context);
+  static TextStyle tunerNoteOctave(BuildContext context) => body1(context);
+  static TextStyle tunerNoteName(BuildContext context) => body0(context);
+  static TextStyle tunerHertzUnitTitle(BuildContext context) =>
+      subtitle1(context);
+  static TextStyle tunerNearNoteFrequency(BuildContext context) =>
+      body1(context);
+  static TextStyle tunerSetBaseFrequency(BuildContext context) =>
+      subtitle1(context);
+  static TextStyle tunerA4Frequency(BuildContext context) => body1(context);
+  static TextStyle tunerDetectedFrequency(BuildContext context) =>
+      body1(context);
+
+  // static TextStyle tunerCentDifference(BuildContext context) => TextStyle(
+  //   fontSize: AppSpacing.space_20,
+  //   fontWeight: FontWeight.w500,
+  //   color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+  // );
+  // static TextStyle tunerCentUnitTitle(BuildContext context) => TextStyle(
+  //   fontSize: AppSpacing.space_16,
+  //   fontWeight: FontWeight.w300,
+  //   color: isDark
+  //       ? AppColors.text_secondary_dark
+  //       : AppColors.text_secondary_light,
+  // );
+  // static TextStyle tunerNoteOctave(BuildContext context) => TextStyle(
+  //   fontSize: AppSpacing.space_24,
+  //   fontWeight: FontWeight.bold,
+  //   color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+  // );
+  // static TextStyle tunerNoteName(BuildContext context) => TextStyle(
+  //   fontSize: AppSpacing.space_48,
+  //   fontWeight: FontWeight.bold,
+  //   color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+  // );
+  // static TextStyle tunerNearNoteFrequency(BuildContext context) => TextStyle(
+  //   fontSize: AppSpacing.space_20,
+  //   fontWeight: FontWeight.w500,
+  //   color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+  // );
+  // static TextStyle tunerHertzUnitTitle(BuildContext context) => TextStyle(
+  //   fontSize: AppSpacing.space_16,
+  //   fontWeight: FontWeight.w300,
+  //   color: isDark
+  //       ? AppColors.text_secondary_dark
+  //       : AppColors.text_secondary_light,
+  // );
+  // static TextStyle tunerDetectedFrequency(BuildContext context) => TextStyle(
+  //   fontSize: AppSpacing.space_24,
+  //   color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+  // );
+  // static TextStyle tunerA4Frequency(BuildContext context) => TextStyle(
+  //   fontSize: AppSpacing.space_16,
+  //   fontWeight: FontWeight.w700,
+  //   color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+  // );
+  // static TextStyle tunerSetBaseFrequency(BuildContext context) => TextStyle(
+  //   fontSize: AppSpacing.space_16,
+  //   color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+  // );
   // ================================================================================================================================
   // ================================================================================================================================
   // ================================================================================================================================
@@ -332,6 +411,21 @@ class AppTypography {
   static TextStyle languageSwitchTileSubtitle(BuildContext context) =>
       settingsItemSubtitle(context);
 
+  static TextStyle musicPlayerAudioWidgetDurationTime(BuildContext context) =>
+      body3(context);
+  static TextStyle musicPlayerAudioWidgetPositionTime(BuildContext context) =>
+      body3(context);
+  static TextStyle musicPlayerPlayingAudioFile(BuildContext context) =>
+      body3(context);
+
+  static TextStyle musicPlayerNotPlayingAudioFile(BuildContext context) =>
+      body3(context);
+
+  static TextStyle musicPlayerAudioItemDurationTime(BuildContext context) =>
+      subtitle3(context);
+
+  static TextStyle musicPlayerAudioItemAddress(BuildContext context) =>
+      subtitle3(context);
   // ================================================================================================================================
   // ================================================================================================================================
   // ================================================================================================================================
@@ -348,6 +442,8 @@ class AppTypography {
       TextStyle(fontSize: AppSpacing.space_12);
   static TextStyle blogCardTime(BuildContext context) =>
       TextStyle(fontSize: AppSpacing.space_10, color: Colors.grey);
+  // static TextStyle blogCarouselErrorInLoading(BuildContext context) =>
+  //     headline1(context);
   static TextStyle blogCarouselErrorInLoading(BuildContext context) =>
       TextStyle(
         color: isDark
@@ -480,48 +576,8 @@ class AppTypography {
   ) => TextStyle();
   static TextStyle musicPlayerErrorInLoadingSnackBar(BuildContext context) =>
       TextStyle();
-  static TextStyle musicPlayerAudioWidgetDurationTime(BuildContext context) =>
-      TextStyle();
-  static TextStyle musicPlayerAudioWidgetPositionTime(BuildContext context) =>
-      TextStyle();
   static TextStyle musicPlayerAudioFileNotFound(BuildContext context) =>
       TextStyle();
-  static TextStyle musicPlayerPlayingAudioFile(BuildContext context) =>
-      TextStyle(
-        fontSize: AppSpacing.space_14,
-        color: isDark
-            ? AppColors.text_primary_dark
-            : AppColors.text_primary_light,
-        fontWeight: FontWeight.w500,
-      );
-
-  static TextStyle musicPlayerNotPlayingAudioFile(BuildContext context) =>
-      TextStyle(
-        fontSize: AppSpacing.space_14,
-        color: isDark
-            ? AppColors.text_primary_dark
-            : AppColors.text_primary_light,
-        fontWeight: FontWeight.normal,
-        // fontWeight: isCurrentlyPlaying
-        //     ? FontWeight.w900
-        //     : FontWeight.normal,
-      );
-
-  static TextStyle musicPlayerAudioItemDurationTime(BuildContext context) =>
-      TextStyle(
-        fontSize: AppSpacing.space_12,
-        color: isDark
-            ? AppColors.text_secondary_dark
-            : AppColors.text_secondary_light,
-      );
-
-  static TextStyle musicPlayerAudioItemAddress(BuildContext context) =>
-      TextStyle(
-        fontSize: AppSpacing.space_12,
-        color: isDark
-            ? AppColors.text_secondary_dark
-            : AppColors.text_secondary_light,
-      );
 
   static TextStyle metronomeAppBar(BuildContext context) => TextStyle(
     color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
@@ -552,62 +608,6 @@ class AppTypography {
     color: isDark
         ? AppColors.text_secondary_dark
         : AppColors.text_secondary_light,
-  );
-
-  static TextStyle tunerCentDifference(BuildContext context) => TextStyle(
-    fontSize: AppSpacing.space_20,
-    fontWeight: FontWeight.w500,
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  );
-
-  static TextStyle tunerCentUnitTitle(BuildContext context) => TextStyle(
-    fontSize: AppSpacing.space_16,
-    fontWeight: FontWeight.w300,
-    color: isDark
-        ? AppColors.text_secondary_dark
-        : AppColors.text_secondary_light,
-  );
-
-  static TextStyle tunerNoteOctave(BuildContext context) => TextStyle(
-    fontSize: AppSpacing.space_24,
-    fontWeight: FontWeight.bold,
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  );
-
-  static TextStyle tunerNoteName(BuildContext context) => TextStyle(
-    fontSize: AppSpacing.space_48,
-    fontWeight: FontWeight.bold,
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  );
-
-  static TextStyle tunerNearNoteFrequency(BuildContext context) => TextStyle(
-    fontSize: AppSpacing.space_20,
-    fontWeight: FontWeight.w500,
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  );
-
-  static TextStyle tunerHertzUnitTitle(BuildContext context) => TextStyle(
-    fontSize: AppSpacing.space_16,
-    fontWeight: FontWeight.w300,
-    color: isDark
-        ? AppColors.text_secondary_dark
-        : AppColors.text_secondary_light,
-  );
-
-  static TextStyle tunerDetectedFrequency(BuildContext context) => TextStyle(
-    fontSize: AppSpacing.space_24,
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  );
-
-  static TextStyle tunerA4Frequency(BuildContext context) => TextStyle(
-    fontSize: AppSpacing.space_16,
-    fontWeight: FontWeight.w700,
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  );
-
-  static TextStyle tunerSetBaseFrequency(BuildContext context) => TextStyle(
-    fontSize: AppSpacing.space_16,
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
   );
 
   static TextStyle voiceRecorderNotGrantedPermissionSnackBar(

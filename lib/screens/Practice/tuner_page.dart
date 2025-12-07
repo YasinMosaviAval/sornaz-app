@@ -148,7 +148,11 @@ class _TunerPageState extends State<TunerPage> {
             Column(
               children: [
                 const SizedBox(height: AppSpacing.space_36),
-                ChangeFrequencyTitleWidget(a4: a4, isDark: isDark),
+                ChangeFrequencyTitleWidget(
+                  a4: a4,
+                  isDark: isDark,
+                  isEnglish: isEnglish,
+                ),
                 changeFrequncySlider(isDark),
                 const SizedBox(height: AppSpacing.space_24),
                 frequencyNotesAndDifferences(isDark),
@@ -344,10 +348,12 @@ class ChangeFrequencyTitleWidget extends StatelessWidget {
     super.key,
     required this.a4,
     required this.isDark,
+    required this.isEnglish,
   });
 
   final double a4;
   final bool isDark;
+  final bool isEnglish;
 
   @override
   Widget build(BuildContext context) {
@@ -359,9 +365,11 @@ class ChangeFrequencyTitleWidget extends StatelessWidget {
             flex: 1,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
+              textDirection: isEnglish ? TextDirection.rtl : TextDirection.ltr,
+              // textDirection: isEnglish ? TextDirection.rtl : TextDirection.ltr,
               children: [
                 Text(
-                  ": ${a4.toStringAsFixed(0)} ${AppStrings.hz.translate(context)}",
+                  "${a4.toStringAsFixed(0)} ${AppStrings.hz.translate(context)}",
                   // textDirection: TextDirection.ltr,
                   style: AppTypography.tunerA4Frequency(context),
                 ),

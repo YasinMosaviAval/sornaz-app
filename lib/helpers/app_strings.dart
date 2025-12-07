@@ -613,7 +613,7 @@ class AppStrings {
 
     grant_audio_permission: 'لطفا اجازه دسترسی به فایل‌های صوتی را بدهید',
     error_loading_files: 'خطا در بارگذاری فایل‌ها',
-    set_base_frequency: ': تنظیم فرکانس مبنا (A4) ',
+    set_base_frequency: 'تنظیم فرکانس مبنا (A4) : ',
     hz: 'هرتز',
     hertz: 'هرتز',
     cents: 'سنت',
