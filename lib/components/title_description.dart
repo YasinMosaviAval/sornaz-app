@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sornaz/classes/accordion.dart';
+import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 
@@ -35,6 +38,8 @@ class _AccordionState extends State<Accordion>
 
   @override
   Widget build(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final bool isDark = appData.isDark;
     return Column(
       children: List.generate(widget.items.length, (index) {
         final item = widget.items[index];
@@ -58,7 +63,12 @@ class _AccordionState extends State<Accordion>
                     turns: isExpanded ? 0.5 : 0,
                     curve: Curves.easeOutCubic,
                     duration: const Duration(milliseconds: 500),
-                    child: const Icon(Icons.keyboard_arrow_down),
+                    child: Icon(
+                      Icons.keyboard_arrow_down,
+                      color: isDark
+                          ? AppColors.text_primary_dark
+                          : AppColors.text_primary_light,
+                    ),
                   ),
                 ],
               ),

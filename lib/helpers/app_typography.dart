@@ -305,70 +305,6 @@ class AppTypography {
   }
 
   // ================================================================================================================================
-  static TextStyle tunerCentDifference(BuildContext context) => body1(context);
-  static TextStyle tunerCentUnitTitle(BuildContext context) =>
-      subtitle1(context);
-  static TextStyle tunerNoteOctave(BuildContext context) => body1(context);
-  static TextStyle tunerNoteName(BuildContext context) => body0(context);
-  static TextStyle tunerHertzUnitTitle(BuildContext context) =>
-      subtitle1(context);
-  static TextStyle tunerNearNoteFrequency(BuildContext context) =>
-      body1(context);
-  static TextStyle tunerSetBaseFrequency(BuildContext context) =>
-      subtitle1(context);
-  static TextStyle tunerA4Frequency(BuildContext context) => body1(context);
-  static TextStyle tunerDetectedFrequency(BuildContext context) =>
-      body1(context);
-
-  // static TextStyle tunerCentDifference(BuildContext context) => TextStyle(
-  //   fontSize: AppSpacing.space_20,
-  //   fontWeight: FontWeight.w500,
-  //   color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  // );
-  // static TextStyle tunerCentUnitTitle(BuildContext context) => TextStyle(
-  //   fontSize: AppSpacing.space_16,
-  //   fontWeight: FontWeight.w300,
-  //   color: isDark
-  //       ? AppColors.text_secondary_dark
-  //       : AppColors.text_secondary_light,
-  // );
-  // static TextStyle tunerNoteOctave(BuildContext context) => TextStyle(
-  //   fontSize: AppSpacing.space_24,
-  //   fontWeight: FontWeight.bold,
-  //   color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  // );
-  // static TextStyle tunerNoteName(BuildContext context) => TextStyle(
-  //   fontSize: AppSpacing.space_48,
-  //   fontWeight: FontWeight.bold,
-  //   color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  // );
-  // static TextStyle tunerNearNoteFrequency(BuildContext context) => TextStyle(
-  //   fontSize: AppSpacing.space_20,
-  //   fontWeight: FontWeight.w500,
-  //   color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  // );
-  // static TextStyle tunerHertzUnitTitle(BuildContext context) => TextStyle(
-  //   fontSize: AppSpacing.space_16,
-  //   fontWeight: FontWeight.w300,
-  //   color: isDark
-  //       ? AppColors.text_secondary_dark
-  //       : AppColors.text_secondary_light,
-  // );
-  // static TextStyle tunerDetectedFrequency(BuildContext context) => TextStyle(
-  //   fontSize: AppSpacing.space_24,
-  //   color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  // );
-  // static TextStyle tunerA4Frequency(BuildContext context) => TextStyle(
-  //   fontSize: AppSpacing.space_16,
-  //   fontWeight: FontWeight.w700,
-  //   color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  // );
-  // static TextStyle tunerSetBaseFrequency(BuildContext context) => TextStyle(
-  //   fontSize: AppSpacing.space_16,
-  //   color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  // );
-  // ================================================================================================================================
-  // ================================================================================================================================
   // ================================================================================================================================
   static TextStyle routerPageNotFound = TextStyle();
   // ================================================================================================================================
@@ -376,58 +312,91 @@ class AppTypography {
   // ================================================================================================================================
   // ================================================================================================================================
   // ================================================================================================================================
-  static TextStyle appDrawerApplicationFullname(BuildContext context) =>
-      headline4(context);
-  static TextStyle appDrawerApplicationEmail(BuildContext context) =>
-      subtitle2(context);
+  static TextStyle appDrawerApplicationFullname(BuildContext context) => headline4(context);
+  static TextStyle appDrawerApplicationEmail(BuildContext context) => subtitle2(context);
   // static TextStyle appDrawerSwitchAcountItem(BuildContext context)=> body1(context);
   // static TextStyle appDrawerHeaderItemPart(BuildContext context)=> body2(context);
   static TextStyle appDrawerItemTitle(BuildContext context) => body2(context);
-  static TextStyle appDrawerItemsubtitle(BuildContext context) =>
-      subtitle2(context);
-
-  static TextStyle aboutUsAppBarTitle(BuildContext context) =>
-      headline3(context);
-  static TextStyle aboutUsTitle(BuildContext context) => headline2(context);
-  static TextStyle aboutUsBody(BuildContext context) => body2(context);
-
-  static TextStyle settingsAppBarTitle(BuildContext context) =>
-      headline3(context);
-  static TextStyle settingsSectionTitle(BuildContext context) =>
-      headline6(context);
-  static TextStyle settingsItemTitle(BuildContext context) =>
-      headline5(context);
-  static TextStyle settingsItemSubtitle(BuildContext context) =>
-      subtitle3(context);
-
-  // // @formatter:off
+  static TextStyle appDrawerItemsubtitle(BuildContext context) => subtitle2(context);
+  // ================================================================================================================================
+  static TextStyle tunerCentDifference(BuildContext context) => body1(context);
+  static TextStyle tunerCentUnitTitle(BuildContext context) => subtitle1(context);
+  static TextStyle tunerNoteOctave(BuildContext context) => body1(context);
+  static TextStyle tunerNoteName(BuildContext context) => body0(context);
+  static TextStyle tunerHertzUnitTitle(BuildContext context) => subtitle1(context);
+  static TextStyle tunerNearNoteFrequency(BuildContext context) => body1(context);
+  static TextStyle tunerSetBaseFrequency(BuildContext context) => subtitle1(context);
+  static TextStyle tunerA4Frequency(BuildContext context) => body1(context);
+  static TextStyle tunerDetectedFrequency(BuildContext context) => body1(context);
+  // ================================================================================================================================
+  static TextStyle aboutUsAppBarTitle(BuildContext context) => headline3(context);
+  static TextStyle aboutUsTitle(BuildContext context) => headline6(context);
+  static TextStyle aboutUsBody(BuildContext context) => body3(context);
+  // ================================================================================================================================
+  static TextStyle settingsAppBarTitle(BuildContext context) => headline3(context);
+  static TextStyle settingsSectionTitle(BuildContext context) => headline6(context);
+  static TextStyle settingsItemTitle(BuildContext context) => headline5(context);
+  static TextStyle settingsItemSubtitle(BuildContext context) => subtitle3(context);
   static TextStyle settingsItemContent(BuildContext context) => body3(context);
   static TextStyle settingsDropdownItem(BuildContext context) => body3(context);
+  // ================================================================================================================================
+  static TextStyle languageSwitchTileTitle(BuildContext context) => settingsItemTitle(context);
+  static TextStyle languageSwitchTileSubtitle(BuildContext context) => settingsItemSubtitle(context);
+  // ================================================================================================================================
+  static TextStyle musicPlayerAudioWidgetDurationTime(BuildContext context) => body3(context);
+  static TextStyle musicPlayerAudioWidgetPositionTime(BuildContext context) => body3(context);
+  static TextStyle musicPlayerPlayingAudioFile(BuildContext context) => body3(context);
+  static TextStyle musicPlayerNotPlayingAudioFile(BuildContext context) => body3(context);
+  static TextStyle musicPlayerAudioItemDurationTime(BuildContext context) => subtitle3(context);
+  static TextStyle musicPlayerAudioItemAddress(BuildContext context) => subtitle3(context);
 
-  // // @formatter:on
+  static TextStyle musicPlayerNotGrantedPermissionSnackBar(BuildContext context) => TextStyle();
+  static TextStyle musicPlayerErrorInLoadingSnackBar(BuildContext context) => TextStyle();
+  static TextStyle musicPlayerAudioFileNotFound(BuildContext context) => TextStyle();
+  // ================================================================================================================================
+  static TextStyle metronomeAppBar(BuildContext context) => headline3(context);
+  static TextStyle metronomeBPM(BuildContext context) => body1(context);
+  static TextStyle metronomeTiming(BuildContext context) => body1(context);
+  static TextStyle metronomeVolume(BuildContext context) => body1(context);
+  static TextStyle metronomeLaunchButton(BuildContext context) => body2(context);
+  static TextStyle metronomePlayPauseButton(BuildContext context) => body2(context);
+  static TextStyle metronomeStopButton(BuildContext context) => subtitle2(context);
+  // ================================================================================================================================
+  static TextStyle voiceRecorderNotGrantedPermissionSnackBar(BuildContext context) => caption(context);
+  static TextStyle voiceRecorderFilename(BuildContext context) => headline6(context);
+  static TextStyle voiceRecorderDate(BuildContext context) => caption(context);
+  static TextStyle voiceRecorderDeleteFileSnackBar(BuildContext context) => caption(context);
+  static TextStyle voiceRecorderRestoreFileSnackBar(BuildContext context) => caption(context);
+  static TextStyle voiceRecorderDeleteFileDialogueTitle(BuildContext context) => headline5(context);
+  static TextStyle voiceRecorderDeleteFileDialogueContent(BuildContext context) => body1(context);
+  static TextStyle voiceRecorderDeleteFileDialogueCancelButton(BuildContext context) => body2(context);
+  static TextStyle voiceRecorderDeleteFileDialogueConfirmButton(BuildContext context) => body2(context);
+  static TextStyle voiceRecorderDeleteFileMessageSnackBar(BuildContext context) => caption(context);
+  static TextStyle voiceRecorderRenameFileDialogueTitle(BuildContext context) => headline5(context);
+  static TextStyle voiceRecorderRenameFileDialogueCancelButton(BuildContext context) => body2(context);
+  static TextStyle voiceRecorderRenameFileDialogueConfirmButton(BuildContext context) => body1(context);
+  static TextStyle voiceRecorderRenameFileMessageSnackBar(BuildContext context) => caption(context);
+  static TextStyle voiceRecorderRenameFileErrorMessageSnackBar(BuildContext context) => caption(context);
+  static TextStyle voiceRecorderRecordingTimer(BuildContext context) => headline3(context);
+  // ================================================================================================================================
+  
+  static TextStyle recordDetailsAppBar(BuildContext context) => headline3(context);
+  static TextStyle recordDetailsFilename(BuildContext context) => body1(context);
+  static TextStyle recordDetailsRecordDate(BuildContext context) => body1(context);
+  static TextStyle recordDetailsFilenameTitle(BuildContext context) => subtitle1(context);
+  static TextStyle recordDetailsRecordDateTitle(BuildContext context) =>subtitle1(context);
+  
+  static TextStyle recordDetailsRenameTitle(BuildContext context) => body2(context);
+  static TextStyle recordDetailsRenameDialogueTitle(BuildContext context) => headline4(context);
+  static TextStyle recordDetailsRenameDialogueCancelButton(BuildContext context) => subtitle3(context);
+  static TextStyle recordDetailsRenameDialogueConfirmButton(BuildContext context) => body3(context);
 
-  static TextStyle languageSwitchTileTitle(BuildContext context) =>
-      settingsItemTitle(context);
-  static TextStyle languageSwitchTileSubtitle(BuildContext context) =>
-      settingsItemSubtitle(context);
+  static TextStyle recordDetailsDeleteDialogueTitle(BuildContext context) => headline4(context);
+  static TextStyle recordDetailsDeleteDialogueLabel(BuildContext context) => body2(context);
+  static TextStyle recordDetailsDeleteDialogueContent(BuildContext context) => body2(context);
+  static TextStyle recordDetailsDeleteDialogueCancelButton(BuildContext context) => subtitle3(context);
+  static TextStyle recordDetailsDeleteDialogueConfirmButton(BuildContext context) => body3(context);
 
-  static TextStyle musicPlayerAudioWidgetDurationTime(BuildContext context) =>
-      body3(context);
-  static TextStyle musicPlayerAudioWidgetPositionTime(BuildContext context) =>
-      body3(context);
-  static TextStyle musicPlayerPlayingAudioFile(BuildContext context) =>
-      body3(context);
-
-  static TextStyle musicPlayerNotPlayingAudioFile(BuildContext context) =>
-      body3(context);
-
-  static TextStyle musicPlayerAudioItemDurationTime(BuildContext context) =>
-      subtitle3(context);
-
-  static TextStyle musicPlayerAudioItemAddress(BuildContext context) =>
-      subtitle3(context);
-  // ================================================================================================================================
-  // ================================================================================================================================
   // ================================================================================================================================
   // ================================================================================================================================
   // ================================================================================================================================
@@ -438,8 +407,7 @@ class AppTypography {
   // ================================================================================================================================
   // ================================================================================================================================
 
-  static TextStyle blogCardTitle(BuildContext context) =>
-      TextStyle(fontSize: AppSpacing.space_12);
+  static TextStyle blogCardTitle(BuildContext context) => TextStyle(fontSize: AppSpacing.space_12);
   static TextStyle blogCardTime(BuildContext context) =>
       TextStyle(fontSize: AppSpacing.space_10, color: Colors.grey);
   // static TextStyle blogCarouselErrorInLoading(BuildContext context) =>
@@ -571,122 +539,7 @@ class AppTypography {
         : AppColors.text_secondary_light,
   );
 
-  static TextStyle musicPlayerNotGrantedPermissionSnackBar(
-    BuildContext context,
-  ) => TextStyle();
-  static TextStyle musicPlayerErrorInLoadingSnackBar(BuildContext context) =>
-      TextStyle();
-  static TextStyle musicPlayerAudioFileNotFound(BuildContext context) =>
-      TextStyle();
 
-  static TextStyle metronomeAppBar(BuildContext context) => TextStyle(
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  );
-
-  static TextStyle metronomeBPM(BuildContext context) => TextStyle(
-    fontSize: AppSpacing.space_24,
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  );
-
-  static TextStyle metronomeTiming(BuildContext context) => TextStyle(
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  );
-
-  static TextStyle metronomeVolume(BuildContext context) => TextStyle(
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  );
-
-  static TextStyle metronomeLaunchButton(BuildContext context) => TextStyle(
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  );
-
-  static TextStyle metronomePlayPauseButton(BuildContext context) => TextStyle(
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  );
-
-  static TextStyle metronomeStopButton(BuildContext context) => TextStyle(
-    color: isDark
-        ? AppColors.text_secondary_dark
-        : AppColors.text_secondary_light,
-  );
-
-  static TextStyle voiceRecorderNotGrantedPermissionSnackBar(
-    BuildContext context,
-  ) => caption(context);
-  static TextStyle voiceRecorderFilename(BuildContext context) =>
-      headline6(context);
-  static TextStyle voiceRecorderDate(BuildContext context) => caption(context);
-  static TextStyle voiceRecorderDeleteFileSnackBar(BuildContext context) =>
-      caption(context);
-  static TextStyle voiceRecorderRestoreFileSnackBar(BuildContext context) =>
-      caption(context);
-  static TextStyle voiceRecorderDeleteFileDialogueTitle(BuildContext context) =>
-      headline5(context);
-  static TextStyle voiceRecorderDeleteFileDialogueContent(
-    BuildContext context,
-  ) => body1(context);
-  static TextStyle voiceRecorderDeleteFileDialogueCancelButton(
-    BuildContext context,
-  ) => body2(context);
-  static TextStyle voiceRecorderDeleteFileDialogueConfirmButton(
-    BuildContext context,
-  ) => body2(context);
-  static TextStyle voiceRecorderDeleteFileMessageSnackBar(
-    BuildContext context,
-  ) => caption(context);
-  static TextStyle voiceRecorderRenameFileDialogueTitle(BuildContext context) =>
-      headline5(context);
-  static TextStyle voiceRecorderRenameFileDialogueCancelButton(
-    BuildContext context,
-  ) => body2(context);
-  static TextStyle voiceRecorderRenameFileDialogueConfirmButton(
-    BuildContext context,
-  ) => body1(context);
-  static TextStyle voiceRecorderRenameFileMessageSnackBar(
-    BuildContext context,
-  ) => caption(context);
-  static TextStyle voiceRecorderRenameFileErrorMessageSnackBar(
-    BuildContext context,
-  ) => caption(context);
-  static TextStyle voiceRecorderRecordingTimer(BuildContext context) =>
-      headline3(context);
-
-  static TextStyle recordDetailsFilenameTitle(BuildContext context) =>
-      TextStyle(
-        fontSize: 18,
-        color: isDark
-            ? AppColors.text_primary_dark
-            : AppColors.text_primary_light,
-      );
-  static TextStyle recordDetailsFilename(BuildContext context) =>
-      TextStyle(fontSize: 22, fontWeight: FontWeight.bold);
-  static TextStyle recordDetailsRecordDate(BuildContext context) =>
-      TextStyle(fontSize: 20, color: Colors.grey);
-  static TextStyle recordDetailsAppBar(BuildContext context) => TextStyle();
-  static TextStyle recordDetailsRecordDateTitle(BuildContext context) =>
-      TextStyle(fontSize: 18);
-  static TextStyle recordDetailsRenameTitle(BuildContext context) =>
-      TextStyle();
-  static TextStyle recordDetailsRenameDialogueTitle(BuildContext context) =>
-      TextStyle();
-  static TextStyle recordDetailsRenameDialogueCancelButton(
-    BuildContext context,
-  ) => TextStyle();
-  static TextStyle recordDetailsRenameDialogueConfirmButton(
-    BuildContext context,
-  ) => TextStyle();
-  static TextStyle recordDetailsDeleteDialogueLabel(BuildContext context) =>
-      TextStyle();
-  static TextStyle recordDetailsDeleteDialogueTitle(BuildContext context) =>
-      TextStyle();
-  static TextStyle recordDetailsDeleteDialogueContent(BuildContext context) =>
-      TextStyle();
-  static TextStyle recordDetailsDeleteDialogueCancelButton(
-    BuildContext context,
-  ) => TextStyle();
-  static TextStyle recordDetailsDeleteDialogueConfirmButton(
-    BuildContext context,
-  ) => TextStyle();
 
   static TextStyle? waveformPainterSeconds(BuildContext context) =>
       TextStyle(fontSize: 10, color: Colors.grey.shade500);

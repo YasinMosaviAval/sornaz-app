@@ -6,10 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:just_waveform/just_waveform.dart';
 import 'package:sornaz/components/waveform_widget.dart';
-// import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
+import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 
 class RecordDetailsPage extends StatefulWidget {
@@ -76,7 +78,11 @@ class _RecordDetailsPageState extends State<RecordDetailsPage> {
             "جزئیات ضبط",
             style: AppTypography.recordDetailsAppBar(context),
           ),
+          backgroundColor: isDark? AppColors.surface_dark: AppColors.surface_light,
+          foregroundColor: isDark? AppColors.text_primary_dark: AppColors.text_primary_light,
         ),
+        backgroundColor: isDark? AppColors.background_dark : AppColors.background_light,
+        // drawerScrimColor: AppColors.error,
         body: Padding(
           padding: const EdgeInsets.all(AppSpacing.space_16),
           child: Column(
@@ -127,6 +133,7 @@ class _RecordDetailsPageState extends State<RecordDetailsPage> {
                   RenameButtonWidget(
                     controller: TextEditingController(text: fileName),
                     onRename: widget.onRename,
+                    isDark: isDark,
                   ),
                   const SizedBox(width: AppSpacing.space_16),
                   DeleteButtonWidget(
@@ -241,16 +248,17 @@ class RecordedVoiceInformationWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "نام فایل:",
+          AppStrings.filename_title.translate(context),
           style: AppTypography.recordDetailsFilenameTitle(context),
         ),
         const SizedBox(height: AppSpacing.space_8),
         Text(fileName, style: AppTypography.recordDetailsFilename(context)),
         const SizedBox(height: AppSpacing.space_16),
         Text(
-          "تاریخ ضبط:",
+          AppStrings.record_date_title.translate(context),
           style: AppTypography.recordDetailsRecordDateTitle(context),
         ),
         const SizedBox(height: AppSpacing.space_8),
@@ -265,16 +273,19 @@ class RenameButtonWidget extends StatelessWidget {
     super.key,
     required this.controller,
     required this.onRename,
+    required this.isDark,
   });
 
   final TextEditingController controller;
   final Function(String) onRename;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: ElevatedButton.icon(
         icon: const Icon(Icons.edit),
+        // style: ButtonStyle(backgroundColor: isDark? AppColors.surface_dark : AppColors.surface_light),
         label: Text(
           "تغییر نام",
           style: AppTypography.recordDetailsRenameTitle(context),

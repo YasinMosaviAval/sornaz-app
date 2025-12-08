@@ -78,8 +78,7 @@ class AppStrings {
   static const use_wifi_description = 'use wifi description';
   static const auto_download = 'auto download';
   static const auto_download_description = 'auto download description';
-  static const two_times_press_back_button_for_exit_application =
-      'two times press back button for exit application';
+  static const two_times_press_back_button_for_exit_application = 'two times press back button for exit application';
   static const home_searchbar_hint = 'homeSearchbarHint';
   static const new_courses_title = 'newCoursesTitle';
   static const last_blog_title = 'lastBlogTitle';
@@ -132,6 +131,29 @@ class AppStrings {
   static const volume = 'volume';
   static const language_mode = 'languageMode';
   static const language_mode_description = 'languageModeDescription';
+
+  static const record_date_title = 'RecordDateTitle';
+  static const filename_title = 'FilenameTitle';
+
+  static const about_us_page_title = 'aboutUsPageTitle';
+  static const about_us_our_mission_title = 'aboutUsOurMissionTitle';
+  static const about_us_our_vision_title = 'aboutUsOurVisionTitle';
+  static const about_us_our_values_title = 'aboutUsOurValuesTitle';
+  static const about_us_our_story_title = 'aboutUsOurStoryTitle';
+  static const about_us_our_team_title = 'aboutUsOurTeamTitle';
+  static const about_us_key_features_title = 'aboutUsKeyFeaturesTitle';
+  static const about_us_our_commitment_title = 'aboutUsOurCommitmentTitle';
+  static const about_us_contact_information_title = 'aboutUsContactInformationTitle';
+  static const about_us_page_description = 'aboutUsPageDescription';
+  static const about_us_our_mission_description = 'aboutUsOurMissionDescription';
+  static const about_us_our_vision_description = 'aboutUsOurVisionDescription';
+  static const about_us_our_values_description = 'aboutUsOurValuesDescription';
+  static const about_us_our_story_description = 'aboutUsOurStoryDescription';
+  static const about_us_our_team_description = 'aboutUsOurTeamDescription';
+  static const about_us_key_features_description = 'aboutUsKeyFeaturesDescription';
+  static const about_us_our_commitment_description = 'aboutUsOurCommitmentDescription';
+  static const about_us_contact_information_description = 'aboutUsContactInformationDescription';
+
   static List<Map<String, dynamic>> getOnboardingPages(String lang) {
     final isEn = lang == 'en';
 
@@ -168,18 +190,6 @@ class AppStrings {
       },
     ];
   }
-
-  static const String aboutUsTitle1 = 'Why are my courses gone?';
-  static const String aboutUsText1 =
-      'Sorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Curabitur tempus urna at turpis condimentum lobortis.';
-  static const String aboutUsTitle2 =
-      'What can I do if I downloaded them on my phone?';
-  static const String aboutUsText2 =
-      'Morem ipsum dolor sit amet, consectetur adipiscing elit. Etiam eu turpis molestie, dictum est a, mattis tellus. Sed dignissim, metus nec fringilla accumsan, risus sem sollicitudin lacus, ut interdum tellus elit sed risus. Maecenas eget condimentum velit, sit amet feugiat lectus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Praesent auctor purus luctus enim egestas, ac scelerisque ante pulvinar. Donec ut rhoncus ex. Suspendisse ac rhoncus nisl, eu tempor urna. Curabitur vel bibendum lorem. Morbi convallis convallis diam sit amet lacinia. Aliquam in elementum tellus.\n\nCurabitur tempor quis eros tempus lacinia. Nam bibendum pellentesque quam a convallis. Sed ut vulputate nisi. Integer in felis sed leo vestibulum venenatis. Suspendisse quis arcu sem. Aenean feugiat ex eu vestibulum vestibulum. Morbi a eleifend magna. Nam metus lacus, porttitor eu mauris a, blandit ultrices nibh. Mauris sit amet magna non ligula vestibulum eleifend. Nulla varius volutpat turpis sed lacinia. Nam eget mi in purus lobortis eleifend. Sed nec ante dictum sem condimentum ullamcorper quis venenatis nisi. Proin vitae facilisis nisi, ac posuere leo.';
-
-  static const String contactUsTitle = 'Why are my courses gone?';
-  static const String contactUsText =
-      'Sorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Curabitur tempus urna at turpis condimentum lobortis.';
 
   // ===============================================================
   // ===============================================================
@@ -322,6 +332,28 @@ class AppStrings {
     volume,
     language_mode,
     language_mode_description,
+    
+    record_date_title,
+    filename_title,
+
+    about_us_page_title,
+    about_us_our_mission_title,
+    about_us_our_vision_title,
+    about_us_our_values_title,
+    about_us_our_story_title,
+    about_us_our_team_title,
+    about_us_key_features_title,
+    about_us_our_commitment_title,
+    about_us_contact_information_title,
+    about_us_page_description,
+    about_us_our_mission_description,
+    about_us_our_vision_description,
+    about_us_our_values_description,
+    about_us_our_story_description,
+    about_us_our_team_description,
+    about_us_key_features_description,
+    about_us_our_commitment_description,
+    about_us_contact_information_description,
   ];
 
   static const en = {
@@ -361,14 +393,11 @@ class AppStrings {
     article_detail_page_title: 'Article Detail Page',
 
     onboarding_title_0: 'Theory and practice complete each other.',
-    onboarding_subtitle_0:
-        'Real progress comes from blending musical knowledge - consistent practice.',
+    onboarding_subtitle_0: 'Real progress comes from blending musical knowledge - consistent practice.',
     onboarding_title_1: 'Lasting learning takes time.',
-    onboarding_subtitle_1:
-        'Musical progress requires patience, regular training, and structured learning.',
+    onboarding_subtitle_1: 'Musical progress requires patience, regular training, and structured learning.',
     onboarding_title_2: 'Music begins with the basics.',
-    onboarding_subtitle_2:
-        'True learning starts with understanding the foundations and core principles of music.',
+    onboarding_subtitle_2: 'True learning starts with understanding the foundations and core principles of music.',
 
     dont_have_an_account: 'Don\'t have an account? Sign up',
     sign_in_with_google: 'Sign In with Google',
@@ -376,8 +405,7 @@ class AppStrings {
     remember_me: 'Remember me',
     password: 'Password',
     email: 'Email',
-    sign_in_description:
-        'Sign into your account - access all of your courses now.',
+    sign_in_description: 'Sign into your account - access all of your courses now.',
     sent_otp_via_email: 'OTP code has been sent via your email',
     sent_otp_via_phone_number: 'OTP code has been sent via your phone number',
     phone_number: 'Phone Number',
@@ -409,8 +437,7 @@ class AppStrings {
     auto_download: 'Auto-download',
     auto_download_description: 'Courses will automatically save to your device',
 
-    two_times_press_back_button_for_exit_application:
-        'Press again BACK Button for Exit Application',
+    two_times_press_back_button_for_exit_application: 'Press again BACK Button for Exit Application',
 
     home_searchbar_hint: 'Search Blogs',
     new_courses_title: 'New Courses',
@@ -460,8 +487,7 @@ class AppStrings {
     text_size: 'Text Size',
     text_size_description: 'Set text size',
 
-    grant_audio_permission:
-        'Please grant permission to access audio files in the app settings.',
+    grant_audio_permission: 'Please grant permission to access audio files in the app settings.',
     error_loading_files: 'Error loading files',
 
     set_base_frequency: 'Set Base Frequency (A4) : ',
@@ -482,6 +508,63 @@ class AppStrings {
 
     language_mode: 'Language',
     language_mode_description: 'Switch to Persian',
+    
+    record_date_title: 'Record Date :',
+    filename_title: 'Filename :',
+
+    about_us_page_title: 'About Us – Sornaz Education App',
+    about_us_our_mission_title: 'Our Mission',
+    about_us_our_vision_title: 'Our Vision',
+    about_us_our_values_title: 'Our Values',
+    about_us_our_story_title: 'Our Story',
+    about_us_our_team_title: 'Our Team',
+    about_us_key_features_title: 'Key Features',
+    about_us_our_commitment_title: 'Our Commitment to Users and Artists',
+    about_us_contact_information_title: 'Contact Information',
+    about_us_page_description:
+        """The Sornaz Education App is designed to help music students learn more effectively. Sornaz not only supports learners throughout their educational journey but also serves as a powerful assistant for teachers and instructors. Our goal is to provide all the tools and resources that students and educators need in a single, unified platform.
+With features such as audio playback, sound recording, and other essential tools, Sornaz is also useful for general users who enjoy working with music.""",
+    about_us_our_mission_description:
+        """Our mission at Sornaz is to simplify the music-learning process. We strive to create a clear, structured environment where learners can track, measure, and manage their progress easily. Providing high-quality educational content and offering practical tools for instructors to plan and monitor student development is a core part of this mission.""",
+    about_us_our_vision_description:
+        """Our vision is to build a complete and accessible music-education space for all music enthusiasts. Through smart progress-tracking tools, charts, and personalized guidance, Sornaz aims to make the learning process more transparent, engaging, and effective.
+We hope to cultivate a community where music education is enjoyable, organized, and available to everyone.""",
+    about_us_our_values_description:
+        """At Sornaz, quality education is our top priority.
+We believe today’s learners are tomorrow’s artists, and we aim to accompany them on their journey toward growth with reliable tools, well-designed educational materials, and personalized study paths.
+We also support teachers by offering customizable planning tools that help them guide their students more efficiently and professionally.""",
+    about_us_our_story_description:
+        """Many music students struggle with confusion and a lack of direction during their learning journey. Limited access to experienced instructors and the absence of a structured learning path often result in years of slow progress or repetitive study without meaningful improvement.
+Sornaz was born to solve this problem—created as a helpful companion for students, providing them with clarity, structure, and access to quality instruction. By offering educational content and tools designed for real progress, Sornaz stands by learners every step of the way.""",
+    about_us_our_team_description:
+        """The Sornaz Music Education App is currently developed by Yasin Mousavi-Avval, who handles the complete design and development of the product.
+During the early stages of the project, Maedeh Rasti contributed as the graphic designer. She created the app’s name and designed its official logo.""",
+    about_us_key_features_description:
+        """In its initial release, Sornaz provides the following tools and features:
+
+Educational articles and learning materials
+
+Music player
+
+Sound recorder
+
+Metronome
+
+Tuner
+
+We plan to add many more features in the future and welcome user feedback to help us improve the app and enhance the learning experience.""",
+    about_us_our_commitment_description:
+        """At Sornaz, we are committed to supporting musicians, learners, and music lovers.
+We continuously work to understand their needs and improve the app’s tools and functionalities, ensuring that Sornaz grows into a reliable and valuable resource for the entire music community.""",
+    about_us_contact_information_description: """📧 Email: sornaz.ac@gmail.com
+
+📱 Social Media:
+
+https://www.instagram.com/sornaz.ac/
+
+https://www.youtube.com/@sornaz.academy
+
+🌐 Website: https://sornaz.com""",
   };
 
   static const fa = {
@@ -521,14 +604,11 @@ class AppStrings {
     article_detail_page_title: 'جزئیات مقاله',
 
     onboarding_title_0: 'تئوری و تمرین یکدیگر را تکمیل می‌کنند.',
-    onboarding_subtitle_0:
-        'پیشرفت واقعی از ترکیب دانش موسیقی و تمرین مستمر حاصل می‌شود.',
+    onboarding_subtitle_0: 'پیشرفت واقعی از ترکیب دانش موسیقی و تمرین مستمر حاصل می‌شود.',
     onboarding_title_1: 'یادگیری پایدار زمان می‌برد.',
-    onboarding_subtitle_1:
-        'پیشرفت موسیقی نیازمند صبر، تمرین منظم و یادگیری ساختاریافته است.',
+    onboarding_subtitle_1: 'پیشرفت موسیقی نیازمند صبر، تمرین منظم و یادگیری ساختاریافته است.',
     onboarding_title_2: 'موسیقی با اصول پایه آغاز می‌شود.',
-    onboarding_subtitle_2:
-        'یادگیری واقعی با درک اصول و پایه‌های موسیقی شروع می‌شود.',
+    onboarding_subtitle_2: 'یادگیری واقعی با درک اصول و پایه‌های موسیقی شروع می‌شود.',
 
     dont_have_an_account: 'آیا اکانت ندارید؟ ثبت نام',
     sign_in_with_google: 'ثبت نام با گوگل',
@@ -536,8 +616,7 @@ class AppStrings {
     remember_me: 'برای من یادآوری کن',
     password: 'رمز عبور',
     email: 'ایمیل',
-    sign_in_description:
-        'وارد حساب کاربری خود شوید تا به تمامی درس ها دسترسی پیدا کنید.',
+    sign_in_description: 'وارد حساب کاربری خود شوید تا به تمامی درس ها دسترسی پیدا کنید.',
     sent_otp_via_email: 'کد تأیید از طریق ایمیل برای شما ارسال شد.',
     sent_otp_via_phone_number: 'کد تأیید از طریق شماره تلفن برای شما ارسال شد.',
     phone_number: 'شماره تلفن',
@@ -558,18 +637,14 @@ class AppStrings {
     push_notifications: 'اعلان‌ها',
     push_notifications_subtitle: 'دریافت اعلان‌های هشدار اپلیکیشن',
     new_course_alerts: 'اعلان دوره‌های جدید',
-    new_course_alerts_description:
-        'زمان بارگذاری دوره توسط اساتید را مطلع شوید',
+    new_course_alerts_description: 'زمان بارگذاری دوره توسط اساتید را مطلع شوید',
     dataTitle: 'داده‌ها',
     use_wifi: 'استفاده از وای‌فای',
-    use_wifi_description:
-        'اپلیکیشن وای‌فای را نسبت به دیتای موبایل ترجیح می‌دهد',
+    use_wifi_description: 'اپلیکیشن وای‌فای را نسبت به دیتای موبایل ترجیح می‌دهد',
     auto_download: 'دانلود خودکار',
-    auto_download_description:
-        'دوره‌ها به‌صورت خودکار روی دستگاه شما ذخیره می‌شوند',
+    auto_download_description: 'دوره‌ها به‌صورت خودکار روی دستگاه شما ذخیره می‌شوند',
 
-    two_times_press_back_button_for_exit_application:
-        'برای خروج دوباره دکمه برگشت را بزنید',
+    two_times_press_back_button_for_exit_application: 'برای خروج دوباره دکمه برگشت را بزنید',
     home_searchbar_hint: 'جستجوی بلاگ‌ها',
 
     new_courses_title: 'دوره‌های جدید',
@@ -627,5 +702,59 @@ class AppStrings {
     volume: 'حجم صدا',
     language_mode: 'زبان',
     language_mode_description: 'تغییر به زبان انگلیسی',
+    
+    record_date_title: "تاریخ ضبط :",
+    filename_title: "نام فایل :",
+
+    about_us_page_title: 'درباره ما – برنامه آموزشی سرناز',
+    about_us_our_mission_title: 'ماموریت ما',
+    about_us_our_vision_title: 'چشم‌انداز ما',
+    about_us_our_values_title: 'ارزش‌های ما',
+    about_us_our_story_title: 'داستان شکل‌گیری سرناز',
+    about_us_our_team_title: 'تیم سرناز',
+    about_us_key_features_title: 'ویژگی‌های اصلی برنامه',
+    about_us_our_commitment_title: 'تعهد ما به هنرمندان و کاربران',
+    about_us_contact_information_title: 'راه‌های ارتباطی',
+    about_us_page_description:
+        """برنامه آموزشی سرناز با هدف کمک به هنرجویان موسیقی برای یادگیری مؤثرتر طراحی شده است. سرناز علاوه بر اینکه یک همراه آموزشی برای هنرجویان است، به عنوان یک دستیار قدرتمند برای اساتید و مدرسین نیز عمل می‌کند. ما در تلاش هستیم تا تمامی نیازهای آموزشی هنرجویان و آموزگاران را در یک بستر یکپارچه فراهم کنیم. همچنین امکاناتی مانند پخش فایل صوتی، ضبط صدا و ابزارهای کاربردی دیگر باعث شده سرناز برای کاربران عادی نیز قابل استفاده و مفید باشد.""",
+    about_us_our_mission_description:
+        """ماموریت ما در سرناز، ساده‌سازی مسیر یادگیری موسیقی است. ما تلاش می‌کنیم محیطی فراهم کنیم که هنرجویان بتوانند بدون پیچیدگی‌های رایج، روند پیشرفت خود را مشاهده و مدیریت کنند. ارائه محتوا و ابزارهای آموزشی باکیفیت و ایجاد بستری برای برنامه‌ریزی آموزشی اساتید، بخشی از این مأموریت است.""",
+    about_us_our_vision_description:
+        """چشم‌انداز سرناز، ایجاد یک فضای آموزشی کامل برای علاقه‌مندان به موسیقی است؛ فضایی که به واسطه ابزارها و نمودارهای تحلیلی، روند یادگیری و پیشرفت هر فرد را شفاف و قابل سنجش کند. ما به دنبال ساختن جامعه‌ای هستیم که در آن آموزش موسیقی برای همه افراد در دسترس، ساخت‌یافته و لذت‌بخش باشد.""",
+    about_us_our_values_description:
+        """در سرناز، ارائه آموزش باکیفیت در اولویت است.
+ما باور داریم که هنرجویان امروز، هنرمندان فردا هستند؛ بنابراین تلاش می‌کنیم با ابزارها، محتوا و برنامه‌ریزی دقیق، آن‌ها را در مسیر رشد همراهی کنیم.
+از سوی دیگر، اساتید و آموزگاران موسیقی می‌توانند با استفاده از قابلیت‌های برنامه‌ریزی و مدیریت پیشرفت سرناز، تجربه آموزشی دقیق‌تر و شخصی‌سازی‌شده‌تری برای هنرجویان خود فراهم کنند.""",
+    about_us_our_story_description:
+        """در دنیای موسیقی، بسیاری از هنرجویان با مشکل سردرگمی در مسیر یادگیری مواجه می‌شوند. نبود دسترسی آسان به اساتید متخصص، و عدم وجود یک مسیر آموزشی مشخص، باعث می‌شود بسیاری از هنرجویان سال‌ها بدون پیشرفت چشمگیر در یک چرخه تکرار گرفتار شوند.
+سرناز از همین نیاز شکل گرفت؛ تا همیار و همراهی مطمئن در کنار هنرجویان باشد و مسیر آموزشی را برای آن‌ها روشن‌تر و قابل مدیریت کند. فراهم کردن دسترسی به آموزگاران باتجربه و ارائه محصولات آموزشی مناسب، بخشی از رسالتی است که سرناز برای خود تعریف کرده است.""",
+    about_us_our_team_description:
+        """توسعه برنامه آموزشی سرناز توسط آقای یاسین موسوی‌اول انجام می‌شود. تمامی مراحل طراحی، ایجاد و بهبود امکانات برنامه بر عهده ایشان است.
+در مراحل اولیه شکل‌گیری پروژه، سرکار خانم مائده راستی به عنوان گرافیست همراه تیم بودند و انتخاب نام «سرناز» و طراحی لوگوی رسمی برنامه نیز توسط ایشان انجام شده است.""",
+    about_us_key_features_description:
+        """در نسخه اولیه، سرناز ابزارها و امکانات زیر را برای کاربران فراهم کرده است:
+
+مقالات و آموزش‌های تخصصی موسیقی
+
+پخش‌کننده موسیقی
+
+ابزار ضبط صدا
+
+مترونوم
+
+تیونر
+
+ما در مسیر توسعه، قصد داریم امکانات بیشتری را به سرناز اضافه کنیم و با آغوش باز از پیشنهادهای کاربران برای ارتقای کیفیت برنامه استقبال می‌کنیم.""",
+    about_us_our_commitment_description:
+        """تمام تلاش ما در سرناز حمایت از هنرمندان، هنرجویان و علاقه‌مندان موسیقی است. ما متعهدیم نیازهای آموزشی و عملی این جامعه را بشناسیم و امکانات برنامه را به‌صورت مداوم در جهت ارتقای تجربه کاربری و کیفیت آموزش بهبود دهیم.""",
+    about_us_contact_information_description: """📧 ایمیل: sornaz.ac@gmail.com
+
+📱 شبکه‌های اجتماعی:
+
+https://www.instagram.com/direct/t/17844708771473835/
+
+https://www.youtube.com/@sornaz.academy
+
+🌐 وب‌سایت: https://sornaz.com""",
   };
 }
