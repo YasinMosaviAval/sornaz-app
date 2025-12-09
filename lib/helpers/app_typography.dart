@@ -364,17 +364,20 @@ class AppTypography {
   // ================================================================================================================================
   static TextStyle voiceRecorderNotGrantedPermissionSnackBar(BuildContext context) => caption(context);
   static TextStyle voiceRecorderFilename(BuildContext context) => headline6(context);
-  static TextStyle voiceRecorderDate(BuildContext context) => caption(context);
+  static TextStyle voiceRecorderDate(BuildContext context) => subtitle3(context);
   static TextStyle voiceRecorderDeleteFileSnackBar(BuildContext context) => caption(context);
   static TextStyle voiceRecorderRestoreFileSnackBar(BuildContext context) => caption(context);
-  static TextStyle voiceRecorderDeleteFileDialogueTitle(BuildContext context) => headline5(context);
-  static TextStyle voiceRecorderDeleteFileDialogueContent(BuildContext context) => body1(context);
-  static TextStyle voiceRecorderDeleteFileDialogueCancelButton(BuildContext context) => body2(context);
-  static TextStyle voiceRecorderDeleteFileDialogueConfirmButton(BuildContext context) => body2(context);
+
+  static TextStyle voiceRecorderDeleteFileDialogueTitle(BuildContext context) => headline4(context);
+  static TextStyle voiceRecorderDeleteFileDialogueContent(BuildContext context) => body2(context);
+  static TextStyle voiceRecorderDeleteFileDialogueCancelButton(BuildContext context) => subtitle3(context);
+  static TextStyle voiceRecorderDeleteFileDialogueConfirmButton(BuildContext context) => body3(context);
   static TextStyle voiceRecorderDeleteFileMessageSnackBar(BuildContext context) => caption(context);
-  static TextStyle voiceRecorderRenameFileDialogueTitle(BuildContext context) => headline5(context);
-  static TextStyle voiceRecorderRenameFileDialogueCancelButton(BuildContext context) => body2(context);
-  static TextStyle voiceRecorderRenameFileDialogueConfirmButton(BuildContext context) => body1(context);
+  
+  static TextStyle voiceRecorderRenameFileDialogueTitle(BuildContext context) => headline4(context);
+  static TextStyle voiceRecorderRenameFileDialogueCancelButton(BuildContext context) => subtitle3(context);
+  static TextStyle voiceRecorderRenameFileDialogueConfirmButton(BuildContext context) => body3(context);
+  static TextStyle voiceRecorderRenameFileDialogueTextField(BuildContext context) => body3(context);
   static TextStyle voiceRecorderRenameFileMessageSnackBar(BuildContext context) => caption(context);
   static TextStyle voiceRecorderRenameFileErrorMessageSnackBar(BuildContext context) => caption(context);
   static TextStyle voiceRecorderRecordingTimer(BuildContext context) => headline3(context);

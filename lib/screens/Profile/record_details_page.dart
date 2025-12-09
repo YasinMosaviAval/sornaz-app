@@ -117,7 +117,7 @@ class _RecordDetailsPageState extends State<RecordDetailsPage> {
                           samples: waveformSnap.data!,
                           duration: durationSnap.data!,
                           filePath: widget.file.path,
-                          color: isDark ? Colors.white : Colors.blue,
+                          color: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light,
                         );
                       },
                     );
@@ -142,6 +142,7 @@ class _RecordDetailsPageState extends State<RecordDetailsPage> {
                     onUndoRestore: (restoredFile, bytes) async {
                       await restoredFile.writeAsBytes(bytes);
                     },
+                    isDark: isDark,
                   ),
                 ],
               ),
@@ -284,8 +285,11 @@ class RenameButtonWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: ElevatedButton.icon(
-        icon: const Icon(Icons.edit),
+        icon: Icon(Icons.edit, color: isDark? AppColors.text_primary_dark : AppColors.text_primary_light,),
         // style: ButtonStyle(backgroundColor: isDark? AppColors.surface_dark : AppColors.surface_light),
+         style: ElevatedButton.styleFrom(
+          backgroundColor: isDark? AppColors.surface_dark : AppColors.surface_light,
+        ),
         label: Text(
           "تغییر نام",
           style: AppTypography.recordDetailsRenameTitle(context),
@@ -347,10 +351,12 @@ class DeleteButtonWidget extends StatelessWidget {
     required this.onDelete,
     required this.file,
     required this.onUndoRestore,
+    required this.isDark
   });
 
   final Function() onDelete;
   final File file;
+  final bool isDark;
   final Future<void> Function(File restoredFile, List<int> bytes) onUndoRestore;
 
   @override
@@ -358,8 +364,8 @@ class DeleteButtonWidget extends StatelessWidget {
     final fileName = file.path.split('/').last;
     return Expanded(
       child: ElevatedButton.icon(
-        icon: const Icon(Icons.delete_forever),
-        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+        icon: Icon(Icons.delete_forever,  color: isDark? AppColors.text_primary_dark : AppColors.text_primary_light),
+        style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
         label: Text(
           "حذف",
           style: AppTypography.recordDetailsDeleteDialogueLabel(context),

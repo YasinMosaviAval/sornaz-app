@@ -68,33 +68,13 @@ class _MetronomePageState extends State<MetronomePage> {
   Widget build(BuildContext context) {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
-
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
-    // final theme = Theme.of(context);
     final bool isEnglish = localeProvider.locale.languageCode == 'en';
 
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: isDark
-            ? AppColors.background_dark
-            : AppColors.background_light,
-
-        appBar: AppBar(
-          title: Text(
-            AppStrings.metronome_title.translate(context),
-            style: AppTypography.metronomeAppBar(context),
-          ),
-
-          backgroundColor: isDark
-              ? AppColors.surface_dark
-              : AppColors.surface_light,
-          iconTheme: IconThemeData(
-            color: isDark
-                ? AppColors.text_primary_dark
-                : AppColors.text_primary_light,
-          ),
-        ),
+        backgroundColor: isDark ? AppColors.background_dark : AppColors.background_light,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

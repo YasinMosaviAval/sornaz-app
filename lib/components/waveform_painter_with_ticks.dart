@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 
 class WaveformPainterWithTicks extends CustomPainter {
   final List<double> amplitudes;
   final bool isRecording;
+  final bool isDark;
 
-  WaveformPainterWithTicks(this.amplitudes, this.isRecording);
+  WaveformPainterWithTicks(this.amplitudes, this.isRecording, this.isDark);
 
   @override
   void paint(Canvas canvas, Size size) {
     final Paint wavePaint = Paint()
-      ..color = Colors.blue
+      ..color = isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light
       ..strokeWidth = 0.5
       ..strokeCap = StrokeCap.round;
 
@@ -63,17 +65,19 @@ class WaveformPainterWithTicksAndTime extends CustomPainter {
   final List<double> amplitudes;
   final bool isRecording;
   final BuildContext context;
+  final bool isDark;
 
   WaveformPainterWithTicksAndTime(
     this.amplitudes,
     this.isRecording,
     this.context,
+    this.isDark,
   );
 
   @override
   void paint(Canvas canvas, Size size) {
     final Paint wavePaint = Paint()
-      ..color = Colors.blue
+      ..color = isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round;
 

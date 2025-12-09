@@ -9,10 +9,8 @@ import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:shamsi_date/shamsi_date.dart';
-// import 'package:sornaz/components/advanced_waveform.dart';
 import 'package:sornaz/components/basic_waveform.dart';
 import 'package:sornaz/components/bottom_nav.dart';
-// import 'package:sornaz/components/db_meter.dart';
 import 'package:sornaz/components/no_file_found.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
@@ -44,7 +42,6 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
   String? _currentFilePath;
   bool isJalaliDate = false;
 
-  // برای نمودار شدت صوت زنده
   final List<double> _amplitudes = [];
   StreamSubscription? _amplitudeSubscription;
 
@@ -55,6 +52,30 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
   void initState() {
     super.initState();
     _checkPermissionsAndLoad();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _amplitudeSubscription?.cancel();
+    _recorder.dispose();
+    _player.dispose();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _seconds = 0;
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!_isRecording || _isPaused) return;
+      setState(() {
+        _seconds++;
+        final m = _seconds ~/ 60;
+        final s = _seconds % 60;
+        _timerText =
+            '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+      });
+    });
   }
 
   Future<void> _checkPermissionsAndLoad() async {
@@ -98,21 +119,6 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
           );
 
     if (mounted) setState(() => _recordings = files.cast<File>());
-  }
-
-  void _startTimer() {
-    _timer?.cancel();
-    _seconds = 0;
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!_isRecording || _isPaused) return;
-      setState(() {
-        _seconds++;
-        final m = _seconds ~/ 60;
-        final s = _seconds % 60;
-        _timerText =
-            '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
-      });
-    });
   }
 
   Future<void> _pauseRecording() async {
@@ -170,11 +176,6 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
     await _loadRecordings();
   }
 
-  String _formatJalaliDate(DateTime date) {
-    final jalali = Jalali.fromDateTime(date);
-    return '${jalali.year}/${jalali.month.toString().padLeft(2, '0')}/${jalali.day.toString().padLeft(2, '0')} - ${jalali.hour.toString().padLeft(2, '0')}:${jalali.minute.toString().padLeft(2, '0')}';
-  }
-
   Future<void> _startRecording() async {
     if (await _recorder.hasPermission()) {
       final dir = await getApplicationDocumentsDirectory();
@@ -219,7 +220,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
 
       _amplitudeSubscription?.cancel();
       _amplitudeSubscription = _recorder
-          .onAmplitudeChanged(const Duration(milliseconds: 10))
+          .onAmplitudeChanged(const Duration(milliseconds: 100))
           .listen((amp) {
             if (!mounted || !_isRecording || _isPaused) return;
 
@@ -237,13 +238,9 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
     }
   }
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _amplitudeSubscription?.cancel();
-    _recorder.dispose();
-    _player.dispose();
-    super.dispose();
+  String _formatJalaliDate(DateTime date) {
+    final jalali = Jalali.fromDateTime(date);
+    return '${jalali.year}/${jalali.month.toString().padLeft(2, '0')}/${jalali.day.toString().padLeft(2, '0')} - ${jalali.hour.toString().padLeft(2, '0')}:${jalali.minute.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -264,36 +261,38 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
             automaticallyImplyLeading: false,
             title: TabBar(
               dividerHeight: 2,
-              indicatorColor: AppColors.text_primary_light,
-              labelColor: AppColors.text_primary_light,
-              unselectedLabelColor: AppColors.text_secondary_light,
-              dividerColor: AppColors.border_light,
+              indicatorColor: isDark? AppColors.text_primary_dark : AppColors.text_primary_light,
+              labelColor: isDark? AppColors.text_primary_dark : AppColors.text_primary_light,
+              unselectedLabelColor:isDark? AppColors.text_secondary_dark : AppColors.text_secondary_light,
+              dividerColor:isDark? AppColors.border_dark : AppColors.border_light,
               tabs: const [
                 Tab(icon: Icon(Icons.mic, size: 32)),
                 Tab(icon: Icon(Icons.list, size: 32)),
               ],
             ),
+            backgroundColor: isDark? AppColors.surface_dark: AppColors.surface_light,
           ),
+          backgroundColor: isDark? AppColors.background_dark: AppColors.background_light,
           body: TabBarView(
             children: [
               // TAB 1: ضبط صدا
               Column(
                 children: [
+                  SizedBox(height: AppSpacing.space_32),
                   RecordingTimer(timerText: _timerText),
-
+                  SizedBox(height: AppSpacing.space_32),
                   BasicWaveformWidget(
-                    isDark: isDark,
                     amplitudes: _amplitudes,
                     isRecording: _isRecording,
                     isPaused: _isPaused,
                   ),
-
+                  SizedBox(height: AppSpacing.space_32),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      if (_isRecording) playPauseButton(),
+                      if (_isRecording) playPauseButton(isDark: isDark),
                       const SizedBox(width: 30),
-                      recordingButton(),
+                      recordingButton(isDark: isDark),
                     ],
                   ),
                 ],
@@ -304,7 +303,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
                   ? NoFilesFoundWidget(
                       message: AppStrings.no_records_file.translate(context),
                     )
-                  : voiceRecordsList(),
+                  : voiceRecordsList(isDark: isDark),
             ],
           ),
           bottomNavigationBar: const BottomNavBarWidget(),
@@ -313,7 +312,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
     );
   }
 
-  ListView voiceRecordsList() {
+  ListView voiceRecordsList({required bool isDark}) {
     return ListView.builder(
       padding: const EdgeInsets.all(12),
       itemCount: _recordings.length,
@@ -329,6 +328,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
           child: Card(
             key: ValueKey(file.path),
             elevation: 2,
+            color: isDark ? AppColors.surface_dark: AppColors.surface_light,
             child: ListTile(
               onTap: () => _openDetailsPage(file),
               contentPadding: EdgeInsets.symmetric(
@@ -341,7 +341,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
                   _currentlyPlayingPath == file.path && _isPlaying
                       ? Icons.pause_circle_filled
                       : Icons.play_circle_fill,
-                  color: Colors.blue,
+                  color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
                 ),
                 onPressed: () => _playPause(file),
               ),
@@ -360,19 +360,19 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
                     iconSize: AppSpacing.space_24,
                     icon: Icon(
                       Icons.edit,
-                      color: Colors.orange,
+                      color: AppColors.info,
                       size: AppSpacing.space_24,
                     ),
-                    onPressed: () => _renameRecording(file),
+                    onPressed: () => _renameRecording(file, isDark: isDark),
                   ),
                   IconButton(
                     iconSize: AppSpacing.space_24,
                     icon: Icon(
                       Icons.delete_forever,
-                      color: Colors.red,
+                      color: AppColors.error,
                       size: AppSpacing.space_24,
                     ),
-                    onPressed: () => _confirmDelete(file),
+                    onPressed: () => _confirmDelete(file, isDark: isDark),
                   ),
                 ],
               ),
@@ -442,12 +442,13 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
     }
   }
 
-  Future<void> _confirmDelete(File file) async {
+  Future<void> _confirmDelete(File file, {required bool isDark}) async {
     final fileName = file.path.split('/').last.replaceAll('.m4a', '');
 
     bool? confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: isDark ? AppColors.surface_dark: AppColors.surface_light,
         title: Text(
           "حذف ضبط",
           textAlign: TextAlign.center,
@@ -521,13 +522,14 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
     }
   }
 
-  Future<void> _renameRecording(File file) async {
+  Future<void> _renameRecording(File file, {required bool isDark}) async {
     final oldName = file.path.split('/').last.replaceAll(".m4a", "");
     final controller = TextEditingController(text: oldName);
 
     final newName = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: isDark ? AppColors.surface_dark: AppColors.surface_light,
         title: Text(
           "تغییر نام فایل",
           style: AppTypography.voiceRecorderRenameFileDialogueTitle(context),
@@ -538,6 +540,10 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
           decoration: const InputDecoration(
             labelText: "نام جدید",
             border: OutlineInputBorder(),
+          ),
+          cursorColor: AppColors.error,
+          style: AppTypography.voiceRecorderRenameFileDialogueTextField(
+            context,
           ),
         ),
         actions: [
@@ -551,6 +557,11 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
             ),
           ),
           ElevatedButton(
+            style: ButtonStyle(
+              backgroundColor: WidgetStateProperty.all(
+                isDark ? AppColors.primary_dark : AppColors.primary_light,
+              ),
+            ),
             onPressed: () {
               if (controller.text.trim().isEmpty) return;
               Navigator.pop(context, controller.text.trim());
@@ -603,25 +614,37 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
     }
   }
 
-  FloatingActionButton recordingButton() {
-    return FloatingActionButton.large(
-      heroTag: "main",
-      backgroundColor: _isRecording ? Colors.red : AppColors.text_primary_light,
-      onPressed: _isRecording ? _stopRecording : _startRecording,
-      child: Icon(
-        _isRecording ? Icons.stop : Icons.mic,
-        size: 44,
-        color: Colors.white,
+  SizedBox recordingButton({required bool isDark}) {
+    return SizedBox(
+      height: AppSpacing.space_76,
+      width: AppSpacing.space_76,
+      child: FloatingActionButton(
+        heroTag: "main",
+        backgroundColor: AppColors.error,
+        // backgroundColor: _isRecording ? AppColors.error : isDark ? AppColors.surface_dark : AppColors.surface_light,
+        onPressed: _isRecording ? _stopRecording : _startRecording,
+        
+        child: Icon(
+          _isRecording ? Icons.stop : Icons.mic,
+          size: AppSpacing.space_40,
+          color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+        ),
       ),
     );
   }
 
-  FloatingActionButton playPauseButton() {
+  FloatingActionButton playPauseButton({required bool isDark}) {
     return FloatingActionButton(
       heroTag: "pause",
-      backgroundColor: _isPaused ? Colors.orange : Colors.grey,
+      backgroundColor: _isPaused
+                        ? isDark? AppColors.clicked_dark: AppColors.clicked_light 
+                        : isDark? AppColors.surface_dark: AppColors.surface_light,
       onPressed: _isPaused ? _resumeRecording : _pauseRecording,
-      child: Icon(_isPaused ? Icons.play_arrow : Icons.pause, size: 36),
+      child: Icon(
+        _isPaused ? Icons.play_arrow : Icons.pause, 
+        size: AppSpacing.space_36, 
+        color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light
+      ),
     );
   }
 }

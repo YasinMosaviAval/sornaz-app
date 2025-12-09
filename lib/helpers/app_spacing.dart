@@ -27,6 +27,7 @@ class AppSpacing {
   static const double space_160 = 160;
   static const double space_170 = 170;
   static const double space_200 = 200;
+  static const double space_250 = 250;
   static const double space_300 = 300;
 
   static const double zero = 0;

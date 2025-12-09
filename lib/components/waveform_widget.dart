@@ -2,7 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:provider/provider.dart';
 import 'dart:math';
+
+import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_data.dart';
 
 class WaveformViewer extends StatefulWidget {
   final List<int> samples;
@@ -141,6 +145,9 @@ class _WaveformPlayerViewState extends State<WaveformPlayerView> {
 
   @override
   Widget build(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    
     final waveformWidth = widget.samples.length * zoom / 2;
 
     return Column(
@@ -149,14 +156,14 @@ class _WaveformPlayerViewState extends State<WaveformPlayerView> {
         Row(
           children: [
             IconButton(
-              icon: const Icon(Icons.play_arrow),
+              icon: Icon(Icons.play_arrow, color: isDark? AppColors.text_primary_dark: AppColors.text_primary_light),
               onPressed: () async {
                 await player.stop();
                 await player.play(DeviceFileSource(widget.filePath));
               },
             ),
             IconButton(
-              icon: const Icon(Icons.pause),
+              icon: Icon(Icons.pause, color: isDark? AppColors.text_primary_dark: AppColors.text_primary_light),
               onPressed: () async {
                 await player.pause();
               },
