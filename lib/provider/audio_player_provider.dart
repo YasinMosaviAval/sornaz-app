@@ -86,8 +86,6 @@ class AudioPlayerProvider extends ChangeNotifier {
     );
   }
 
-
-
   // ==========================
   // Repeat mode (0=off, 1=one, 2=all)
   // ==========================

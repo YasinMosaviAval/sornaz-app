@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/classes/audio_file.dart';
+import 'package:sornaz/components/audio_file_actions.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
@@ -42,11 +43,19 @@ class AudioItem extends StatelessWidget {
             : Colors.transparent,
       ),
       child: GestureDetector(
-        onLongPress: () => _showFileOptions(context, file, index),
+        onLongPress: () => showFileOptions(context, audio),
+        // onLongPress: () => _showFileOptions(context, file, index),
         child: ListTile(
           contentPadding: EdgeInsets.symmetric(
             horizontal: AppSpacing.space_24,
             vertical: AppSpacing.space_2,
+          ),
+          leading: Icon(
+            isPlaying ? Icons.pause_circle_filled :  Icons.play_circle_filled,
+            color: isPlaying
+                ? (isDark ? AppColors.text_primary_dark : AppColors.text_primary_light)
+                : (isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light),
+            size: AppSpacing.space_32,
           ),
           minTileHeight: AppSpacing.space_24,
           title: isPlaying
@@ -91,6 +100,7 @@ class AudioItem extends StatelessWidget {
   }
 }
 
+/*
 void _showFileOptions(BuildContext context, AudioFile file, int index) {
   showModalBottomSheet(
     context: context,
@@ -187,3 +197,4 @@ void _renameFile(BuildContext context, AudioFile file) {
     ),
   );
 }
+*/

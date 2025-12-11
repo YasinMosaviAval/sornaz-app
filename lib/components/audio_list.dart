@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sornaz/classes/audio_file.dart';
+import 'package:sornaz/components/audio_file_actions.dart';
 import 'package:sornaz/components/audio_item.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
@@ -28,7 +28,6 @@ class AudioList extends StatelessWidget {
       );
     }
     
-    
     if (provider.filteredFiles.isEmpty) {
       return Container(
         decoration: BoxDecoration(
@@ -52,8 +51,9 @@ class AudioList extends StatelessWidget {
         itemBuilder: (context, index) {
           final audio = provider.filteredFiles[index];
           return GestureDetector(
-            key: ValueKey(audio.file.path),   // 👈 باید روی روت باشه
-            onLongPress: () => _showFileOptions(context, audio, index),
+            key: ValueKey(audio.file.path),
+            onLongPress: () => showFileOptions(context, audio),
+            // onLongPress: () => _showFileOptions(context, audio, index),
             child: AudioItem(
               audio: audio,
               isPlaying: provider.currentIndex == index,
@@ -66,6 +66,7 @@ class AudioList extends StatelessWidget {
   }
 }
 
+/*
 void _showFileOptions(BuildContext context, AudioFile file, int index) {
   showModalBottomSheet(
     context: context,
@@ -99,7 +100,6 @@ void _showFileOptions(BuildContext context, AudioFile file, int index) {
     },
   );
 }
-
 
 void _showRenameDialog(BuildContext context, AudioFile file) {
   final controller = TextEditingController(text: file.fileName.split('.').first);
@@ -186,3 +186,4 @@ void _showDeleteConfirm(BuildContext context, AudioFile file) {
     },
   );
 }
+*/

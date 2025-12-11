@@ -14,8 +14,6 @@ class MusicPlayerPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
     final bool isEnglish = localeProvider.locale.languageCode == 'en';
-    
-
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: ChangeNotifierProvider(
