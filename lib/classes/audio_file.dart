@@ -1,7 +1,7 @@
 import 'dart:io';
 
 class AudioFile {
-  final File file;
+  File file;
   final Duration duration;
 
   AudioFile(this.file, this.duration);

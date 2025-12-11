@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:sornaz/classes/audio_file.dart';
+import 'package:sornaz/main.dart';
 import 'package:sornaz/services/audio_file_loader.dart';
 
 class AudioPlayerProvider extends ChangeNotifier {
@@ -30,6 +31,62 @@ class AudioPlayerProvider extends ChangeNotifier {
     isShuffle = !isShuffle;
     notifyListeners();
   }
+
+  // ==========================
+  // Remove file from List, from Device, Rename file
+  // ==========================
+  Future<bool> renameFile(AudioFile file, String newName) async {
+    final dir = file.file.parent.path;
+
+    final newPath = "$dir/$newName";
+
+    final newFile = await file.file.rename(newPath);
+
+    // بروزرسانی خود AudioFile
+    file.file = newFile;
+
+    notifyListeners();   // 👈 لیست فوراً رفرش می‌شود
+
+    // Snackbar
+    _showSnackBar("نام فایل تغییر کرد");
+    return true;
+  }
+
+  bool removeFromList(AudioFile file) {
+    allFiles.remove(file);
+    filteredFiles.remove(file);
+
+    notifyListeners();
+
+    _showSnackBar("از لیست حذف شد");
+    return true;
+  }
+
+  Future<bool> deleteFromDevice(AudioFile file) async {
+    await file.file.delete();
+
+    allFiles.remove(file);
+    filteredFiles.remove(file);
+
+    notifyListeners();
+
+    _showSnackBar("فایل از حافظه حذف شد");
+    return true;
+  }
+
+  void _showSnackBar(String message) {
+    final context = navigatorKey.currentContext;
+    if (context == null) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+
 
   // ==========================
   // Repeat mode (0=off, 1=one, 2=all)

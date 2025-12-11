@@ -4,6 +4,7 @@ import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/main.dart';
 import 'package:sornaz/screens/Onboarding/splash.dart';
 import 'package:sornaz/screens/Others/about_us.dart';
 import 'package:sornaz/screens/Others/settings.dart';
@@ -48,6 +49,7 @@ class MyApp extends StatelessWidget {
         //   ],
         // );
         return MaterialApp(
+          navigatorKey: navigatorKey,
           // routerConfig: router,
           debugShowCheckedModeBanner: false,
           title: AppStrings.application_fullname.translate(context),
