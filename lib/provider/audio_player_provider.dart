@@ -1,6 +1,4 @@
-
 import 'dart:async';
-
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:sornaz/classes/audio_file.dart';
@@ -23,10 +21,29 @@ class AudioPlayerProvider extends ChangeNotifier {
   List<Duration> history = [];
   Timer? undoTimer;
 
-// =================================================================================
-// =================================================================================
-// =================================================================================
-  
+  // ==========================
+  // Shuffle
+  // ==========================
+  bool isShuffle = false;
+
+  void toggleShuffle() {
+    isShuffle = !isShuffle;
+    notifyListeners();
+  }
+
+  // ==========================
+  // Repeat mode (0=off, 1=one, 2=all)
+  // ==========================
+  int repeatMode = 0;
+
+  void toggleRepeatMode() {
+    repeatMode = (repeatMode + 1) % 3;
+    notifyListeners();
+  }
+
+  // ==========================
+  // Time mode
+  // ==========================
   bool showRemaining = false;
 
   void toggleTimeMode() {
@@ -34,9 +51,9 @@ class AudioPlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-// =================================================================================
-// =================================================================================
-
+  // ==========================
+  // Playback speed
+  // ==========================
   double playbackSpeed = 1.0;
 
   final List<double> speedOptions = [
@@ -58,29 +75,38 @@ class AudioPlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-
-// =================================================================================
-// =================================================================================
-// =================================================================================
-
-
+  // ==========================
+  // Constructor
+  // ==========================
   AudioPlayerProvider() {
     _initListeners();
   }
 
   void _initListeners() {
+    // وضعیت پخش
     _player.onPlayerStateChanged.listen((state) {
       isPlaying = state == PlayerState.playing;
       notifyListeners();
-
-      if (state == PlayerState.completed) playNext();
     });
 
+    // طول آهنگ
     _player.onDurationChanged.listen((d) {
       duration = d;
       notifyListeners();
     });
 
+    // پایان آهنگ
+    _player.onPlayerComplete.listen((event) async {
+      if (repeatMode == 1) {
+        // Repeat ONE
+        await _player.seek(Duration.zero);
+        await _player.resume();
+      } else {
+        playNext();
+      }
+    });
+
+    // موقعیت پخش
     Timer.periodic(const Duration(milliseconds: 500), (_) async {
       if (isPlaying) {
         final pos = await _player.getCurrentPosition();
@@ -90,8 +116,13 @@ class AudioPlayerProvider extends ChangeNotifier {
         }
       }
     });
+
+    _player.setReleaseMode(ReleaseMode.stop);
   }
 
+  // ==========================
+  // Load files
+  // ==========================
   Future<void> loadFiles() async {
     isLoading = true;
     notifyListeners();
@@ -110,9 +141,24 @@ class AudioPlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ==========================
+  // Playback control
+  // ==========================
   Future<void> play(int index) async {
     currentIndex = index;
-    await _player.play(DeviceFileSource(filteredFiles[index].file.path));
+    await _player.stop();
+
+    await _player.setSource(
+      DeviceFileSource(filteredFiles[index].file.path),
+    );
+
+    if (repeatMode == 1) {
+      _player.setReleaseMode(ReleaseMode.loop);
+    } else {
+      _player.setReleaseMode(ReleaseMode.stop);
+    }
+
+    await _player.resume();
 
     history.clear();
     isUndoMode = false;
@@ -127,7 +173,29 @@ class AudioPlayerProvider extends ChangeNotifier {
   }
 
   void playNext() {
-    if (currentIndex < filteredFiles.length - 1) play(currentIndex + 1);
+    if (filteredFiles.isEmpty) return;
+
+    if (isShuffle) {
+      int nextIndex = _getRandomIndex();
+      play(nextIndex);
+    } else {
+      if (currentIndex < filteredFiles.length - 1) {
+        play(currentIndex + 1);
+      } else if (repeatMode == 2) {
+        // Repeat ALL
+        play(0);
+      }
+    }
+  }
+
+  int _getRandomIndex() {
+    if (filteredFiles.length <= 1) return currentIndex;
+
+    int nextIndex = currentIndex;
+    while (nextIndex == currentIndex) {
+      nextIndex = DateTime.now().millisecondsSinceEpoch % filteredFiles.length;
+    }
+    return nextIndex;
   }
 
   void previousOrUndo() {
@@ -141,6 +209,7 @@ class AudioPlayerProvider extends ChangeNotifier {
       } else {
         _restartUndoTimer();
       }
+
       notifyListeners();
     } else {
       if (position > const Duration(seconds: 3)) {
@@ -151,6 +220,9 @@ class AudioPlayerProvider extends ChangeNotifier {
     }
   }
 
+  // ==========================
+  // Seek / Undo
+  // ==========================
   void startSliding() {
     if (history.isEmpty || history.last != position) history.add(position);
     isUndoMode = true;
@@ -162,6 +234,18 @@ class AudioPlayerProvider extends ChangeNotifier {
     final d = Duration(seconds: sec.toInt());
     await _player.seek(d);
     _restartUndoTimer();
+  }
+
+  Future<void> seekForward10() async {
+    final newPos = position + const Duration(seconds: 10);
+    await _player.seek(newPos < duration ? newPos : duration);
+    notifyListeners();
+  }
+
+  Future<void> seekBackward10() async {
+    final newPos = position - const Duration(seconds: 10);
+    await _player.seek(newPos > Duration.zero ? newPos : Duration.zero);
+    notifyListeners();
   }
 
   void _restartUndoTimer() {

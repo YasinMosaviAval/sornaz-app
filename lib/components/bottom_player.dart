@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/audio_controls.dart';
+import 'package:sornaz/components/audio_slider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/provider/audio_player_provider.dart';
-import 'package:sornaz/components/audio_slider.dart';
 
 class BottomPlayerWidget extends StatelessWidget {
   const BottomPlayerWidget({super.key});

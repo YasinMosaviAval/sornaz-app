@@ -17,7 +17,17 @@ class AudioList extends StatelessWidget {
     final isDark = appData.isDark;
     final pr = context.watch<AudioPlayerProvider>();
 
-    if (pr.isLoading) return const Center(child: CircularProgressIndicator());
+    if (pr.isLoading) {
+      return Container(
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.background_dark : AppColors.background_light,
+        ),
+        child: Center(child: CircularProgressIndicator()
+        )
+      );
+    }
+    
+    
     if (pr.filteredFiles.isEmpty) {
       return Container(
         decoration: BoxDecoration(

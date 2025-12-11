@@ -6,12 +6,6 @@ import 'package:sornaz/helpers/app_locale_provider.dart';
 
 void main() {
   runApp(
-    // ChangeNotifierProvider(create: (_) => AppData(), child: const MyApp()),
-    //   );
-    // }
-
-    // void main() {
-    //   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AppData()),

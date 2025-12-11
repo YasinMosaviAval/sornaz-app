@@ -21,8 +21,8 @@ class AudioSlider extends StatelessWidget {
           onPressed: () => {},
           style: TextButton.styleFrom(
             padding: EdgeInsets.zero,
-            maximumSize: const Size(40, 20),
-            minimumSize: const Size(40, 20),
+            maximumSize: const Size(56, 20),
+            minimumSize: const Size(56, 20),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
           child: Text(
@@ -49,8 +49,8 @@ class AudioSlider extends StatelessWidget {
           onPressed: () => pr.toggleTimeMode(),
           style: TextButton.styleFrom(
             padding: EdgeInsets.zero,
-            maximumSize: const Size(40, 20),
-            minimumSize: const Size(40, 20),
+            maximumSize: const Size(56, 20),
+            minimumSize: const Size(56, 20),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
           child: Text(

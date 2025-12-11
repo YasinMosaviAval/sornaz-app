@@ -24,7 +24,16 @@ String formatJalaliDate(String isoDate) {
 
 String formatDuration(Duration d) {
   String twoDigits(int n) => n.toString().padLeft(2, '0');
-  final minutes = twoDigits(d.inMinutes.remainder(60));
-  final seconds = twoDigits(d.inSeconds.remainder(60));
-  return '$minutes:$seconds';
+
+  int hours = d.inHours;
+  int minutes = d.inMinutes.remainder(60);
+  int seconds = d.inSeconds.remainder(60);
+
+  if (hours > 0) {
+    // برای فایل‌های طولانی‌تر از یک ساعت
+    return "${twoDigits(hours)}:${twoDigits(minutes)}:${twoDigits(seconds)}";
+  } else {
+    // برای فایل‌های معمولی زیر یک ساعت
+    return "${twoDigits(minutes)}:${twoDigits(seconds)}";
+  }
 }

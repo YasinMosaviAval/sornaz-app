@@ -135,8 +135,10 @@ class _ArticlesPageState extends State<ArticlesPage> {
       home: Scaffold(
         appBar: AppBar(
           backgroundColor: isDark
-              ? AppColors.background_dark
-              : AppColors.background_light,
+              ? AppColors.surface_dark
+              : AppColors.surface_light,
+              // ? AppColors.background_dark
+              // : AppColors.background_light,
           elevation: 0,
           automaticallyImplyLeading: false,
           leadingWidth: AppSpacing.space_48,
@@ -148,26 +150,31 @@ class _ArticlesPageState extends State<ArticlesPage> {
           actions: [ApplicationLogo(isDark: isDark)],
         ),
         drawer: const AppDrawer(),
-        body: Directionality(
+        body: Container(
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.background_dark : AppColors.background_light,
+        ),
+        child: Directionality(
           textDirection: TextDirection.rtl,
           child: isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : hasError
-              ? Center(
-                  child: Text(
-                    AppStrings.error_in_loading.translate(context),
-                    style: AppTypography.articlesErrorInLoading(context),
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _fetchInitialData,
-                  child: ArticlesListWidget(
-                    scrollController: _scrollController,
-                    posts: posts,
-                    isLoadingMore: isLoadingMore,
-                    isDark: isDark,
-                  ),
+            ? const Center(child: CircularProgressIndicator())
+            : hasError
+            ? Center(
+                child: Text(
+                  AppStrings.error_in_loading.translate(context),
+                  style: AppTypography.articlesErrorInLoading(context),
                 ),
+              )
+            : RefreshIndicator(
+                onRefresh: _fetchInitialData,
+                child: ArticlesListWidget(
+                  scrollController: _scrollController,
+                  posts: posts,
+                  isLoadingMore: isLoadingMore,
+                  isDark: isDark,
+                ),
+              ),
+          )
         ),
         bottomNavigationBar: const BottomNavBarWidget(),
       ),
