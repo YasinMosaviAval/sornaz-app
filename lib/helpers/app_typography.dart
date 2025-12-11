@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_colors.dart';
-import 'package:sornaz/helpers/app_spacing.dart';
 
 class AppTypography {
   static final isDark = false;
@@ -248,6 +247,59 @@ class AppTypography {
     );
   }
 
+  //*** */ primary color
+  static TextStyle link1(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    return TextStyle(
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 16),
+      fontWeight: FontWeight.w500,
+      color: isDark
+          ? AppColors.primary_dark
+          : AppColors.primary_light,
+      letterSpacing: -0.01,
+      fontStyle: FontStyle.normal,
+      textBaseline: TextBaseline.alphabetic,
+      overflow: TextOverflow.visible,
+    );
+  }
+
+  static TextStyle link2(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    return TextStyle(
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 14),
+      fontWeight: FontWeight.w500,
+      color: isDark
+          ? AppColors.primary_dark
+          : AppColors.primary_light,
+      letterSpacing: -0.01,
+      fontStyle: FontStyle.normal,
+      textBaseline: TextBaseline.alphabetic,
+      overflow: TextOverflow.visible,
+    );
+  }
+
+  static TextStyle link3(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    return TextStyle(
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 12),
+      fontWeight: FontWeight.w500,
+      color: isDark
+          ? AppColors.primary_dark
+          : AppColors.primary_light,
+      letterSpacing: -0.01,
+      fontStyle: FontStyle.normal,
+      textBaseline: TextBaseline.alphabetic,
+      overflow: TextOverflow.visible,
+    );
+  }
+
+
   static TextStyle caption(BuildContext context) {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
@@ -349,10 +401,10 @@ class AppTypography {
   static TextStyle musicPlayerNotPlayingAudioFile(BuildContext context) => body3(context);
   static TextStyle musicPlayerAudioItemDurationTime(BuildContext context) => subtitle3(context);
   static TextStyle musicPlayerAudioItemAddress(BuildContext context) => subtitle3(context);
-
-  static TextStyle musicPlayerNotGrantedPermissionSnackBar(BuildContext context) => TextStyle();
-  static TextStyle musicPlayerErrorInLoadingSnackBar(BuildContext context) => TextStyle();
-  static TextStyle musicPlayerAudioFileNotFound(BuildContext context) => TextStyle();
+  static TextStyle musicPlayerNotGrantedPermissionSnackBar(BuildContext context) => body3(context);
+  static TextStyle musicPlayerErrorInLoadingSnackBar(BuildContext context) => body3(context);
+  static TextStyle musicPlayerAudioFileNotFound(BuildContext context) => headline5(context);
+  static TextStyle musicPlayerSpeedMenuItem(BuildContext context) => body2(context);
   // ================================================================================================================================
   static TextStyle metronomeAppBar(BuildContext context) => headline3(context);
   static TextStyle metronomeBPM(BuildContext context) => body1(context);
@@ -382,7 +434,6 @@ class AppTypography {
   static TextStyle voiceRecorderRenameFileErrorMessageSnackBar(BuildContext context) => caption(context);
   static TextStyle voiceRecorderRecordingTimer(BuildContext context) => headline3(context);
   // ================================================================================================================================
-  
   static TextStyle recordDetailsAppBar(BuildContext context) => headline3(context);
   static TextStyle recordDetailsFilename(BuildContext context) => body1(context);
   static TextStyle recordDetailsRecordDate(BuildContext context) => body1(context);
@@ -399,183 +450,57 @@ class AppTypography {
   static TextStyle recordDetailsDeleteDialogueContent(BuildContext context) => body2(context);
   static TextStyle recordDetailsDeleteDialogueCancelButton(BuildContext context) => subtitle3(context);
   static TextStyle recordDetailsDeleteDialogueConfirmButton(BuildContext context) => body3(context);
-
+  // ================================================================================================================================
+  static TextStyle articlesErrorInLoading(BuildContext context) => headline4(context);
+  static TextStyle articlesReleaseDate(BuildContext context) => subtitle3(context);
+  static TextStyle articlesTitle(BuildContext context) => body3(context);
+  static TextStyle articlesBrief(BuildContext context) => subtitle3(context);
+  // ================================================================================================================================
+  static TextStyle articlesDetailPageErrorInSendingComment(BuildContext context,) => headline4(context);
+  static TextStyle articlesDetailPageLoadMoreComments(BuildContext context) => headline4(context);
+  static TextStyle articlesDetailPageCommentsListTitle(BuildContext context) => headline3(context);
+  static TextStyle articlesDetailPageCommentsListEmptyTitle(BuildContext context) => headline3(context);
+  static TextStyle articlesDetailPageSendStarPoint(BuildContext context) => body3(context);
+  static TextStyle articlesDetailPageWriteComment(BuildContext context) => body3(context);
+  static TextStyle articlesDetailPageSendCommentButton(BuildContext context) => body3(context);
+  static TextStyle articlesDetailPageSimilarArticlesTitle(BuildContext context) => headline3(context);
+  static TextStyle articlesDetailPageSimilarArticlesItemTitle(BuildContext context) => body3(context);
+  static TextStyle articlesDetailPageSimilarArticlesItemSubtitle(BuildContext context) => subtitle3(context);
+  static TextStyle articlesDetailPageArticlesTitle(BuildContext context) => headline3(context);
+  static TextStyle articlesDetailPageArticleCommentsListTitle(BuildContext context) => headline5(context);
+  static TextStyle articlesDetailPageArticleCommentsListSubtitle(BuildContext context) => body3(context);
+  static TextStyle articlesDetailPageArticleCommentsListDate(BuildContext context) => subtitle3(context);
+  static TextStyle articlesDetailPageArticleCommentsListReleaseDate(BuildContext context) => subtitle2(context);
+  static TextStyle articlesDetailPageArticlesAuthorsName(BuildContext context) => subtitle2(context);
+  // ================================================================================================================================
+  static TextStyle blogCardTitle(BuildContext context) => body3(context);
+  static TextStyle blogCardTime(BuildContext context) => subtitle3(context);
+  static TextStyle blogCarouselErrorInLoading(BuildContext context) => headline4(context);
+  static TextStyle blogCarouselTitle(BuildContext context) => headline6(context);
+  static TextStyle blogCarouselDate(BuildContext context) => subtitle3(context);
   // ================================================================================================================================
   // ================================================================================================================================
   // ================================================================================================================================
   // ================================================================================================================================
   // ================================================================================================================================
   // ================================================================================================================================
-  // ================================================================================================================================
-  // ================================================================================================================================
-  // ================================================================================================================================
-
-  static TextStyle blogCardTitle(BuildContext context) => TextStyle(fontSize: AppSpacing.space_12);
-  static TextStyle blogCardTime(BuildContext context) =>
-      TextStyle(fontSize: AppSpacing.space_10, color: Colors.grey);
-  // static TextStyle blogCarouselErrorInLoading(BuildContext context) =>
-  //     headline1(context);
-  static TextStyle blogCarouselErrorInLoading(BuildContext context) =>
-      TextStyle(
-        color: isDark
-            ? AppColors.text_primary_dark
-            : AppColors.text_primary_light,
-      );
-  static TextStyle blogCarouselTitle(BuildContext context) => TextStyle(
-    fontWeight: FontWeight.w600,
-    fontSize: 12,
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  );
-  static TextStyle blogCarouselDate(BuildContext context) => TextStyle(
-    color: isDark
-        ? AppColors.text_secondary_dark
-        : AppColors.text_secondary_light,
-    fontSize: 10,
-  );
-
-  static TextStyle bottomNavSnackBar(BuildContext context) => TextStyle();
-  static TextStyle headerSectionTitle(BuildContext context) => TextStyle();
-  static TextStyle headerSectionViewAllLink(BuildContext context) =>
-      TextStyle();
-
-  static TextStyle noFileFoundMessage(BuildContext context) => TextStyle(
-    fontSize: AppSpacing.space_20,
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  );
-
-  static TextStyle sectionTitleTitle(BuildContext context) => TextStyle(
-    fontSize: AppSpacing.space_18,
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-    fontWeight: FontWeight.w900,
-  );
-
-  static TextStyle sectionTitleViewAllLink(BuildContext context) => TextStyle(
-    color: isDark ? AppColors.primary_dark : AppColors.primary_light,
-  );
-
-  static TextStyle homeApplicationTitle(BuildContext context) => TextStyle(
-    fontSize: AppSpacing.space_18,
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-    fontWeight: FontWeight.w700,
-  );
-
-  static TextStyle articlesErrorInLoading(BuildContext context) => TextStyle();
-  static TextStyle articlesReleaseDate(BuildContext context) => TextStyle(
-    fontSize: AppSpacing.space_10,
-    color: isDark
-        ? AppColors.text_secondary_dark
-        : AppColors.text_secondary_light,
-  );
-  static TextStyle articlesTitle(BuildContext context) => TextStyle(
-    fontWeight: FontWeight.w800,
-    fontSize: AppSpacing.space_12,
-    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-  );
-  static TextStyle articlesBrief(BuildContext context) => TextStyle(
-    fontSize: AppSpacing.space_10,
-    color: isDark
-        ? AppColors.text_secondary_dark
-        : AppColors.text_secondary_light,
-  );
-
-  static TextStyle articlesDetailPageErrorInSendingComment(
-    BuildContext context,
-  ) => TextStyle();
-  static TextStyle articlesDetailPageLoadMoreComments(BuildContext context) =>
-      TextStyle();
-  static TextStyle articlesDetailPageCommentsListTitle(BuildContext context) =>
-      TextStyle(fontSize: AppSpacing.space_18, fontWeight: FontWeight.bold);
-  static TextStyle articlesDetailPageCommentsListEmptyTitle(
-    BuildContext context,
-  ) => TextStyle(fontSize: AppSpacing.space_16, fontWeight: FontWeight.bold);
-  static TextStyle articlesDetailPageSendStarPoint(BuildContext context) =>
-      TextStyle();
-  static TextStyle articlesDetailPageWriteComment(BuildContext context) =>
-      TextStyle();
-  static TextStyle articlesDetailPageSendCommentButton(BuildContext context) =>
-      TextStyle();
-  static TextStyle articlesDetailPageSimilarArticlesTitle(
-    BuildContext context,
-  ) => TextStyle(fontSize: AppSpacing.space_18, fontWeight: FontWeight.bold);
-  static TextStyle articlesDetailPageSimilarArticlesItemTitle(
-    BuildContext context,
-  ) => TextStyle();
-  static TextStyle articlesDetailPageSimilarArticlesItemSubtitle(
-    BuildContext context,
-  ) => TextStyle();
-  static TextStyle articlesDetailPageArticlesTitle(BuildContext context) =>
-      TextStyle(
-        fontSize: AppSpacing.space_18,
-        fontWeight: FontWeight.bold,
-        color: isDark
-            ? AppColors.text_primary_dark
-            : AppColors.text_primary_light,
-      );
-  static TextStyle articlesDetailPageArticleCommentsListTitle(
-    BuildContext context,
-  ) => TextStyle();
-  static TextStyle articlesDetailPageArticleCommentsListSubtitle(
-    BuildContext context,
-  ) => TextStyle();
-  static TextStyle articlesDetailPageArticleCommentsListDate(
-    BuildContext context,
-  ) => TextStyle(
-    fontSize: AppSpacing.space_12,
-    color: isDark
-        ? AppColors.text_secondary_dark
-        : AppColors.text_secondary_light,
-  );
-  static TextStyle articlesDetailPageArticleCommentsListReleaseDate(
-    BuildContext context,
-  ) => TextStyle(
-    fontSize: AppSpacing.space_14,
-    color: isDark
-        ? AppColors.text_secondary_dark
-        : AppColors.text_secondary_light,
-  );
-  static TextStyle articlesDetailPageArticlesAuthorsName(
-    BuildContext context,
-  ) => TextStyle(
-    fontSize: AppSpacing.space_14,
-    color: isDark
-        ? AppColors.text_secondary_dark
-        : AppColors.text_secondary_light,
-  );
 
 
+  static TextStyle bottomNavSnackBar(BuildContext context) => body3(context);
 
-  static TextStyle? waveformPainterSeconds(BuildContext context) =>
-      TextStyle(fontSize: 10, color: Colors.grey.shade500);
+  static TextStyle headerSectionTitle(BuildContext context) => headline4(context);
+  static TextStyle headerSectionViewAllLink(BuildContext context) => link3(context);
 
-  static TextStyle? searchBarText(BuildContext context) =>
-      TextStyle(fontSize: AppSpacing.space_12, fontWeight: FontWeight.w600);
-  static TextStyle? searchBarHint(BuildContext context) => TextStyle(
-    fontWeight: FontWeight.w500,
-    color: isDark
-        ? AppColors.text_secondary_dark
-        : AppColors.text_secondary_light,
-  );
+  static TextStyle noFileFoundMessage(BuildContext context) => headline4(context);
 
-  // static TextStyle? myAppDarkThemeHeadlineMedium(BuildContext context) =>
-  //     TextStyle(
-  //       color: AppColors.text_primary_dark,
-  //       fontWeight: FontWeight.bold,
-  //     );
-  // static TextStyle? myAppDarkThemeBodyMedium(BuildContext context) => TextStyle(
-  //   color: AppColors.text_secondary_dark,
-  //   fontSize: 12,
-  //   // fontSize: appData.textSize,
-  // );
+  static TextStyle sectionTitleTitle(BuildContext context) => headline3(context);
+  static TextStyle sectionTitleViewAllLink(BuildContext context) => link3(context);
 
-  // static TextStyle? myAppLightThemeHeadlineMedium(BuildContext context) =>
-  //     TextStyle(
-  //       color: AppColors.text_primary_light,
-  //       fontWeight: FontWeight.bold,
-  //     );
-  // static TextStyle? myAppLightThemeBodyMedium(BuildContext context) =>
-  //     TextStyle(
-  //       color: AppColors.text_secondary_dark,
-  //       fontSize: 12,
-  //       // fontSize: appData.textSize,
-  //     );
+  static TextStyle homeApplicationTitle(BuildContext context) => headline3(context);
+  
+  
+  static TextStyle waveformPainterSeconds(BuildContext context) => subtitle3(context);
+  
+  static TextStyle searchBarText(BuildContext context) => body1(context);
+  static TextStyle searchBarHint(BuildContext context) => subtitle3(context);
 }

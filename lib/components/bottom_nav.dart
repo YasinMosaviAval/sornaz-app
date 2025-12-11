@@ -20,6 +20,7 @@ class BottomNavBarWidget3 extends StatelessWidget {
   static const List<Widget> _pages = [
     ArticlesPage(),
     MusicPlayerPage(),
+    // OldMusicPlayerPage(),
     MetronomePage(),
     TunerPage(),
     VoiceRecorderPage(),
@@ -116,6 +117,7 @@ class _BottomNavBarWidgetState extends State<BottomNavBarWidget> {
   static const List<Widget> _pages = [
     ArticlesPage(),
     MusicPlayerPage(),
+    // OldMusicPlayerPage(),
     MetronomePage(),
     TunerPage(),
     VoiceRecorderPage(),
