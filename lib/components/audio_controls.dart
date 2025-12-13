@@ -12,7 +12,7 @@ class AudioControls extends StatelessWidget {
   Widget build(BuildContext context) {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
-    final pr = context.watch<AudioPlayerProvider>();
+    final provider = context.watch<AudioPlayerProvider>();
 
     return Column(
       children: [
@@ -23,33 +23,33 @@ class AudioControls extends StatelessWidget {
               icon: const Icon(Icons.forward_10),
               iconSize: AppSpacing.space_32,
               color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-              onPressed: pr.seekForward10,
+              onPressed: provider.seekForward10,
             ),
             IconButton(
               icon: const Icon(Icons.skip_next),
               iconSize: AppSpacing.space_32,
               color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-              onPressed: pr.playNext,
+              onPressed: provider.playNext,
             ),
             IconButton(
-              icon: Icon(pr.isPlaying ? Icons.pause : Icons.play_arrow),
+              icon: Icon(provider.isPlaying ? Icons.pause : Icons.play_arrow),
               iconSize: AppSpacing.space_32,
               color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-              onPressed: pr.isPlaying
-                  ? pr.pause
-                  : () => pr.play(pr.currentIndex),
+              onPressed: provider.isPlaying
+                  ? provider.pause
+                  : () => provider.play(provider.currentIndex),
             ),
             IconButton(
-              icon: Icon(pr.isUndoMode ? Icons.undo : Icons.skip_previous),
+              icon: Icon(provider.isUndoMode ? Icons.undo : Icons.skip_previous),
               iconSize: AppSpacing.space_32,
               color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-              onPressed: pr.previousOrUndo,
+              onPressed: provider.previousOrUndo,
             ),
             IconButton(
               icon: const Icon(Icons.replay_10),
               iconSize: AppSpacing.space_32,
               color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-              onPressed: pr.seekBackward10,
+              onPressed: provider.seekBackward10,
             ),
         
           ],
@@ -62,29 +62,38 @@ class AudioControls extends StatelessWidget {
             children: [
               IconButton(
                 icon: Icon(
+                  provider.folderMode ? Icons.list : Icons.folder,
+                  color: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light
+                ),
+                iconSize: AppSpacing.space_24,
+                // onPressed: provider.toggleFolderMode,
+                onPressed: () => provider.toggleFolderMode(),
+              ),
+              IconButton(
+                icon: Icon(
                   Icons.shuffle,
-                  color: pr.isShuffle
+                  color: provider.isShuffle
                       ? (isDark ? AppColors.primary_dark : AppColors.primary_light)
                       : (isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light),
                 ),
                 iconSize: AppSpacing.space_24,
-                onPressed: pr.toggleShuffle,
+                onPressed: provider.toggleShuffle,
               ),
               IconButton(
                 alignment: Alignment.center,
                 icon: Icon(
-                  pr.repeatMode == 0
+                  provider.repeatMode == 0
                       ? Icons.repeat
-                      : pr.repeatMode == 1
+                      : provider.repeatMode == 1
                           ? Icons.repeat_one
                           : Icons.repeat, // حالت repeat all
                 ),
-                color: pr.repeatMode == 0
+                color: provider.repeatMode == 0
                     ? (isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light)
                     : isDark
                         ? AppColors.primary_dark
                         : AppColors.primary_light,
-                onPressed: pr.toggleRepeatMode,
+                onPressed: provider.toggleRepeatMode,
                 iconSize: AppSpacing.space_24,
               ),
               Theme(
@@ -100,9 +109,9 @@ class AudioControls extends StatelessWidget {
                 ),
                 
                 child: PopupMenuButton<double>(
-                  initialValue: pr.playbackSpeed,
-                  onSelected: pr.setSpeed,
-                  itemBuilder: (_) => pr.speedOptions.map((speed) {
+                  initialValue: provider.playbackSpeed,
+                  onSelected: provider.setSpeed,
+                  itemBuilder: (_) => provider.speedOptions.map((speed) {
                     return PopupMenuItem<double>(
                       value: speed,
                       child: Text(
@@ -119,7 +128,7 @@ class AudioControls extends StatelessWidget {
                       ),
                       const SizedBox(width: AppSpacing.space_4),
                       Text(
-                        "${pr.playbackSpeed}x",
+                        "${provider.playbackSpeed}x",
                         style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light),
                       ),
                     ],

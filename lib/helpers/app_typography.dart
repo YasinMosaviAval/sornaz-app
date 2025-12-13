@@ -405,6 +405,12 @@ class AppTypography {
   static TextStyle musicPlayerErrorInLoadingSnackBar(BuildContext context) => body3(context);
   static TextStyle musicPlayerAudioFileNotFound(BuildContext context) => headline5(context);
   static TextStyle musicPlayerSpeedMenuItem(BuildContext context) => body2(context);
+  static TextStyle musicPlayerAudioFolderListViewTitle(BuildContext context) => body3(context);
+  static TextStyle musicPlayerBreadCrumb(BuildContext context) => body3(context);
+  static TextStyle musicPlayerBreadCrumbSubDirectory(BuildContext context) => body3(context);
+  static TextStyle musicPlayerBreadCrumbSlashes(BuildContext context) => subtitle3(context);
+  static TextStyle musicPlayerFolderViewTitle(BuildContext context) => body3(context);
+  static TextStyle musicPlayerFolderViewSubtitle(BuildContext context) => subtitle3(context);
   // ================================================================================================================================
   static TextStyle metronomeAppBar(BuildContext context) => headline3(context);
   static TextStyle metronomeBPM(BuildContext context) => body1(context);

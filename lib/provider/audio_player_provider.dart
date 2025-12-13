@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:sornaz/classes/audio_file.dart';
+import 'package:sornaz/classes/playback_undo.dart';
 import 'package:sornaz/main.dart';
 import 'package:sornaz/services/audio_file_loader.dart';
 
@@ -21,6 +23,10 @@ class AudioPlayerProvider extends ChangeNotifier {
 
   List<Duration> history = [];
   Timer? undoTimer;
+
+  final List<PlaybackUndo> _undoStack = [];
+
+
 
   // ==========================
   // Shuffle
@@ -86,6 +92,52 @@ class AudioPlayerProvider extends ChangeNotifier {
     );
   }
 
+  // ==========================
+  // Folder Mode & Flat Mode
+  // ==========================
+  bool folderMode = false; // false = flat, true = folder
+
+  void toggleFolderMode() {
+    folderMode = !folderMode;
+    notifyListeners();
+  }
+
+
+  // void toggleFolderMode(BuildContext context) {
+  //   if (!folderMode) {
+  //     final folderProvider =
+  //         Provider.of<FolderNavigatorProvider>(context, listen: false);
+
+  //     if (folderProvider.rootDir == null) {
+  //       // هنوز پوشه انتخاب نشده
+  //       loadFiles(context); // یا باز کردن picker
+  //       return;
+  //     }
+  //   }
+
+  //   folderMode = !folderMode;
+  //   notifyListeners();
+  // }
+
+  Map<String, List<AudioFile>> folderTree = {};
+
+  void _buildFolderTree() {
+    folderTree.clear();
+
+    for (var file in allFiles) {
+      final folder = file.file.parent.path;
+
+      if (!folderTree.containsKey(folder)) {
+        folderTree[folder] = [];
+      }
+
+      folderTree[folder]!.add(file);
+    }
+  }
+
+
+  // ==========================
+  // ==========================
   // ==========================
   // Repeat mode (0=off, 1=one, 2=all)
   // ==========================
@@ -178,16 +230,75 @@ class AudioPlayerProvider extends ChangeNotifier {
   // ==========================
   // Load files
   // ==========================
+/*
   Future<void> loadFiles() async {
     isLoading = true;
     notifyListeners();
 
-    allFiles = await AudioFileLoader.loadFromPicker();
+    // allFiles = await AudioFileLoader.loadFromPicker();
     filteredFiles = allFiles;
+
+    _buildFolderTree();
 
     isLoading = false;
     notifyListeners();
   }
+*/
+/*
+Future<void> loadFiles(BuildContext context) async {
+  isLoading = true;
+  notifyListeners();
+
+
+  // context امن قبل از await
+  final safeContext = context;
+
+  // انتخاب پوشه
+  final path = await AudioFileLoader.pickDirectory();
+  if (path == null) {
+    isLoading = false;
+    notifyListeners();
+    return;
+  }
+
+  final dir = Directory(path);
+
+  // ست کردن مسیر در FolderNavigatorProvider
+  final folderProvider = Provider.of<FolderNavigatorProvider>(safeContext, listen: false);
+  await folderProvider.setRoot(dir);
+
+  // بارگذاری فایل‌ها
+  allFiles = await AudioFileLoader.loadDirectory(dir);
+  filteredFiles = allFiles;
+
+  _buildFolderTree();
+
+  isLoading = false;
+  notifyListeners();
+}
+*/
+Future<void> loadFilesFromDirectory(Directory dir) async {
+  isLoading = true;
+  notifyListeners();
+
+  allFiles = await AudioFileLoader.loadFromDirectory(dir);
+  filteredFiles = allFiles;
+  _buildFolderTree();
+
+  isLoading = false;
+  notifyListeners();
+}
+
+
+void setFileList(List<AudioFile> files) {
+  allFiles = files;
+  filteredFiles = files;
+  _buildFolderTree();
+  notifyListeners();
+}
+
+
+
 
   void filter(String q) {
     filteredFiles = allFiles
@@ -200,26 +311,43 @@ class AudioPlayerProvider extends ChangeNotifier {
   // Playback control
   // ==========================
   Future<void> play(int index) async {
-    currentIndex = index;
-    await _player.stop();
+    // اگر آهنگ قبلی داریم و آهنگ جدید است
+    if (currentIndex != -1 && currentIndex != index) {
+      _undoStack.add(
+        PlaybackUndo(
+          index: currentIndex,
+          position: position,
+          createdAt: DateTime.now(),
+        ),
+      );
 
+      isUndoMode = true;
+      _restartUndoTimer();
+    }
+
+    currentIndex = index;
+
+    await _player.stop();
     await _player.setSource(
       DeviceFileSource(filteredFiles[index].file.path),
     );
 
-    if (repeatMode == 1) {
-      _player.setReleaseMode(ReleaseMode.loop);
-    } else {
-      _player.setReleaseMode(ReleaseMode.stop);
-    }
-
     await _player.resume();
 
-    history.clear();
-    isUndoMode = false;
-    undoTimer?.cancel();
-
     notifyListeners();
+  }
+    
+  void _cleanupUndoStack() {
+    final now = DateTime.now();
+
+    _undoStack.removeWhere(
+      (u) => now.difference(u.createdAt).inSeconds > 10,
+    );
+
+    if (_undoStack.isEmpty) {
+      isUndoMode = false;
+      undoTimer?.cancel();
+    }
   }
 
   Future<void> pause() async {
@@ -253,27 +381,35 @@ class AudioPlayerProvider extends ChangeNotifier {
     return nextIndex;
   }
 
-  void previousOrUndo() {
-    if (isUndoMode && history.isNotEmpty) {
-      final p = history.removeLast();
-      _player.seek(p);
+  Future<void> previousOrUndo() async {
+    _cleanupUndoStack();
 
-      if (history.isEmpty) {
-        isUndoMode = false;
-        undoTimer?.cancel();
-      } else {
-        _restartUndoTimer();
-      }
+    if (_undoStack.isNotEmpty) {
+      final undo = _undoStack.removeLast(); // LIFO
+
+      await _player.stop();
+      currentIndex = undo.index;
+
+      await _player.setSource(
+        DeviceFileSource(filteredFiles[undo.index].file.path),
+      );
+
+      await _player.seek(undo.position);
+      await _player.resume();
 
       notifyListeners();
-    } else {
-      if (position > const Duration(seconds: 3)) {
-        _player.seek(Duration.zero);
-      } else if (currentIndex > 0) {
-        play(currentIndex - 1);
-      }
+      return;
+    }
+
+    // رفتار قبلی
+    if (position > const Duration(seconds: 3)) {
+      await _player.seek(Duration.zero);
+    } else if (currentIndex > 0) {
+      play(currentIndex - 1);
     }
   }
+
+
 
   // ==========================
   // Seek / Undo
@@ -304,11 +440,16 @@ class AudioPlayerProvider extends ChangeNotifier {
   }
 
   void _restartUndoTimer() {
-    undoTimer?.cancel();
-    undoTimer = Timer(const Duration(seconds: 10), () {
-      isUndoMode = false;
-      history.clear();
-      notifyListeners();
-    });
+  undoTimer?.cancel();
+  undoTimer = Timer(const Duration(seconds: 1), () {
+    _cleanupUndoStack();
+    notifyListeners();
+  });
+}
+
+  void playFromFolder(List<AudioFile> files, int index) {
+    filteredFiles = files;
+    play(index);
   }
+
 }

@@ -14,12 +14,14 @@ class AudioItem extends StatelessWidget {
   final AudioFile audio;
   final bool isPlaying;
   final int index;
+  final VoidCallback? onTap;
 
   const AudioItem({
     super.key, 
     required this.audio,
     required this.isPlaying,
     required this.index,
+    this.onTap,
   });
 
   @override
@@ -93,108 +95,9 @@ class AudioItem extends StatelessWidget {
               ),
             ],
           ),
-          onTap: () => provider.play(index),
+          onTap: onTap ?? () => provider.play(index),
         ),
       ),
     );
   }
 }
-
-/*
-void _showFileOptions(BuildContext context, AudioFile file, int index) {
-  showModalBottomSheet(
-    context: context,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
-    builder: (_) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: Icon(Icons.edit),
-            title: Text("تغییر نام"),
-            onTap: () {
-              Navigator.pop(context);
-              _renameFile(context, file);
-            },
-          ),
-          ListTile(
-            leading: Icon(Icons.delete),
-            title: Text("حذف"),
-            onTap: () {
-              Navigator.pop(context);
-              _confirmDelete(context, file, index);
-            },
-          ),
-        ],
-      );
-    },
-  );
-}
-
-void _confirmDelete(BuildContext context, AudioFile file, int index) {
-  showDialog(
-    context: context,
-    builder: (_) => AlertDialog(
-      title: Text("حذف فایل"),
-      content: Text("می‌خوای فقط از لیست حذف بشه یا از حافظه هم پاک بشه؟"),
-      actions: [
-        TextButton(
-          child: Text("انصراف"),
-          onPressed: () => Navigator.pop(context),
-        ),
-        TextButton(
-          child: Text("فقط از لیست"),
-          onPressed: () {
-            Provider.of<AudioPlayerProvider>(context, listen: false)
-                .removeFromList(file);
-
-            Navigator.pop(context);
-          },
-        ),
-        TextButton(
-          child: Text("حذف از حافظه"),
-          onPressed: () {
-            Provider.of<AudioPlayerProvider>(context, listen: false)
-                .deleteFromDevice(file);
-
-            Navigator.pop(context);
-          },
-        ),
-      ],
-    ),
-  );
-}
-
-void _renameFile(BuildContext context, AudioFile file) {
-  TextEditingController controller =
-      TextEditingController(text: file.fileName);
-
-  showDialog(
-    context: context,
-    builder: (_) => AlertDialog(
-      title: Text("تغییر نام فایل"),
-      content: TextField(
-        controller: controller,
-        decoration: InputDecoration(hintText: "نام     جدید"),
-      ),
-      actions: [
-        TextButton(
-          child: Text("انصراف"),
-          onPressed: () => Navigator.pop(context),
-        ),
-        TextButton(
-          child: Text("ذخیره"),
-          onPressed: () {
-            Provider.of<AudioPlayerProvider>(context, listen: false)
-                .renameFile(file, controller.text.trim());
-
-            Navigator.pop(context);
-          },
-        ),
-      ],
-    ),
-  );
-}
-*/
