@@ -14,15 +14,12 @@ class BottomPlayerWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
-    
-    final pr = context.watch<AudioPlayerProvider>();
+    final provider = context.watch<AudioPlayerProvider>();
 
-    if (pr.currentIndex == -1) return const SizedBox.shrink();
+    if (provider.currentIndex == -1) return const SizedBox.shrink();
 
     return Container(
-      decoration: BoxDecoration(
-        color: isDark? AppColors.surface_dark : AppColors.surface_light
-      ),
+      decoration: BoxDecoration(color: isDark? AppColors.surface_dark : AppColors.surface_light),
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_16, vertical: AppSpacing.space_4),
       child: Column(
         children: [

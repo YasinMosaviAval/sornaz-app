@@ -32,6 +32,9 @@ class AudioPlayerProvider extends ChangeNotifier {
 
   List<AudioFile> files = [];
 
+  int scannedFiles = 0;
+  int totalFiles = 0;
+  String currentFileName = '';
 
   void startLoading() {
     isLoading = true;
@@ -235,12 +238,13 @@ class AudioPlayerProvider extends ChangeNotifier {
   // Load files
   // ==========================
 
-void setFileList(List<AudioFile> files) {
-  allFiles = files;
-  filteredFiles = files;
-  _buildFolderTree();
-  notifyListeners();
-}
+  void setFileList(List<AudioFile> files) {
+    allFiles = files;
+    filteredFiles = files;
+    _buildFolderTree();
+    isLoading = false;
+    notifyListeners();
+  }
 
   void start() {
     isLoading = true;
@@ -252,6 +256,9 @@ void setFileList(List<AudioFile> files) {
   void update(ScanStatus status) {
     progress = status.total == 0 ? 0 : status.scanned / status.total;
     currentPath = status.currentPath;
+    currentFileName = status.currentPath.split('/').last;
+    scannedFiles = status.scanned;
+    totalFiles = status.total;
     notifyListeners();
   }
 
@@ -260,6 +267,12 @@ void setFileList(List<AudioFile> files) {
     isLoading = false;
     notifyListeners();
   }
+
+AudioFile? get currentAudio {
+  if (currentIndex == null) return null;
+  if (currentIndex! < 0 || currentIndex! >= filteredFiles.length) return null;
+  return filteredFiles[currentIndex!];
+}
 
   void filter(String q) {
     filteredFiles = allFiles

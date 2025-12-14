@@ -9,7 +9,6 @@ import 'package:sornaz/provider/audio_player_provider.dart';
 import 'package:sornaz/components/audio_item.dart';
 import 'package:sornaz/provider/folder_navigator_provider.dart';
 
-
 class FolderListView extends StatelessWidget {
   const FolderListView({super.key});
 
@@ -29,6 +28,10 @@ class FolderListView extends StatelessWidget {
         itemBuilder: (context, index) {
           final folderPath = folders[index];
           final files = provider.folderTree[folderPath]!;
+
+          // گرفتن ایندکس فایل‌ها نسبت به filteredFiles اصلی
+          final fileIndexes = files.map((f) => provider.filteredFiles.indexOf(f)).toList();
+
           return ExpansionTile(
             title: Text(
               folderPath.split('/').last, 
@@ -39,8 +42,8 @@ class FolderListView extends StatelessWidget {
               for (int i = 0; i < files.length; i++)
                 AudioItem(
                   audio: files[i],
-                  index: provider.filteredFiles.indexOf(files[i]),
-                  isPlaying: provider.filteredFiles.indexOf(files[i]) == provider.currentIndex,
+                  index: fileIndexes[i],
+                  isPlaying: fileIndexes[i] == provider.currentIndex,
                 ),
             ],
           );
@@ -63,20 +66,21 @@ class FolderView extends StatelessWidget {
 
     if (nav.rootDir == null || nav.currentDir == null) {
       return const Center(
-        child: Text("در حال بارگذاری پوشه‌ها..."),
+        child: Text("در حال آماده‌سازی پوشه‌ها..."),
       );
     }
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark? AppColors.background_dark : AppColors.background_light
+        color: isDark ? AppColors.background_dark : AppColors.background_light
       ),
       child: Column(
         children: [
-          BreadcrumbWidget(),
+          const BreadcrumbWidget(),
           Expanded(
             child: ListView(
               children: [
+                // نمایش فولدرها
                 for (var dir in subFolders)
                   Container(
                     decoration: BoxDecoration(
@@ -86,17 +90,13 @@ class FolderView extends StatelessWidget {
                       ),
                     ),
                     child: ListTile(
-                      leading: Icon(Icons.folder, color: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light,),
+                      leading: Icon(Icons.folder, color: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light),
                       title: Text(dir.path.split("/").last, style: AppTypography.musicPlayerFolderViewTitle(context)),
                       subtitle: Padding(
                         padding: const EdgeInsets.only(top: AppSpacing.space_8),
-                        child: Row(
-                          children: [
-                            Text(
-                              "${nav.folderAudioCount[dir.path] ?? 0} آهنگ",
-                              style: AppTypography.musicPlayerFolderViewSubtitle(context)
-                            ),
-                          ],
+                        child: Text(
+                          "${nav.folderAudioCount[dir.path] ?? 0} آهنگ",
+                          style: AppTypography.musicPlayerFolderViewSubtitle(context)
                         ),
                       ),
                       contentPadding: EdgeInsets.symmetric(horizontal: AppSpacing.space_16),
@@ -107,14 +107,14 @@ class FolderView extends StatelessWidget {
                       onTap: () => nav.enterFolder(dir),
                     ),
                   ),
+                // نمایش فایل‌ها
                 for (int i = 0; i < files.length; i++)
                   AudioItem(
                     audio: files[i],
                     index: i,
                     isPlaying: false,
                     onTap: () {
-                      context.read<AudioPlayerProvider>()
-                          .playFromFolder(files, i);
+                      context.read<AudioPlayerProvider>().playFromFolder(files, i);
                     },
                   ),
               ],

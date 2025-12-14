@@ -39,8 +39,7 @@ class AudioSlider extends StatelessWidget {
               value: pr.position.inSeconds.toDouble(),
               max: pr.duration.inSeconds.toDouble().clamp(1, double.infinity),
               onChangeStart: (_) => pr.startSliding(),
-              onChanged: (v) =>
-                  pr.position = Duration(seconds: v.toInt()), // UI update
+              onChanged: (v) => pr.position = Duration(seconds: v.toInt()),
               onChangeEnd: (v) => pr.seekTo(v),
             ),
           ),

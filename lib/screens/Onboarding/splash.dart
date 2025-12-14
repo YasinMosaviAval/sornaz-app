@@ -30,9 +30,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
     return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.background_dark
-          : AppColors.background_light,
+      backgroundColor: isDark ? AppColors.background_dark : AppColors.background_light,
       body: Center(
         child: Image.asset(
           isDark ? AppImages.logo_dark : AppImages.logo_light,

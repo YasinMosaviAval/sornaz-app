@@ -17,38 +17,28 @@ class SearchBarWidget extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
-    final pr = context.read<AudioPlayerProvider>();
+    final provider = context.read<AudioPlayerProvider>();
 
     return AppBar(
       elevation: 0,
       automaticallyImplyLeading: false,
       titleTextStyle: AppTypography.searchBarText(context),
       title: TextField(
-        onChanged: pr.filter,
+        onChanged: provider.filter,
         decoration: InputDecoration(
           hintText: AppStrings.music_player_search_hint.translate(context),
           hintStyle: AppTypography.searchBarHint(context),
           border: InputBorder.none,
           prefixIcon: Icon(
             Icons.search,
-            color: isDark
-                ? AppColors.text_secondary_dark
-                : AppColors.text_secondary_light,
+            color: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light,
           ),
         ),
-        cursorColor: isDark
-            ? AppColors.text_secondary_dark
-            : AppColors.text_secondary_light,
+        cursorColor: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light,
         style: AppTypography.searchBarText(context),
       ),
-      backgroundColor: isDark
-          ? AppColors.surface_dark
-          : AppColors.surface_light,
-      iconTheme: IconThemeData(
-        color: isDark
-            ? AppColors.text_primary_dark
-            : AppColors.text_primary_light,
-      ),
+      backgroundColor: isDark ? AppColors.surface_dark : AppColors.surface_light,
+      iconTheme: IconThemeData(color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light),
     );
   }
 }

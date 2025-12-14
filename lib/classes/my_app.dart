@@ -16,41 +16,10 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
-    // final GoRouter router = GoRouter(
-    //   routes: [GoRoute(path: '/', builder: (context, state) => HomePage())],
-    // );
-
-    // MaterialApp.router(routerConfig: router);
-
     return Consumer2<LocaleProvider, AppData>(
       builder: (context, localeProvider, appData, child) {
-        // final GoRouter router = GoRouter(
-        //   routes: [
-        //     GoRoute(
-        //       path: '/',
-        //       builder: (context, state) => const SplashScreen(),
-        //     ),
-        //     GoRoute(
-        //       path: '/home',
-        //       builder: (context, state) => const HomePage(),
-        //     ),
-        //     GoRoute(
-        //       path: '/settings',
-        //       builder: (context, state) => const SettingsPage(),
-        //     ),
-        //     GoRoute(
-        //       path: '/about',
-        //       builder: (context, state) => const AboutUsPage(),
-        //     ),
-        //     GoRoute(
-        //       path: '/music_player',
-        //       builder: (context, state) => const MusicPlayerPage(),
-        //     ),
-        //   ],
-        // );
         return MaterialApp(
           navigatorKey: navigatorKey,
-          // routerConfig: router,
           debugShowCheckedModeBanner: false,
           title: AppStrings.application_fullname.translate(context),
           locale: localeProvider.locale,
@@ -80,23 +49,15 @@ class MyApp extends StatelessWidget {
 
   ThemeData darkTheme(AppData appData) {
     return ThemeData(
-      // primarySwatch: Colors.yellow,
-      // secondaryHeaderColor: AppColors.secondary_dark,
-      // brightness: Brightness.dark,
-      // scaffoldBackgroundColor: AppColors.background_dark,
-      // cardColor: AppColors.background_dark,
       fontFamily: appData.fontFamily,
     );
   }
 
   ThemeData lightTheme(AppData appData) {
     return ThemeData(
-      // primarySwatch: Colors.blue,
-      // secondaryHeaderColor: AppColors.secondary_light,
-      // brightness: Brightness.light,
-      // scaffoldBackgroundColor: AppColors.background_light,
-      // cardColor: AppColors.background_light,
       fontFamily: appData.fontFamily,
     );
   }
 }
+
+// ==

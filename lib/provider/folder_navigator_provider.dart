@@ -149,6 +149,6 @@ class FolderNavigatorProvider extends ChangeNotifier {
 
   bool _isAudio(String p) {
     final x = p.toLowerCase();
-    return x.endsWith('.mp3') || x.endsWith('.wav') || x.endsWith('.m4a');
+    return x.endsWith('.mp3') || x.endsWith('.wav') || x.endsWith('.m4a') || x.endsWith('.ogg');
   }
 }
