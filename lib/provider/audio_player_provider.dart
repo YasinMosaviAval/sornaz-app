@@ -1,19 +1,21 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:sornaz/classes/audio_file.dart';
 import 'package:sornaz/classes/playback_undo.dart';
+import 'package:sornaz/classes/scan_progress.dart';
 import 'package:sornaz/main.dart';
-import 'package:sornaz/services/audio_file_loader.dart';
 
 class AudioPlayerProvider extends ChangeNotifier {
-  final AudioPlayer _player = AudioPlayer();
 
   List<AudioFile> allFiles = [];
+  bool isLoading = false;
+  double progress = 0.0; // 0.0 → 1.0
+
+  final AudioPlayer _player = AudioPlayer();
+
   List<AudioFile> filteredFiles = [];
 
-  bool isLoading = false;
   bool isPlaying = false;
   bool isUndoMode = false;
 
@@ -25,6 +27,28 @@ class AudioPlayerProvider extends ChangeNotifier {
   Timer? undoTimer;
 
   final List<PlaybackUndo> _undoStack = [];
+
+  String currentPath = '';
+
+  List<AudioFile> files = [];
+
+
+  void startLoading() {
+    isLoading = true;
+    progress = 0;
+    notifyListeners();
+  }
+
+  void updateProgress(int scanned, int total) {
+    progress = total == 0 ? 0 : scanned / total;
+    notifyListeners();
+  }
+
+  void setFiles(List<AudioFile> files) {
+    allFiles = files;
+    isLoading = false;
+    notifyListeners();
+  }
 
 
 
@@ -102,23 +126,6 @@ class AudioPlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-
-  // void toggleFolderMode(BuildContext context) {
-  //   if (!folderMode) {
-  //     final folderProvider =
-  //         Provider.of<FolderNavigatorProvider>(context, listen: false);
-
-  //     if (folderProvider.rootDir == null) {
-  //       // هنوز پوشه انتخاب نشده
-  //       loadFiles(context); // یا باز کردن picker
-  //       return;
-  //     }
-  //   }
-
-  //   folderMode = !folderMode;
-  //   notifyListeners();
-  // }
-
   Map<String, List<AudioFile>> folderTree = {};
 
   void _buildFolderTree() {
@@ -190,19 +197,17 @@ class AudioPlayerProvider extends ChangeNotifier {
   }
 
   void _initListeners() {
-    // وضعیت پخش
+    
     _player.onPlayerStateChanged.listen((state) {
       isPlaying = state == PlayerState.playing;
       notifyListeners();
     });
 
-    // طول آهنگ
     _player.onDurationChanged.listen((d) {
       duration = d;
       notifyListeners();
     });
 
-    // پایان آهنگ
     _player.onPlayerComplete.listen((event) async {
       if (repeatMode == 1) {
         // Repeat ONE
@@ -213,7 +218,6 @@ class AudioPlayerProvider extends ChangeNotifier {
       }
     });
 
-    // موقعیت پخش
     Timer.periodic(const Duration(milliseconds: 500), (_) async {
       if (isPlaying) {
         final pos = await _player.getCurrentPosition();
@@ -230,65 +234,6 @@ class AudioPlayerProvider extends ChangeNotifier {
   // ==========================
   // Load files
   // ==========================
-/*
-  Future<void> loadFiles() async {
-    isLoading = true;
-    notifyListeners();
-
-    // allFiles = await AudioFileLoader.loadFromPicker();
-    filteredFiles = allFiles;
-
-    _buildFolderTree();
-
-    isLoading = false;
-    notifyListeners();
-  }
-*/
-/*
-Future<void> loadFiles(BuildContext context) async {
-  isLoading = true;
-  notifyListeners();
-
-
-  // context امن قبل از await
-  final safeContext = context;
-
-  // انتخاب پوشه
-  final path = await AudioFileLoader.pickDirectory();
-  if (path == null) {
-    isLoading = false;
-    notifyListeners();
-    return;
-  }
-
-  final dir = Directory(path);
-
-  // ست کردن مسیر در FolderNavigatorProvider
-  final folderProvider = Provider.of<FolderNavigatorProvider>(safeContext, listen: false);
-  await folderProvider.setRoot(dir);
-
-  // بارگذاری فایل‌ها
-  allFiles = await AudioFileLoader.loadDirectory(dir);
-  filteredFiles = allFiles;
-
-  _buildFolderTree();
-
-  isLoading = false;
-  notifyListeners();
-}
-*/
-Future<void> loadFilesFromDirectory(Directory dir) async {
-  isLoading = true;
-  notifyListeners();
-
-  allFiles = await AudioFileLoader.loadFromDirectory(dir);
-  filteredFiles = allFiles;
-  _buildFolderTree();
-
-  isLoading = false;
-  notifyListeners();
-}
-
 
 void setFileList(List<AudioFile> files) {
   allFiles = files;
@@ -297,8 +242,24 @@ void setFileList(List<AudioFile> files) {
   notifyListeners();
 }
 
+  void start() {
+    isLoading = true;
+    progress = 0;
+    currentPath = '';
+    notifyListeners();
+  }
 
+  void update(ScanStatus status) {
+    progress = status.total == 0 ? 0 : status.scanned / status.total;
+    currentPath = status.currentPath;
+    notifyListeners();
+  }
 
+  void finish(List<AudioFile> result) {
+    files = result;
+    isLoading = false;
+    notifyListeners();
+  }
 
   void filter(String q) {
     filteredFiles = allFiles

@@ -1,40 +1,57 @@
 import 'dart:io';
-import 'package:audioplayers/audioplayers.dart';
-import 'package:file_picker/file_picker.dart';
+import 'dart:isolate';
 import 'package:sornaz/classes/audio_file.dart';
+import 'package:sornaz/classes/scan_progress.dart';
+import 'package:sornaz/services/audio_scan_cache_service.dart';
+import 'package:sornaz/services/audio_scan_isolate.dart';
 
+typedef ScanProgress = void Function(int scanned, int total);
 class AudioFileLoader {
-  // انتخاب پوشه
-  static Future<String?> pickDirectory() async {
-    return await FilePicker.platform.getDirectoryPath();
-  }
 
-  // لود فایل‌ها با duration واقعی و async
-  static Future<List<AudioFile>> loadFromDirectory(Directory dir) async {
-    List<AudioFile> list = [];
+  static Future<void> scanWithIsolate({
+    required List<Directory> roots,
+    required Function(ScanStatus) onProgress,
+    required Function(List<AudioFile>) onDone,
+  }) async {
 
-    await for (final entity in dir.list(recursive: true, followLinks: false)) {
-      if (entity is File && _isAudio(entity.path)) {
-        try {
-          final temp = AudioPlayer();
-          await temp.setSource(DeviceFileSource(entity.path));
-          final dur = await temp.getDuration() ?? Duration.zero;
-          await temp.dispose();
+    final receivePort = ReceivePort();
+    final isolate = await Isolate.spawn(
+      scanAudioIsolate,
+      {
+        'sendPort': receivePort.sendPort,
+        'roots': roots.map((e) => e.path).toList(),
+      },
+    );
 
-          list.add(AudioFile(entity, dur));
-        } catch (_) {
-          // اگر خطایی در گرفتن duration بود، فایل را با Duration.zero اضافه کن
-          list.add(AudioFile(entity, Duration.zero));
-        }
+    final cache = await ScanCacheService.loadCache();
+    final List<AudioFile> results = [];
+
+    receivePort.listen((msg) async {
+      if (msg['done'] == true) {
+        await ScanCacheService.saveCache({
+          for (var f in results)
+            f.file.path: f.file.lastModifiedSync().millisecondsSinceEpoch,
+        });
+
+        isolate.kill();
+        onDone(results);
+        return;
       }
-    }
 
-    return list;
-  }
+      final scanned = msg['scanned'];
+      final total = msg['total'];
+      final path = msg['path'];
 
-  // بررسی پسوند
-  static bool _isAudio(String p) {
-    final x = p.toLowerCase();
-    return x.endsWith('.mp3') || x.endsWith('.wav') || x.endsWith('.m4a');
+      onProgress(ScanStatus(
+        scanned: scanned,
+        total: total,
+        currentPath: path,
+      ));
+
+      final modified = File(path).lastModifiedSync().millisecondsSinceEpoch;
+      if (cache[path] == modified) return;
+
+      results.add(AudioFile(File(path), Duration.zero));
+    });
   }
 }
