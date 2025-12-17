@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sornaz/components/audio_breadcrumb.dart';
+import 'package:sornaz/components/music_player/breadcrumb.dart';
+import 'package:sornaz/components/music_player/bottom_player.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/provider/audio_player_provider.dart';
-import 'package:sornaz/components/audio_item.dart';
+import 'package:sornaz/components/music_player/audio_item.dart';
 import 'package:sornaz/provider/folder_navigator_provider.dart';
 
 class FolderListView extends StatelessWidget {
@@ -28,23 +29,25 @@ class FolderListView extends StatelessWidget {
         itemBuilder: (context, index) {
           final folderPath = folders[index];
           final files = provider.folderTree[folderPath]!;
-
-          // گرفتن ایندکس فایل‌ها نسبت به filteredFiles اصلی
           final fileIndexes = files.map((f) => provider.filteredFiles.indexOf(f)).toList();
-
-          return ExpansionTile(
-            title: Text(
-              folderPath.split('/').last, 
-              style: AppTypography.musicPlayerAudioFolderListViewTitle(context),
-            ),
-            collapsedIconColor: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+          return Column(
             children: [
-              for (int i = 0; i < files.length; i++)
-                AudioItem(
-                  audio: files[i],
-                  index: fileIndexes[i],
-                  isPlaying: fileIndexes[i] == provider.currentIndex,
+              ExpansionTile(
+                title: Text(
+                  folderPath.split('/').last, 
+                  style: AppTypography.musicPlayerAudioFolderListViewTitle(context),
                 ),
+                collapsedIconColor: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+                children: [
+                  for (int i = 0; i < files.length; i++)
+                    AudioItem(
+                      audio: files[i],
+                      index: fileIndexes[i],
+                      isPlaying: fileIndexes[i] == provider.currentIndex,
+                    ),
+                ],
+              ),
+              BottomPlayerWidget(),
             ],
           );
         },
@@ -114,12 +117,13 @@ class FolderView extends StatelessWidget {
                     index: i,
                     isPlaying: false,
                     onTap: () {
-                      context.read<AudioPlayerProvider>().playFromFolder(files, i);
+                      // context.read<AudioPlayerProvider>().playFromFolder(files, i);
                     },
                   ),
               ],
             ),
           ),
+          const BottomPlayerWidget(),
         ],
       ),
     );

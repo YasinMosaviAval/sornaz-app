@@ -1,5 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:path/path.dart';
 import 'package:provider/provider.dart';
@@ -21,7 +19,6 @@ import 'dart:async';
 
 import 'package:sornaz/screens/Home/home.dart';
 
-//SCS
 class ArticlesPage extends StatefulWidget {
   const ArticlesPage({super.key});
 
@@ -29,14 +26,10 @@ class ArticlesPage extends StatefulWidget {
   State<ArticlesPage> createState() => _ArticlesPageState();
 }
 
-//SCS
 class _ArticlesPageState extends State<ArticlesPage> {
   List<dynamic> posts = [];
   List<dynamic> categories = [];
-  // ==================================================================== get
-  String get selectedCategory =>
-      AppStrings.all.translate(context as BuildContext);
-  // ==================================================================== get
+  String get selectedCategory => AppStrings.all.translate(context as BuildContext);
   String searchQuery = AppStrings.epmty_text;
   bool isLoading = true;
   bool hasError = false;
@@ -182,7 +175,6 @@ class _ArticlesPageState extends State<ArticlesPage> {
   }
 }
 
-//SCS
 class ArticlesListWidget extends StatelessWidget {
   const ArticlesListWidget({
     super.key,
@@ -274,7 +266,6 @@ class ArticlesListWidget extends StatelessWidget {
   }
 }
 
-// SCS
 class ArticlesReleaseDateWidget extends StatelessWidget {
   const ArticlesReleaseDateWidget({
     super.key,
@@ -298,7 +289,6 @@ class ArticlesReleaseDateWidget extends StatelessWidget {
   }
 }
 
-// SCS
 class ArticlesBriefWidget extends StatelessWidget {
   const ArticlesBriefWidget({
     super.key,
@@ -320,7 +310,6 @@ class ArticlesBriefWidget extends StatelessWidget {
   }
 }
 
-// SCS
 class ArticlesTitleWidget extends StatelessWidget {
   const ArticlesTitleWidget({
     super.key,

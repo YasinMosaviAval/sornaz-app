@@ -40,11 +40,11 @@ class BreadcrumbWidget extends StatelessWidget {
                     nav.rootDir!.path.split("/").last,
                     style: AppTypography.musicPlayerBreadCrumb(context)
                   ),
-                  for (var p in parts)
+                  for (var part in parts)
                     Row(
                       children: [
                         Text(" / ", style: AppTypography.musicPlayerBreadCrumbSlashes(context)),
-                        Text(p, style: AppTypography.musicPlayerBreadCrumbSubDirectory(context)),
+                        Text(part, style: AppTypography.musicPlayerBreadCrumbSubDirectory(context)),
                       ],
                     ),
                 ],

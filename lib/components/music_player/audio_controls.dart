@@ -60,6 +60,17 @@ class AudioControls extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             spacing: AppSpacing.space_16,
             children: [
+              // IconButton(
+              //   icon: Icon(
+              //     provider.folderMode ? Icons.list : Icons.folder,
+              //     color: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light
+              //   ),
+              //   iconSize: AppSpacing.space_24,
+              //   // onPressed: provider.toggleFolderMode,
+              //   onPressed: () => _tabController.animateTo(0),
+              // ),
+
+
               IconButton(
                 icon: Icon(
                   provider.folderMode ? Icons.list : Icons.folder,
@@ -69,6 +80,12 @@ class AudioControls extends StatelessWidget {
                 // onPressed: provider.toggleFolderMode,
                 onPressed: () => provider.toggleFolderMode(),
               ),
+
+
+
+
+
+
               IconButton(
                 icon: Icon(
                   Icons.shuffle,
