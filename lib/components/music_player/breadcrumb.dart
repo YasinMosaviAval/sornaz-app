@@ -4,7 +4,7 @@ import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_typography.dart';
-import 'package:sornaz/provider/folder_navigator_provider.dart';
+import 'package:sornaz/audio/folder_navigator_provider.dart';
 
 class BreadcrumbWidget extends StatelessWidget {
   const BreadcrumbWidget({super.key});

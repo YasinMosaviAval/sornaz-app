@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
-import 'package:sornaz/provider/audio_player_provider.dart';
+import 'package:sornaz/audio/audio_player_provider.dart';
 
 class AudioControls extends StatelessWidget {
   const AudioControls({super.key});

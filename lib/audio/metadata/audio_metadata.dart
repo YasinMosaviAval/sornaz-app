@@ -1,15 +1,4 @@
-import 'dart:io';
 import 'dart:typed_data';
-
-class AudioFile {
-  File file;
-  final Duration duration;
-
-  AudioFile(this.file, this.duration);
-
-  String get fileName => file.path.split('/').last;
-  String get folderName => file.parent.path;
-}
 
 class AudioMetadata {
   final String? title;
@@ -18,8 +7,8 @@ class AudioMetadata {
   final String? genre;
   final int? year;
   final Duration? duration;
-  final int? bitrate;
   final Uint8List? artwork;
+  final int? bitrate;
 
   AudioMetadata({
     this.title,
@@ -28,7 +17,7 @@ class AudioMetadata {
     this.genre,
     this.year,
     this.duration,
-    this.bitrate,
     this.artwork,
+    this.bitrate,
   });
 }

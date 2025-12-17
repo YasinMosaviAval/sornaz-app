@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/music_player/search_bar.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
-import 'package:sornaz/provider/audio_player_provider.dart';
+import 'package:sornaz/audio/audio_player_provider.dart';
 import 'package:sornaz/components/bottom_nav.dart';
-import 'package:sornaz/provider/folder_navigator_provider.dart';
+import 'package:sornaz/audio/folder_navigator_provider.dart';
 import 'package:sornaz/screens/Players/music_player_tabs.dart';
-import 'package:sornaz/services/audio_file_loader.dart';
+import 'package:sornaz/audio/scan/audio_file_loader.dart';
 
 class MusicPlayerPage extends StatefulWidget {
   const MusicPlayerPage({super.key});
@@ -30,8 +30,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
       AudioFileLoader.scanWithIsolate(
         roots: [
           Directory('/storage/emulated/0/'),
-          // Directory('/storage/9C33-6BBD'),
-          // Directory('/storage/9C33-6BBD/Music')
+          Directory('/storage/9C33-6BBD/Music/')
         ],
         onProgress: (status) => audio.update(status),
         onDone: (result) {

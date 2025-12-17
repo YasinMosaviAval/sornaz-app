@@ -5,8 +5,8 @@ import 'package:sornaz/components/music_player/folder_list_view.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
-import 'package:sornaz/provider/audio_player_provider.dart';
-import 'package:sornaz/provider/folder_navigator_provider.dart';
+import 'package:sornaz/audio/audio_player_provider.dart';
+import 'package:sornaz/audio/folder_navigator_provider.dart';
 
 class AudioList extends StatelessWidget {
   const AudioList({super.key});

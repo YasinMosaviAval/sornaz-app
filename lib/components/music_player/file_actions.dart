@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sornaz/classes/audio_file.dart';
-import 'package:sornaz/provider/audio_player_provider.dart';
+import 'package:sornaz/audio/scan/audio_file.dart';
+import 'package:sornaz/audio/audio_player_provider.dart';
 
 
 void showFileOptions(BuildContext context, AudioFile file) {

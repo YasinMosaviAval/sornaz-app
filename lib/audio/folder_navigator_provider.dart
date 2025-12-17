@@ -176,7 +176,7 @@ class FolderNavigatorProvider extends ChangeNotifier {
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:sornaz/classes/audio_file.dart';
+import 'package:sornaz/audio/scan/audio_file.dart';
 
 class FolderNavigatorProvider extends ChangeNotifier {
   Directory? rootDir;

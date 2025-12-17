@@ -6,7 +6,7 @@ import 'package:sornaz/components/music_player/audio_item.dart';
 import 'package:sornaz/components/music_player/bottom_player.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
-import 'package:sornaz/provider/audio_player_provider.dart';
+import 'package:sornaz/audio/audio_player_provider.dart';
 
 class FlatListView extends StatelessWidget {
   const FlatListView({super.key});

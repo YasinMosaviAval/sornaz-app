@@ -4,8 +4,8 @@ class ScanStatus {
   final String currentPath;
 
   ScanStatus({
-    required this.scanned,
-    required this.total,
-    required this.currentPath,
+    required this.scanned, 
+    required this.total, 
+    required this.currentPath
   });
 }

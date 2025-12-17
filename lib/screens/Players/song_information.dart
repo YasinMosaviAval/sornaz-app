@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_functions.dart';
-import 'package:sornaz/provider/audio_player_provider.dart';
+import 'package:sornaz/audio/audio_player_provider.dart';
 
 class NowPlayingInfoTab extends StatelessWidget {
   const NowPlayingInfoTab({super.key});
@@ -27,6 +27,9 @@ class NowPlayingInfoTab extends StatelessWidget {
     final year = meta?.year?.toString() ?? 'نامشخص';
     final durationStr = meta?.duration?.toString().split('.').first ?? formatDuration(audio.duration);
     final bitrate = meta?.bitrate != null ? '${meta?.bitrate} kbps' : 'نامشخص';
+    // final bitrate = 'نامشخص';
+
+
     
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),

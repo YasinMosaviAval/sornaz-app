@@ -6,9 +6,9 @@ import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_typography.dart';
-import 'package:sornaz/provider/audio_player_provider.dart';
+import 'package:sornaz/audio/audio_player_provider.dart';
 import 'package:sornaz/components/music_player/audio_item.dart';
-import 'package:sornaz/provider/folder_navigator_provider.dart';
+import 'package:sornaz/audio/folder_navigator_provider.dart';
 
 class FolderListView extends StatelessWidget {
   const FolderListView({super.key});
