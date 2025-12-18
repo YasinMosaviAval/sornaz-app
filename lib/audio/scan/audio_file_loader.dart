@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:isolate';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 
 import 'scan_progress.dart';
@@ -58,13 +59,24 @@ class AudioFileLoader {
 
     // مرحله ۲: اسکن واقعی فایل‌ها async
     for (var root in roots) {
-      await scanDirectory(root, (file) {
+      await scanDirectory(root, (file) async {
         scanned++;
+        Duration fileDuration = Duration.zero;
+        try {
+          final tempPlayer = AudioPlayer();
+          await tempPlayer.setSource(DeviceFileSource(file.path));
+          fileDuration = (await tempPlayer.getDuration()) ?? Duration.zero;
+          await tempPlayer.dispose(); // مهم: حتما dispose کن تا حافظه نخوره
+        } catch (e) {
+          // اگر خطا داد (مثلاً فایل خراب)، صفر بذار
+          fileDuration = Duration.zero;
+        }
+
         files.add(AudioFile(
           file: file,
           fileName: file.path.split('/').last,
           folderName: file.parent.path,
-          duration: Duration.zero,
+          duration: fileDuration,
         ));
         if (scanned % 20 == 0 || scanned == total) {  // هر ۲۰ فایل آپدیت بفرست
           sendPort.send(ScanStatus(scanned: scanned, total: total, currentPath: file.path));

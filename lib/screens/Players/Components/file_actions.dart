@@ -63,12 +63,11 @@ void showRenameDialog(BuildContext context, AudioFile file) {
             onPressed: () {
               final newName = controller.text.trim();
               if (newName.isEmpty) return;
-
               final provider = Provider.of<AudioPlayerProvider>(context, listen: false);
-
               Navigator.pop(dialogCtx);
 
               Future.microtask(() async {
+                if (!context.mounted) return;
                 final success = await provider.renameFile(
                   file,
                   "$newName.${file.fileName.split('.').last}",
@@ -137,6 +136,7 @@ void showDeleteConfirm(BuildContext context, AudioFile file) {
               Navigator.pop(dialogCtx);
 
               Future.microtask(() async {
+                if (!context.mounted) return;
                 final success = await provider.deleteFromDevice(file, AppStrings.audio_player_provider_delete_from_memory.translate(context));
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(

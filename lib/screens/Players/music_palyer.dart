@@ -23,17 +23,14 @@ class MusicPlayerPage extends StatefulWidget {
 }
 
 class _MusicPlayerPageState extends State<MusicPlayerPage> {
-  bool _permissionsGranted = false;  // اختیاری، برای کنترل بهتر
 
   @override
   void initState() {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _requestPermissionsAndScan();  // تغییر اینجا
+      _requestPermissionsAndScan();
     });
-
-    
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final audio = context.read<AudioPlayerProvider>();
@@ -60,12 +57,9 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
   }
 
   Future<void> _requestPermissionsAndScan() async {
-    // درخواست مجوز ذخیره‌سازی (برای اندروید ۱۰ و پایین)
     var storageStatus = await Permission.storage.request();
 
-    // برای اندروید ۱۱+ بهتره از manageExternalStorage استفاده کنی، اما اگر نمی‌خوای All files access بدی:
     if (storageStatus.isDenied) {
-      // اگر storage قدیمی رد شد، می‌تونی manageExternalStorage رو امتحان کنی (اختیاری)
       var manageStatus = await Permission.manageExternalStorage.request();
       if (manageStatus.isDenied || manageStatus.isPermanentlyDenied) {
         _showPermissionDeniedDialog();
@@ -76,21 +70,21 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
       return;
     }
 
-    // if(!context.mounted) return;
-    // اگر مجوز داده شد، اسکن رو شروع کن
+    if(!mounted) return;
     final audio = context.read<AudioPlayerProvider>();
     final folderNav = context.read<FolderNavigatorProvider>();
 
-    audio.start();  // isScanning = true و غیره
+    audio.start();
 
     AudioFileLoader.scanWithIsolate(
       roots: [
         Directory('/storage/emulated/0/'),
-        Directory('/storage/9C33-6BBD'), // کارت حافظه اگر باشه
+        Directory('/storage/9C33-6BBD'),
       ],
       onProgress: (status) => audio.update(status),
       onDone: (result) {
         audio.finish(result);
+        
         final folderPaths = result.map((f) => f.file.parent.path).toSet().toList();
         final folderMap = {
           for (var path in folderPaths)
@@ -102,9 +96,9 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
         );
       },
     ).catchError((error) {
+      if (!mounted) return;
       audio.isScanning = false;
       audio.isLoading = false;
-      audio.notifyListeners();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("خطا در اسکن: $error")),
       );
