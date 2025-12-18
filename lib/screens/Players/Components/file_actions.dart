@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/audio/scan/audio_file.dart';
 import 'package:sornaz/audio/audio_player_provider.dart';
+import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_translations.dart';
 
 
 void showFileOptions(BuildContext context, AudioFile file) {
@@ -16,17 +18,17 @@ void showFileOptions(BuildContext context, AudioFile file) {
         children: [
           ListTile(
             leading: const Icon(Icons.edit),
-            title: const Text("تغییر نام"),
+            title: Text(AppStrings.file_action_change_filename.translate(context)),
             onTap: () {
-              Navigator.pop(sheetCtx); // بستن bottom sheet
+              Navigator.pop(sheetCtx);
               showRenameDialog(context, file);
             },
           ),
           ListTile(
             leading: const Icon(Icons.delete),
-            title: const Text("حذف"),
+            title: Text(AppStrings.file_action_remove.translate(context)),
             onTap: () {
-              Navigator.pop(sheetCtx); // بستن bottom sheet
+              Navigator.pop(sheetCtx);
               showDeleteConfirm(context, file);
             },
           ),
@@ -46,43 +48,40 @@ void showRenameDialog(BuildContext context, AudioFile file) {
     context: context,
     builder: (dialogCtx) {
       return AlertDialog(
-        title: const Text("تغییر نام فایل"),
+        title: Text(AppStrings.file_action_change_filename.translate(context)),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(hintText: "نام جدید (بدون پسوند)"),
+          decoration: InputDecoration(hintText: AppStrings.file_action_new_filename.translate(context)),
         ),
         actions: [
           TextButton(
-            child: const Text("انصراف"),
+            child: Text(AppStrings.file_action_discard.translate(context)),
             onPressed: () => Navigator.pop(dialogCtx),
           ),
           TextButton(
-            child: const Text("ذخیره"),
+            child: Text(AppStrings.file_action_save.translate(context)),
             onPressed: () {
               final newName = controller.text.trim();
               if (newName.isEmpty) return;
 
               final provider = Provider.of<AudioPlayerProvider>(context, listen: false);
 
-              // ❗️ ابتدا دیالوگ را ببند
               Navigator.pop(dialogCtx);
 
-              // ❗️ سپس async را در microtask انجام بده تا context مشکلی نداشته باشد
               Future.microtask(() async {
                 final success = await provider.renameFile(
                   file,
-                  "$newName.${file.fileName.split('.').last}", // حفظ پسوند
+                  "$newName.${file.fileName.split('.').last}",
                 );
 
-                // ❗️ چک mounted برای امنیت
                 if (!context.mounted) return;
 
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
                       success
-                          ? "نام فایل تغییر کرد"
-                          : "خطا در تغییر نام (ممکن است فایل مشابه وجود داشته باشد)",
+                          ? AppStrings.file_action_changed_filename.translate(context)
+                          : AppStrings.file_action_error_in_changed_filename.translate(context),
                     ),
                   ),
                 );
@@ -101,17 +100,17 @@ void showDeleteConfirm(BuildContext context, AudioFile file) {
     context: context,
     builder: (dialogCtx) {
       return AlertDialog(
-        title: const Text("حذف فایل"),
-        content: const Text("حذف فقط از لیست یا حذف کامل از حافظه؟"),
+        title: Text(AppStrings.file_action_remove_file.translate(context)),
+        content: Text(AppStrings.file_action_remove_file_from_list_or_memory.translate(context)),
         actions: [
 
           TextButton(
-            child: const Text("انصراف"),
+            child: Text(AppStrings.file_action_discard.translate(context)),
             onPressed: () => Navigator.pop(dialogCtx),
           ),
 
           TextButton(
-            child: const Text("حذف از لیست"),
+            child: Text(AppStrings.file_action_remove_file_from_list.translate(context)),
             onPressed: () {
               Navigator.pop(dialogCtx);
 
@@ -122,7 +121,7 @@ void showDeleteConfirm(BuildContext context, AudioFile file) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                        removed ? "از لیست حذف شد" : "خطا در حذف از لیست"),
+                        removed ? AppStrings.file_action_removed_file_from_list.translate(context) : AppStrings.file_action_error_in_removed_file_from_list.translate(context)),
                   ),
                 );
               }
@@ -130,7 +129,7 @@ void showDeleteConfirm(BuildContext context, AudioFile file) {
           ),
 
           TextButton(
-            child: const Text("حذف از حافظه"),
+            child: Text(AppStrings.file_action_delete_file_from_memory.translate(context)),
             onPressed: () {
               final provider = Provider.of<AudioPlayerProvider>(context, listen: false);
 
@@ -142,7 +141,7 @@ void showDeleteConfirm(BuildContext context, AudioFile file) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                        success ? "فایل از حافظه حذف شد" : "خطا در حذف فایل"),
+                        success ? AppStrings.file_action_deleted_file_from_memory.translate(context) : AppStrings.file_action_error_in_deleted_file_from_memory.translate(context)),
                   ),
                 );
               });

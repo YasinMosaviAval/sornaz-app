@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sornaz/components/music_player/breadcrumb.dart';
-import 'package:sornaz/components/music_player/bottom_player.dart';
+import 'package:sornaz/screens/Players/Components/breadcrumb.dart';
+import 'package:sornaz/screens/Players/Components/bottom_player.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
+import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/audio/audio_player_provider.dart';
-import 'package:sornaz/components/music_player/audio_item.dart';
+import 'package:sornaz/screens/Players/Components/audio_item.dart';
 import 'package:sornaz/audio/folder_navigator_provider.dart';
 
 class FolderListView extends StatelessWidget {
@@ -68,8 +70,8 @@ class FolderView extends StatelessWidget {
     final files = nav.audioFiles;
 
     if (nav.rootDir == null || nav.currentDir == null) {
-      return const Center(
-        child: Text("در حال آماده‌سازی پوشه‌ها..."),
+      return Center(
+        child: Text(AppStrings.folder_list_view_preparing_folders.translate(context)),
       );
     }
 
@@ -83,7 +85,6 @@ class FolderView extends StatelessWidget {
           Expanded(
             child: ListView(
               children: [
-                // نمایش فولدرها
                 for (var dir in subFolders)
                   Container(
                     decoration: BoxDecoration(
@@ -98,7 +99,7 @@ class FolderView extends StatelessWidget {
                       subtitle: Padding(
                         padding: const EdgeInsets.only(top: AppSpacing.space_8),
                         child: Text(
-                          "${nav.folderAudioCount[dir.path] ?? 0} آهنگ",
+                          "${nav.folderAudioCount[dir.path] ?? 0} ${AppStrings.folder_list_view_song.translate(context)}",
                           style: AppTypography.musicPlayerFolderViewSubtitle(context)
                         ),
                       ),
@@ -110,7 +111,6 @@ class FolderView extends StatelessWidget {
                       onTap: () => nav.enterFolder(dir),
                     ),
                   ),
-                // نمایش فایل‌ها
                 for (int i = 0; i < files.length; i++)
                   AudioItem(
                     audio: files[i],

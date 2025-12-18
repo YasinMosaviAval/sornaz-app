@@ -59,6 +59,25 @@ class AppSpacing {
   //     if (screenWidth < 1200) return base * 1.2;
   //     return base * 1.5;
   //   }
+
+  static SizedBox sizedBoxH2() => const SizedBox(height: AppSpacing.space_2);
+  static SizedBox sizedBoxH4() => const SizedBox(height: AppSpacing.space_4);
+  static SizedBox sizedBoxH8() => const SizedBox(height: AppSpacing.space_8);
+  static SizedBox sizedBoxH12() => const SizedBox(height: AppSpacing.space_12);
+  static SizedBox sizedBoxH16() => const SizedBox(height: AppSpacing.space_16);
+  static SizedBox sizedBoxH24() => const SizedBox(height: AppSpacing.space_24);
+  static SizedBox sizedBoxH32() => const SizedBox(height: AppSpacing.space_32);
+  static SizedBox sizedBoxH48() => const SizedBox(height: AppSpacing.space_48);
+
+  static SizedBox sizedBoxW2() => const SizedBox(width: AppSpacing.space_2);
+  static SizedBox sizedBoxW4() => const SizedBox(width: AppSpacing.space_4);
+  static SizedBox sizedBoxW8() => const SizedBox(width: AppSpacing.space_8);
+  static SizedBox sizedBoxW12() => const SizedBox(width: AppSpacing.space_12);
+  static SizedBox sizedBoxW16() => const SizedBox(width: AppSpacing.space_16);
+  static SizedBox sizedBoxW24() => const SizedBox(width: AppSpacing.space_24);
+  static SizedBox sizedBoxW32() => const SizedBox(width: AppSpacing.space_32);
+  static SizedBox sizedBoxW48() => const SizedBox(width: AppSpacing.space_48);
+
 }
 
 class AppPadding {

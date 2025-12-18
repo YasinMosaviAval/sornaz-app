@@ -17,7 +17,7 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (_) => AppData()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
-        ChangeNotifierProvider(create: (_) => libraryManager), // LibraryManager
+        ChangeNotifierProvider(create: (_) => libraryManager),
         ChangeNotifierProvider(
           create: (_) => AudioPlayerProvider(libraryManager: libraryManager),
         ),

@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
@@ -10,8 +12,9 @@ import 'package:sornaz/screens/Articles/articles.dart';
 import 'package:sornaz/screens/Players/music_palyer.dart';
 import 'package:sornaz/screens/Practice/metronome_page.dart';
 import 'package:sornaz/screens/Practice/tuner_page.dart';
-import 'package:sornaz/screens/Profile/voice_recorder.dart';
 import 'package:flutter/services.dart';
+import 'package:sornaz/screens/Profile/voice_recorder.dart';
+// import 'package:sornaz/screens/Profile/voice_recorder/view/voice_recorder_page.dart';
 
 class BottomNavBarWidget3 extends StatelessWidget {
   const BottomNavBarWidget3({super.key});
@@ -20,10 +23,9 @@ class BottomNavBarWidget3 extends StatelessWidget {
   static const List<Widget> _pages = [
     ArticlesPage(),
     MusicPlayerPage(),
-    // OldMusicPlayerPage(),
     MetronomePage(),
     TunerPage(),
-    VoiceRecorderPage(),
+    VoiceRecorderPage2(),
   ];
 
   void _onItemTapped(BuildContext context, int index) {
@@ -40,7 +42,6 @@ class BottomNavBarWidget3 extends StatelessWidget {
 
     return PopScope(
       canPop: false,
-      // ignore: deprecated_member_use
       onPopInvoked: (didPop) {
         if (didPop) return;
         if (currentIndex != 0) {
@@ -117,10 +118,9 @@ class _BottomNavBarWidgetState extends State<BottomNavBarWidget> {
   static const List<Widget> _pages = [
     ArticlesPage(),
     MusicPlayerPage(),
-    // OldMusicPlayerPage(),
     MetronomePage(),
     TunerPage(),
-    VoiceRecorderPage(),
+    VoiceRecorderPage2(),
   ];
 
   void _onItemTapped(BuildContext context, int index) {

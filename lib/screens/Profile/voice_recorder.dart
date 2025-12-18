@@ -1,4 +1,5 @@
 // ignore_for_file: use_build_context_synchronously
+// ignore_for_file: unused_field
 
 import 'dart:io';
 import 'dart:async';
@@ -21,13 +22,13 @@ import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/screens/Profile/record_details_page.dart';
 
-class VoiceRecorderPage extends StatefulWidget {
-  const VoiceRecorderPage({super.key});
+class VoiceRecorderPage2 extends StatefulWidget {
+  const VoiceRecorderPage2({super.key});
   @override
-  State<VoiceRecorderPage> createState() => _VoiceRecorderPageState();
+  State<VoiceRecorderPage2> createState() => _VoiceRecorderPageState2();
 }
 
-class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
+class _VoiceRecorderPageState2 extends State<VoiceRecorderPage2> {
   final AudioRecorder _recorder = AudioRecorder();
   final AudioPlayer _player = AudioPlayer();
 
@@ -45,7 +46,6 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
   final List<double> _amplitudes = [];
   StreamSubscription? _amplitudeSubscription;
 
-  // ignore: unused_field
   double? _lastDB;
 
   @override
@@ -89,7 +89,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'اجازه دسترسی به میکروفون و حافظه لازم است',
+              AppStrings.voice_recorder_microphone_and_storage_access_permissions.translate(context),
               style: AppTypography.voiceRecorderNotGrantedPermissionSnackBar(
                 context,
               ),
@@ -112,7 +112,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
         recordDir
             .listSync()
             .whereType<File>()
-            .where((f) => f.path.endsWith('.m4a'))
+            .where((f) => f.path.endsWith(AppStrings.file_type_dot_m4a))
             .toList()
           ..sort(
             (a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()),
@@ -198,7 +198,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
           jalaliDate.second.toString().padLeft(2, '0');
 
       _currentFilePath =
-          '${dir.path}/Recordings/${isJalaliDate ? jalaliFilename : gregorianFilename}.m4a';
+          '${dir.path}/Recordings/${isJalaliDate ? jalaliFilename : gregorianFilename}${AppStrings.file_type_dot_m4a}';
 
       await _recorder.start(
         const RecordConfig(
@@ -224,8 +224,8 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
           .listen((amp) {
             if (!mounted || !_isRecording || _isPaused) return;
 
-            final double db = amp.current; // دسی‌بل واقعی
-            final double normalized = db < -60 ? 0.0 : (db + 60) / 60; // 0 تا 1
+            final double db = amp.current;
+            final double normalized = db < -60 ? 0.0 : (db + 60) / 60;
 
             setState(() {
               _lastDB = db;
@@ -247,10 +247,8 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
   Widget build(BuildContext context) {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
-
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
-    // final theme = Theme.of(context);
-    final bool isEnglish = localeProvider.locale.languageCode == 'en';
+    final bool isEnglish = localeProvider.locale.languageCode == AppStrings.localization_en;
 
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
@@ -275,30 +273,27 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
           backgroundColor: isDark? AppColors.background_dark: AppColors.background_light,
           body: TabBarView(
             children: [
-              // TAB 1: ضبط صدا
               Column(
                 children: [
-                  SizedBox(height: AppSpacing.space_32),
+                  AppSpacing.sizedBoxH32(),
                   RecordingTimer(timerText: _timerText),
-                  SizedBox(height: AppSpacing.space_32),
+                  AppSpacing.sizedBoxH32(),
                   BasicWaveformWidget(
                     amplitudes: _amplitudes,
                     isRecording: _isRecording,
                     isPaused: _isPaused,
                   ),
-                  SizedBox(height: AppSpacing.space_32),
+                  AppSpacing.sizedBoxH32(),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       if (_isRecording) playPauseButton(isDark: isDark),
-                      const SizedBox(width: 30),
+                      AppSpacing.sizedBoxW32(),
                       recordingButton(isDark: isDark),
                     ],
                   ),
                 ],
               ),
-
-              // TAB 2: لیست فایل‌ها
               _recordings.isEmpty
                   ? NoFilesFoundWidget(
                       message: AppStrings.no_records_file.translate(context),
@@ -318,13 +313,12 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
       itemCount: _recordings.length,
       itemBuilder: (context, index) {
         final file = _recordings[index];
-        final fileName = file.path.split('/').last.replaceAll('.m4a', '');
+        final fileName = file.path.split('/').last.replaceAll(AppStrings.file_type_dot_m4a, '');
         final date = _formatJalaliDate(file.lastModifiedSync());
 
         return AnimatedSwitcher(
           duration: Duration(milliseconds: 350),
-          transitionBuilder: (child, animation) =>
-              SizeTransition(sizeFactor: animation, child: child),
+          transitionBuilder: (child, animation) => SizeTransition(sizeFactor: animation, child: child),
           child: Card(
             key: ValueKey(file.path),
             elevation: 2,
@@ -395,7 +389,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
           jalaliDate: jalaliDate,
           onRename: (newName) async {
             final dir = file.parent.path;
-            final newPath = "$dir/$newName.m4a";
+            final newPath = "$dir/$newName${AppStrings.file_type_dot_m4a}";
             await file.rename(newPath);
             await _loadRecordings();
           },
@@ -414,21 +408,21 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            "فایل حذف شد",
+            AppStrings.voice_recorder_file_deleted.translate(context),
             style: AppTypography.voiceRecorderDeleteFileSnackBar(context),
           ),
           action: SnackBarAction(
-            label: "UNDO",
+            label: AppStrings.voice_recorder_label_restore.translate(context),
             onPressed: () async {
               final restored = File(path);
               await restored.writeAsBytes(bytes);
 
-              await _loadRecordings(); // 🔥 فوراً آیتم برمی‌گردد
+              await _loadRecordings();
 
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    "فایل برگردانده شد",
+                    AppStrings.voice_recorder_file_restored.translate(context),
                     style: AppTypography.voiceRecorderRestoreFileSnackBar(
                       context,
                     ),
@@ -443,19 +437,19 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
   }
 
   Future<void> _confirmDelete(File file, {required bool isDark}) async {
-    final fileName = file.path.split('/').last.replaceAll('.m4a', '');
+    final fileName = file.path.split('/').last.replaceAll(AppStrings.file_type_dot_m4a, '');
 
     bool? confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: isDark ? AppColors.surface_dark: AppColors.surface_light,
         title: Text(
-          "حذف ضبط",
+          AppStrings.voice_recorder_delete_recording.translate(context),
           textAlign: TextAlign.center,
           style: AppTypography.voiceRecorderDeleteFileDialogueTitle(context),
         ),
         content: Text(
-          "آیا از حذف فایل «$fileName» مطمئن هستید؟",
+          "${AppStrings.voice_recorder_confirm_delete_before_filename.translate(context)}$fileName${AppStrings.voice_recorder_confirm_delete_after_filename.translate(context)}",
           textAlign: TextAlign.center,
           style: AppTypography.voiceRecorderDeleteFileDialogueContent(context),
         ),
@@ -463,7 +457,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              "خیر",
+              AppStrings.voice_recorder_no.translate(context),
               style: AppTypography.voiceRecorderDeleteFileDialogueCancelButton(
                 context,
               ),
@@ -476,7 +470,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
             ),
             onPressed: () => Navigator.pop(context, true),
             child: Text(
-              "بله، حذف کن",
+              AppStrings.voice_recorder_yes_delete.translate(context),
               style: AppTypography.voiceRecorderDeleteFileDialogueConfirmButton(
                 context,
               ),
@@ -487,18 +481,15 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
     );
 
     if (confirm == true) {
-      // 1) خواندن محتوا جهت امکان Undo
       final bytes = await file.readAsBytes();
       final originalPath = file.path;
 
-      // 2) حذف فایل
       await _deleteRecording(file);
 
-      // 3) Snackbar با دکمه Undo
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            "فایل «$fileName» حذف شد",
+            "${AppStrings.voice_recorder_delete_message_before_filename.translate(context)}$fileName${AppStrings.voice_recorder_delete_message_after_filename.translate(context)}",
             style: AppTypography.voiceRecorderDeleteFileMessageSnackBar(
               context,
             ),
@@ -506,14 +497,11 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 4),
           action: SnackBarAction(
-            label: "Undo",
+            label: AppStrings.voice_recorder_label_restore.translate(context),
             textColor: Colors.yellow,
             onPressed: () async {
-              // فایل را دوباره ایجاد می‌کنیم
               final restored = File(originalPath);
               await restored.writeAsBytes(bytes);
-
-              // لیست را دوباره لود کن
               await _loadRecordings();
             },
           ),
@@ -523,7 +511,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
   }
 
   Future<void> _renameRecording(File file, {required bool isDark}) async {
-    final oldName = file.path.split('/').last.replaceAll(".m4a", "");
+    final oldName = file.path.split('/').last.replaceAll(AppStrings.file_type_dot_m4a, "");
     final controller = TextEditingController(text: oldName);
 
     final newName = await showDialog<String>(
@@ -531,14 +519,14 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
       builder: (context) => AlertDialog(
         backgroundColor: isDark ? AppColors.surface_dark: AppColors.surface_light,
         title: Text(
-          "تغییر نام فایل",
+          AppStrings.voice_recorder_rename_file.translate(context),
           style: AppTypography.voiceRecorderRenameFileDialogueTitle(context),
         ),
         content: TextField(
           controller: controller,
           autofocus: true,
-          decoration: const InputDecoration(
-            labelText: "نام جدید",
+          decoration: InputDecoration(
+            labelText: AppStrings.voice_recorder_new_filename.translate(context),
             border: OutlineInputBorder(),
           ),
           cursorColor: AppColors.error,
@@ -550,7 +538,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
           TextButton(
             onPressed: () => Navigator.pop(context, null),
             child: Text(
-              "انصراف",
+              AppStrings.voice_recorder_discard.translate(context),
               style: AppTypography.voiceRecorderRenameFileDialogueCancelButton(
                 context,
               ),
@@ -567,7 +555,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
               Navigator.pop(context, controller.text.trim());
             },
             child: Text(
-              "ذخیره",
+              AppStrings.voice_recorder_save.translate(context),
               style: AppTypography.voiceRecorderRenameFileDialogueConfirmButton(
                 context,
               ),
@@ -579,9 +567,8 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
 
     if (newName == null) return;
 
-    // مسیر جدید
     final dir = file.parent.path;
-    final newPath = "$dir/$newName.m4a";
+    final newPath = "$dir/$newName${AppStrings.file_type_dot_m4a}";
 
     try {
       await file.rename(newPath);
@@ -590,7 +577,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            "نام فایل به «$newName» تغییر کرد.",
+            "${AppStrings.voice_recorder_filename_changed_before_filename.translate(context)}$newName${AppStrings.voice_recorder_filename_changed_after_filename.translate(context)}",
             style: AppTypography.voiceRecorderRenameFileMessageSnackBar(
               context,
             ),
@@ -603,7 +590,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            "خطا در تغییر نام!",
+            AppStrings.voice_recorder_error_in_renaming.translate(context),
             style: AppTypography.voiceRecorderRenameFileErrorMessageSnackBar(
               context,
             ),
@@ -619,9 +606,8 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
       height: AppSpacing.space_76,
       width: AppSpacing.space_76,
       child: FloatingActionButton(
-        heroTag: "main",
+        heroTag: AppStrings.voice_recorder_hero_tag_main,
         backgroundColor: AppColors.error,
-        // backgroundColor: _isRecording ? AppColors.error : isDark ? AppColors.surface_dark : AppColors.surface_light,
         onPressed: _isRecording ? _stopRecording : _startRecording,
         
         child: Icon(
@@ -635,7 +621,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
 
   FloatingActionButton playPauseButton({required bool isDark}) {
     return FloatingActionButton(
-      heroTag: "pause",
+      heroTag: AppStrings.voice_recorder_hero_tag_pause,
       backgroundColor: _isPaused
                         ? isDark? AppColors.clicked_dark: AppColors.clicked_light 
                         : isDark? AppColors.surface_dark: AppColors.surface_light,

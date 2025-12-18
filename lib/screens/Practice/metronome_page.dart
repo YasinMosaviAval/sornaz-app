@@ -69,7 +69,7 @@ class _MetronomePageState extends State<MetronomePage> {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
-    final bool isEnglish = localeProvider.locale.languageCode == 'en';
+    final bool isEnglish = localeProvider.locale.languageCode == AppStrings.localization_en;
 
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,

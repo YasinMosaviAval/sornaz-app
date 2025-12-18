@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/audio/scan/audio_file.dart';
-import 'package:sornaz/components/music_player/file_actions.dart';
+import 'package:sornaz/screens/Players/Components/file_actions.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/audio/audio_player_provider.dart';
-import 'package:sornaz/components/music_player/marquee_text.dart';
+import 'package:sornaz/screens/Players/Components/marquee_text.dart';
 import 'package:sornaz/helpers/app_functions.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 
@@ -39,9 +39,7 @@ class AudioItem extends StatelessWidget {
           color: isDark ? AppColors.border_dark : AppColors.border_light,
         ),
         color: isPlaying
-            ? isDark
-                  ? AppColors.clicked_dark
-                  : AppColors.clicked_light
+            ? isDark ? AppColors.clicked_dark : AppColors.clicked_light
             : Colors.transparent,
       ),
       child: GestureDetector(
@@ -74,14 +72,14 @@ class AudioItem extends StatelessWidget {
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: AppSpacing.space_4),
+              AppSpacing.sizedBoxH4(),
               Row(
                 children: [
                   Text(
                     formatDuration(audio.duration),
                     style: AppTypography.musicPlayerAudioItemDurationTime(context),
                   ),
-                  SizedBox(width: AppSpacing.space_16),
+                  AppSpacing.sizedBoxH16(),
                   Expanded(
                     child: Text(
                       audio.folderName.substring(1),

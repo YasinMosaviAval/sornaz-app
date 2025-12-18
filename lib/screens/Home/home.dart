@@ -21,35 +21,20 @@ class HomePage extends StatelessWidget {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
-    // final theme = Theme.of(context);
-    final bool isEnglish = localeProvider.locale.languageCode == 'en';
+    final bool isEnglish = localeProvider.locale.languageCode == AppStrings.localization_en;
 
     return
-    //  MaterialApp(
-    //   debugShowCheckedModeBanner: false,
-    //   theme: ThemeData(
-    //     fontFamily: 'Vazir',
-    //     // scaffoldBackgroundColor: isDark
-    //     //     ? AppColors.background_dark
-    //     //     : AppColors.background_light,
-    //   ),
-    //   home:
     Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: isDark
-            ? AppColors.background_dark
-            : AppColors.background_light,
+        backgroundColor: isDark ? AppColors.background_dark : AppColors.background_light,
         appBar: AppBar(
-          backgroundColor: isDark
-              ? AppColors.surface_dark
-              : AppColors.surface_light,
+          backgroundColor: isDark ? AppColors.surface_dark : AppColors.surface_light,
           elevation: 0,
           automaticallyImplyLeading: false,
           leadingWidth: AppSpacing.space_48,
           titleSpacing: AppSpacing.space_16,
           actionsPadding: const EdgeInsets.only(right: AppSpacing.space_24),
-
           leading: HeaderMenuIcon(isDark: isDark),
           title: ApplicationTitle(isDark: isDark),
           actions: [ApplicationLogo(isDark: isDark)],

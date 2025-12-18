@@ -86,6 +86,7 @@ class AppStrings {
   static const no_title = 'noTitle';
   static const error_in_loading = 'errorInLoading';
   static const failed_to_load_posts = 'failedToLoadPosts';
+  static const failed_to_load_categories = 'failedToLoadCategories';
   static const previous_button = 'previousButton';
   static const next_button = 'nextButton';
   static const start_button = 'startButton';
@@ -153,6 +154,69 @@ class AppStrings {
   static const about_us_key_features_description = 'aboutUsKeyFeaturesDescription';
   static const about_us_our_commitment_description = 'aboutUsOurCommitmentDescription';
   static const about_us_contact_information_description = 'aboutUsContactInformationDescription';
+  static const audio_list_preparing_folders = 'audioListPreparingFolders';
+  static const music_player_scanning_files = 'musicPlayerScanningFiles';
+  static const music_player_scanned_files = 'musicPlayerScannedFiles';
+  static const song_information_no_song_playing = 'songInformationNoSongPlaying';
+  static const audio_player_provider_changed_filename = 'audioPlayerProviderChangedFilename';
+  static const audio_player_provider_remove_from_list = 'audioPlayerProviderRemoveFromList';
+  static const audio_player_provider_delete_from_memory = 'audioPlayerProviderDeleteFromMemory';
+  static const folder_list_view_preparing_folders = 'folderListViewPreparingFolders';
+  static const folder_list_view_song = 'folderListViewSong';
+  static const audio_controls_1x_speed = 'audioControls1xSpeed';
+  static const file_action_change_filename = "fileActionChangeFilename";
+  static const file_action_remove = "fileActionRemove";
+  static const file_action_new_filename = "fileActionNewFilename";
+  static const file_action_discard = "fileActionDiscard";
+  static const file_action_save = "fileActionSave";
+  static const file_action_changed_filename = "fileActionChangedFilename";
+  static const file_action_error_in_changed_filename = "fileActionErrorInChangedFilename";
+  static const file_action_remove_file = "fileActionRemoveFile";
+  static const file_action_remove_file_from_list_or_memory = "fileActionRemoveFileFromListOrMemory";
+  static const file_action_remove_file_from_list = "fileActionRemoveFileFromList";
+  static const file_action_removed_file_from_list = "fileActionRemovedFileFromList";
+  static const file_action_error_in_removed_file_from_list = "fileActionErrorInRemovedFileFromList";
+  static const file_action_delete_file_from_memory = "fileActionDeleteFileFromMemory";
+  static const file_action_deleted_file_from_memory = "fileActionDeletedFileFromMemory";
+  static const file_action_error_in_deleted_file_from_memory = "fileActionErrorInDeletedFileFromMemory";
+  static const waveform_widget_zoom_label = "waveformWidgetZoomLabel";
+  static const song_information_title = 'songInformationTitle';
+  static const song_information_artists = 'songInformationArtists';
+  static const song_information_album = 'songInformationAlbum';
+  static const song_information_genre = 'songInformationGenre';
+  static const song_information_year = 'songInformationYear';
+  static const song_information_duration = 'songInformationDuration';
+  static const song_information_bitrate = 'songInformationBitrate';
+  static const record_details_record_information = 'recordDetailsRecordInformation';
+  static const delete_button_widget_delete = 'deleteButtonWidgetDelete';
+  static const delete_button_widget_confirm_delete = 'deleteButtonWidgetConfirmDelete';
+  static const delete_button_widget_delete_question_before_filename_part = 'deleteButtonWidgetDeleteQuestionBeforeFilenamePart';
+  static const delete_button_widget_delete_question_after_filename_part = 'deleteButtonWidgetDeleteQuestionAfterFilenamePart';
+  static const delete_button_widget_discard_button = 'deleteButtonWidgetDiscardButton';
+  static const delete_button_widget_confirm_delete_button = 'deleteButtonWidgetConfirmDeleteButton';
+  static const rename_button_widget_rename = 'renameButtonWidgetRename';
+  static const rename_button_widget_new_filename = 'renameButtonWidgetNewFilename';
+  static const rename_button_widget_discard = 'renameButtonWidgetDiscard';
+  static const rename_button_widget_save = 'renameButtonWidgetSave';
+
+  static const voice_recorder_microphone_and_storage_access_permissions = 'voice_recorder_microphone_and_storage_access_permissions';
+  static const voice_recorder_file_deleted = 'voiceRecorderFileDeleted';
+  static const voice_recorder_file_restored = 'voiceRecorderFileRestored';
+  static const voice_recorder_label_restore = 'voiceRecorderLabelRestore';
+  static const voice_recorder_delete_recording = 'voiceRecorderDeleteRecording';
+  static const voice_recorder_confirm_delete_before_filename = 'voiceRecorderConfirmDeleteBeforeFilename';
+  static const voice_recorder_confirm_delete_after_filename = 'voiceRecorderConfirmDeleteAfterFilename';
+  static const voice_recorder_no = 'voiceRecorderNo';
+  static const voice_recorder_yes_delete = 'voiceRecorderYesDelete';
+  static const voice_recorder_delete_message_before_filename = 'voiceRecorderDeleteMessageBeforeFilename';
+  static const voice_recorder_delete_message_after_filename = 'voiceRecorderDeleteMessageAfterFilename';
+  static const voice_recorder_rename_file = 'voiceRecorderRenameFile';
+  static const voice_recorder_new_filename = 'voiceRecorderNewFilename';
+  static const voice_recorder_discard = 'voiceRecorderDiscard';
+  static const voice_recorder_save = 'voiceRecorderSave';
+  static const voice_recorder_filename_changed_before_filename = 'voiceRecorderFilenameChangedBeforeFilename';
+  static const voice_recorder_filename_changed_after_filename = 'voiceRecorderFilenameChangedAfterFilename';
+  static const voice_recorder_error_in_renaming = 'voiceRecorderErrorInRenaming';
 
   static List<Map<String, dynamic>> getOnboardingPages(String lang) {
     final isEn = lang == 'en';
@@ -200,6 +264,43 @@ class AppStrings {
   static const String sample_email = 'bruno203@gmail.com';
   static const String sample_phone = '0911223344';
   static const String sample_username = 'bruno203';
+
+  static const String file_type_mp3 = 'mp3';
+  static const String file_type_wav = 'wav';
+  static const String file_type_m4a = 'm4a';
+  static const String file_type_ogg = 'ogg';
+  static const String file_type_flac = 'flac';
+  static const String file_type_aac = 'aac';
+  static const String audio_controls_speed_sign = 'x';
+  
+  static const String file_type_dot_mp3 = '.mp3';
+  static const String file_type_dot_wav = '.wav';
+  static const String file_type_dot_m4a = '.m4a';
+  static const String file_type_dot_ogg = '.ogg';
+  static const String file_type_dot_flac = '.flac';
+  static const String file_type_dot_aac = '.aac';
+
+  static const String bitrate_unit = 'kbps';
+  static const note_c = "C";
+  static const note_c_sharp = "C#";
+  static const note_d = "D";
+  static const note_d_sharp = "D#";
+  static const note_e = "E";
+  static const note_f = "F";
+  static const note_f_sharp = "F#";
+  static const note_g = "G";
+  static const note_g_sharp = "G#";
+  static const note_a = "A";
+  static const note_a_sharp = "A#";
+  static const note_b = "B";
+
+  static const localization_fa = 'fa';
+  static const localization_en = 'en';
+
+  static const voice_recorder_hero_tag_main = "main";
+  static const voice_recorder_hero_tag_pause = "pause";
+
+
   // ===============================================================
   // ===============================================================
   // ===============================================================
@@ -287,6 +388,7 @@ class AppStrings {
     no_title,
     error_in_loading,
     failed_to_load_posts,
+    failed_to_load_categories,
     previous_button,
     next_button,
     start_button,
@@ -354,6 +456,68 @@ class AppStrings {
     about_us_key_features_description,
     about_us_our_commitment_description,
     about_us_contact_information_description,
+    audio_list_preparing_folders,
+    music_player_scanning_files,
+    music_player_scanned_files,
+    song_information_no_song_playing,
+    audio_player_provider_changed_filename,
+    audio_player_provider_remove_from_list,
+    audio_player_provider_delete_from_memory,
+    folder_list_view_preparing_folders,
+    folder_list_view_song,
+    audio_controls_1x_speed,
+    file_action_change_filename,
+    file_action_remove,
+    file_action_new_filename,
+    file_action_discard,
+    file_action_save,
+    file_action_changed_filename,
+    file_action_error_in_changed_filename,
+    file_action_remove_file,
+    file_action_remove_file_from_list_or_memory,
+    file_action_remove_file_from_list,
+    file_action_removed_file_from_list,
+    file_action_error_in_removed_file_from_list,
+    file_action_delete_file_from_memory,
+    file_action_deleted_file_from_memory,
+    file_action_error_in_deleted_file_from_memory,
+    waveform_widget_zoom_label,
+    song_information_title,
+    song_information_artists,
+    song_information_album,
+    song_information_genre,
+    song_information_year,
+    song_information_duration,
+    song_information_bitrate,
+    record_details_record_information,
+    delete_button_widget_delete,
+    delete_button_widget_confirm_delete,
+    delete_button_widget_delete_question_before_filename_part,
+    delete_button_widget_delete_question_after_filename_part,
+    delete_button_widget_discard_button,
+    delete_button_widget_confirm_delete_button,
+    rename_button_widget_rename,
+    rename_button_widget_new_filename,
+    rename_button_widget_discard,
+    rename_button_widget_save,
+    voice_recorder_file_deleted,
+    voice_recorder_microphone_and_storage_access_permissions,
+    voice_recorder_file_restored,
+    voice_recorder_label_restore,
+    voice_recorder_delete_recording,
+    voice_recorder_confirm_delete_before_filename,
+    voice_recorder_confirm_delete_after_filename,
+    voice_recorder_no,
+    voice_recorder_yes_delete,
+    voice_recorder_delete_message_before_filename,
+    voice_recorder_delete_message_after_filename,
+    voice_recorder_rename_file,
+    voice_recorder_new_filename,
+    voice_recorder_discard,
+    voice_recorder_save,
+    voice_recorder_filename_changed_before_filename,
+    voice_recorder_filename_changed_after_filename,
+    voice_recorder_error_in_renaming,
   ];
 
   static const en = {
@@ -447,6 +611,7 @@ class AppStrings {
     no_title: 'No Title',
     error_in_loading: 'Error loading data',
     failed_to_load_posts: 'Failed to load posts',
+    failed_to_load_categories: 'Failed to load categories',
 
     previous_button: 'Previous',
     next_button: 'Next',
@@ -565,6 +730,70 @@ https://www.instagram.com/sornaz.ac/
 https://www.youtube.com/@sornaz.academy
 
 🌐 Website: https://sornaz.com""",
+
+
+    audio_list_preparing_folders: "Preparing Folders ...",
+    music_player_scanning_files: "Scanning Files ...",
+    music_player_scanned_files: "Scanned Files ...",
+    song_information_no_song_playing: "No Song Playing",
+    audio_player_provider_changed_filename: "Changed Filename",
+    audio_player_provider_remove_from_list: "Remove From List",
+    audio_player_provider_delete_from_memory: "Delete From Memory",
+    folder_list_view_preparing_folders: "Preparing Folders ...",
+    folder_list_view_song: "Song",
+    audio_controls_1x_speed: "1x (Normal)",
+    file_action_change_filename: "Rename",
+    file_action_remove: "Remove",
+    file_action_new_filename: "New name (without extension)",
+    file_action_discard: "Discard",
+    file_action_save: "Save",
+    file_action_changed_filename: "File name changed",
+    file_action_error_in_changed_filename: "Error renaming file (a file with the same name may already exist)",
+    file_action_remove_file: "Remove file",
+    file_action_remove_file_from_list_or_memory: "Remove from the list only, or delete permanently from storage?",
+    file_action_remove_file_from_list: "Remove from list",
+    file_action_removed_file_from_list: "Removed from list",
+    file_action_error_in_removed_file_from_list: "Error removing from list",
+    file_action_delete_file_from_memory: "Delete from storage",
+    file_action_deleted_file_from_memory: "File deleted from storage",
+    file_action_error_in_deleted_file_from_memory: "Error deleting file",
+    waveform_widget_zoom_label: "Zoom",
+    song_information_title: 'Title',
+    song_information_artists: 'Artists',
+    song_information_album: 'Album',
+    song_information_genre: 'Genre',
+    song_information_year: 'Year',
+    song_information_duration: 'Duration',
+    song_information_bitrate: 'Bitrate',
+    record_details_record_information: "Record Information",
+    delete_button_widget_delete : "Delete",
+    delete_button_widget_confirm_delete : "Confirm Delete",
+    delete_button_widget_delete_question_before_filename_part : "Are you Sure for Delete «",
+    delete_button_widget_delete_question_after_filename_part : "»?",
+    delete_button_widget_discard_button : "Discard",
+    delete_button_widget_confirm_delete_button : "Yes, Delete Files",
+    rename_button_widget_rename : "Rename",
+    rename_button_widget_new_filename : "New Filename",
+    rename_button_widget_discard : "Discard",
+    rename_button_widget_save : "Save",
+    voice_recorder_microphone_and_storage_access_permissions: "Microphone and storage access permissions are required.",
+    voice_recorder_file_deleted: "File deleted",
+    voice_recorder_file_restored: "File restored",
+    voice_recorder_label_restore: "Restore",
+    voice_recorder_delete_recording: "Delete recording",
+    voice_recorder_confirm_delete_before_filename: "Are you sure you want to delete the file “",
+    voice_recorder_confirm_delete_after_filename: "”?",
+    voice_recorder_no: "No",
+    voice_recorder_yes_delete: "Yes, delete",
+    voice_recorder_delete_message_before_filename: "File “",
+    voice_recorder_delete_message_after_filename: "” has been deleted",
+    voice_recorder_rename_file: "Rename file",
+    voice_recorder_new_filename: "New name",
+    voice_recorder_discard: "Cancel",
+    voice_recorder_save: "Save",
+    voice_recorder_filename_changed_before_filename: "File name changed to “",
+    voice_recorder_filename_changed_after_filename: "”.",
+    voice_recorder_error_in_renaming: "Error renaming file!",
   };
 
   static const fa = {
@@ -652,7 +881,8 @@ https://www.youtube.com/@sornaz.academy
     view_all_link: 'مشاهده همه',
     no_title: 'بدون عنوان',
     error_in_loading: 'خطا در بارگذاری',
-    failed_to_load_posts: 'خطا در لود پست‌ها',
+    failed_to_load_posts: 'خطا در بارگزاری پست‌ها',
+    failed_to_load_categories: 'خطا در بارگزاری دسته بندی ها',
     previous_button: 'قبلی',
     next_button: 'بعدی',
     start_button: 'شروع',
@@ -671,7 +901,7 @@ https://www.youtube.com/@sornaz.academy
     comment: 'کامنت',
     comments: 'کامنت‌ها',
     without_comments: 'بدون کامنت',
-    unknown: 'ناشناس',
+    unknown: 'نامشخص',
     load_more_comments: 'بارگذاری کامنت‌های بیشتر',
     write_your_comments: 'نظر خود را بنویسید',
     take_your_point_to_article: 'امتیاز شما به مقاله',
@@ -756,5 +986,68 @@ https://www.instagram.com/direct/t/17844708771473835/
 https://www.youtube.com/@sornaz.academy
 
 🌐 وب‌سایت: https://sornaz.com""",
+
+    audio_list_preparing_folders: "در حال آماده‌سازی پوشه‌ها ...",
+    music_player_scanning_files: "در حال اسکن فایل‌ها ...",
+    music_player_scanned_files: "فایل اسکن شد",
+    song_information_no_song_playing: "هیچ آهنگی در حال پخش نیست",
+    audio_player_provider_changed_filename: "نام فایل تغییر کرد",
+    audio_player_provider_remove_from_list: "فایل از لیست حذف شد",
+    audio_player_provider_delete_from_memory: "فایل از حافظه پاک شد",
+    folder_list_view_preparing_folders: "در حال آماده‌سازی پوشه‌ها ...",
+    folder_list_view_song: "آهنگ",
+    audio_controls_1x_speed: "1x سرعت طبیعی",
+    file_action_change_filename: "تغییر نام",
+    file_action_remove: "حذف",
+    file_action_new_filename: "نام جدید (بدون پسوند)",
+    file_action_discard: "انصراف",
+    file_action_save: "ذخیره",
+    file_action_changed_filename: "نام فایل تغییر کرد",
+    file_action_error_in_changed_filename: "خطا در تغییر نام (ممکن است فایل مشابه وجود داشته باشد)",
+    file_action_remove_file: "حذف فایل",
+    file_action_remove_file_from_list_or_memory: "حذف فقط از لیست یا حذف کامل از حافظه؟",
+    file_action_remove_file_from_list: "حذف از لیست",
+    file_action_removed_file_from_list: "از لیست حذف شد",
+    file_action_error_in_removed_file_from_list: "خطا در حذف از لیست",
+    file_action_delete_file_from_memory: "حذف از حافظه",
+    file_action_deleted_file_from_memory: "فایل از حافظه حذف شد",
+    file_action_error_in_deleted_file_from_memory: "خطا در حذف فایل",
+    waveform_widget_zoom_label: "بزرگنمایی",
+    song_information_title: 'عنوان',
+    song_information_artists: 'هنرمند',
+    song_information_album: 'آلبوم',
+    song_information_genre: 'ژانر',
+    song_information_year: 'سال',
+    song_information_duration: 'مدت',
+    song_information_bitrate: 'بیت ریت',
+    record_details_record_information: "جزئیات ضبط",
+    delete_button_widget_delete : "حذف",
+    delete_button_widget_confirm_delete : "تأیید حذف",
+    delete_button_widget_delete_question_before_filename_part : "آیا از حذف فایل «",
+    delete_button_widget_delete_question_after_filename_part : "» مطمئن هستی؟",
+    delete_button_widget_discard_button : "خیر",
+    delete_button_widget_confirm_delete_button : "بله، حذف شود",
+    rename_button_widget_rename : "تغییر نام",
+    rename_button_widget_new_filename : "نام جدید",
+    rename_button_widget_discard : "انصراف",
+    rename_button_widget_save : "ذخیره",
+    voice_recorder_microphone_and_storage_access_permissions: "اجازه دسترسی به میکروفون و حافظه لازم است",
+    voice_recorder_file_deleted: "فایل حذف شد",
+    voice_recorder_file_restored: "فایل برگردانده شد",
+    voice_recorder_label_restore: "برگرداندن",
+    voice_recorder_delete_recording: "حذف ضبط",
+    voice_recorder_confirm_delete_before_filename: "آیا از حذف فایل «",
+    voice_recorder_confirm_delete_after_filename: "» مطمئن هستید؟",
+    voice_recorder_no: "خیر",
+    voice_recorder_yes_delete: "بله، حذف کن",
+    voice_recorder_delete_message_before_filename: "فایل «",
+    voice_recorder_delete_message_after_filename: "» حذف شد",
+    voice_recorder_rename_file: "تغییر نام فایل",
+    voice_recorder_new_filename: "نام جدید",
+    voice_recorder_discard: "انصراف",
+    voice_recorder_save: "ذخیره",
+    voice_recorder_filename_changed_before_filename: "نام فایل به «",
+    voice_recorder_filename_changed_after_filename: "» تغییر کرد.",
+    voice_recorder_error_in_renaming: "خطا در تغییر نام!",
   };
 }

@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, strict_top_level_inference
 
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -31,18 +31,18 @@ class _TunerPageState extends State<TunerPage> {
   double noteFreq = 0.0;
 
   final List<String> notes = [
-    "C",
-    "C#",
-    "D",
-    "D#",
-    "E",
-    "F",
-    "F#",
-    "G",
-    "G#",
-    "A",
-    "A#",
-    "B",
+    AppStrings.note_c,
+    AppStrings.note_c_sharp,
+    AppStrings.note_d,
+    AppStrings.note_d_sharp,
+    AppStrings.note_e,
+    AppStrings.note_f,
+    AppStrings.note_f_sharp,
+    AppStrings.note_g,
+    AppStrings.note_g_sharp,
+    AppStrings.note_a,
+    AppStrings.note_a_sharp,
+    AppStrings.note_b
   ];
 
   double centDifference(double detectedFreq, double targetFreq) {
@@ -100,7 +100,6 @@ class _TunerPageState extends State<TunerPage> {
     return {"note": noteName, "cents": cents.clamp(-50, 50)};
   }
 
-  // ignore: strict_top_level_inference
   void _onPitchDetected(result) {
     double freq = result['frequency'].toDouble() ?? 0.0;
 
@@ -126,8 +125,7 @@ class _TunerPageState extends State<TunerPage> {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
-    // final theme = Theme.of(context);
-    final bool isEnglish = localeProvider.locale.languageCode == 'en';
+    final bool isEnglish = localeProvider.locale.languageCode == AppStrings.localization_en;
 
     final analyzed = _analyzePitch(frequency);
     double cents = analyzed["cents"].toDouble();
@@ -137,24 +135,20 @@ class _TunerPageState extends State<TunerPage> {
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: Scaffold(
-        // appBar: ,
         backgroundColor: isDark
             ? AppColors.background_dark
             : AppColors.background_light,
         body:
-            // Directionality(
-            //   textDirection: TextDirection.rtl,
-            //   child:
             Column(
               children: [
-                const SizedBox(height: AppSpacing.space_36),
+                AppSpacing.sizedBoxH32(),
                 ChangeFrequencyTitleWidget(
                   a4: a4,
                   isDark: isDark,
                   isEnglish: isEnglish,
                 ),
                 changeFrequncySlider(isDark),
-                const SizedBox(height: AppSpacing.space_24),
+                AppSpacing.sizedBoxH24(),
                 frequencyNotesAndDifferences(isDark),
                 FrequencyBoxViewerWidget(
                   inRange: inRange,
@@ -190,12 +184,10 @@ class _TunerPageState extends State<TunerPage> {
                               frequency,
                               noteFreq,
                             ).toStringAsFixed(2),
-                      // textDirection: TextDirection.ltr,
                       style: AppTypography.tunerCentDifference(context),
                     ),
                     Text(
                       AppStrings.cents.translate(context),
-                      // textDirection: TextDirection.ltr,
                       style: AppTypography.tunerCentUnitTitle(context),
                     ),
                   ],
@@ -209,7 +201,7 @@ class _TunerPageState extends State<TunerPage> {
                           : getOctave(noteFreq).toString(),
                       style: AppTypography.tunerNoteOctave(context),
                     ),
-                    SizedBox(width: AppSpacing.space_4),
+                    AppSpacing.sizedBoxW4(),
                     Text(note, style: AppTypography.tunerNoteName(context)),
                   ],
                 ),
@@ -218,12 +210,10 @@ class _TunerPageState extends State<TunerPage> {
                   children: [
                     Text(
                       noteFreq.toStringAsFixed(2),
-                      // textDirection: TextDirection.ltr,
                       style: AppTypography.tunerNearNoteFrequency(context),
                     ),
                     Text(
                       AppStrings.hertz.translate(context),
-                      // textDirection: TextDirection.ltr,
                       style: AppTypography.tunerHertzUnitTitle(context),
                     ),
                   ],
@@ -337,7 +327,6 @@ class DetectedFrequencyWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       "${frequency.toStringAsFixed(1)} ${AppStrings.hz.translate(context)}",
-      // textDirection: TextDirection.ltr,
       style: AppTypography.tunerDetectedFrequency(context),
     );
   }
@@ -366,17 +355,14 @@ class ChangeFrequencyTitleWidget extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               textDirection: isEnglish ? TextDirection.rtl : TextDirection.ltr,
-              // textDirection: isEnglish ? TextDirection.rtl : TextDirection.ltr,
               children: [
                 Text(
                   "${a4.toStringAsFixed(0)} ${AppStrings.hz.translate(context)}",
-                  // textDirection: TextDirection.ltr,
                   style: AppTypography.tunerA4Frequency(context),
                 ),
                 SizedBox(width: AppSpacing.space_4),
                 Text(
                   AppStrings.set_base_frequency.translate(context),
-                  // textDirection: TextDirection.ltr,
                   style: AppTypography.tunerSetBaseFrequency(context),
                 ),
               ],

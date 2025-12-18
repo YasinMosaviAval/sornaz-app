@@ -7,6 +7,8 @@ import 'dart:math';
 
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
+import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_translations.dart';
 
 class WaveformViewer extends StatefulWidget {
   final List<int> samples;
@@ -47,7 +49,7 @@ class _WaveformViewerState extends State<WaveformViewer> {
           min: 1.0,
           max: 8.0,
           value: zoom,
-          label: "Zoom",
+          label: AppStrings.waveform_widget_zoom_label.translate(context),
           onChanged: (v) => setState(() => zoom = v),
         ),
       ],
@@ -227,7 +229,6 @@ class WaveformPainter extends CustomPainter {
       canvas.drawLine(Offset(x, midY - y), Offset(x, midY + y), paint);
     }
 
-    // Playhead (خط قرمز)
     final playheadPaint = Paint()
       ..color = Colors.red
       ..strokeWidth = 2;

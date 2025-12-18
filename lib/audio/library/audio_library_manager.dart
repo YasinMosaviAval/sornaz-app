@@ -14,13 +14,11 @@ class AudioLibraryManager extends ChangeNotifier {
   int scannedFiles = 0;
   int totalFiles = 0;
 
-  /// Set root directories for the library
   Future<void> setRoots(List<Directory> directories) async {
     roots = directories;
     notifyListeners();
   }
 
-  /// Scan all audio files under root directories
   Future<void> scanLibrary() async {
     if (roots.isEmpty) return;
 
@@ -49,7 +47,6 @@ class AudioLibraryManager extends ChangeNotifier {
     );
   }
 
-  /// Filter files by query
   List<AudioFile> filter(String query) {
     return allFiles
         .where((audio) => audio.fileName.toLowerCase().contains(query.toLowerCase()))

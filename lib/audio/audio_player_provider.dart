@@ -21,7 +21,6 @@ class AudioPlayerProvider extends ChangeNotifier {
   late final PlaybackQueueManager _queue;
   late final AudioLibraryManager libraryManager;
 
-  
   List<AudioFile> allFiles = [];
   List<AudioFile> filteredFiles = [];
   Map<String, List<AudioFile>> folderTree = {};
@@ -51,7 +50,6 @@ class AudioPlayerProvider extends ChangeNotifier {
   // ==========================
   int repeatMode = 0;
 
-
 // ==========================
   // Metadata
   // ==========================
@@ -73,7 +71,6 @@ class AudioPlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // مثال اتصال به play:
   Future<void> play(int index) async {
     try {
       isLoading = true;
@@ -84,7 +81,6 @@ class AudioPlayerProvider extends ChangeNotifier {
       await _player.setSource(DeviceFileSource(filteredFiles[index].file.path));
       await _player.resume();
 
-      // Load metadata بدون block کردن UI
       loadCurrentMetadata();
 
     } finally {
@@ -92,7 +88,6 @@ class AudioPlayerProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-
 
   // ==========================
   // Constructor
@@ -186,8 +181,6 @@ class AudioPlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-
-
   void _initListeners() {
     _player.onPlayerStateChanged.listen((state) {
       isPlaying = state == PlayerState.playing;
@@ -220,26 +213,23 @@ class AudioPlayerProvider extends ChangeNotifier {
   // Folder Mode
   // ==========================
   bool folderMode = false;
+
   void toggleFolderMode() {
     folderMode = !folderMode;
     notifyListeners();
   }
 
-
-
   // ==========================
   // Playback speed
   // ==========================
   double playbackSpeed = 1.0;
-  final List<double> speedOptions = [
-    0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 3.0, 4.0
-  ];
-
+  final List<double> speedOptions = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 3.0, 4.0];
 
   // ==========================
   // Time Mode
   // ==========================
   bool showRemaining = false;
+
   void toggleTimeMode() {
     showRemaining = !showRemaining;
     notifyListeners();
@@ -305,7 +295,6 @@ class AudioPlayerProvider extends ChangeNotifier {
     return filteredFiles[currentIndex];
   }
 
-
   Future<void> playFromFolder(List<AudioFile> files, int index) async {
     filteredFiles = files;
     await play(index);
@@ -358,6 +347,8 @@ class AudioPlayerProvider extends ChangeNotifier {
   // ==========================
   // File operations
   // ==========================
+  // AppLocalizations appLocalizations = AppLocalizations(Locale.fromSubtags());
+
   Future<bool> renameFile(AudioFile file, String newName) async {
     final dir = file.file.parent.path;
     final newPath = "$dir/$newName";
@@ -372,6 +363,7 @@ class AudioPlayerProvider extends ChangeNotifier {
     allFiles.remove(file);
     filteredFiles.remove(file);
     notifyListeners();
+    // _showSnackBar(appLocalizations.translate(AppStrings.about_us_key_features_title));
     _showSnackBar("از لیست حذف شد");
     return true;
   }
@@ -410,12 +402,11 @@ class AudioPlayerProvider extends ChangeNotifier {
     );
   }
 
-@override
-void dispose() {
-  _controller.dispose();
-  super.dispose();
-}
-
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 }
 
 

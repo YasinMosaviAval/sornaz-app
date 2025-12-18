@@ -25,7 +25,7 @@ class WaveformPainterWithTicks extends CustomPainter {
     // =======================
     const double tickHeightLong = 15;
     const double tickHeightShort = 8;
-    const double tickSpacingPx = 20; // هر ۲۰px یک خط
+    const double tickSpacingPx = 20;
 
     for (double x = 0; x < size.width; x += tickSpacingPx) {
       final bool isBigTick = (x ~/ tickSpacingPx) % 4 == 0;

@@ -18,7 +18,7 @@ class SettingsPage extends StatelessWidget {
     final bool isDark = appData.isDark;
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
     // final theme = Theme.of(context);
-    final bool isEnglish = localeProvider.locale.languageCode == 'en';
+    final bool isEnglish = localeProvider.locale.languageCode == AppStrings.localization_en;
 
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,

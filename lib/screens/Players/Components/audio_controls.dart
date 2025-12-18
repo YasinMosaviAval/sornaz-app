@@ -4,6 +4,8 @@ import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/audio/audio_player_provider.dart';
+import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_translations.dart';
 
 class AudioControls extends StatelessWidget {
   const AudioControls({super.key});
@@ -60,32 +62,14 @@ class AudioControls extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             spacing: AppSpacing.space_16,
             children: [
-              // IconButton(
-              //   icon: Icon(
-              //     provider.folderMode ? Icons.list : Icons.folder,
-              //     color: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light
-              //   ),
-              //   iconSize: AppSpacing.space_24,
-              //   // onPressed: provider.toggleFolderMode,
-              //   onPressed: () => _tabController.animateTo(0),
-              // ),
-
-
               IconButton(
                 icon: Icon(
                   provider.folderMode ? Icons.list : Icons.folder,
                   color: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light
                 ),
                 iconSize: AppSpacing.space_24,
-                // onPressed: provider.toggleFolderMode,
                 onPressed: () => provider.toggleFolderMode(),
               ),
-
-
-
-
-
-
               IconButton(
                 icon: Icon(
                   Icons.shuffle,
@@ -103,7 +87,7 @@ class AudioControls extends StatelessWidget {
                       ? Icons.repeat
                       : provider.repeatMode == 1
                           ? Icons.repeat_one
-                          : Icons.repeat, // حالت repeat all
+                          : Icons.repeat,
                 ),
                 color: provider.repeatMode == 0
                     ? (isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light)
@@ -116,8 +100,6 @@ class AudioControls extends StatelessWidget {
               Theme(
                 data: Theme.of(context).copyWith(
                   popupMenuTheme: PopupMenuThemeData(
-                    // color: isDark ? AppColors.surface_dark : AppColors.surface_light,
-                    // textStyle: AppTypography.musicPlayerSpeedMenuItem(context),
                     elevation: 8,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppSpacing.space_4),
@@ -132,7 +114,7 @@ class AudioControls extends StatelessWidget {
                     return PopupMenuItem<double>(
                       value: speed,
                       child: Text(
-                        speed == 1 ? "1x (Normal)" : "${speed}x",
+                        speed == 1 ? AppStrings.audio_controls_1x_speed.translate(context) : "${speed}x",
                       ),
                     );
                   }).toList(),
@@ -145,7 +127,7 @@ class AudioControls extends StatelessWidget {
                       ),
                       const SizedBox(width: AppSpacing.space_4),
                       Text(
-                        "${provider.playbackSpeed}x",
+                        "${provider.playbackSpeed}${AppStrings.audio_controls_speed_sign}",
                         style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light),
                       ),
                     ],

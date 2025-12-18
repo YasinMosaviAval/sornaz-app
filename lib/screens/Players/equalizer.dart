@@ -1,17 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_data.dart';
+import 'package:sornaz/helpers/app_spacing.dart';
 
 class EqualizerTab extends StatelessWidget {
   const EqualizerTab({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: const [
-        EqualizerSlider(label: 'Bass'),
-        EqualizerSlider(label: 'Mid'),
-        EqualizerSlider(label: 'Treble'),
-      ],
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.background_dark : AppColors.background_light
+      ),
+      child: ListView(
+        padding: const EdgeInsets.all(AppSpacing.space_16),
+        children: const [
+          EqualizerSlider(label: 'Bass'),
+          EqualizerSlider(label: 'Mid'),
+          EqualizerSlider(label: 'Treble'),
+        ],
+      ),
     );
   }
 }
@@ -32,7 +43,7 @@ class EqualizerSlider extends StatelessWidget {
           value: 0,
           onChanged: (_) {},
         ),
-        const SizedBox(height: 12),
+        AppSpacing.sizedBoxH12()
       ],
     );
   }

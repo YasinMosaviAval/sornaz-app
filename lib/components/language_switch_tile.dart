@@ -17,7 +17,7 @@ class LanguageSwitchTile extends StatelessWidget {
     // final isPersian = appData.isPersian;
     return Consumer<LocaleProvider>(
       builder: (context, localeProvider, child) {
-        final bool isEnglish = localeProvider.locale.languageCode == 'en';
+        final bool isEnglish = localeProvider.locale.languageCode == AppStrings.localization_en;
         return ListTile(
           leading: const Icon(Icons.language),
           title: Text(
@@ -37,7 +37,7 @@ class LanguageSwitchTile extends StatelessWidget {
           trailing: Switch(
             value: isEnglish,
             onChanged: (value) {
-              localeProvider.setLocale(value ? 'en' : 'fa');
+              localeProvider.setLocale(value ? AppStrings.localization_en : AppStrings.localization_fa);
               // appData.toggleLanguage();
             },
           ),

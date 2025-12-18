@@ -27,11 +27,6 @@ class _AccordionState extends State<Accordion>
 
   void _onItemTapped(int index) {
     setState(() {
-      // if (_expandedIndex == index) {
-      //   _expandedIndex = null; // اگر دوباره کلیک شد، بسته شود
-      // } else {
-      //   _expandedIndex = index; // فقط آیتم جدید باز شود
-      // }
       _expandedIndex = (_expandedIndex == index) ? null : index;
     });
   }

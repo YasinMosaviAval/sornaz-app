@@ -1,11 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sornaz/components/music_player/search_bar.dart';
+import 'package:sornaz/screens/Players/Components/search_bar.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/audio/audio_player_provider.dart';
 import 'package:sornaz/components/bottom_nav.dart';
 import 'package:sornaz/audio/folder_navigator_provider.dart';
+import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/screens/Players/music_player_tabs.dart';
 import 'package:sornaz/audio/scan/audio_file_loader.dart';
 
@@ -58,18 +60,18 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
-                      "در حال اسکن فایل‌ها",
+                    Text(
+                      AppStrings.music_player_scanning_files.translate(context),
                       style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)
                     ),
-                    const SizedBox(height: AppSpacing.space_32),
+                    AppSpacing.sizedBoxH32(),
                     LinearProgressIndicator(value: audio.progress),
-                    const SizedBox(height: AppSpacing.space_32),
+                    AppSpacing.sizedBoxH32(),
                     Text(
-                      "${audio.scannedFiles} / ${audio.totalFiles} فایل اسکن شد",
+                      "${audio.scannedFiles} / ${audio.totalFiles} ${AppStrings.music_player_scanned_files.translate(context)}",
                       style: const TextStyle(fontSize: 16)
                     ),
-                    const SizedBox(height: AppSpacing.space_32),
+                    AppSpacing.sizedBoxH32(),
                     Text(
                       audio.currentPath, 
                       maxLines: 2, 

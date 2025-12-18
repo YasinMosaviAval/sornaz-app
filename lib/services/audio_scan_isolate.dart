@@ -1,12 +1,21 @@
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:sornaz/helpers/app_strings.dart';
+
 void scanAudioIsolate(Map<String, dynamic> args) async {
   final SendPort sendPort = args['sendPort'];
   final List<String> roots = args['roots'];
 
   final audioFiles = <Map<String, dynamic>>[];
-  final extensions = ['.mp3', '.wav', '.m4a'];
+  final extensions = [
+    AppStrings.file_type_dot_mp3,
+    AppStrings.file_type_dot_wav,
+    AppStrings.file_type_dot_m4a,
+    AppStrings.file_type_dot_aac,
+    AppStrings.file_type_dot_flac,
+    AppStrings.file_type_dot_ogg,
+  ];
 
   // 1️⃣ شمارش
   final List<File> files = [];

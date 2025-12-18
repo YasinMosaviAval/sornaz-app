@@ -16,7 +16,6 @@ import 'package:sornaz/components/bottom_nav.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
-
 import 'package:sornaz/screens/Home/home.dart';
 
 class ArticlesPage extends StatefulWidget {
@@ -121,23 +120,14 @@ class _ArticlesPageState extends State<ArticlesPage> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: AppStrings.articles_title.translate(context),
-      // theme: ThemeData(
-      //   colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      //   useMaterial3: true,
-      // ),
       home: Scaffold(
         appBar: AppBar(
-          backgroundColor: isDark
-              ? AppColors.surface_dark
-              : AppColors.surface_light,
-              // ? AppColors.background_dark
-              // : AppColors.background_light,
+          backgroundColor: isDark ? AppColors.surface_dark : AppColors.surface_light,
           elevation: 0,
           automaticallyImplyLeading: false,
           leadingWidth: AppSpacing.space_48,
           titleSpacing: AppSpacing.space_16,
           actionsPadding: const EdgeInsets.only(right: AppSpacing.space_24),
-
           leading: HeaderMenuIcon(isDark: isDark),
           title: ApplicationTitle(isDark: isDark),
           actions: [ApplicationLogo(isDark: isDark)],
@@ -195,49 +185,27 @@ class ArticlesListWidget extends StatelessWidget {
       controller: _scrollController,
       itemCount: posts.length + (isLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {
-        if (index == posts.length) {
-          return const Center(child: CircularProgressIndicator());
-        }
+        if (index == posts.length) return const Center(child: CircularProgressIndicator());
 
         final post = posts[index];
-        final title =
-            post['title']?['rendered'] ??
-            AppStrings.without_title.translate(context);
-        final excerpt =
-            (post['excerpt']?['rendered'] as String?)?.replaceAll(
-              RegExp(r'<[^>]*>'),
-              '',
-            ) ??
-            AppStrings.without_briefs.translate(context);
+        final title = post['title']?['rendered'] ?? AppStrings.without_title.translate(context);
+        final excerpt = (post['excerpt']?['rendered'] as String?)?.replaceAll( RegExp(r'<[^>]*>'), '', ) ?? AppStrings.without_briefs.translate(context);
         final featuredMedia = post['featured_media'] ?? 0;
-        final imageUrl =
-            (featuredMedia is int &&
-                featuredMedia > 0 &&
-                post['_embedded'] != null)
-            ? (post['_embedded']['wp:featuredmedia']?[0]?['source_url']
-                      as String?) ??
-                  ''
+        final imageUrl = (featuredMedia is int && featuredMedia > 0 && post['_embedded'] != null)
+            ? (post['_embedded']['wp:featuredmedia']?[0]?['source_url'] as String?) ?? ''
             : '';
-        // final date = (post['date'] as String?)?.substring(0, 10) ?? '';
         final isoDate = post['date'] as String? ?? '';
 
         return Container(
           decoration: BoxDecoration(
-            color: index % 2 == 0
-                ? AppColors.background_light
-                : AppColors.surface_light,
+            color: index % 2 == 0 ? AppColors.background_light : AppColors.surface_light,
             border: Border.all(
               width: 1,
               color: isDark ? AppColors.border_dark : AppColors.border_light,
               style: BorderStyle.solid,
             ),
           ),
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.space_0,
-            AppSpacing.space_4,
-            AppSpacing.space_0,
-            AppSpacing.space_4,
-          ),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.space_4),
           child: ListTile(
             leading: imageUrl.isNotEmpty
                 ? CachedNetworkImage(
@@ -250,9 +218,9 @@ class ArticlesListWidget extends StatelessWidget {
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: AppSpacing.space_4),
+                AppSpacing.sizedBoxH4(),
                 ArticlesBriefWidget(excerpt: excerpt, isDark: isDark),
-                const SizedBox(height: AppSpacing.space_2),
+                AppSpacing.sizedBoxH2(),
                 ArticlesReleaseDateWidget(isoDate: isoDate, isDark: isDark),
               ],
             ),
@@ -361,7 +329,7 @@ Future<List<dynamic>> fetchPosts(
   } else if (response.statusCode == 400) {
     return [];
   } else {
-    throw Exception('Failed to load posts');
+    throw Exception(AppStrings.failed_to_load_posts.translate(context as BuildContext));
   }
 }
 
@@ -372,6 +340,6 @@ Future<List<dynamic>> fetchCategories() async {
   if (response.statusCode == 200) {
     return json.decode(response.body);
   } else {
-    throw Exception('Failed to load categories');
+    throw Exception(AppStrings.failed_to_load_categories.translate(context as BuildContext));
   }
 }
