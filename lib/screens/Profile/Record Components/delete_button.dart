@@ -40,11 +40,7 @@ class DeleteButtonWidget extends StatelessWidget {
                     AppStrings.delete_button_widget_confirm_delete.translate(context),
                 style: AppTypography.recordDetailsDeleteDialogueTitle(context),
               ),
-              content: Text("""
-                  ${AppStrings.delete_button_widget_delete_question_before_filename_part.translate(context)}
-                  $fileName
-                  ${AppStrings.delete_button_widget_delete_question_after_filename_part.translate(context)}
-                """,
+              content: Text("""${AppStrings.delete_button_widget_delete_question_before_filename_part.translate(context)}$fileName${AppStrings.delete_button_widget_delete_question_after_filename_part.translate(context)}""",
                 style: AppTypography.recordDetailsDeleteDialogueContent(
                   context,
                 ),

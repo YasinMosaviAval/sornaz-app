@@ -3,15 +3,17 @@ import 'package:audioplayers/audioplayers.dart';
 
 class AudioPlayerController {
   final AudioPlayer _player = AudioPlayer();
-
-  bool isPlaying = false;
+  
   Duration duration = Duration.zero;
   Duration position = Duration.zero;
   double playbackSpeed = 1.0;
+  bool isPlaying = false;
 
   final StreamController<void> _stateChanged = StreamController.broadcast();
+  final StreamController<void> _completeChanged = StreamController.broadcast(); // جدید: برای complete
 
   Stream<void> get onStateChanged => _stateChanged.stream;
+  Stream<void> get onComplete => _completeChanged.stream; // جدید
 
   AudioPlayerController() {
     _initListeners();
@@ -33,6 +35,10 @@ class AudioPlayerController {
       _stateChanged.add(null);
     });
 
+    _player.onPlayerComplete.listen((_) {
+      _completeChanged.add(null);
+    });
+
     _player.setReleaseMode(ReleaseMode.stop);
   }
 
@@ -46,13 +52,9 @@ class AudioPlayerController {
     await _player.resume();
   }
 
-  Future<void> pause() async {
-    await _player.pause();
-  }
+  Future<void> pause() async => await _player.pause();
 
-  Future<void> resume() async {
-    await _player.resume();
-  }
+  Future<void> resume() async => await _player.resume();
 
   Future<void> stop() async {
     await _player.stop();
@@ -60,9 +62,7 @@ class AudioPlayerController {
     _stateChanged.add(null);
   }
 
-  Future<void> seek(Duration newPosition) async {
-    await _player.seek(newPosition);
-  }
+  Future<void> seek(Duration newPosition) async => await _player.seek(newPosition);
 
   Future<void> setSpeed(double speed) async {
     playbackSpeed = speed;
@@ -72,6 +72,7 @@ class AudioPlayerController {
 
   void dispose() {
     _stateChanged.close();
+    _completeChanged.close();
     _player.dispose();
   }
 }

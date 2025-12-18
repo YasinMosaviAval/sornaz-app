@@ -11,6 +11,7 @@ import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/audio/audio_player_provider.dart';
 import 'package:sornaz/screens/Players/Components/audio_item.dart';
 import 'package:sornaz/audio/folder_navigator_provider.dart';
+import 'package:sornaz/screens/Players/Components/search_bar.dart';
 
 class FolderListView extends StatelessWidget {
   const FolderListView({super.key});
@@ -81,6 +82,7 @@ class FolderView extends StatelessWidget {
       ),
       child: Column(
         children: [
+          const SearchBarWidget(),
           const BreadcrumbWidget(),
           Expanded(
             child: ListView(

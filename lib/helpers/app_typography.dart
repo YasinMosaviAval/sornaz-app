@@ -411,6 +411,10 @@ class AppTypography {
   static TextStyle musicPlayerBreadCrumbSlashes(BuildContext context) => subtitle3(context);
   static TextStyle musicPlayerFolderViewTitle(BuildContext context) => body3(context);
   static TextStyle musicPlayerFolderViewSubtitle(BuildContext context) => subtitle3(context);
+
+  static TextStyle musicPlayerScanningFiles(BuildContext context) => headline3(context);
+  static TextStyle musicPlayerScannedFiles(BuildContext context) => body1(context);
+  static TextStyle musicPlayerCurrentFileAddress(BuildContext context) => subtitle3(context);
   // ================================================================================================================================
   static TextStyle metronomeAppBar(BuildContext context) => headline3(context);
   static TextStyle metronomeBPM(BuildContext context) => body1(context);

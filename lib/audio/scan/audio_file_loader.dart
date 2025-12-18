@@ -29,30 +29,47 @@ class AudioFileLoader {
   static void _scanIsolate(List args) async {
     SendPort sendPort = args[0];
     List<Directory> roots = args[1];
-
     List<AudioFile> files = [];
     int scanned = 0;
     int total = 0;
 
-    for (var dir in roots) {
-      total += dir.listSync(recursive: true).where((f) => f is File && _isAudioFile(f)).length;
-    }
-
-    for (var dir in roots) {
-      final entities = dir.listSync(recursive: true);
-      for (var entity in entities) {
+    // فانکشن helper برای اسکن async recursive
+    Future<void> scanDirectory(Directory dir, Function(File) onFile) async {
+      await for (var entity in dir.list(recursive: false)) {  // فقط لایه فعلی، recursive رو دستی هندل کن
         if (entity is File && _isAudioFile(entity)) {
-          scanned++;
-          files.add(AudioFile(
-            file: entity,
-            fileName: entity.path.split('/').last,
-            folderName: entity.parent.path,
-            duration: Duration.zero,
-          ));
-
-          sendPort.send(ScanStatus(scanned: scanned, total: total, currentPath: entity.path));
+          onFile(entity);
+        } else if (entity is Directory) {
+          await scanDirectory(entity, onFile);  // recursive call async
         }
       }
+    }
+
+    // مرحله ۱: شمارش total async (نرم و بدون بلاک)
+    for (var root in roots) {
+      await scanDirectory(root, (file) {
+        total++;
+        if (total % 50 == 0) {  // هر ۵۰ فایل آپدیت بفرست برای نرم بودن
+          sendPort.send(ScanStatus(scanned: 0, total: total, currentPath: file.path));
+        }
+      });
+    }
+    // آپدیت نهایی total
+    sendPort.send(ScanStatus(scanned: 0, total: total, currentPath: 'شمارش تکمیل شد'));
+
+    // مرحله ۲: اسکن واقعی فایل‌ها async
+    for (var root in roots) {
+      await scanDirectory(root, (file) {
+        scanned++;
+        files.add(AudioFile(
+          file: file,
+          fileName: file.path.split('/').last,
+          folderName: file.parent.path,
+          duration: Duration.zero,
+        ));
+        if (scanned % 20 == 0 || scanned == total) {  // هر ۲۰ فایل آپدیت بفرست
+          sendPort.send(ScanStatus(scanned: scanned, total: total, currentPath: file.path));
+        }
+      });
     }
 
     sendPort.send(files);

@@ -10,9 +10,7 @@ class PlaybackQueueManager {
     if (isShuffle) _shuffle();
   }
 
-  void setCurrentIndex(int index) {
-    _currentIndex = index;
-  }
+  void setCurrentIndex(int index) => _currentIndex = index;
 
   int? next() {
     if (_currentIndex == -1) return null;
@@ -40,10 +38,7 @@ class PlaybackQueueManager {
     return null;
   }
 
-  void toggleShuffle() {
-    isShuffle = !isShuffle;
-    _rebuildOrder();
-  }
+  void toggleShuffle() => isShuffle = !isShuffle;
 
   void toggleRepeat() {
     repeatMode = RepeatMode.values[
@@ -51,18 +46,24 @@ class PlaybackQueueManager {
     ];
   }
 
-  void _rebuildOrder() {
+  void rebuildOrder({required int queueLength}) {
     final current = _currentIndex;
-    _order = List.generate(_order.length, (i) => i);
 
-    if (isShuffle) _shuffle();
+    _order = List.generate(queueLength, (i) => i);
 
-    _currentIndex = current;
+    if (isShuffle) {
+      _order.shuffle();
+      if (current != -1 && _order.contains(current)) {
+        _currentIndex = _order.indexOf(current);
+      } else {
+        _currentIndex = queueLength > 0 ? 0 : -1;
+      }
+    } else {
+      _currentIndex = current.clamp(-1, queueLength - 1);
+    }
   }
 
-  void _shuffle() {
-    _order.shuffle();
-  }
+  void _shuffle() => _order.shuffle();
 }
 
 

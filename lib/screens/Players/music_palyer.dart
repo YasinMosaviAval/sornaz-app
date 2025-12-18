@@ -1,7 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
-import 'package:sornaz/screens/Players/Components/search_bar.dart';
+import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_data.dart';
+import 'package:sornaz/helpers/app_locale_provider.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/audio/audio_player_provider.dart';
 import 'package:sornaz/components/bottom_nav.dart';
@@ -19,9 +23,17 @@ class MusicPlayerPage extends StatefulWidget {
 }
 
 class _MusicPlayerPageState extends State<MusicPlayerPage> {
+  bool _permissionsGranted = false;  // اختیاری، برای کنترل بهتر
+
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _requestPermissionsAndScan();  // تغییر اینجا
+    });
+
+    
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final audio = context.read<AudioPlayerProvider>();
@@ -47,51 +59,136 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
     });
   }
 
+  Future<void> _requestPermissionsAndScan() async {
+    // درخواست مجوز ذخیره‌سازی (برای اندروید ۱۰ و پایین)
+    var storageStatus = await Permission.storage.request();
+
+    // برای اندروید ۱۱+ بهتره از manageExternalStorage استفاده کنی، اما اگر نمی‌خوای All files access بدی:
+    if (storageStatus.isDenied) {
+      // اگر storage قدیمی رد شد، می‌تونی manageExternalStorage رو امتحان کنی (اختیاری)
+      var manageStatus = await Permission.manageExternalStorage.request();
+      if (manageStatus.isDenied || manageStatus.isPermanentlyDenied) {
+        _showPermissionDeniedDialog();
+        return;
+      }
+    }if (storageStatus.isPermanentlyDenied) {
+      _showPermissionDeniedDialog();
+      return;
+    }
+
+    // if(!context.mounted) return;
+    // اگر مجوز داده شد، اسکن رو شروع کن
+    final audio = context.read<AudioPlayerProvider>();
+    final folderNav = context.read<FolderNavigatorProvider>();
+
+    audio.start();  // isScanning = true و غیره
+
+    AudioFileLoader.scanWithIsolate(
+      roots: [
+        Directory('/storage/emulated/0/'),
+        Directory('/storage/9C33-6BBD'), // کارت حافظه اگر باشه
+      ],
+      onProgress: (status) => audio.update(status),
+      onDone: (result) {
+        audio.finish(result);
+        final folderPaths = result.map((f) => f.file.parent.path).toSet().toList();
+        final folderMap = {
+          for (var path in folderPaths)
+            path: result.where((f) => f.file.parent.path == path).toList()
+        };
+        folderNav.setRoots(
+          folderPaths.map((p) => Directory(p)).toList(),
+          folderMap,
+        );
+      },
+    ).catchError((error) {
+      audio.isScanning = false;
+      audio.isLoading = false;
+      audio.notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("خطا در اسکن: $error")),
+      );
+    });
+  }
+
+void _showPermissionDeniedDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text("دسترسی لازم است"),
+        content: const Text(
+          "برای اسکن فایل‌های موسیقی، دسترسی به حافظه دستگاه لازم است. لطفاً در تنظیمات برنامه مجوز را فعال کنید.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("بعداً"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              openAppSettings();  // کاربر رو ببر به تنظیمات برنامه
+              Navigator.pop(context);
+            },
+            child: const Text("رفتن به تنظیمات"),
+          ),
+        ],
+      ),
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const SearchBarWidget(),
-      body: Consumer<AudioPlayerProvider>(
-        builder: (_, audio, _) {
-          if (audio.isScanning) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      AppStrings.music_player_scanning_files.translate(context),
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
+    final bool isEnglish = localeProvider.locale.languageCode == AppStrings.localization_en;
+    return Directionality(
+      textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
+      child: Scaffold(
+        body: Consumer<AudioPlayerProvider>(
+          builder: (_, audio, _) {
+            if (audio.isScanning) {
+              return Container(
+                color: isDark ? AppColors.background_dark : AppColors.background_light,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          AppStrings.music_player_scanning_files.translate(context),
+                          style: AppTypography.musicPlayerScanningFiles(context)
+                        ),
+                        AppSpacing.sizedBoxH32(),
+                        LinearProgressIndicator(value: audio.progress),
+                        AppSpacing.sizedBoxH32(),
+                        Text(
+                          "${audio.scannedFiles} / ${audio.totalFiles}   ${AppStrings.music_player_scanned_files.translate(context)}",
+                          style: AppTypography.musicPlayerScannedFiles(context)
+                        ),
+                        AppSpacing.sizedBoxH32(),
+                        Text(
+                          audio.currentPath, 
+                          maxLines: 2, 
+                          overflow: TextOverflow.ellipsis, 
+                          textAlign: TextAlign.center, 
+                          style: AppTypography.musicPlayerCurrentFileAddress(context)
+                        ),
+                      ],
                     ),
-                    AppSpacing.sizedBoxH32(),
-                    LinearProgressIndicator(value: audio.progress),
-                    AppSpacing.sizedBoxH32(),
-                    Text(
-                      "${audio.scannedFiles} / ${audio.totalFiles} ${AppStrings.music_player_scanned_files.translate(context)}",
-                      style: const TextStyle(fontSize: 16)
-                    ),
-                    AppSpacing.sizedBoxH32(),
-                    Text(
-                      audio.currentPath, 
-                      maxLines: 2, 
-                      overflow: TextOverflow.ellipsis, 
-                      textAlign: TextAlign.center, 
-                      style: const TextStyle(
-                        fontSize: 12, 
-                        color: Colors.grey
-                      )
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            );
-          }
-          // if (audio.isLoading) return const Center(child: CircularProgressIndicator());
-          return Expanded(child: MusicPlayerTabs());
-        },
+              );
+            }
+            // if (audio.isLoading) return const Center(child: CircularProgressIndicator());
+            return Expanded(child: MusicPlayerTabs());
+          },
+        ),
+        bottomNavigationBar: const BottomNavBarWidget(),
       ),
-      bottomNavigationBar: const BottomNavBarWidget(),
     );
   }
 }

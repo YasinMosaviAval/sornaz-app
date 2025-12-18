@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sornaz/audio/playback/playback_queue_manager.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
@@ -83,19 +84,23 @@ class AudioControls extends StatelessWidget {
               IconButton(
                 alignment: Alignment.center,
                 icon: Icon(
-                  provider.repeatMode == 0
+                  provider.repeatMode == RepeatMode.off
                       ? Icons.repeat
-                      : provider.repeatMode == 1
+                      : provider.repeatMode == RepeatMode.one
                           ? Icons.repeat_one
                           : Icons.repeat,
                 ),
-                color: provider.repeatMode == 0
+                color: provider.repeatMode == RepeatMode.off
                     ? (isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light)
                     : isDark
                         ? AppColors.primary_dark
                         : AppColors.primary_light,
                 onPressed: provider.toggleRepeatMode,
                 iconSize: AppSpacing.space_24,
+              ),
+              Text(
+                "${provider.playbackSpeed}${AppStrings.audio_controls_speed_sign}",
+                style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light),
               ),
               Theme(
                 data: Theme.of(context).copyWith(
@@ -106,34 +111,22 @@ class AudioControls extends StatelessWidget {
                     ),
                   ),
                 ),
-                
                 child: PopupMenuButton<double>(
                   initialValue: provider.playbackSpeed,
                   onSelected: provider.setSpeed,
                   itemBuilder: (_) => provider.speedOptions.map((speed) {
                     return PopupMenuItem<double>(
                       value: speed,
-                      child: Text(
-                        speed == 1 ? AppStrings.audio_controls_1x_speed.translate(context) : "${speed}x",
-                      ),
+                      child: Text(speed == 1 ? AppStrings.audio_controls_1x_speed.translate(context) : "${speed}x"),
                     );
                   }).toList(),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.speed,
-                        color: isDark? AppColors.text_primary_dark : AppColors.text_primary_light,
-                        size: AppSpacing.space_24,
-                      ),
-                      const SizedBox(width: AppSpacing.space_4),
-                      Text(
-                        "${provider.playbackSpeed}${AppStrings.audio_controls_speed_sign}",
-                        style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light),
-                      ),
-                    ],
+                  child: Icon(
+                    Icons.speed,
+                    size: AppSpacing.space_24,
+                    color: isDark ? const Color.fromARGB(255, 26, 3, 3) : AppColors.text_primary_light,
                   ),
                 ),
-              )
+              ),
             ],
           ),
         ),

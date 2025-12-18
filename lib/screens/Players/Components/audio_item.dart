@@ -64,6 +64,7 @@ class AudioItem extends StatelessWidget {
                 textStyle: AppTypography.musicPlayerPlayingAudioFile(context)
               )
               : Text(
+                  // audio.fileName,
                   audio.fileName.substring(0, audio.fileName.lastIndexOf('.')),
                   style: AppTypography.musicPlayerNotPlayingAudioFile(context),
                   overflow: TextOverflow.ellipsis,
@@ -73,23 +74,26 @@ class AudioItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               AppSpacing.sizedBoxH4(),
-              Row(
-                children: [
-                  Text(
-                    formatDuration(audio.duration),
-                    style: AppTypography.musicPlayerAudioItemDurationTime(context),
-                  ),
-                  AppSpacing.sizedBoxH16(),
-                  Expanded(
-                    child: Text(
-                      audio.folderName.substring(1),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      textDirection: TextDirection.ltr,
-                      style: AppTypography.musicPlayerAudioItemAddress(context),
+              Directionality(
+                textDirection: TextDirection.ltr,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        audio.folderName.substring(1),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        textDirection: TextDirection.ltr,
+                        style: AppTypography.musicPlayerAudioItemAddress(context),
+                      ),
                     ),
-                  ),
-                ],
+                    AppSpacing.sizedBoxW16(),
+                    Text(
+                      formatDuration(audio.duration),
+                      style: AppTypography.musicPlayerAudioItemDurationTime(context),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

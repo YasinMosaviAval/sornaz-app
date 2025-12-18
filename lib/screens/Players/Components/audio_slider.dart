@@ -15,10 +15,13 @@ class AudioSlider extends StatelessWidget {
     final isDark = appData.isDark;
     final pr = context.watch<AudioPlayerProvider>();
 
+    final double currentPosition = pr.position.inSeconds.toDouble();
+    final double totalDuration = pr.duration.inSeconds.toDouble() == 0 ? 1.0 : pr.duration.inSeconds.toDouble();
+
     return Row(
       children: [
         TextButton(
-          onPressed: () => {},
+          onPressed: () {},
           style: TextButton.styleFrom(
             padding: EdgeInsets.zero,
             maximumSize: const Size(56, 20),
@@ -36,11 +39,11 @@ class AudioSlider extends StatelessWidget {
             child: Slider(
               activeColor: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
               inactiveColor: isDark ? AppColors.border_dark : AppColors.border_light,
-              value: pr.position.inSeconds.toDouble(),
-              max: pr.duration.inSeconds.toDouble().clamp(1, double.infinity),
-              onChangeStart: (_) => pr.startSliding(),
-              onChanged: (v) => pr.position = Duration(seconds: v.toInt()),
-              // onChangeEnd: (v) => pr.seekTo(v),
+              value: currentPosition.clamp(0.0, totalDuration),
+              max: totalDuration,
+              onChangeStart: (_) => [pr.startSliding()],
+              onChanged: (v) => {},
+              onChangeEnd: (v) => pr.seek(Duration(seconds: v.toInt())),
             ),
           ),
         ),

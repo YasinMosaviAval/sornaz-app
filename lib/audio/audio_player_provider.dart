@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:metadata_god/metadata_god.dart';
 import 'package:sornaz/audio/library/audio_library_manager.dart';
@@ -12,7 +11,6 @@ import 'package:sornaz/audio/scan/scan_progress.dart';
 import 'package:sornaz/classes/playback_undo.dart';
 import 'package:sornaz/main.dart';
 import 'package:sornaz/audio/controller/audio_player_controller.dart';
-
 
 class AudioPlayerProvider extends ChangeNotifier {
   
@@ -27,14 +25,15 @@ class AudioPlayerProvider extends ChangeNotifier {
   bool isLoading = false;
   bool isScanning = false;
   double progress = 0.0;
-
-  final AudioPlayer _player = AudioPlayer();
-  bool isPlaying = false;
   bool isUndoMode = false;
+  bool folderMode = false;
+  bool showRemaining = false;
+
+  bool get isPlaying => _controller.isPlaying;
+  Duration get duration => _controller.duration;
+  Duration get position => _controller.position;
 
   int currentIndex = -1;
-  Duration duration = Duration.zero;
-  Duration position = Duration.zero;
 
   List<Duration> history = [];
   Timer? undoTimer;
@@ -44,15 +43,13 @@ class AudioPlayerProvider extends ChangeNotifier {
   int scannedFiles = 0;
   int totalFiles = 0;
   String currentFileName = '';
-  
-  // ==========================
-  // Repeat Mode (0=off, 1=one, 2=all)
-  // ==========================
-  int repeatMode = 0;
 
-// ==========================
-  // Metadata
-  // ==========================
+  bool get isShuffle => _queue.isShuffle;
+  RepeatMode get repeatMode => _queue.repeatMode;
+
+  double playbackSpeed = 1.0;
+  final List<double> speedOptions = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 3.0, 4.0];
+  
   AudioMetadata? _currentMetadata;
   AudioMetadata? get currentMetadata => _currentMetadata;
 
@@ -77,21 +74,18 @@ class AudioPlayerProvider extends ChangeNotifier {
       notifyListeners();
 
       currentIndex = index;
-      await _player.stop();
-      await _player.setSource(DeviceFileSource(filteredFiles[index].file.path));
-      await _player.resume();
+      
+      // <<< این دو خط رو اضافه کن >>>
+      _queue.setQueue(filteredFiles.length);
+      _queue.setCurrentIndex(index);
 
+      await _controller.playFile(filteredFiles[index].file.path);
       loadCurrentMetadata();
-
     } finally {
       isLoading = false;
       notifyListeners();
     }
   }
-
-  // ==========================
-  // Constructor
-  // ==========================
 
   AudioPlayerProvider({required this.libraryManager}) {
     _controller = AudioPlayerController();
@@ -104,32 +98,19 @@ class AudioPlayerProvider extends ChangeNotifier {
       notifyListeners();
     });
 
-    _controller.onStateChanged.listen((_) {
+    _controller.onComplete.listen((_) {
       final nextIndex = _queue.next();
       if (nextIndex != null) play(nextIndex);
     });
 
     _controller.onStateChanged.listen((_) {
-      isPlaying = _controller.isPlaying;
-      duration = _controller.duration;
-      position = _controller.position;
       notifyListeners();
     });
-
-    _initListeners();
   }
 
-  Future<void> pause() async {
-    await _controller.pause();
-  }
-
-  Future<void> resume() async {
-    await _controller.resume();
-  }
-
-  Future<void> seek(Duration d) async {
-    await _controller.seek(d);
-  }
+  Future<void> pause() async => await _controller.pause();
+  Future<void> resume() async => await _controller.resume();
+  Future<void> seek(Duration duration) async => await _controller.seek(duration);
 
   Future<void> setSpeed(double value) async {
     playbackSpeed = value;
@@ -138,7 +119,7 @@ class AudioPlayerProvider extends ChangeNotifier {
   }
 
   void onTrackComplete() {
-    if (repeatMode == 1) {
+    if (repeatMode == RepeatMode.one) {
       seek(Duration.zero);
       resume();
     } else {
@@ -148,7 +129,6 @@ class AudioPlayerProvider extends ChangeNotifier {
 
   Future<void> previousOrUndo() async {
     final undo = _history.pop();
-
     if (undo != null) {
       currentIndex = undo.index;
       await _controller.playFile(
@@ -173,6 +153,7 @@ class AudioPlayerProvider extends ChangeNotifier {
 
   void toggleShuffle() {
     _queue.toggleShuffle();
+    _queue.rebuildOrder(queueLength: filteredFiles.length);
     notifyListeners();
   }
 
@@ -181,63 +162,16 @@ class AudioPlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _initListeners() {
-    _player.onPlayerStateChanged.listen((state) {
-      isPlaying = state == PlayerState.playing;
-      notifyListeners();
-    });
-
-    _player.onDurationChanged.listen((d) {
-      duration = d;
-      notifyListeners();
-    });
-
-    _player.onPlayerComplete.listen((_) {
-      if (repeatMode == 1) {
-        _player.seek(Duration.zero);
-        _player.resume();
-      } else {
-        playNext();
-      }
-    });
-
-    _player.setReleaseMode(ReleaseMode.stop);
-  }
-
-  // ==========================
-  // Shuffle
-  // ==========================
-  bool isShuffle = false;
-
-  // ==========================
-  // Folder Mode
-  // ==========================
-  bool folderMode = false;
-
   void toggleFolderMode() {
     folderMode = !folderMode;
     notifyListeners();
   }
-
-  // ==========================
-  // Playback speed
-  // ==========================
-  double playbackSpeed = 1.0;
-  final List<double> speedOptions = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 3.0, 4.0];
-
-  // ==========================
-  // Time Mode
-  // ==========================
-  bool showRemaining = false;
 
   void toggleTimeMode() {
     showRemaining = !showRemaining;
     notifyListeners();
   }
 
-  // ==========================
-  // File Loading
-  // ==========================
   void start() {
     isScanning = true;
     isLoading = true;
@@ -264,6 +198,7 @@ class AudioPlayerProvider extends ChangeNotifier {
     allFiles = files;
     filteredFiles = files;
     _buildFolderTree();
+    _queue.setQueue(files.length);
     isLoading = false;
     isScanning = false;
     notifyListeners();
@@ -273,6 +208,7 @@ class AudioPlayerProvider extends ChangeNotifier {
     allFiles = files;
     filteredFiles = files;
     _buildFolderTree();
+    _queue.setQueue(files.length);
     isLoading = false;
     isScanning = false;
     notifyListeners();
@@ -287,9 +223,6 @@ class AudioPlayerProvider extends ChangeNotifier {
     }
   }
 
-  // ==========================
-  // Audio Playback
-  // ==========================
   AudioFile? get currentAudio {
     if (currentIndex < 0 || currentIndex >= filteredFiles.length) return null;
     return filteredFiles[currentIndex];
@@ -297,18 +230,23 @@ class AudioPlayerProvider extends ChangeNotifier {
 
   Future<void> playFromFolder(List<AudioFile> files, int index) async {
     filteredFiles = files;
+    
+    _queue.setQueue(files.length);
+    if (index < files.length) {
+      _queue.setCurrentIndex(index);
+    }
     await play(index);
   }
 
   Future<void> seekForward10() async {
     final newPos = position + const Duration(seconds: 10);
-    await _player.seek(newPos < duration ? newPos : duration);
+    await _controller.seek(newPos < duration ? newPos : duration);
     notifyListeners();
   }
 
   Future<void> seekBackward10() async {
     final newPos = position - const Duration(seconds: 10);
-    await _player.seek(newPos > Duration.zero ? newPos : Duration.zero);
+    await _controller.seek(newPos > Duration.zero ? newPos : Duration.zero);
     notifyListeners();
   }
 
@@ -338,42 +276,42 @@ class AudioPlayerProvider extends ChangeNotifier {
   }
 
   void filter(String query) {
-    filteredFiles = allFiles
-        .where((audio) => audio.fileName.toLowerCase().contains(query.toLowerCase()))
-        .toList();
+    filteredFiles = allFiles.where((audio) => audio.fileName.toLowerCase().contains(query.toLowerCase())).toList();
+    
+    _queue.rebuildOrder(queueLength: filteredFiles.length);
+    // _queue.setQueue(filteredFiles.length);
+    if (currentIndex >= filteredFiles.length) {
+      currentIndex = filteredFiles.isEmpty ? -1 : 0;
+      _queue.setCurrentIndex(currentIndex);
+    }
+    
     notifyListeners();
   }
 
-  // ==========================
-  // File operations
-  // ==========================
-  // AppLocalizations appLocalizations = AppLocalizations(Locale.fromSubtags());
-
-  Future<bool> renameFile(AudioFile file, String newName) async {
+  Future<bool> renameFile(AudioFile file, String newName, String message) async {
     final dir = file.file.parent.path;
     final newPath = "$dir/$newName";
     final newFile = await file.file.rename(newPath);
     file.file = newFile;
     notifyListeners();
-    _showSnackBar("نام فایل تغییر کرد");
+    _showSnackBar(message);
     return true;
   }
 
-  bool removeFromList(AudioFile file) {
+  bool removeFromList(AudioFile file, String message) {
     allFiles.remove(file);
     filteredFiles.remove(file);
     notifyListeners();
-    // _showSnackBar(appLocalizations.translate(AppStrings.about_us_key_features_title));
-    _showSnackBar("از لیست حذف شد");
+    _showSnackBar(message);
     return true;
   }
 
-  Future<bool> deleteFromDevice(AudioFile file) async {
+  Future<bool> deleteFromDevice(AudioFile file, String message) async {
     await file.file.delete();
     allFiles.remove(file);
     filteredFiles.remove(file);
     notifyListeners();
-    _showSnackBar("فایل از حافظه حذف شد");
+    _showSnackBar(message);
     return true;
   }
 
@@ -384,10 +322,6 @@ class AudioPlayerProvider extends ChangeNotifier {
       SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
     );
   }
-
-  // ==========================
-  // Metadata
-  // ==========================
 
   Future<AudioMetadata> extractMetadata(String path) async {
     final meta = await MetadataGod.readMetadata(file: path);
@@ -407,6 +341,7 @@ class AudioPlayerProvider extends ChangeNotifier {
     _controller.dispose();
     super.dispose();
   }
+
 }
 
 
