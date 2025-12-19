@@ -22,9 +22,11 @@ class AudioPlayerProvider extends ChangeNotifier {
   List<AudioFile> filteredFiles = [];
   Map<String, List<AudioFile>> folderTree = {};
   bool isLoading = false;
+  bool isHiveLoading = true;
   bool isUndoMode = false;
   bool folderMode = false;
   bool showRemaining = false;
+  // bool isLoadingFilesFromCache = true;
 
   bool get isPlaying => _controller.isPlaying;
   Duration get duration => _controller.duration;
@@ -82,9 +84,12 @@ class AudioPlayerProvider extends ChangeNotifier {
     _controller = AudioPlayerController();
     _history = PlaybackHistoryManager();
     _queue = PlaybackQueueManager();
+    
+    isHiveLoading = true;
 
     libraryManager.addListener(() {
       filteredFiles = libraryManager.allFiles;
+      isHiveLoading = false;
       _buildFolderTree();
       notifyListeners();
     });
@@ -97,6 +102,12 @@ class AudioPlayerProvider extends ChangeNotifier {
     _controller.onStateChanged.listen((_) {
       notifyListeners();
     });
+
+  }
+
+  void setLoading(bool value) {
+    isLoading = value;
+    notifyListeners();
   }
 
   Future<void> pause() async => await _controller.pause();

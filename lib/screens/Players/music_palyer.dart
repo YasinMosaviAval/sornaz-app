@@ -37,7 +37,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
     if (storageStatus.isDenied) {
       var manageStatus = await Permission.manageExternalStorage.request();
       if (manageStatus.isDenied || manageStatus.isPermanentlyDenied) {
-        _showPermissionDeniedDialog();
+        if (mounted) _showPermissionDeniedDialog();
         return;
       }
     }
@@ -58,24 +58,19 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
       Directory('/storage/9C33-6BBD/Music/'),
     ]);
 
+    if (!mounted) return;
+
     await libraryManager.loadOrScan();
 
     if (libraryManager.allFiles.isNotEmpty && mounted) {
-      final folderPaths = libraryManager.allFiles
-          .map((f) => f.file.parent.path)
-          .toSet()
-          .toList();
+      final folderPaths = libraryManager.allFiles.map((f) => f.file.parent.path).toSet().toList();
       final folderMap = {
         for (var path in folderPaths)
-          path: libraryManager.allFiles
-              .where((f) => f.file.parent.path == path)
-              .toList()
+          path: libraryManager.allFiles.where((f) => f.file.parent.path == path).toList()
       };
-      folderNav.setRoots(
-        folderPaths.map((p) => Directory(p)).toList(),
-        folderMap,
-      );
+      folderNav.setRoots(folderPaths.map((p) => Directory(p)).toList(), folderMap);
     }
+    await libraryManager.loadOrScan();
   }
 
   void _showPermissionDeniedDialog() {
@@ -149,8 +144,11 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                   ),
                 ),
               );
+            } else if (library.allFiles.isEmpty) {
+              return Center(child: CircularProgressIndicator());
+            } else {
+              return Expanded(child: MusicPlayerTabs());
             }
-            return Expanded(child: MusicPlayerTabs());
           },
         ),
         bottomNavigationBar: const BottomNavBarWidget(),

@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sornaz/helpers/app_logger.dart';
 import 'package:sornaz/screens/Players/Components/file_actions.dart';
 import 'package:sornaz/screens/Players/Components/audio_item.dart';
 import 'package:sornaz/screens/Players/Components/bottom_player.dart';
@@ -19,35 +20,54 @@ class FlatListView extends StatelessWidget {
     final isDark = appData.isDark;
     final provider = context.watch<AudioPlayerProvider>();
 
-    return Column(
-      children: [
-        const SearchBarWidget(),
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.background_dark : AppColors.background_light,
+    loggingSornaz("  ===   provider.filteredFiles.length: ${provider.filteredFiles.length}");
+    return Consumer<AudioPlayerProvider>(
+      builder: (context, provider, _) {
+        if (provider.isHiveLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (provider.filteredFiles.isEmpty) {
+          return Center(
+            child: Text(
+              "فایل صوتی یافت نشد",
+              style: TextStyle(fontSize: 18, color: Colors.grey),
             ),
-            child: ListView.builder(
-              padding: EdgeInsets.all(0),
-              itemCount: provider.filteredFiles.length,
-              itemBuilder: (context, index) {
-                final audio = provider.filteredFiles[index];
-                return GestureDetector(
-                  onTap: () => provider.play(index),
-                  key: ValueKey(audio.file.path),
-                  onLongPress: () => showFileOptions(context, audio),
-                  child: AudioItem(
-                    audio: provider.filteredFiles[index],
-                    isPlaying: provider.currentIndex == index,
-                    index: index,
-                  ),
-                );
-              },
+          );
+        }
+
+        return Column(
+          children: [
+            const SearchBarWidget(),
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.background_dark : AppColors.background_light,
+                ),
+                child: ListView.builder(
+                  padding: EdgeInsets.all(0),
+                  itemCount: provider.filteredFiles.length,
+                  itemBuilder: (context, index) {
+                    final audio = provider.filteredFiles[index];
+                    return GestureDetector(
+                      onTap: () => provider.play(index),
+                      key: ValueKey(audio.file.path),
+                      onLongPress: () => showFileOptions(context, audio),
+                      child: AudioItem(
+                        audio: provider.filteredFiles[index],
+                        isPlaying: provider.currentIndex == index,
+                        index: index,
+                      ),
+                    );
+                  },
+                ),
+              ),
             ),
-          ),
-        ),
-        BottomPlayerWidget(),
-      ],
+            BottomPlayerWidget(),
+          ],
+        );
+
+      }
     );
   }
 }

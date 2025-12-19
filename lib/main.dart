@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:sornaz/audio/cache/audio_cache_factory.dart';
 import 'package:sornaz/audio/library/audio_library_manager.dart';
 import 'package:sornaz/classes/my_app.dart';
 import 'package:sornaz/helpers/app_data.dart';
@@ -14,8 +15,16 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Hive.initFlutter();
+  
+  final cache = await AudioCacheFactory.getCache();
+  final cachedFiles = await cache.loadCachedFiles();
 
   final libraryManager = AudioLibraryManager();
+  if (cachedFiles.isNotEmpty) {
+    libraryManager.allFiles = cachedFiles; // مستقیم پر کن
+    // اگر بخوای notifyListeners صدا بزنی (اختیاری)
+    // libraryManager.notifyListeners();
+  }
 
   runApp(
     MultiProvider(
