@@ -39,7 +39,7 @@ class _MetronomePageState extends State<MetronomePage> {
       volume: volume.toInt(),
       enableTickCallback: true,
       timeSignature: timeSignature,
-      sampleRate: 44100,
+      sampleRate: 1536,
     );
     setState(() {
       isInitialized = metronome.isInitialized;
@@ -164,17 +164,14 @@ class _MetronomePageState extends State<MetronomePage> {
         backgroundColor: isDark
             ? AppColors.surface_dark
             : AppColors.surface_light,
-        // foregroundColor: isDark
-        //     ? AppColors.text_primary_dark
-        //     : AppColors.text_primary_light, // رنگ متن
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.space_24,
           vertical: AppSpacing.space_12,
-        ), // پدینگ
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(
             AppSpacing.space_4,
-          ), // گوشه‌های گرد
+          ),
         ),
       ),
       child: Text(
@@ -194,17 +191,14 @@ class _MetronomePageState extends State<MetronomePage> {
         backgroundColor: isDark
             ? AppColors.surface_dark
             : AppColors.surface_light,
-        // foregroundColor: isDark
-        //     ? AppColors.text_primary_dark
-        //     : AppColors.text_primary_light, // رنگ متن
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.space_24,
           vertical: AppSpacing.space_12,
-        ), // پدینگ
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(
             AppSpacing.space_4,
-          ), // گوشه‌های گرد
+          ),
         ),
       ),
       child: Text(
@@ -222,17 +216,14 @@ class _MetronomePageState extends State<MetronomePage> {
         backgroundColor: isDark
             ? AppColors.surface_dark
             : AppColors.surface_light,
-        // foregroundColor: isDark
-        //     ? AppColors.text_primary_dark
-        //     : AppColors.text_primary_light, // رنگ متن
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.space_24,
           vertical: AppSpacing.space_12,
-        ), // پدینگ
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(
             AppSpacing.space_4,
-          ), // گوشه‌های گرد
+          ),
         ),
       ),
       onPressed: isInitialized ? stopMetronome : null,

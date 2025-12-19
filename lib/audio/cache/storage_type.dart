@@ -1,0 +1,4 @@
+enum StorageType {
+  hive,
+  isar,
+}

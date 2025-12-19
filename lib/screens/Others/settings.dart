@@ -162,7 +162,6 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
             ),
-
             Slider(
               activeColor: isDark
                   ? AppColors.text_primary_dark
@@ -177,7 +176,6 @@ class SettingsPage extends StatelessWidget {
               divisions: 4,
               onChanged: appData.updateTextSize,
             ),
-
             ListTile(
               title: Text(
                 AppStrings.select_font_title.translate(context),
@@ -253,6 +251,27 @@ class SettingsPage extends StatelessWidget {
                     : AppColors.text_primary_light,
               ),
             ),
+
+// ListTile(
+//   title: Text("روش ذخیره‌سازی کش فایل‌ها"),
+//   subtitle: Text(provider.storageType == StorageType.hive ? "Hive (فعلی)" : "Isar (فعلی)"),
+//   onTap: () async {
+//     final newType = provider.storageType == StorageType.hive 
+//         ? StorageType.isar 
+//         : StorageType.hive;
+
+//     await provider.setStorageType(newType);
+
+//     // کش قبلی رو پاک کن و دوباره اسکن کن
+//     await libraryManager.clearCache();
+//     await libraryManager.loadOrScan();
+
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       SnackBar(content: Text("روش ذخیره‌سازی تغییر کرد. کش پاک شد و دوباره لود می‌شه.")),
+//     );
+//   },
+// ),
+
           ],
         ),
       ),

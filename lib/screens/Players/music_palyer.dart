@@ -2,18 +2,17 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:sornaz/audio/library/audio_library_manager.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
-import 'package:sornaz/audio/audio_player_provider.dart';
 import 'package:sornaz/components/bottom_nav.dart';
 import 'package:sornaz/audio/folder_navigator_provider.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/screens/Players/music_player_tabs.dart';
-import 'package:sornaz/audio/scan/audio_file_loader.dart';
 
 class MusicPlayerPage extends StatefulWidget {
   const MusicPlayerPage({super.key});
@@ -23,36 +22,12 @@ class MusicPlayerPage extends StatefulWidget {
 }
 
 class _MusicPlayerPageState extends State<MusicPlayerPage> {
-
   @override
   void initState() {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _requestPermissionsAndScan();
-    });
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final audio = context.read<AudioPlayerProvider>();
-      final folderNav = context.read<FolderNavigatorProvider>();
-
-      audio.start();
-
-      AudioFileLoader.scanWithIsolate(
-        roots: [
-          Directory('/storage/emulated/0/'),
-          Directory('/storage/9C33-6BBD/Music/')
-        ],
-        onProgress: (status) => audio.update(status),
-        onDone: (result) {
-          audio.finish(result);
-
-          final folderPaths = result.map((f) => f.file.parent.path).toSet().toList();
-          final folderMap = {for (var path in folderPaths) path: result.where((f) => f.file.parent.path == path).toList()};
-
-          folderNav.setRoots(folderPaths.map((p) => Directory(p)).toList(), folderMap);
-        },
-      );
     });
   }
 
@@ -65,47 +40,46 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
         _showPermissionDeniedDialog();
         return;
       }
-    }if (storageStatus.isPermanentlyDenied) {
-      _showPermissionDeniedDialog();
+    }
+    
+    if (storageStatus.isPermanentlyDenied) {
+      if (mounted) _showPermissionDeniedDialog();
       return;
     }
 
     if(!mounted) return;
-    final audio = context.read<AudioPlayerProvider>();
+    
+    final libraryManager = context.read<AudioLibraryManager>();
     final folderNav = context.read<FolderNavigatorProvider>();
 
-    audio.start();
+    await libraryManager.setRoots([
+      Directory('/storage/emulated/0/'),
+      // Directory('/storage/emulated/0/Music/Telegram/'),
+      Directory('/storage/9C33-6BBD/Music/'),
+    ]);
 
-    AudioFileLoader.scanWithIsolate(
-      roots: [
-        Directory('/storage/emulated/0/'),
-        Directory('/storage/9C33-6BBD'),
-      ],
-      onProgress: (status) => audio.update(status),
-      onDone: (result) {
-        audio.finish(result);
-        
-        final folderPaths = result.map((f) => f.file.parent.path).toSet().toList();
-        final folderMap = {
-          for (var path in folderPaths)
-            path: result.where((f) => f.file.parent.path == path).toList()
-        };
-        folderNav.setRoots(
-          folderPaths.map((p) => Directory(p)).toList(),
-          folderMap,
-        );
-      },
-    ).catchError((error) {
-      if (!mounted) return;
-      audio.isScanning = false;
-      audio.isLoading = false;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("خطا در اسکن: $error")),
+    await libraryManager.loadOrScan();
+
+    if (libraryManager.allFiles.isNotEmpty && mounted) {
+      final folderPaths = libraryManager.allFiles
+          .map((f) => f.file.parent.path)
+          .toSet()
+          .toList();
+      final folderMap = {
+        for (var path in folderPaths)
+          path: libraryManager.allFiles
+              .where((f) => f.file.parent.path == path)
+              .toList()
+      };
+      folderNav.setRoots(
+        folderPaths.map((p) => Directory(p)).toList(),
+        folderMap,
       );
-    });
+    }
   }
 
-void _showPermissionDeniedDialog() {
+  void _showPermissionDeniedDialog() {
+    if (!mounted) return;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -121,7 +95,7 @@ void _showPermissionDeniedDialog() {
           ),
           ElevatedButton(
             onPressed: () {
-              openAppSettings();  // کاربر رو ببر به تنظیمات برنامه
+              openAppSettings();
               Navigator.pop(context);
             },
             child: const Text("رفتن به تنظیمات"),
@@ -130,7 +104,6 @@ void _showPermissionDeniedDialog() {
       ),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -141,9 +114,9 @@ void _showPermissionDeniedDialog() {
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: Scaffold(
-        body: Consumer<AudioPlayerProvider>(
-          builder: (_, audio, _) {
-            if (audio.isScanning) {
+        body: Consumer<AudioLibraryManager>(
+          builder: (_, library, _) {
+            if (library.isScanning) {
               return Container(
                 color: isDark ? AppColors.background_dark : AppColors.background_light,
                 child: Center(
@@ -157,15 +130,15 @@ void _showPermissionDeniedDialog() {
                           style: AppTypography.musicPlayerScanningFiles(context)
                         ),
                         AppSpacing.sizedBoxH32(),
-                        LinearProgressIndicator(value: audio.progress),
+                        LinearProgressIndicator(value: library.progress),
                         AppSpacing.sizedBoxH32(),
                         Text(
-                          "${audio.scannedFiles} / ${audio.totalFiles}   ${AppStrings.music_player_scanned_files.translate(context)}",
+                          "${library.scannedFiles} / ${library.totalFiles}   ${AppStrings.music_player_scanned_files.translate(context)}",
                           style: AppTypography.musicPlayerScannedFiles(context)
                         ),
                         AppSpacing.sizedBoxH32(),
                         Text(
-                          audio.currentPath, 
+                          library.currentPath, 
                           maxLines: 2, 
                           overflow: TextOverflow.ellipsis, 
                           textAlign: TextAlign.center, 
@@ -177,7 +150,6 @@ void _showPermissionDeniedDialog() {
                 ),
               );
             }
-            // if (audio.isLoading) return const Center(child: CircularProgressIndicator());
             return Expanded(child: MusicPlayerTabs());
           },
         ),

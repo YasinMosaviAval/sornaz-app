@@ -7,7 +7,6 @@ import 'package:sornaz/audio/metadata/metadata_service.dart';
 import 'package:sornaz/audio/playback/playback_history.dart';
 import 'package:sornaz/audio/playback/playback_queue_manager.dart';
 import 'package:sornaz/audio/scan/audio_file.dart';
-import 'package:sornaz/audio/scan/scan_progress.dart';
 import 'package:sornaz/classes/playback_undo.dart';
 import 'package:sornaz/main.dart';
 import 'package:sornaz/audio/controller/audio_player_controller.dart';
@@ -23,8 +22,6 @@ class AudioPlayerProvider extends ChangeNotifier {
   List<AudioFile> filteredFiles = [];
   Map<String, List<AudioFile>> folderTree = {};
   bool isLoading = false;
-  bool isScanning = false;
-  double progress = 0.0;
   bool isUndoMode = false;
   bool folderMode = false;
   bool showRemaining = false;
@@ -38,11 +35,6 @@ class AudioPlayerProvider extends ChangeNotifier {
   List<Duration> history = [];
   Timer? undoTimer;
   final List<PlaybackUndo> _undoStack = [];
-
-  String currentPath = '';
-  int scannedFiles = 0;
-  int totalFiles = 0;
-  String currentFileName = '';
 
   bool get isShuffle => _queue.isShuffle;
   RepeatMode get repeatMode => _queue.repeatMode;
@@ -75,7 +67,6 @@ class AudioPlayerProvider extends ChangeNotifier {
 
       currentIndex = index;
       
-      // <<< این دو خط رو اضافه کن >>>
       _queue.setQueue(filteredFiles.length);
       _queue.setCurrentIndex(index);
 
@@ -172,45 +163,12 @@ class AudioPlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void start() {
-    isScanning = true;
-    isLoading = true;
-    progress = 0.0;
-    scannedFiles = 0;
-    totalFiles = 0;
-    currentPath = '';
-    currentFileName = '';
-    allFiles = [];
-    filteredFiles = [];
-    notifyListeners();
-  }
-
-  void update(ScanStatus status) {
-    scannedFiles = status.scanned;
-    totalFiles = status.total;
-    currentPath = status.currentPath;
-    currentFileName = status.currentPath.split('/').last;
-    progress = totalFiles == 0 ? 0 : scannedFiles / totalFiles;
-    notifyListeners();
-  }
-
-  void finish(List<AudioFile> files) {
-    allFiles = files;
-    filteredFiles = files;
-    _buildFolderTree();
-    _queue.setQueue(files.length);
-    isLoading = false;
-    isScanning = false;
-    notifyListeners();
-  }
-
   void setFileList(List<AudioFile> files) {
     allFiles = files;
     filteredFiles = files;
     _buildFolderTree();
     _queue.setQueue(files.length);
     isLoading = false;
-    isScanning = false;
     notifyListeners();
   }
 
@@ -279,7 +237,6 @@ class AudioPlayerProvider extends ChangeNotifier {
     filteredFiles = allFiles.where((audio) => audio.fileName.toLowerCase().contains(query.toLowerCase())).toList();
     
     _queue.rebuildOrder(queueLength: filteredFiles.length);
-    // _queue.setQueue(filteredFiles.length);
     if (currentIndex >= filteredFiles.length) {
       currentIndex = filteredFiles.isEmpty ? -1 : 0;
       _queue.setCurrentIndex(currentIndex);
