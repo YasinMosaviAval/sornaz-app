@@ -1,5 +1,3 @@
-// ignore_for_file: empty_catches
-
 import 'dart:io';
 import 'dart:isolate';
 import 'package:sornaz/helpers/app_strings.dart';
@@ -55,7 +53,9 @@ class AudioFileLoader {
             onFile(entity);
           }
         }
-      } catch (e) {}
+      } catch (e) {
+        // Catch Error
+      }
     }
 
     sendPort.send(ScanStatus(scanned: 0, total: 0, currentPath: 'در حال شمارش...'));

@@ -26,7 +26,6 @@ class AudioPlayerProvider extends ChangeNotifier {
   bool isUndoMode = false;
   bool folderMode = false;
   bool showRemaining = false;
-  // bool isLoadingFilesFromCache = true;
 
   bool get isPlaying => _controller.isPlaying;
   Duration get duration => _controller.duration;
@@ -58,7 +57,6 @@ class AudioPlayerProvider extends ChangeNotifier {
       audio.metadata = null;
       _currentMetadata = null;
     }
-
     notifyListeners();
   }
 
@@ -84,12 +82,11 @@ class AudioPlayerProvider extends ChangeNotifier {
     _controller = AudioPlayerController();
     _history = PlaybackHistoryManager();
     _queue = PlaybackQueueManager();
-    
+
     isHiveLoading = true;
 
     libraryManager.addListener(() {
       filteredFiles = libraryManager.allFiles;
-      isHiveLoading = false;
       _buildFolderTree();
       notifyListeners();
     });
@@ -102,7 +99,6 @@ class AudioPlayerProvider extends ChangeNotifier {
     _controller.onStateChanged.listen((_) {
       notifyListeners();
     });
-
   }
 
   void setLoading(bool value) {
@@ -199,7 +195,6 @@ class AudioPlayerProvider extends ChangeNotifier {
 
   Future<void> playFromFolder(List<AudioFile> files, int index) async {
     filteredFiles = files;
-    
     _queue.setQueue(files.length);
     if (index < files.length) {
       _queue.setCurrentIndex(index);
@@ -237,7 +232,6 @@ class AudioPlayerProvider extends ChangeNotifier {
   void _cleanupUndoStack() {
     final now = DateTime.now();
     _undoStack.removeWhere((u) => now.difference(u.createdAt).inSeconds > 10);
-
     if (_undoStack.isEmpty) {
       isUndoMode = false;
       undoTimer?.cancel();
@@ -246,13 +240,11 @@ class AudioPlayerProvider extends ChangeNotifier {
 
   void filter(String query) {
     filteredFiles = allFiles.where((audio) => audio.fileName.toLowerCase().contains(query.toLowerCase())).toList();
-    
     _queue.rebuildOrder(queueLength: filteredFiles.length);
     if (currentIndex >= filteredFiles.length) {
       currentIndex = filteredFiles.isEmpty ? -1 : 0;
       _queue.setCurrentIndex(currentIndex);
     }
-    
     notifyListeners();
   }
 

@@ -13,7 +13,6 @@ import 'package:sornaz/screens/Players/Components/search_bar.dart';
 class FlatListView extends StatelessWidget {
   const FlatListView({super.key});
 
-  
   @override
   Widget build(BuildContext context) {
     final appData = Provider.of<AppData>(context);
@@ -23,11 +22,7 @@ class FlatListView extends StatelessWidget {
     loggingSornaz("  ===   provider.filteredFiles.length: ${provider.filteredFiles.length}");
     return Consumer<AudioPlayerProvider>(
       builder: (context, provider, _) {
-        if (provider.isHiveLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (provider.filteredFiles.isEmpty) {
+        if (provider.filteredFiles.isEmpty && !provider.isHiveLoading) {
           return Center(
             child: Text(
               "فایل صوتی یافت نشد",
@@ -35,7 +30,6 @@ class FlatListView extends StatelessWidget {
             ),
           );
         }
-
         return Column(
           children: [
             const SearchBarWidget(),
@@ -66,7 +60,6 @@ class FlatListView extends StatelessWidget {
             BottomPlayerWidget(),
           ],
         );
-
       }
     );
   }

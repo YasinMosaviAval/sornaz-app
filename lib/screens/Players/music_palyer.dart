@@ -54,7 +54,6 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
 
     await libraryManager.setRoots([
       Directory('/storage/emulated/0/'),
-      // Directory('/storage/emulated/0/Music/Telegram/'),
       Directory('/storage/9C33-6BBD/Music/'),
     ]);
 
@@ -70,7 +69,6 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
       };
       folderNav.setRoots(folderPaths.map((p) => Directory(p)).toList(), folderMap);
     }
-    await libraryManager.loadOrScan();
   }
 
   void _showPermissionDeniedDialog() {
@@ -144,11 +142,8 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                   ),
                 ),
               );
-            } else if (library.allFiles.isEmpty) {
-              return Center(child: CircularProgressIndicator());
-            } else {
-              return Expanded(child: MusicPlayerTabs());
             }
+            return Expanded(child: MusicPlayerTabs());
           },
         ),
         bottomNavigationBar: const BottomNavBarWidget(),
