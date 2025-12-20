@@ -102,6 +102,7 @@ class AudioControls extends StatelessWidget {
                 "${provider.playbackSpeed}${AppStrings.audio_controls_speed_sign}",
                 style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light),
               ),
+              
               Theme(
                 data: Theme.of(context).copyWith(
                   popupMenuTheme: PopupMenuThemeData(
