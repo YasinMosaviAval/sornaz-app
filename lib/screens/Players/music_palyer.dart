@@ -6,6 +6,7 @@ import 'package:sornaz/audio/library/audio_library_manager.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
+import 'package:sornaz/helpers/app_logger.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/components/bottom_nav.dart';
@@ -52,10 +53,37 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
     final libraryManager = context.read<AudioLibraryManager>();
     final folderNav = context.read<FolderNavigatorProvider>();
 
-    await libraryManager.setRoots([
-      Directory('/storage/emulated/0/'),
-      Directory('/storage/9C33-6BBD/Music/'),
-    ]);
+    List<Directory> availableRoots = [];
+
+    final internalStorage = Directory('/storage/emulated/0');
+    if (await internalStorage.exists()) {
+      availableRoots.add(internalStorage);
+    }
+
+    final storageDir = Directory('/storage');
+    if (await storageDir.exists()) {
+      try {
+        final List<FileSystemEntity> entities = storageDir.listSync();
+        for (var entity in entities) {
+          if (entity is Directory) {
+            final String path = entity.path;
+            if (path != '/storage/emulated' && path != '/storage/self' && !path.startsWith('/storage/0000-0000') && RegExp(r'^/storage/[A-F0-9]{4}-[A-F0-9]{4}$').hasMatch(path)) {
+              if (await entity.exists()) {
+                availableRoots.add(entity);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        //
+      }
+    }
+
+    if (availableRoots.isEmpty && await internalStorage.exists()) availableRoots.add(internalStorage);
+
+    loggingSornaz("مسیرهای یافت شده برای اسکن: ${availableRoots.map((d) => d.path).toList()}");
+
+    await libraryManager.setRoots(availableRoots);
 
     if (!mounted) return;
 
