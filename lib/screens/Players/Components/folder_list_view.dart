@@ -86,6 +86,7 @@ class FolderView extends StatelessWidget {
           const BreadcrumbWidget(),
           Expanded(
             child: ListView(
+              padding: EdgeInsets.all(0),
               children: [
                 for (var dir in subFolders)
                   Container(

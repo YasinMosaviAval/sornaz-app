@@ -15,13 +15,16 @@ class EqualizerTab extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? AppColors.background_dark : AppColors.background_light
       ),
-      child: ListView(
-        padding: const EdgeInsets.all(AppSpacing.space_16),
-        children: const [
-          EqualizerSlider(label: 'Bass'),
-          EqualizerSlider(label: 'Mid'),
-          EqualizerSlider(label: 'Treble'),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_24),
+        child: Column(
+          children: [
+            AppSpacing.sizedBoxH48(),
+            EqualizerSlider(label: 'Bass'),
+            EqualizerSlider(label: 'Mid'),
+            EqualizerSlider(label: 'Treble'),
+          ],
+        ),
       ),
     );
   }
@@ -41,9 +44,14 @@ class EqualizerSlider extends StatelessWidget {
           min: -10,
           max: 10,
           value: 0,
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.space_0, 
+            AppSpacing.space_4, 
+            AppSpacing.space_0, 
+            AppSpacing.space_24,
+          ),
           onChanged: (_) {},
         ),
-        AppSpacing.sizedBoxH12()
       ],
     );
   }

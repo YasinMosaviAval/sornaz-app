@@ -54,7 +54,7 @@ class NowPlayingInfoTab extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AppSpacing.sizedBoxH24(),
+            AppSpacing.sizedBoxH32(),
             Center(
               child: meta?.artwork != null
                   ? ClipRRect(
@@ -72,7 +72,7 @@ class NowPlayingInfoTab extends StatelessWidget {
                       height: AppSpacing.space_200
                     ),
             ),
-            AppSpacing.sizedBoxH24(),
+            AppSpacing.sizedBoxH32(),
             _info(AppStrings.song_information_title.translate(context), title, AppStrings.unknown.translate(context)),
             _info(AppStrings.song_information_artists.translate(context), artist, AppStrings.unknown.translate(context)),
             _info(AppStrings.song_information_album.translate(context), album, AppStrings.unknown.translate(context)),

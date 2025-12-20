@@ -13,10 +13,10 @@ class AudioSlider extends StatelessWidget {
   Widget build(BuildContext context) {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
-    final pr = context.watch<AudioPlayerProvider>();
+    final provider = context.watch<AudioPlayerProvider>();
 
-    final double currentPosition = pr.position.inSeconds.toDouble();
-    final double totalDuration = pr.duration.inSeconds.toDouble() == 0 ? 1.0 : pr.duration.inSeconds.toDouble();
+    final double currentPosition = provider.position.inSeconds.toDouble();
+    final double totalDuration = provider.duration.inSeconds.toDouble() == 0 ? 1.0 : provider.duration.inSeconds.toDouble();
 
     return Row(
       children: [
@@ -29,7 +29,7 @@ class AudioSlider extends StatelessWidget {
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
           child: Text(
-            formatDuration(pr.duration), 
+            formatDuration(provider.duration), 
             style: AppTypography.musicPlayerAudioWidgetDurationTime(context)
           ),
         ),
@@ -41,14 +41,18 @@ class AudioSlider extends StatelessWidget {
               inactiveColor: isDark ? AppColors.border_dark : AppColors.border_light,
               value: currentPosition.clamp(0.0, totalDuration),
               max: totalDuration,
-              onChangeStart: (_) => [pr.startSliding()],
+              onChangeStart: (_) => [provider.startSliding()],
               onChanged: (v) => {},
-              onChangeEnd: (v) => pr.seek(Duration(seconds: v.toInt())),
+              onChangeEnd: (v) => {
+                provider.seek(Duration(seconds: v.toInt())),
+                // تایمر رو دوباره شروع کن تا ۱۰ ثانیه فرصت داشته باشه
+                provider.restartUndoTimer(),  // اگر private بود، یک متد عمومی بساز
+              },
             ),
           ),
         ),
         TextButton(
-          onPressed: () => pr.toggleTimeMode(),
+          onPressed: () => provider.toggleTimeMode(),
           style: TextButton.styleFrom(
             padding: EdgeInsets.zero,
             maximumSize: const Size(56, 20),
@@ -56,9 +60,9 @@ class AudioSlider extends StatelessWidget {
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
           child: Text(
-            pr.showRemaining
-                ? formatDuration(pr.duration - pr.position)
-                : formatDuration(pr.position),
+            provider.showRemaining
+                ? formatDuration(provider.duration - provider.position)
+                : formatDuration(provider.position),
             style: AppTypography.musicPlayerAudioWidgetPositionTime(context),
           ),
         ),

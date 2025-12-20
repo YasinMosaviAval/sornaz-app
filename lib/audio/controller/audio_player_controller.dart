@@ -70,6 +70,13 @@ class AudioPlayerController {
     _stateChanged.add(null);
   }
 
+  Future<void> playFileAndSeek(String path, Duration position) async {
+    await _player.stop();
+    await _player.setSource(DeviceFileSource(path));
+    await _player.seek(position);
+    await _player.resume();
+  }
+
   void dispose() {
     _stateChanged.close();
     _completeChanged.close();

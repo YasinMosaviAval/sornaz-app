@@ -61,6 +61,16 @@ class AudioPlayerProvider extends ChangeNotifier {
   }
 
   Future<void> play(int index) async {
+    if (currentIndex != -1 && currentIndex != index) {
+      _history.push(
+        index: currentIndex,
+        position: position,
+      );
+      isUndoMode = true;
+      _restartUndoTimer();
+      notifyListeners();
+    }
+
     try {
       isLoading = true;
       notifyListeners();
@@ -128,11 +138,21 @@ class AudioPlayerProvider extends ChangeNotifier {
   Future<void> previousOrUndo() async {
     final undo = _history.pop();
     if (undo != null) {
-      currentIndex = undo.index;
-      await _controller.playFile(
-        filteredFiles[undo.index].file.path,
-      );
-      await _controller.seek(undo.position);
+      if (currentIndex != undo.index) {
+        currentIndex = undo.index;
+        await _controller.playFile(filteredFiles[undo.index].file.path);
+        await Future.delayed(const Duration(milliseconds: 100));
+        await _controller.seek(undo.position);
+      } else {
+        await _controller.seek(undo.position);
+      }
+      if (_history.hasUndo == false) {
+        isUndoMode = false;
+        undoTimer?.cancel();
+      } else {
+        _restartUndoTimer();
+      }
+
       notifyListeners();
       return;
     }
@@ -215,7 +235,11 @@ class AudioPlayerProvider extends ChangeNotifier {
   }
 
   void startSliding() {
-    if (history.isEmpty || history.last != position) history.add(position);
+    // if (history.isEmpty || history.last != position) history.add(position);
+    _history.push(
+      index: currentIndex,
+      position: position,
+    );
     isUndoMode = true;
     _restartUndoTimer();
     notifyListeners();
@@ -223,11 +247,13 @@ class AudioPlayerProvider extends ChangeNotifier {
 
   void _restartUndoTimer() {
     undoTimer?.cancel();
-    undoTimer = Timer(const Duration(seconds: 1), () {
+    undoTimer = Timer(const Duration(seconds: 10), () {
       _cleanupUndoStack();
       notifyListeners();
     });
   }
+
+  void restartUndoTimer() => _restartUndoTimer();
 
   void _cleanupUndoStack() {
     final now = DateTime.now();

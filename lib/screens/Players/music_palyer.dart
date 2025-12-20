@@ -6,7 +6,6 @@ import 'package:sornaz/audio/library/audio_library_manager.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
-import 'package:sornaz/helpers/app_logger.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/components/bottom_nav.dart';
@@ -34,7 +33,6 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
 
   Future<void> _requestPermissionsAndScan() async {
     var storageStatus = await Permission.storage.request();
-
     if (storageStatus.isDenied) {
       var manageStatus = await Permission.manageExternalStorage.request();
       if (manageStatus.isDenied || manageStatus.isPermanentlyDenied) {
@@ -42,7 +40,6 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
         return;
       }
     }
-    
     if (storageStatus.isPermanentlyDenied) {
       if (mounted) _showPermissionDeniedDialog();
       return;
@@ -56,9 +53,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
     List<Directory> availableRoots = [];
 
     final internalStorage = Directory('/storage/emulated/0');
-    if (await internalStorage.exists()) {
-      availableRoots.add(internalStorage);
-    }
+    if (await internalStorage.exists()) availableRoots.add(internalStorage);
 
     final storageDir = Directory('/storage');
     if (await storageDir.exists()) {
@@ -80,9 +75,6 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
     }
 
     if (availableRoots.isEmpty && await internalStorage.exists()) availableRoots.add(internalStorage);
-
-    loggingSornaz("مسیرهای یافت شده برای اسکن: ${availableRoots.map((d) => d.path).toList()}");
-
     await libraryManager.setRoots(availableRoots);
 
     if (!mounted) return;
