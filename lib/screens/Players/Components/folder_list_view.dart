@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sornaz/helpers/app_logger.dart';
 import 'package:sornaz/screens/Players/Components/breadcrumb.dart';
 import 'package:sornaz/screens/Players/Components/bottom_player.dart';
 import 'package:sornaz/helpers/app_colors.dart';
@@ -59,6 +60,7 @@ class FolderListView extends StatelessWidget {
   }
 }
 
+/*
 class FolderView extends StatelessWidget {
   const FolderView({super.key});
 
@@ -129,6 +131,237 @@ class FolderView extends StatelessWidget {
           const BottomPlayerWidget(),
         ],
       ),
+    );
+  }
+}
+*/
+
+/*
+class FolderView extends StatelessWidget {
+  const FolderView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Provider.of<AppData>(context).isDark;
+    final nav = context.watch<FolderNavigatorProvider>();
+    final provider = context.read<AudioPlayerProvider>();
+
+    if (nav.currentDir == null) return Center(child: Text("در حال بارگذاری..."));
+
+    return Column(
+      children: [
+        AppSpacing.sizedBoxH48(),
+        BreadcrumbWidget(),
+        Expanded(
+          child: ListView(
+            padding: EdgeInsets.all(0),
+            children: [
+              for (var dir in nav.subFolders)
+                ListTile(
+                  leading: Icon(Icons.folder),
+                  title: Text(dir.path.split('/').last),
+                  trailing: Icon(Icons.chevron_right),
+                  onTap: () => nav.enterRealFolder(dir),
+                ),
+              // for (int i = 0; i < nav.audioFiles.length; i++)
+              //   AudioItem(
+              //     audio: nav.audioFiles[i],
+              //     index: provider.filteredFiles.indexOf(nav.audioFiles[i]),
+              //     // isPlaying: provider.currentIndex == provider.filteredFiles.indexOf(nav.audioFiles[i]),
+              //     // index: i,
+              //     // isPlaying: provider.currentAudio != null && provider.currentAudio!.file.path == nav.audioFiles[i].file.path,
+              //     isPlaying: provider.filteredFiles.indexOf(nav.audioFiles[i]) == provider.currentIndex,
+              //     onTap: () {
+              //       provider.playFromFolder(nav.audioFiles, i);
+              //     },
+              //   ),
+              for (int i = 0; i < nav.audioFiles.length; i++)
+
+                AudioItem(
+                  audio: nav.audioFiles[i],
+                  index: i,
+                  isPlaying: provider.currentAudio != null && provider.currentAudio!.file.path == nav.audioFiles[i].file.path,
+                  onTap: () => provider.playFromFolder(nav.audioFiles, i)
+                ),
+            ],
+          ),
+        ),
+        BottomPlayerWidget(),
+      ]
+    );
+  }
+}
+*/
+
+/*
+class FolderView extends StatelessWidget {
+  const FolderView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Provider.of<AppData>(context).isDark;
+
+    return Consumer2<FolderNavigatorProvider, AudioPlayerProvider>(
+      builder: (context, nav, provider, _) {
+        if (nav.currentDir == null) return Center(child: Text("در حال بارگذاری فولدرها..."));
+
+        final bool isCompletelyEmpty = nav.subFolders.isEmpty && nav.audioFiles.isEmpty;
+        loggingSornaz("audioFiles.length = ${nav.audioFiles.length}");
+
+        final hasSubFolders = nav.subFolders.isNotEmpty;
+        final hasAudioFiles = nav.audioFiles.isNotEmpty;
+
+        // اگر هیچی نبود
+        if (!hasSubFolders && !hasAudioFiles) {
+          return const Center(child: Text("هیچ فولدر یا آهنگی در این مسیر یافت نشد"));
+        }
+
+        return Column(
+          children: [
+            AppSpacing.sizedBoxH32(),
+            const BreadcrumbWidget(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    nav.showOnlyFoldersWithAudio 
+                        ? "فقط فولدرهای دارای آهنگ" 
+                        : "نمایش همه فولدرها",
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                  Switch(
+                    value: nav.showOnlyFoldersWithAudio,
+                    onChanged: (value) {
+                      nav.toggleShowOnlyAudioFolders();
+                    },
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: 
+              // isCompletelyEmpty
+              //   ? Center(child: Text("هیچ فولدر یا آهنگی یافت نشد"))
+              //   : 
+                ListView.builder(
+                padding: EdgeInsets.all(0),
+                itemCount: nav.subFolders.length + nav.audioFiles.length,
+                itemBuilder: (context, index) {
+                   loggingSornaz("ListView itemCount = ${nav.subFolders.length + nav.audioFiles.length}");
+                  // اول زیرفولدرها
+                  if (index < nav.subFolders.length) {
+                    final dir = nav.subFolders[index];
+                    return ListTile(
+                      leading: Icon(Icons.folder, color: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light),
+                      title: Text(dir.path.split('/').last, style: AppTypography.musicPlayerFolderViewTitle(context)),
+                      trailing: Icon(Icons.chevron_right, color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light),
+                      onTap: () => nav.enterRealFolder(dir),
+                    );
+                  }
+
+                  // بعد آهنگ‌ها
+                  final audioIndex = index - nav.subFolders.length;
+                  final audio = nav.audioFiles[audioIndex];
+
+                  return AudioItem(
+                    audio: audio,
+                    index: audioIndex,
+                    isPlaying: provider.currentAudio != null && provider.currentAudio!.file.path == audio.file.path,
+                    onTap: () {
+                      provider.playFromFolder(nav.audioFiles, audioIndex);
+                    },
+                  );
+                },
+              ),
+            ),
+            const BottomPlayerWidget(),
+          ],
+        );
+      },
+    );
+  }
+}
+*/
+
+
+
+class FolderView extends StatelessWidget {
+  const FolderView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Provider.of<AppData>(context).isDark;
+
+    return Consumer2<FolderNavigatorProvider, AudioPlayerProvider>(
+      builder: (context, nav, provider, _) {
+        if (nav.currentDir == null) {
+          return const Center(child: Text("در حال بارگذاری فولدرها..."));
+        }
+
+        final hasContent = nav.subFolders.isNotEmpty || nav.audioFiles.isNotEmpty;
+
+        if (!hasContent) {
+          return const Center(child: Text("هیچ فولدر یا آهنگی در این مسیر یافت نشد"));
+        }
+
+        return Column(
+          children: [
+            AppSpacing.sizedBoxH32(),
+            const BreadcrumbWidget(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    nav.showOnlyFoldersWithAudio 
+                        ? "فقط فولدرهای دارای آهنگ" 
+                        : "نمایش همه فولدرها",
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                  Switch(
+                    value: nav.showOnlyFoldersWithAudio,
+                    onChanged: (value) {
+                      nav.toggleShowOnlyAudioFolders();
+                    },
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView(  // <<< ListView ساده (نه builder)
+                children: [
+                  // زیرفولدرها
+                  ...nav.subFolders.map((dir) => ListTile(
+                    leading: Icon(Icons.folder, color: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light),
+                    title: Text(dir.path.split('/').last, style: AppTypography.musicPlayerFolderViewTitle(context)),
+                    trailing: Icon(Icons.chevron_right, color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light),
+                    onTap: () => nav.enterRealFolder(dir),
+                  )),
+
+                  // آهنگ‌ها
+                  ...nav.audioFiles.asMap().entries.map((entry) {
+                    final i = entry.key;
+                    final audio = entry.value;
+                    return AudioItem(
+                      audio: audio,
+                      index: i,
+                      isPlaying: provider.currentAudio != null && 
+                                 provider.currentAudio!.file.path == audio.file.path,
+                      onTap: () {
+                        provider.playFromFolder(nav.audioFiles, i);
+                      },
+                    );
+                  }),
+                ],
+              ),
+            ),
+            const BottomPlayerWidget(),
+          ],
+        );
+      },
     );
   }
 }

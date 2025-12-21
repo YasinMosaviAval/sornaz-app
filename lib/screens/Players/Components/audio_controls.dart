@@ -98,11 +98,12 @@ class AudioControls extends StatelessWidget {
                 onPressed: provider.toggleRepeatMode,
                 iconSize: AppSpacing.space_24,
               ),
+
               Text(
                 "${provider.playbackSpeed}${AppStrings.audio_controls_speed_sign}",
                 style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light),
               ),
-              
+
               Theme(
                 data: Theme.of(context).copyWith(
                   popupMenuTheme: PopupMenuThemeData(

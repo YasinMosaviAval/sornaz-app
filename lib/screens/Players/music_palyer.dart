@@ -6,6 +6,7 @@ import 'package:sornaz/audio/library/audio_library_manager.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
+import 'package:sornaz/helpers/app_logger.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/components/bottom_nav.dart';
@@ -33,6 +34,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
 
   Future<void> _requestPermissionsAndScan() async {
     var storageStatus = await Permission.storage.request();
+
     if (storageStatus.isDenied) {
       var manageStatus = await Permission.manageExternalStorage.request();
       if (manageStatus.isDenied || manageStatus.isPermanentlyDenied) {
@@ -40,6 +42,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
         return;
       }
     }
+
     if (storageStatus.isPermanentlyDenied) {
       if (mounted) _showPermissionDeniedDialog();
       return;
@@ -70,16 +73,24 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
           }
         }
       } catch (e) {
-        //
+        loggingSornaz("خطا در خواندن /storage: $e");
       }
     }
 
     if (availableRoots.isEmpty && await internalStorage.exists()) availableRoots.add(internalStorage);
     await libraryManager.setRoots(availableRoots);
 
+    loggingSornaz("مسیرهای یافت شده برای اسکن: ${availableRoots.map((d) => d.path).toList()}");
+    
+    await libraryManager.setRoots(availableRoots);
+
     if (!mounted) return;
 
     await libraryManager.loadOrScan();
+
+    if (availableRoots.isNotEmpty) {
+      await folderNav.startRealNavigation(availableRoots.first);
+    }
 
     if (libraryManager.allFiles.isNotEmpty && mounted) {
       final folderPaths = libraryManager.allFiles.map((f) => f.file.parent.path).toSet().toList();

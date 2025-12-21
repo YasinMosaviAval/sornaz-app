@@ -14,20 +14,22 @@ class BreadcrumbWidget extends StatelessWidget {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
     final nav = context.watch<FolderNavigatorProvider>();
-    final parts = nav.breadcrumbParts;
+
+    // final parts = nav.breadcrumbParts;
+    final bool canGoBack = nav.pathHistory.length > 1;
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: AppSpacing.space_16, vertical: AppSpacing.space_8),
       color: isDark? AppColors.background_dark : AppColors.background_light,
       child: Row(
         children: [
-          if (parts.isNotEmpty)
+          if (canGoBack)
             IconButton(
               icon: Icon(
                 Icons.arrow_back,
                 color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light
               ),
-              onPressed: () => nav.goBack(),
+              onPressed: () => nav.goBackReal(),
             ),
           Expanded(
             child: SingleChildScrollView(
@@ -37,10 +39,10 @@ class BreadcrumbWidget extends StatelessWidget {
                   const Text("📁 "),
                   SizedBox(width: AppSpacing.space_8),
                   Text(
-                    nav.rootDir!.path.split("/").last,
+                    nav.rootDir?.path.split("/").last ?? "حافظه",
                     style: AppTypography.musicPlayerBreadCrumb(context)
                   ),
-                  for (var part in parts)
+                  for (var part in nav.breadcrumbParts)
                     Row(
                       children: [
                         Text(" / ", style: AppTypography.musicPlayerBreadCrumbSlashes(context)),
