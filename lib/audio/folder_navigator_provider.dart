@@ -85,10 +85,12 @@ class FolderNavigatorProvider extends ChangeNotifier {
 
   bool showOnlyFoldersWithAudio = true;
   
+  /*
   void toggleShowOnlyAudioFolders() {
     showOnlyFoldersWithAudio = !showOnlyFoldersWithAudio;
     _loadRealFolder();  // دوباره لود کن تا فیلتر اعمال بشه
   }
+  */
 
   // برای حالت واقعی
   List<Directory> pathHistory = [];
@@ -151,6 +153,7 @@ class FolderNavigatorProvider extends ChangeNotifier {
     _loadRealFolder();
   }
 
+/*
   Future<void> _loadRealFolder() async {
     if (currentDir == null) return;
 
@@ -218,7 +221,7 @@ class FolderNavigatorProvider extends ChangeNotifier {
       loggingSornaz("خطا در لود فولدر واقعی: $e");
     }
   }
-
+*/
   // برای حالت fake (قدیمی) — دست نخورده
   // void enterFolder(Directory folder) {
   //   currentDir = folder;
@@ -234,4 +237,85 @@ class FolderNavigatorProvider extends ChangeNotifier {
   //   updateFolderAudioCount();
   //   notifyListeners();
   // }
+
+
+
+void toggleShowOnlyAudioFolders() {
+  showOnlyFoldersWithAudio = !showOnlyFoldersWithAudio;
+
+  // فقط زیرفولدرها رو دوباره فیلتر کن — currentDir و audioFiles دست نخورده بمونن
+  _filterSubFolders();
+
+  notifyListeners();
+}
+
+void _filterSubFolders() async {
+  if (currentDir == null) return;
+
+  subFolders.clear();
+
+  try {
+    final entities = currentDir!.listSync();
+
+    List<Directory> allSubFolders = [];
+
+    for (var entity in entities) {
+      if (entity is Directory) {
+        allSubFolders.add(entity);
+      }
+    }
+
+    if (showOnlyFoldersWithAudio) {
+      subFolders = allSubFolders.where((dir) {
+        try {
+          return dir.listSync().any((e) =>
+              e is File &&
+              ['mp3', 'wav', 'aac', 'm4a', 'flac', 'ogg'].contains(e.path.split('.').last.toLowerCase()));
+        } catch (e) {
+          return false;
+        }
+      }).toList();
+    } else {
+      subFolders = allSubFolders;
+    }
+
+    subFolders.sort((a, b) => a.path.compareTo(b.path));
+  } catch (e) {
+    loggingSornaz("خطا در فیلتر فولدرها: $e");
+  }
+}
+
+Future<void> _loadRealFolder() async {
+  if (currentDir == null) return;
+
+  // فقط audioFiles رو لود کن (اولین بار یا وقتی وارد فولدر می‌شی)
+  audioFiles.clear();
+
+  try {
+    final entities = currentDir!.listSync();
+
+    for (var entity in entities) {
+      if (entity is File) {
+        final ext = entity.path.split('.').last.toLowerCase();
+        if (['mp3', 'wav', 'aac', 'm4a', 'flac', 'ogg'].contains(ext)) {
+          audioFiles.add(AudioFile(
+            file: entity,
+            fileName: entity.path.split('/').last,
+            folderName: currentDir!.path,
+            duration: Duration.zero,
+          ));
+        }
+      }
+    }
+
+    audioFiles.sort((a, b) => a.fileName.compareTo(b.fileName));
+
+    // زیرفولدرها رو فیلتر کن (با وضعیت فعلی سوییچ)
+    _filterSubFolders();
+
+    notifyListeners();
+  } catch (e) {
+    print("خطا در لود فولدر واقعی: $e");
+  }
+}
 }

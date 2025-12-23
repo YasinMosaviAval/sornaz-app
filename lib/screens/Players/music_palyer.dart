@@ -80,7 +80,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
     if (availableRoots.isEmpty && await internalStorage.exists()) availableRoots.add(internalStorage);
     await libraryManager.setRoots(availableRoots);
 
-    loggingSornaz("مسیرهای یافت شده برای اسکن: ${availableRoots.map((d) => d.path).toList()}");
+    // loggingSornaz("مسیرهای یافت شده برای اسکن: ${availableRoots.map((d) => d.path).toList()}");
     
     await libraryManager.setRoots(availableRoots);
 

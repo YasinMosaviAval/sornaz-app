@@ -285,8 +285,6 @@ class FolderView extends StatelessWidget {
 }
 */
 
-
-
 class FolderView extends StatelessWidget {
   const FolderView({super.key});
 
@@ -296,63 +294,58 @@ class FolderView extends StatelessWidget {
 
     return Consumer2<FolderNavigatorProvider, AudioPlayerProvider>(
       builder: (context, nav, provider, _) {
-        if (nav.currentDir == null) {
-          return const Center(child: Text("در حال بارگذاری فولدرها..."));
-        }
+        if (nav.currentDir == null) return Center(child: Text(AppStrings.folder_list_view_preparing_folders.translate(context)));
 
         final hasContent = nav.subFolders.isNotEmpty || nav.audioFiles.isNotEmpty;
 
-        if (!hasContent) {
-          return const Center(child: Text("هیچ فولدر یا آهنگی در این مسیر یافت نشد"));
-        }
+        if (!hasContent) return const Center(child: Text("هیچ فولدر یا آهنگی در این مسیر یافت نشد"));
 
         return Column(
           children: [
-            AppSpacing.sizedBoxH32(),
-            const BreadcrumbWidget(),
+            // Row(
+            //   children: [
+                const SearchBarWidget(),
+                const BreadcrumbWidget(),
+            //   ],
+            // ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    nav.showOnlyFoldersWithAudio 
-                        ? "فقط فولدرهای دارای آهنگ" 
-                        : "نمایش همه فولدرها",
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    nav.showOnlyFoldersWithAudio ? "فقط فولدرهای دارای آهنگ" : "نمایش همه فولدرها",
+                    style: const TextStyle(fontSize: AppSpacing.space_14, fontWeight: FontWeight.w500),
                   ),
                   Switch(
                     value: nav.showOnlyFoldersWithAudio,
-                    onChanged: (value) {
-                      nav.toggleShowOnlyAudioFolders();
-                    },
+                    onChanged: (value) => nav.toggleShowOnlyAudioFolders()
                   ),
                 ],
               ),
             ),
             Expanded(
-              child: ListView(  // <<< ListView ساده (نه builder)
+              child: ListView(
+                
                 children: [
-                  // زیرفولدرها
-                  ...nav.subFolders.map((dir) => ListTile(
-                    leading: Icon(Icons.folder, color: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light),
-                    title: Text(dir.path.split('/').last, style: AppTypography.musicPlayerFolderViewTitle(context)),
-                    trailing: Icon(Icons.chevron_right, color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light),
-                    onTap: () => nav.enterRealFolder(dir),
-                  )),
-
-                  // آهنگ‌ها
+                  ...nav.subFolders.map((dir) {
+                    // loggingSornaz("  ==  ${dir.path.split('/').last}");
+                    return ListTile(
+                      leading: Icon(Icons.folder, color: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light),
+                      title: Text(dir.path.split('/').last, style: AppTypography.musicPlayerFolderViewTitle(context)),
+                      trailing: Icon(Icons.chevron_right, color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light),
+                      onTap: () => nav.enterRealFolder(dir),
+                    );
+                  }),
                   ...nav.audioFiles.asMap().entries.map((entry) {
                     final i = entry.key;
                     final audio = entry.value;
+                    loggingSornaz("  ==  $i + ${audio.file.path.substring(0, audio.file.path.lastIndexOf('/') + 1)} + ${audio.file.path.substring(audio.file.path.lastIndexOf('/') + 1)}");
                     return AudioItem(
                       audio: audio,
                       index: i,
-                      isPlaying: provider.currentAudio != null && 
-                                 provider.currentAudio!.file.path == audio.file.path,
-                      onTap: () {
-                        provider.playFromFolder(nav.audioFiles, i);
-                      },
+                      isPlaying: provider.currentAudio != null && provider.currentAudio!.file.path == audio.file.path,
+                      onTap: () => provider.playFromFolder(nav.audioFiles, i)
                     );
                   }),
                 ],
