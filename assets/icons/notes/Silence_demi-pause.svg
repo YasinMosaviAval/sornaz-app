@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   version="1.2"
+   width="55"
+   height="15"
+   viewBox="0 0 8.833002 2.4090005"
+   id="svg2">
+  <metadata
+     id="metadata46">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs44" />
+  <text
+     x="5.6905999"
+     y="-163.75511"
+     id="text4"
+     style="font-size:2.19950008px;text-anchor:start;fill:currentColor;font-family:Century Schoolbook L">
+    <tspan
+       id="tspan6" />
+  </text>
+  <g
+     transform="translate(-23.439895,-6.0936243)"
+     id="g3088">
+    <line
+       style="stroke:currentColor;stroke-width:0.09999999;stroke-linecap:round;stroke-linejoin:round"
+       id="line12"
+       y2="7.6452999"
+       x2="31.583609"
+       y1="7.6452999"
+       x1="24.300453" />
+    <path
+       d="m 28.662194,7.6453 h -1.42 c -0.024,0 -0.04,-0.016 -0.04,-0.04 v -0.544 c 0,-0.024 0.016,-0.04 0.04,-0.04 h 1.42 c 0.024,0 0.04,0.016 0.04,0.04 v 0.544 c 0,0.024 -0.016,0.04 -0.04,0.04 z"
+       id="path28"
+       style="fill:currentColor" />
+  </g>
+  <a
+     xlink:href="http://lilypond.org/"
+     transform="translate(31.6841,-1.4492043)"
+     id="a34">
+    <rect
+       width="56.133499"
+       height="2.0827"
+       x="0"
+       y="-0.44389999"
+       id="rect36"
+       style="fill:none;stroke:none" />
+  </a>
+</svg>

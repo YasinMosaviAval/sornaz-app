@@ -80,7 +80,7 @@ class FolderNavigatorProvider extends ChangeNotifier {
   Directory? currentDir;
   List<Directory> subFolders = [];
   List<AudioFile> audioFiles = [];
-  Map<String, List<AudioFile>> fakeRoots = {}; // برای حالت fake (FolderListView) نگه دار
+  Map<String, List<AudioFile>> fakeRoots = {};
   Map<String, int> folderAudioCount = {};
 
   bool showOnlyFoldersWithAudio = true;
@@ -92,7 +92,6 @@ class FolderNavigatorProvider extends ChangeNotifier {
   }
   */
 
-  // برای حالت واقعی
   List<Directory> pathHistory = [];
 
   List<String> get breadcrumbParts {
@@ -112,7 +111,6 @@ class FolderNavigatorProvider extends ChangeNotifier {
     }
   }
 
-  // برای حالت fake (FolderListView) — دست نخورده می‌مونه
   Future<void> setRoots(List<Directory> roots, Map<String, List<AudioFile>> filesMap) async {
     if (roots.isEmpty) return;
     rootDir = roots.first;
@@ -127,7 +125,6 @@ class FolderNavigatorProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // برای حالت واقعی (FolderView) — جدید
   Future<void> startRealNavigation(Directory startDir) async {
     if (!await startDir.exists()) return;
 
@@ -222,13 +219,6 @@ class FolderNavigatorProvider extends ChangeNotifier {
     }
   }
 */
-  // برای حالت fake (قدیمی) — دست نخورده
-  // void enterFolder(Directory folder) {
-  //   currentDir = folder;
-  //   audioFiles = fakeRoots[folder.path] ?? [];
-  //   updateFolderAudioCount();
-  //   notifyListeners();
-  // }
 
   // void goBack() {
   //   if (currentDir == rootDir) return;
@@ -242,10 +232,7 @@ class FolderNavigatorProvider extends ChangeNotifier {
 
 void toggleShowOnlyAudioFolders() {
   showOnlyFoldersWithAudio = !showOnlyFoldersWithAudio;
-
-  // فقط زیرفولدرها رو دوباره فیلتر کن — currentDir و audioFiles دست نخورده بمونن
   _filterSubFolders();
-
   notifyListeners();
 }
 
@@ -270,7 +257,7 @@ void _filterSubFolders() async {
         try {
           return dir.listSync().any((e) =>
               e is File &&
-              ['mp3', 'wav', 'aac', 'm4a', 'flac', 'ogg'].contains(e.path.split('.').last.toLowerCase()));
+              [AppStrings.file_type_mp3, AppStrings.file_type_wav, AppStrings.file_type_aac, AppStrings.file_type_m4a, AppStrings.file_type_flac, AppStrings.file_type_ogg].contains(e.path.split('.').last.toLowerCase()));
         } catch (e) {
           return false;
         }
@@ -288,7 +275,6 @@ void _filterSubFolders() async {
 Future<void> _loadRealFolder() async {
   if (currentDir == null) return;
 
-  // فقط audioFiles رو لود کن (اولین بار یا وقتی وارد فولدر می‌شی)
   audioFiles.clear();
 
   try {
@@ -310,12 +296,10 @@ Future<void> _loadRealFolder() async {
 
     audioFiles.sort((a, b) => a.fileName.compareTo(b.fileName));
 
-    // زیرفولدرها رو فیلتر کن (با وضعیت فعلی سوییچ)
     _filterSubFolders();
-
     notifyListeners();
   } catch (e) {
-    print("خطا در لود فولدر واقعی: $e");
+    loggingSornaz("خطا در لود فولدر واقعی: $e");
   }
 }
 }

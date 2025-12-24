@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   id="svg2"
+   viewBox="0 0 4.9237001 2"
+   height="3.5145974mm"
+   width="8.6524115mm"
+   version="1.2">
+  <title
+     id="title3378">Bâton de pauses</title>
+  <metadata
+     id="metadata50">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>Bâton de pauses</dc:title>
+        <cc:license
+           rdf:resource="http://creativecommons.org/publicdomain/mark/1.0/" />
+      </cc:Work>
+      <cc:License
+         rdf:about="http://creativecommons.org/publicdomain/mark/1.0/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs48" />
+  <rect
+     style="fill:currentColor"
+     id="rect28"
+     ry="0.079999998"
+     height="2"
+     width="0.2"
+     y="0"
+     x="-5.689893e-016" />
+  <rect
+     style="fill:currentColor"
+     id="rect30"
+     ry="0.079999998"
+     height="2"
+     width="0.2"
+     y="0"
+     x="4.7237" />
+  <rect
+     style="fill:currentColor"
+     id="rect32"
+     ry="0.079999998"
+     height="0.66000003"
+     width="4.5237002"
+     y="0.66999996"
+     x="0.2" />
+</svg>
