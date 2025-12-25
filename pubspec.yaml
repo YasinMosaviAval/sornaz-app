@@ -67,6 +67,9 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+    - assets/icons/notes/notes/
+    - assets/icons/notes/rests/
+    - assets/icons/notes/signatures/
     - assets/audio/tick.wav
     - assets/audio/accent.wav
   fonts:

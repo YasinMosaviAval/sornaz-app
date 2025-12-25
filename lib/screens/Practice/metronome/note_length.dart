@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-
+/*
 class NoteLength {
   final String name;
   final double multiplier;
@@ -12,26 +12,91 @@ class NoteLength {
     required this.icon,
   });
 }
+*/
+class NoteLength {
+  final String name;
+  final double multiplier;
+  final Widget Function(Color color, double size) iconBuilder;
+  final Widget Function(Color color, double size) selectedIconBuilder;
 
-const noteLengths = [
+  const NoteLength({
+    required this.name,
+    required this.multiplier,
+    required this.iconBuilder,
+    required this.selectedIconBuilder,
+  });
+
+  Widget icon({required Color color, bool isSelectedIcon = false, double size = 36}) {
+    return isSelectedIcon? selectedIconBuilder(color, size) : iconBuilder(color, size);
+  }
+}
+
+final noteLengths = [
   NoteLength(
     name: 'Quarter',
     multiplier: 1.0,
-    icon: Icon(Icons.music_note), // بعداً با آیکن واقعی جایگزین
+    iconBuilder: (color, size) => Icon(
+      Icons.looks_one_outlined,
+
+      // Icons.music_note,
+      color: color,
+      size: size,
+    ),
+    selectedIconBuilder: (color, size) => Icon(
+      Icons.looks_one,
+
+      // Icons.music_note,
+      color: color,
+      size: size,
+    ),
+    
   ),
   NoteLength(
     name: 'Eighth',
     multiplier: 0.5,
-    icon: Icon(Icons.library_music),
+    iconBuilder: (color, size) => Icon(
+      Icons.looks_two_outlined,
+      // Icons.library_music,
+      color: color,
+      size: size,
+    ),
+    selectedIconBuilder: (color, size) => Icon(
+      Icons.looks_two_rounded,
+      // Icons.library_music,
+      color: color,
+      size: size,
+    ),
+    
   ),
   NoteLength(
     name: 'Triplet',
     multiplier: 1 / 3,
-    icon: Icon(Icons.queue_music),
+    iconBuilder: (color, size) => Icon(
+      Icons.looks_3_outlined,
+      color: color,
+      size: size,
+    ),
+    selectedIconBuilder: (color, size) => Icon(
+      Icons.looks_3_sharp,
+      color: color,
+      size: size,
+    ),
+    
   ),
   NoteLength(
     name: 'Half',
     multiplier: 2.0,
-    icon: Icon(Icons.audiotrack),
+    iconBuilder: (color, size) => Icon(
+      Icons.looks_4_outlined,
+      color: color,
+      size: size,
+    ),
+    selectedIconBuilder: (color, size) => Icon(
+      Icons.looks_4,
+      color: color,
+      size: size,
+    ),
+    
   ),
 ];
+

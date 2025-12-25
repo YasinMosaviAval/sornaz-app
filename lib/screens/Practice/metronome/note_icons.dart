@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/widgets.dart';
 
@@ -57,12 +59,14 @@ class MusicSymbol {
   });
 
   /// نمایش Widget SVG
-  Widget widget({double? size, Color? color}) {
+  Widget noteWidget({double? size, Color? color}) {
     return SvgPicture.asset(
       assetPath,
       width: size ?? defaultSize,
       height: size ?? defaultSize,
-      color: color,
+      colorFilter: color == null
+          ? null
+          : ColorFilter.mode(color, BlendMode.srcIn),
     );
   }
 }
@@ -71,62 +75,70 @@ class MusicSymbol {
 class MusicSymbols {
   static const String _notePath = 'assets/icons/notes/';
   static const String _restPath = 'assets/icons/rests/';
-  static const String _artPath = 'assets/icons/articulation/';
-  static const String _dynPath = 'assets/icons/dynamics/';
+  // static const String _artPath = 'assets/icons/articulations/';
+  // static const String _dynPath = 'assets/icons/dynamics/';
+  static const String _signaturePath = 'assets/icons/signatures/';
 
+  static Widget quarter({double size = 24, Color? color}) {
+    return SvgPicture.asset(
+      '${_notePath}quarter.svg',
+      width: size,
+      height: size,
+      colorFilter: color == null
+          ? null
+          : ColorFilter.mode(color, BlendMode.srcIn),
+    );
+  }
+
+  static Widget eighth({double size = 24, Color? color}) {
+    return SvgPicture.asset(
+      '${_notePath}eighth.svg',
+      width: size,
+      height: size,
+      colorFilter: color == null
+          ? null
+          : ColorFilter.mode(color, BlendMode.srcIn),
+    );
+  }
   /// نت‌ها
-  static const MusicSymbol wholeNote = MusicSymbol(
-    name: 'Whole Note',
-    type: 'note',
-    assetPath: '${_notePath}whole.svg',
-  );
-  static const MusicSymbol halfNote = MusicSymbol(
-    name: 'Half Note',
-    type: 'note',
-    assetPath: '${_notePath}half.svg',
-  );
-  static const MusicSymbol quarterNote = MusicSymbol(
-    name: 'Quarter Note',
-    type: 'note',
-    assetPath: '${_notePath}quarter.svg',
-  );
-  static const MusicSymbol eighthNote = MusicSymbol(
-    name: 'Eighth Note',
-    type: 'note',
-    assetPath: '${_notePath}eighth.svg',
-  );
-  static const MusicSymbol sixteenthNote = MusicSymbol(
-    name: 'Sixteenth Note',
-    type: 'note',
-    assetPath: '${_notePath}sixteenth.svg',
-  );
-  static const MusicSymbol tripletNote = MusicSymbol(
-    name: 'Triplet',
-    type: 'note',
-    assetPath: '${_notePath}triplet.svg',
-  );
+  static const MusicSymbol double_whole_note = MusicSymbol(name: 'Double Whole Note', type: 'note', assetPath: '${_notePath}double_whole.svg');
+  static const MusicSymbol whole_note = MusicSymbol(name: 'Whole Note', type: 'note', assetPath: '${_notePath}whole.svg');
+  static const MusicSymbol half_note = MusicSymbol(name: 'Half Note', type: 'note', assetPath: '${_notePath}half.svg');
+  static const MusicSymbol half_note_reverse = MusicSymbol(name: 'Half Note Reverse', type: 'note', assetPath: '${_notePath}half_reverse.svg');
+  static const MusicSymbol quarter_note = MusicSymbol(name: 'Quarter Note', type: 'note', assetPath: '${_notePath}quarter.svg');
+  static const MusicSymbol quarter_note_reverse = MusicSymbol(name: 'Quarter Note Reverse', type: 'note', assetPath: '${_notePath}quarter_reverse.svg');
+  static const MusicSymbol eighth_note = MusicSymbol(name: 'Eighth Note', type: 'note', assetPath: '${_notePath}eighth.svg');
+  static const MusicSymbol eighth_note_reverse = MusicSymbol(name: 'Eighth Note Reverse', type: 'note', assetPath: '${_notePath}eighth_reverse.svg');
+  static const MusicSymbol sixteenth_note = MusicSymbol(name: 'Sixteenth Note', type: 'note', assetPath: '${_notePath}sixteenth.svg');
+  static const MusicSymbol sixteenth_note_reverse = MusicSymbol(name: 'Sixteenth Note Reverse', type: 'note', assetPath: '${_notePath}sixteenth_reverse.svg');
 
   /// سکوت‌ها
-  static const MusicSymbol wholeRest = MusicSymbol(
-    name: 'Whole Rest',
-    type: 'rest',
-    assetPath: '${_restPath}whole_rest.svg',
-  );
-  static const MusicSymbol halfRest = MusicSymbol(
-    name: 'Half Rest',
-    type: 'rest',
-    assetPath: '${_restPath}half_rest.svg',
-  );
-  static const MusicSymbol quarterRest = MusicSymbol(
-    name: 'Quarter Rest',
-    type: 'rest',
-    assetPath: '${_restPath}quarter_rest.svg',
-  );
-  static const MusicSymbol eighthRest = MusicSymbol(
-    name: 'Eighth Rest',
-    type: 'rest',
-    assetPath: '${_restPath}eighth_rest.svg',
-  );
+  static const MusicSymbol full_rest = MusicSymbol(name: 'Full Rest', type: 'rest', assetPath: '${_restPath}full_rest.svg');
+  static const MusicSymbol whole_rest = MusicSymbol(name: 'Whole Rest', type: 'rest', assetPath: '${_restPath}whole_rest.svg');
+  static const MusicSymbol half_rest = MusicSymbol(name: 'Half Rest', type: 'rest', assetPath: '${_restPath}half_rest.svg');
+  static const MusicSymbol quarter_rest = MusicSymbol(name: 'Quarter Rest', type: 'rest', assetPath: '${_restPath}quarter_rest.svg');
+  static const MusicSymbol eighth_rest = MusicSymbol(name: 'Eighth Rest', type: 'rest', assetPath: '${_restPath}eighth_rest.svg');
+  static const MusicSymbol sixteenth_rest = MusicSymbol(name: 'Sixteenth Rest', type: 'rest', assetPath: '${_restPath}sixteenth_rest.svg');
+
+
+
+  static const MusicSymbol clef_c = MusicSymbol(name: 'Clef C', type: 'signatures', assetPath: '${_signaturePath}clef_c.svg');
+  static const MusicSymbol clef_f = MusicSymbol(name: 'Clef F', type: 'signatures', assetPath: '${_signaturePath}clef_f.svg');
+  static const MusicSymbol clef_g = MusicSymbol(name: 'Clef G', type: 'signatures', assetPath: '${_signaturePath}clef_g.svg');
+
+  static const MusicSymbol bemol = MusicSymbol(name: 'Bemol', type: 'signatures', assetPath: '${_signaturePath}bemol.svg');
+  static const MusicSymbol sharp = MusicSymbol(name: 'Sharp', type: 'signatures', assetPath: '${_signaturePath}sharp.svg');
+  static const MusicSymbol becarre = MusicSymbol(name: 'Becarre', type: 'signatures', assetPath: '${_signaturePath}becarre.svg');
+  static const MusicSymbol double_bemol = MusicSymbol(name: 'Double Bemol', type: 'signatures', assetPath: '${_signaturePath}double_bemol.svg');
+  static const MusicSymbol double_sharp = MusicSymbol(name: 'Double Sharp', type: 'signatures', assetPath: '${_signaturePath}double_sharp.svg');
+  static const MusicSymbol becarre_bemol = MusicSymbol(name: 'Becarre Bemol', type: 'signatures', assetPath: '${_signaturePath}becarre_bemol.svg');
+  static const MusicSymbol becarre_sharp = MusicSymbol(name: 'Becarre Sharp', type: 'signatures', assetPath: '${_signaturePath}becarre_sharp.svg');
+
+
+}
+
+
+/*
 
   /// علائم اجرا
   static const MusicSymbol accent = MusicSymbol(
@@ -191,7 +203,7 @@ class MusicSymbols {
     type: 'dynamic',
     assetPath: '${_dynPath}decrescendo.svg',
   );
-}
+*/
 
 
 /*
