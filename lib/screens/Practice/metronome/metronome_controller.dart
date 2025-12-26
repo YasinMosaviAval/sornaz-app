@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:sornaz/screens/Practice/metronome/note_length.dart';
 
-class MetronomeController {
+class MetronomeController extends ChangeNotifier {
   final AudioPlayer _tickPlayer = AudioPlayer();
   final AudioPlayer _accentPlayer = AudioPlayer();
 
@@ -270,7 +270,7 @@ void startTimerFor(int hours, int minutes) {
     accentVolume = value.clamp(0.0, 1.0);
     _accentPlayer.setVolume(accentVolume);
   }
-
+/*
   void tapTempo() {
     final now = DateTime.now().millisecondsSinceEpoch;
 
@@ -293,12 +293,94 @@ void startTimerFor(int hours, int minutes) {
       setBpm(newBpm.clamp(40, 200));
     }
   }
+*/
+bool showTapTempo = false;
+bool showTimerStopwatch = false;
+bool showBarsStopwatch = false;
+bool showBarsDivision = false;
 
+
+void setShowTapTempo(bool value) {
+  showTapTempo = value;
+  notifyListeners();
+}
+
+  Timer? _tapResetTimer;
+
+  // void tapTempo() {
+  //   final now = DateTime.now().millisecondsSinceEpoch;
+
+  //   _tapTimes.add(now);
+  //   if (_tapTimes.length > _maxTaps) {
+  //     _tapTimes.removeAt(0);
+  //   }
+
+  //   if (_tapTimes.length >= 2) {
+  //     final intervals = <int>[];
+  //     for (int i = 1; i < _tapTimes.length; i++) {
+  //       intervals.add(_tapTimes[i] - _tapTimes[i - 1]);
+  //     }
+
+  //     final avgInterval = intervals.reduce((a, b) => a + b) / intervals.length;
+  //     final newBpm = (60000 / avgInterval).round();
+  //     setBpm(newBpm.clamp(40, 200));
+  //   }
+
+  //   // ریست خودکار Tap Tempo بعد از 3 ثانیه
+  //   _tapResetTimer?.cancel(); // لغو تایمر قبلی
+  //   _tapResetTimer = Timer(const Duration(seconds: 3), () {
+  //     resetTapTempo();
+  //   });
+  // }
+
+
+  @override
   Future<void> dispose() async {
+    _tapResetTimer?.cancel();
+    super.dispose();
     stop();
     await _tickPlayer.dispose();
     await _accentPlayer.dispose();
   }
+
+bool _tapActive = false; // وضعیت Tap فعال
+
+bool get tapActive => _tapActive;
+
+void tapTempo() {
+  final now = DateTime.now().millisecondsSinceEpoch;
+
+  _tapTimes.add(now);
+  if (_tapTimes.length > _maxTaps) {
+    _tapTimes.removeAt(0);
+  }
+
+  if (_tapTimes.length >= 2) {
+    final intervals = <int>[];
+    for (int i = 1; i < _tapTimes.length; i++) {
+      intervals.add(_tapTimes[i] - _tapTimes[i - 1]);
+    }
+
+    final avgInterval = intervals.reduce((a, b) => a + b) / intervals.length;
+    final newBpm = (60000 / avgInterval).round();
+    setBpm(newBpm.clamp(40, 200));
+  }
+
+  // فعال کردن Tap Active بعد از اولین Tap
+  _tapActive = true;
+
+  _tapResetTimer?.cancel();
+  _tapResetTimer = Timer(const Duration(seconds: 3), () {
+    resetTapTempo();
+  });
+}
+
+void resetTapTempo() {
+  _tapTimes.clear();
+  _tapActive = false;
+  notifyListeners();
+}
+
 
 }
 

@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/bottom_nav.dart';
@@ -19,8 +21,12 @@ class MetronomePage extends StatefulWidget {
   State<MetronomePage> createState() => _MetronomePageState();
 }
 
-class _MetronomePageState extends State<MetronomePage> with SingleTickerProviderStateMixin {
+class _MetronomePageState extends State<MetronomePage> with TickerProviderStateMixin  {
   final MetronomeController _controller = MetronomeController();
+late AnimationController _uiController;
+late Animation<double> _tapOpacity;
+late Animation<double> _tapScale;
+late Animation<Offset> _playButtonOffset;
 
   late AnimationController _pulseController;
 
@@ -71,14 +77,36 @@ class _MetronomePageState extends State<MetronomePage> with SingleTickerProvider
       seconds: selectedSeconds,
     );
 
+_uiController = AnimationController(
+  vsync: this,
+  duration: const Duration(milliseconds: 500),
+);
+
+_tapOpacity = Tween<double>(begin: 1, end: 0).animate(
+  CurvedAnimation(parent: _uiController, curve: Curves.easeOut),
+);
+
+_tapScale = Tween<double>(begin: 1, end: 0.7).animate(
+  CurvedAnimation(parent: _uiController, curve: Curves.easeOut),
+);
+
+_playButtonOffset = Tween<Offset>(
+  begin: const Offset(0, 0),
+  end: const Offset(0, 0),
+).animate(
+  CurvedAnimation(parent: _uiController, curve: Curves.easeOutCubic),
+);
+
   }
 
   @override
   void dispose() {
+    _uiController.dispose();
     _pulseController.dispose();
     _controller.dispose();
     super.dispose();
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -97,13 +125,17 @@ class _MetronomePageState extends State<MetronomePage> with SingleTickerProvider
             icon: const Icon(Icons.settings),
             color: isDark? AppColors.text_primary_dark : AppColors.text_primary_light,
             iconSize: 36,
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              final result = await Navigator.push<bool>(
                 context,
                 MaterialPageRoute(
                   builder: (_) => MetronomeSettingsPage(controller: _controller),
                 ),
               );
+
+              if (result != null) {
+                setState(() {});
+              }
             },
           ),
           automaticallyImplyLeading: false,
@@ -163,7 +195,7 @@ class _MetronomePageState extends State<MetronomePage> with SingleTickerProvider
                 child: Directionality(
                   textDirection: TextDirection.ltr,
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: _controller.showBarsDivision ? MainAxisAlignment.spaceBetween : MainAxisAlignment.center,
                     children: [
                       SizedBox(
                         width: 48,
@@ -202,22 +234,23 @@ class _MetronomePageState extends State<MetronomePage> with SingleTickerProvider
                         ),
                       ),
 
-                      Row(
-                        children: noteLengths.map((note) {
-                          final isSelected = _controller.selectedNote == note;
-                          return GestureDetector(
-                            onTap: () => setState(() => _controller.setNoteLength(note)),
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 8),
-                              child: note.icon(color: isSelected 
-                                ? isDark ? AppColors.text_primary_dark : AppColors.text_primary_light
-                                : isDark ? AppColors.unselected_item_dark : AppColors.unselected_item_light,
-                                isSelectedIcon: isSelected
+                      if (_controller.showBarsDivision)
+                        Row(
+                          children: noteLengths.map((note) {
+                            final isSelected = _controller.selectedNote == note;
+                            return GestureDetector(
+                              onTap: () => setState(() => _controller.setNoteLength(note)),
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 8),
+                                child: note.icon(color: isSelected 
+                                  ? isDark ? AppColors.text_primary_dark : AppColors.text_primary_light
+                                  : isDark ? AppColors.unselected_item_dark : AppColors.unselected_item_light,
+                                  isSelectedIcon: isSelected
+                                ),
                               ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
+                            );
+                          }).toList(),
+                        ),
                     ],
                   ),
                 ),
@@ -228,42 +261,44 @@ class _MetronomePageState extends State<MetronomePage> with SingleTickerProvider
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  ChoiceChip(
-                    label: Text('Timer'),
-                    labelStyle: TextStyle(
-                      color: isDark? AppColors.text_primary_light : AppColors.text_primary_dark,
+                  if (_controller.showTimerStopwatch)
+                    ChoiceChip(
+                      label: Text('Timer'),
+                      labelStyle: TextStyle(
+                        color: isDark? AppColors.text_primary_light : AppColors.text_primary_dark,
+                      ),
+                      selected: _controller.stopMode == StopMode.timer,
+                      checkmarkColor: isDark? AppColors.text_primary_light : AppColors.text_primary_dark,
+                      selectedColor: isDark? AppColors.primary_dark : AppColors.primary_light,
+                      backgroundColor: isDark? AppColors.clicked_dark : AppColors.clicked_light,
+                      onSelected: (selected) {
+                        setState(() {
+                          if (selected) {
+                            _controller.enableTimerMode(
+                              minutes: selectedMinutes,
+                              seconds: selectedSeconds,
+                            );
+                          } else {
+                            _controller.disableStopConditions();
+                          }
+                        });
+                      },
                     ),
-                    selected: _controller.stopMode == StopMode.timer,
-                    checkmarkColor: isDark? AppColors.text_primary_light : AppColors.text_primary_dark,
-                    selectedColor: isDark? AppColors.primary_dark : AppColors.primary_light,
-                    backgroundColor: isDark? AppColors.clicked_dark : AppColors.clicked_light,
-                    onSelected: (selected) {
-                      setState(() {
-                        if (selected) {
-                          _controller.enableTimerMode(
-                            minutes: selectedMinutes,
-                            seconds: selectedSeconds,
-                          );
-                        } else {
-                          _controller.disableStopConditions();
-                        }
-                      });
-                    },
-                  ),
                   const SizedBox(width: 12),
-                  ChoiceChip(
-                    label: const Text('Bars'),
-                    selected: _controller.stopMode == StopMode.bars,
-                    onSelected: (selected) {
-                      setState(() {
-                        if (selected) {
-                          _controller.enableBarsMode(selectedBars);
-                        } else {
-                          _controller.disableStopConditions();
-                        }
-                      });
-                    },
-                  ),
+                  if (_controller.showBarsStopwatch)
+                    ChoiceChip(
+                      label: const Text('Bars'),
+                      selected: _controller.stopMode == StopMode.bars,
+                      onSelected: (selected) {
+                        setState(() {
+                          if (selected) {
+                            _controller.enableBarsMode(selectedBars);
+                          } else {
+                            _controller.disableStopConditions();
+                          }
+                        });
+                      },
+                    ),
                 ],
               ),
 
@@ -273,47 +308,49 @@ class _MetronomePageState extends State<MetronomePage> with SingleTickerProvider
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    IgnorePointer(
-                      ignoring: _controller.stopMode != StopMode.timer,
-                      child: Opacity(
-                        opacity: _controller.stopMode == StopMode.timer ? 1 : 0.3,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _minutesDropdown(),
-                            const SizedBox(width: 12),
-                            _secondsDropdown(),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 48),
-                    IgnorePointer(
-                      ignoring: _controller.stopMode != StopMode.bars,
-                      child: Opacity(
-                        opacity: _controller.stopMode == StopMode.bars ? 1.0 : 0.3,
-                        child: DropdownButton<int>(
-                          value: selectedBars,
-                          alignment: Alignment.center,
-                          items: List.generate(
-                            64,
-                            (i) => DropdownMenuItem(
-                              value: i + 2,
-                              child: Text('${i + 1} Bars'),
-                            ),
+                    if (_controller.showTimerStopwatch)
+                      IgnorePointer(
+                        ignoring: _controller.stopMode != StopMode.timer,
+                        child: Opacity(
+                          opacity: _controller.stopMode == StopMode.timer ? 1 : 0.3,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _minutesDropdown(),
+                              const SizedBox(width: 12),
+                              _secondsDropdown(),
+                            ],
                           ),
-                          onChanged: _controller.stopMode == StopMode.bars
-                              ? (v) {
-                                  if (v == null) return;
-                                  setState(() {
-                                    selectedBars = v;
-                                    _controller.enableBarsMode(v);
-                                  });
-                                }
-                              : null,
                         ),
                       ),
-                    ),
+                    const SizedBox(width: 48),
+                    if (_controller.showBarsStopwatch)
+                      IgnorePointer(
+                        ignoring: _controller.stopMode != StopMode.bars,
+                        child: Opacity(
+                          opacity: _controller.stopMode == StopMode.bars ? 1.0 : 0.3,
+                          child: DropdownButton<int>(
+                            value: selectedBars,
+                            alignment: Alignment.center,
+                            items: List.generate(
+                              64,
+                              (i) => DropdownMenuItem(
+                                value: i + 2,
+                                child: Text('${i + 1} Bars'),
+                              ),
+                            ),
+                            onChanged: _controller.stopMode == StopMode.bars
+                                ? (v) {
+                                    if (v == null) return;
+                                    setState(() {
+                                      selectedBars = v;
+                                      _controller.enableBarsMode(v);
+                                    });
+                                  }
+                                : null,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -321,65 +358,103 @@ class _MetronomePageState extends State<MetronomePage> with SingleTickerProvider
               const SizedBox(height: 48),
 
               /// Play / Pause button with pulse
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _controller.tapTempo();
-                        bpm = _controller.bpm;
-                      });
-                    },
-                    child: Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isDark ? AppColors.clicked_dark : AppColors.clicked_light,
-                      ),
-                      child: Icon(
-                        Icons.touch_app,
-                        size: 32,
-                        color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-                      ),
-                    ),
-                  ),
+              SizedBox(
+                height: 120,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
 
-                  ScaleTransition(
-                    scale: Tween(begin: 1.0, end: 1.1).animate(
-                      CurvedAnimation(
-                        parent: _pulseController,
-                        curve: Curves.easeOut,
+                    // ===== Tap Tempo =====
+                    if (_controller.showTapTempo)
+                      AnimatedOpacity(
+                        duration: const Duration(milliseconds: 500),
+                        opacity: _controller.isPlaying ? 0 : 1,
+                        child: Align(
+                          alignment: const Alignment(0.5, 0),
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _controller.tapTempo();
+                                bpm = _controller.bpm;
+                              });
+                            },
+                            child: AnimatedBuilder(
+                              animation: _controller,
+                              builder: (context, child) {
+                                return Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: _controller.tapActive
+                                        ? (isDark ? AppColors.primary_dark : AppColors.primary_light)
+                                        : (isDark ? AppColors.clicked_dark : AppColors.clicked_light),
+                                  ),
+                                  child: Icon(
+                                    Icons.touch_app,
+                                    size: 32,
+                                    color: _controller.tapActive
+                                        ? (isDark ?  AppColors.text_primary_light : AppColors.text_primary_dark)
+                                        : (isDark ?  AppColors.text_primary_dark : AppColors.text_primary_light),
+                                  ),
+                                );
+                              },
+                            )
+                          ),
+                        ),
+                      ),
+
+                    // ===== Play/Pause Button =====
+                    SlideTransition(
+                      position: _playButtonOffset,
+                      child: AnimatedAlign(
+                        duration: const Duration(milliseconds: 500),
+                        alignment: _controller.showTapTempo
+                          ? _controller.isPlaying ? Alignment(0, 0) : Alignment(-0.5, 0)
+                          : _controller.isPlaying ? Alignment(0, 0) : Alignment(0, 0),
+                        curve: Curves.easeOutCubic,
+                        child: ScaleTransition(
+                        scale: Tween(begin: 1.0, end: 1.1).animate(
+                          CurvedAnimation(
+                            parent: _pulseController,
+                            curve: Curves.easeOut,
+                          ),
+                        ),
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              if (_controller.isPlaying) {
+                                _controller.stop();
+                              } else {
+                                _controller.start();
+                              }
+                            });
+                          },
+                          child: Container(
+                            width: AppSpacing.space_100,
+                            height: AppSpacing.space_100,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _controller.isAccentBeat
+                                  ? isDark ? AppColors.primary_dark : AppColors.primary_light
+                                  : (isDark ? AppColors.clicked_dark : AppColors.clicked_light),
+                            ),
+                            child: Icon(
+                              _controller.isPlaying ? Icons.pause : Icons.play_arrow,
+                              size: AppSpacing.space_56,
+                              color: _controller.isAccentBeat
+                                  ? isDark ? AppColors.surface_dark : AppColors.surface_light
+                                  : isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _controller.isPlaying ? _controller.stop() : _controller.start();
-                        });
-                      },
-                      child: Container(
-                        width: AppSpacing.space_100,
-                        height: AppSpacing.space_100,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: _controller.isAccentBeat
-                              ? isDark ? AppColors.primary_dark : AppColors.primary_light
-                              : (isDark ? AppColors.clicked_dark : AppColors.clicked_light),
-                        ),
-                        child: Icon(
-                          _controller.isPlaying ? Icons.pause : Icons.play_arrow,
-                          size: AppSpacing.space_56,
-                          color: _controller.isAccentBeat
-                              ? isDark ? AppColors.surface_dark : AppColors.surface_light
-                              : isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                    )
+                  ],
+                ),
+              )
+
             ],
           ),
         ),
@@ -388,60 +463,60 @@ class _MetronomePageState extends State<MetronomePage> with SingleTickerProvider
     );
   }
 
-    String getTempoName(int bpm) {
-    return tempoTerms
-        .firstWhere(
-          (term) => bpm >= term.min && bpm <= term.max,
-          orElse: () => const TempoTerm('—', 0, 0),
-        )
-        .name;
+  String getTempoName(int bpm) {
+  return tempoTerms
+      .firstWhere(
+        (term) => bpm >= term.min && bpm <= term.max,
+        orElse: () => const TempoTerm('—', 0, 0),
+      )
+      .name;
+}
+
+  Widget _minutesDropdown() {
+    return DropdownButton<int>(
+      value: selectedMinutes,
+      items: List.generate(
+        60,
+        (i) => DropdownMenuItem(
+          value: i,
+          child: Text('$i min'),
+        ),
+      ),
+      onChanged: (v) {
+        if (v == null) return;
+        setState(() {
+          selectedMinutes = v;
+          _controller.enableTimerMode(
+            minutes: selectedMinutes,
+            seconds: selectedSeconds,
+          );
+        });
+      },
+    );
   }
 
-Widget _minutesDropdown() {
-  return DropdownButton<int>(
-    value: selectedMinutes,
-    items: List.generate(
-      60,
-      (i) => DropdownMenuItem(
-        value: i,
-        child: Text('$i min'),
-      ),
-    ),
-    onChanged: (v) {
-      if (v == null) return;
-      setState(() {
-        selectedMinutes = v;
-        _controller.enableTimerMode(
-          minutes: selectedMinutes,
-          seconds: selectedSeconds,
-        );
-      });
-    },
-  );
-}
-
-Widget _secondsDropdown() {
-  return DropdownButton<int>(
-    value: selectedSeconds,
-    items: List.generate(
-      60,
-      (i) => DropdownMenuItem(
-        value: i,
-        child: Text('$i sec'),
-      ),
-    ),
-    onChanged: (v) {
-      if (v == null) return;
-      setState(() {
-        selectedSeconds = v;
-        _controller.enableTimerMode(
-          minutes: selectedMinutes,
-          seconds: selectedSeconds,
-        );
-      });
-    },
-  );
-}
+  Widget _secondsDropdown() {
+      return DropdownButton<int>(
+        value: selectedSeconds,
+        items: List.generate(
+          60,
+          (i) => DropdownMenuItem(
+            value: i,
+            child: Text('$i sec'),
+          ),
+        ),
+        onChanged: (v) {
+          if (v == null) return;
+          setState(() {
+            selectedSeconds = v;
+            _controller.enableTimerMode(
+              minutes: selectedMinutes,
+              seconds: selectedSeconds,
+            );
+          });
+        },
+      );
+    }
 
 
 }

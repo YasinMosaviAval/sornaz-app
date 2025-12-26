@@ -37,7 +37,7 @@ class NoteIcons {
       '${_basePath}quarter.svg',
       width: size,
       height: size,
-      color: color,
+      // color: color,
     );
   }
 
