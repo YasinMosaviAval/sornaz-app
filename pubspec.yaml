@@ -70,8 +70,9 @@ flutter:
     - assets/icons/notes/notes/
     - assets/icons/notes/rests/
     - assets/icons/notes/signatures/
-    - assets/audio/tick.wav
     - assets/audio/accent.wav
+    - assets/audio/tick.wav
+    - assets/audio/sub_tick.wav
   fonts:
     - family: iran_sansx_fn
       fonts:

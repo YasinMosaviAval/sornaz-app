@@ -10,7 +10,7 @@ import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/screens/Articles/articles.dart';
 import 'package:sornaz/screens/Players/music_palyer.dart';
-import 'package:sornaz/screens/Practice/metronome/metronome_page.dart';
+import 'package:sornaz/screens/Practice/metronome/screens/metronome_page.dart';
 import 'package:sornaz/screens/Practice/tuner_page.dart';
 import 'package:flutter/services.dart';
 import 'package:sornaz/screens/Profile/voice_recorder.dart';

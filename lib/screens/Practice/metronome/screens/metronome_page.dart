@@ -9,11 +9,11 @@ import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_typography.dart';
-import 'package:sornaz/screens/Practice/metronome/metronome_controller.dart';
-import 'package:sornaz/screens/Practice/metronome/metronome_settings_page.dart';
-import 'package:sornaz/screens/Practice/metronome/note_length.dart';
-import 'package:sornaz/screens/Practice/metronome/tempo_terms.dart';
-import 'package:sornaz/screens/Practice/metronome/time_signature_option.dart';
+import 'package:sornaz/screens/Practice/metronome/controller/metronome_controller.dart';
+import 'package:sornaz/screens/Practice/metronome/screens/metronome_settings_page.dart';
+import 'package:sornaz/screens/Practice/metronome/classes/note_length.dart';
+import 'package:sornaz/screens/Practice/metronome/classes/tempo_terms.dart';
+import 'package:sornaz/screens/Practice/metronome/classes/time_signature_option.dart';
 class MetronomePage extends StatefulWidget {
   const MetronomePage({super.key});
 
@@ -23,10 +23,10 @@ class MetronomePage extends StatefulWidget {
 
 class _MetronomePageState extends State<MetronomePage> with TickerProviderStateMixin  {
   final MetronomeController _controller = MetronomeController();
-late AnimationController _uiController;
-late Animation<double> _tapOpacity;
-late Animation<double> _tapScale;
-late Animation<Offset> _playButtonOffset;
+  late AnimationController _uiController;
+  late Animation<double> _tapOpacity;
+  late Animation<double> _tapScale;
+  late Animation<Offset> _playButtonOffset;
 
   late AnimationController _pulseController;
 

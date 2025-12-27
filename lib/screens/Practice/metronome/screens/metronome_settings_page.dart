@@ -6,7 +6,7 @@ import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_typography.dart';
-import 'package:sornaz/screens/Practice/metronome/metronome_controller.dart';
+import 'package:sornaz/screens/Practice/metronome/controller/metronome_controller.dart';
 import 'package:sornaz/screens/Practice/metronome/Components/labeled_slider.dart';
 // import 'package:sornaz/screens/Practice/metronome/tempo_terms.dart';
 
@@ -92,6 +92,21 @@ class _MetronomeSettingsPageState extends State<MetronomeSettingsPage> {
                 unit: '%',
                 onChanged: (v) {
                   setState(() => controller.setTickVolume(v / 100));
+                },
+              ),
+
+              const SizedBox(height: 16),
+
+              // Tick Volume
+              LabeledSlider(
+                label: const Icon(Icons.graphic_eq),
+                value: controller.subTickVolume  * 100,
+                min: 0,
+                max: 100,
+                divisions: 100,
+                unit: '%',
+                onChanged: (v) {
+                  setState(() => controller.setSubTickVolume(v / 100));
                 },
               ),
 
