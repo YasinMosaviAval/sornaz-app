@@ -12,8 +12,8 @@ class AppColors {
   static const Color surface_light = Color.fromARGB(255, 241, 241, 241);
   static const Color shadow_light = Color.fromARGB(30, 241, 241, 241);
   static const Color text_primary_light = Color.fromARGB(255, 0, 0, 0);
-  static const Color button_text_primary_light = Color.fromARGB(255, 255, 255, 255);
   static const Color text_secondary_light = Color.fromARGB(155, 31, 31, 31);
+  static const Color button_text_primary_light = Color.fromARGB(255, 255, 255, 255);
   static const Color unselected_item_light = Color.fromARGB(75, 31, 31, 31);
 
   static const Color clicked_dark = Color.fromARGB(30, 241, 241, 241);
@@ -25,8 +25,8 @@ class AppColors {
   static const Color surface_dark = Color.fromARGB(255, 31, 31, 31);
   static const Color shadow_dark = Color.fromARGB(30, 31, 31, 31);
   static const Color text_primary_dark = Color.fromARGB(255, 255, 255, 255);
-  static const Color button_text_primary_dark = Color.fromARGB(255, 0, 0, 0);
   static const Color text_secondary_dark = Color.fromARGB(155, 241, 241, 241);
+  static const Color button_text_primary_dark = Color.fromARGB(255, 0, 0, 0);
   static const Color unselected_item_dark = Color.fromARGB(100, 241, 241, 241);
 
   static const Color error = Color.fromRGBO(244, 67, 54, 1);

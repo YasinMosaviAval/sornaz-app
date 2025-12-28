@@ -9,9 +9,12 @@ import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_typography.dart';
+import 'package:sornaz/screens/Practice/metronome/Components/bpm_header.dart';
+import 'package:sornaz/screens/Practice/metronome/Components/bpm_slider.dart';
+import 'package:sornaz/screens/Practice/metronome/Components/stop_mode_section.dart';
+import 'package:sornaz/screens/Practice/metronome/Components/time_signature_row.dart';
 import 'package:sornaz/screens/Practice/metronome/controller/metronome_controller.dart';
 import 'package:sornaz/screens/Practice/metronome/screens/metronome_settings_page.dart';
-import 'package:sornaz/screens/Practice/metronome/classes/note_length.dart';
 import 'package:sornaz/screens/Practice/metronome/classes/tempo_terms.dart';
 import 'package:sornaz/screens/Practice/metronome/classes/time_signature_option.dart';
 class MetronomePage extends StatefulWidget {
@@ -77,25 +80,25 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
       seconds: selectedSeconds,
     );
 
-_uiController = AnimationController(
-  vsync: this,
-  duration: const Duration(milliseconds: 500),
-);
+    _uiController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
 
-_tapOpacity = Tween<double>(begin: 1, end: 0).animate(
-  CurvedAnimation(parent: _uiController, curve: Curves.easeOut),
-);
+    _tapOpacity = Tween<double>(begin: 1, end: 0).animate(
+      CurvedAnimation(parent: _uiController, curve: Curves.easeOut),
+    );
 
-_tapScale = Tween<double>(begin: 1, end: 0.7).animate(
-  CurvedAnimation(parent: _uiController, curve: Curves.easeOut),
-);
+    _tapScale = Tween<double>(begin: 1, end: 0.7).animate(
+      CurvedAnimation(parent: _uiController, curve: Curves.easeOut),
+    );
 
-_playButtonOffset = Tween<Offset>(
-  begin: const Offset(0, 0),
-  end: const Offset(0, 0),
-).animate(
-  CurvedAnimation(parent: _uiController, curve: Curves.easeOutCubic),
-);
+    _playButtonOffset = Tween<Offset>(
+      begin: const Offset(0, 0),
+      end: const Offset(0, 0),
+    ).animate(
+      CurvedAnimation(parent: _uiController, curve: Curves.easeOutCubic),
+    );
 
   }
 
@@ -120,186 +123,59 @@ _playButtonOffset = Tween<Offset>(
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          title: IconButton(
-            icon: const Icon(Icons.settings),
-            color: isDark? AppColors.text_primary_dark : AppColors.text_primary_light,
-            iconSize: 36,
-            onPressed: () async {
-              final result = await Navigator.push<bool>(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => MetronomeSettingsPage(controller: _controller),
-                ),
-              );
-
-              if (result != null) {
-                setState(() {});
-              }
-            },
-          ),
-          automaticallyImplyLeading: false,
-          backgroundColor: isDark? AppColors.surface_dark : AppColors.surface_light,
-        ),
+        appBar: _MetronomeAppBar(isDark, _controller),
         backgroundColor: isDark? AppColors.background_dark : AppColors.background_light,
         body: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              /// BPM + Tempo name
-              Column(
-                children: [
-                  Directionality(
-                    textDirection: TextDirection.ltr,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          bpm.toString(),
-                          style: AppTypography.body0(context),
-                        ),
-                        AppSpacing.sizedBoxW8(),
-                        Text(
-                          'BPM',
-                          style: AppTypography.subtitle3(context),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Text(
-                    tempoName,
-                    style: AppTypography.subtitle1(context),
-                  ),
-                ],
-              ),
+              BpmHeader(bpm: bpm, tempoName: tempoName),
 
               const SizedBox(height: 16),
 
-              Slider(
-                value: bpm.toDouble(),
-                min: 40,
-                max: 200,
-                activeColor: isDark? AppColors.primary_dark : AppColors.primary_light,
-                inactiveColor: isDark? AppColors.text_secondary_dark : AppColors.text_secondary_light,
-                onChanged: (v) {
-                  setState(() => bpm = v.toInt());
-                  _controller.setBpm(bpm);
+              BpmSlider(
+                bpm: bpm,
+                isDark: isDark,
+                onChanged: (value) {
+                  setState(() => bpm = value);
+                  _controller.setBpm(value);
                 },
               ),
 
               const SizedBox(height: 56),
 
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Directionality(
-                  textDirection: TextDirection.ltr,
-                  child: Row(
-                    mainAxisAlignment: _controller.showBarsDivision ? MainAxisAlignment.spaceBetween : MainAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: 48,
-                        height: 48,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 0),
-                          decoration: BoxDecoration(
-                            color: isDark ? AppColors.clicked_dark : AppColors.clicked_light,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: DropdownButton<TimeSignatureOption>(
-                            value: selectedTimeSignature,
-                            isExpanded: true,
-                            icon: const SizedBox.shrink(),
-                            underline: const SizedBox(),
-                            dropdownColor: isDark? AppColors.surface_dark : AppColors.surface_light,
-                            items: timeSignatures.map((option) {
-                              return DropdownMenuItem(
-                                value: option,
-                                child: Center(
-                                  child: Text(
-                                    option.label,
-                                    style: AppTypography.body2(context),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              if (value == null) return;
-                              setState(() {
-                                selectedTimeSignature = value;
-                                _controller.setTimeSignature(value.beats);
-                              });
-                            },
-                          ),
-                        ),
-                      ),
-
-                      if (_controller.showBarsDivision)
-                        Row(
-                          children: noteLengths.map((note) {
-                            final isSelected = _controller.selectedNote == note;
-                            return GestureDetector(
-                              onTap: () => setState(() => _controller.setNoteLength(note)),
-                              child: Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 8),
-                                child: note.icon(color: isSelected 
-                                  ? isDark ? AppColors.text_primary_dark : AppColors.text_primary_light
-                                  : isDark ? AppColors.unselected_item_dark : AppColors.unselected_item_light,
-                                  isSelectedIcon: isSelected
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                    ],
-                  ),
-                ),
+              TimeSignatureSection(
+                controller: _controller,
+                selected: selectedTimeSignature,
+                isDark: isDark,
+                onChanged: (value) {
+                  setState(() {
+                    selectedTimeSignature = value;
+                    _controller.setTimeSignature(value.beats);
+                  });
+                },
               ),
-
+              
               const SizedBox(height: 56),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (_controller.showTimerStopwatch)
-                    ChoiceChip(
-                      label: Text('Timer'),
-                      labelStyle: TextStyle(
-                        color: isDark? AppColors.text_primary_light : AppColors.text_primary_dark,
-                      ),
-                      selected: _controller.stopMode == StopMode.timer,
-                      checkmarkColor: isDark? AppColors.text_primary_light : AppColors.text_primary_dark,
-                      selectedColor: isDark? AppColors.primary_dark : AppColors.primary_light,
-                      backgroundColor: isDark? AppColors.clicked_dark : AppColors.clicked_light,
-                      onSelected: (selected) {
-                        setState(() {
-                          if (selected) {
-                            _controller.enableTimerMode(
-                              minutes: selectedMinutes,
-                              seconds: selectedSeconds,
-                            );
-                          } else {
-                            _controller.disableStopConditions();
-                          }
-                        });
-                      },
-                    ),
-                  const SizedBox(width: 12),
-                  if (_controller.showBarsStopwatch)
-                    ChoiceChip(
-                      label: const Text('Bars'),
-                      selected: _controller.stopMode == StopMode.bars,
-                      onSelected: (selected) {
-                        setState(() {
-                          if (selected) {
-                            _controller.enableBarsMode(selectedBars);
-                          } else {
-                            _controller.disableStopConditions();
-                          }
-                        });
-                      },
-                    ),
-                ],
+              StopModeSection(
+                controller: _controller,
+                isDark: isDark,
+                selectedBars: selectedBars,
+                selectedMinutes: selectedMinutes,
+                selectedSeconds: selectedSeconds,
+                onBarsChanged: (v) {
+                  setState(() => selectedBars = v);
+                  _controller.enableBarsMode(v);
+                },
+                onTimerChanged: (m, s) {
+                  setState(() {
+                    selectedMinutes = m;
+                    selectedSeconds = s;
+                  });
+                  _controller.enableTimerMode(minutes: m, seconds: s);
+                },
               ),
 
               const SizedBox(height: 8),
@@ -316,55 +192,27 @@ _playButtonOffset = Tween<Offset>(
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              _minutesDropdown(),
+                              _minutesDropdown(isDark),
                               const SizedBox(width: 12),
-                              _secondsDropdown(),
+                              _secondsDropdown(isDark),
                             ],
                           ),
                         ),
                       ),
                     const SizedBox(width: 48),
                     if (_controller.showBarsStopwatch)
-                      IgnorePointer(
-                        ignoring: _controller.stopMode != StopMode.bars,
-                        child: Opacity(
-                          opacity: _controller.stopMode == StopMode.bars ? 1.0 : 0.3,
-                          child: DropdownButton<int>(
-                            value: selectedBars,
-                            alignment: Alignment.center,
-                            items: List.generate(
-                              64,
-                              (i) => DropdownMenuItem(
-                                value: i + 2,
-                                child: Text('${i + 1} Bars'),
-                              ),
-                            ),
-                            onChanged: _controller.stopMode == StopMode.bars
-                                ? (v) {
-                                    if (v == null) return;
-                                    setState(() {
-                                      selectedBars = v;
-                                      _controller.enableBarsMode(v);
-                                    });
-                                  }
-                                : null,
-                          ),
-                        ),
-                      ),
+                      _barsDropdown(isDark),
                   ],
                 ),
               ),
 
               const SizedBox(height: 48),
 
-              /// Play / Pause button with pulse
               SizedBox(
                 height: 120,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-
-                    // ===== Tap Tempo =====
                     if (_controller.showTapTempo)
                       AnimatedOpacity(
                         duration: const Duration(milliseconds: 500),
@@ -403,8 +251,6 @@ _playButtonOffset = Tween<Offset>(
                           ),
                         ),
                       ),
-
-                    // ===== Play/Pause Button =====
                     SlideTransition(
                       position: _playButtonOffset,
                       child: AnimatedAlign(
@@ -463,6 +309,7 @@ _playButtonOffset = Tween<Offset>(
     );
   }
 
+
   String getTempoName(int bpm) {
   return tempoTerms
       .firstWhere(
@@ -472,14 +319,21 @@ _playButtonOffset = Tween<Offset>(
       .name;
 }
 
-  Widget _minutesDropdown() {
+  Widget _minutesDropdown(bool isDark) {
     return DropdownButton<int>(
       value: selectedMinutes,
+      dropdownColor: isDark ? AppColors.surface_dark : AppColors.surface_light,
+      iconEnabledColor: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light,
+      iconDisabledColor: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light,
+      underline: null,
       items: List.generate(
         60,
         (i) => DropdownMenuItem(
           value: i,
-          child: Text('$i min'),
+          child: Text(
+            '$i min',
+            style: AppTypography.body2(context),
+          ),
         ),
       ),
       onChanged: (v) {
@@ -495,14 +349,21 @@ _playButtonOffset = Tween<Offset>(
     );
   }
 
-  Widget _secondsDropdown() {
+  Widget _secondsDropdown(bool isDark) {
       return DropdownButton<int>(
         value: selectedSeconds,
+        dropdownColor: isDark ? AppColors.surface_dark : AppColors.surface_light,
+        iconEnabledColor: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light,
+        iconDisabledColor: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light,
+        underline: null,
         items: List.generate(
           60,
           (i) => DropdownMenuItem(
             value: i,
-            child: Text('$i sec'),
+            child: Text(
+              '$i sec',
+              style: AppTypography.body2(context),
+            ),
           ),
         ),
         onChanged: (v) {
@@ -518,6 +379,78 @@ _playButtonOffset = Tween<Offset>(
       );
     }
 
+  IgnorePointer _barsDropdown(bool isDark) {
+    return IgnorePointer(
+      ignoring: _controller.stopMode != StopMode.bars,
+      child: Opacity(
+        opacity: _controller.stopMode == StopMode.bars ? 1.0 : 0.3,
+        child: DropdownButton<int>(
+          value: selectedBars,
+          dropdownColor: isDark ? AppColors.surface_dark : AppColors.surface_light,
+          iconEnabledColor: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light,
+          iconDisabledColor: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light,
+          underline: null,
+          items: List.generate(
+            64,
+            (i) => DropdownMenuItem(
+              value: i + 2,
+              child: Text(
+                '${i + 1} Bars',
+                style: AppTypography.body2(context)
+              ),
+            ),
+          ),
+          onChanged: _controller.stopMode == StopMode.bars
+              ? (v) {
+                  if (v == null) return;
+                  setState(() {
+                    selectedBars = v;
+                    _controller.enableBarsMode(v);
+                  });
+                }
+              : null,
+        ),
+      ),
+    );
+  }
 
 }
 
+class _MetronomeAppBar extends StatelessWidget
+    implements PreferredSizeWidget {
+  final bool isDark;
+  final MetronomeController controller;
+
+  const _MetronomeAppBar(this.isDark, this.controller);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      automaticallyImplyLeading: false,
+      backgroundColor:
+          isDark ? AppColors.surface_dark : AppColors.surface_light,
+      title: IconButton(
+        icon: const Icon(Icons.settings),
+        iconSize: AppSpacing.space_32,
+        color: isDark
+            ? AppColors.text_primary_dark
+            : AppColors.text_primary_light,
+        onPressed: () async {
+          final result = await Navigator.push<bool>(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  MetronomeSettingsPage(controller: controller),
+            ),
+          );
+          if (result != null) {
+            // فقط برای rebuild
+          }
+        },
+      ),
+    );
+  }
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}

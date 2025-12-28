@@ -113,6 +113,7 @@ class AppStrings {
   static const guest_user = 'guestUser';
   static const without_content = 'withoutContent';
   static const notification_title = 'notificationTitle';
+  static const appearance_title = 'appearanceTitle';
   static const elements = 'elements';
   static const text_size = 'textSize';
   static const text_size_description = 'textSizeDescription';
@@ -415,6 +416,7 @@ class AppStrings {
     guest_user,
     without_content,
     notification_title,
+    appearance_title,
     elements,
     text_size,
     text_size_description,
@@ -648,6 +650,7 @@ class AppStrings {
     without_content: 'Without Content',
 
     notification_title: 'Notification',
+    appearance_title: 'Appearance',
     elements: 'Elements',
     text_size: 'Text Size',
     text_size_description: 'Set text size',
@@ -912,6 +915,7 @@ https://www.youtube.com/@sornaz.academy
     without_content: 'بدون محتوا',
 
     notification_title: 'اطلاعیه',
+    appearance_title: 'ظاهر',
     elements: 'ابزار',
     text_size: 'اندازه متن',
     text_size_description: 'اندازه متن اپلیکیشن',

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_spacing.dart';
 
 class NoteLength {
   final String name;
@@ -22,6 +24,30 @@ class NoteLength {
       ? selectedIconBuilder(color, size) 
       : iconBuilder(color, size);
   }
+
+  Widget nameBox({
+    required TextStyle style, 
+    bool isSelected = false,
+    bool isDark = false
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isSelected 
+          ? isDark ? AppColors.surface_dark : AppColors.surface_light
+          : Colors.transparent,
+        borderRadius: BorderRadius.all(Radius.circular(AppSpacing.space_2))
+      ),
+      padding: EdgeInsets.all(AppSpacing.space_4),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_8),
+        child: Text(
+          name, 
+          style: style,
+        ),
+      ),
+    );
+  }
+
 }
 
 final noteLengths = [

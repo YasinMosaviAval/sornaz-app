@@ -195,6 +195,23 @@ class AppTypography {
     );
   }
 
+  static TextStyle body4(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    return TextStyle(
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 10),
+      fontWeight: FontWeight.normal,
+      color: isDark
+          ? AppColors.text_primary_dark
+          : AppColors.text_primary_light,
+      letterSpacing: -0.01,
+      fontStyle: FontStyle.normal,
+      textBaseline: TextBaseline.alphabetic,
+      overflow: TextOverflow.visible,
+    );
+  }
+
   //*** */ secondary text color
   static TextStyle subtitle1(BuildContext context) {
     final appData = Provider.of<AppData>(context);
@@ -236,6 +253,23 @@ class AppTypography {
     return TextStyle(
       fontFamily: appData.fontFamily,
       fontSize: _responsiveSize(context, 12),
+      fontWeight: FontWeight.w500,
+      color: isDark
+          ? AppColors.text_secondary_dark
+          : AppColors.text_secondary_light,
+      letterSpacing: -0.01,
+      fontStyle: FontStyle.normal,
+      textBaseline: TextBaseline.alphabetic,
+      overflow: TextOverflow.visible,
+    );
+  }
+  
+  static TextStyle subtitle4(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    return TextStyle(
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 10),
       fontWeight: FontWeight.w500,
       color: isDark
           ? AppColors.text_secondary_dark
@@ -356,6 +390,15 @@ class AppTypography {
     return baseSize + appData.textSize;
   }
 
+
+
+
+  // Text(
+  //   title,
+  //   style: AppTypography.settingsSectionTitle(context).copyWith(
+  //     color: textColor,
+  //   ),
+  // ),
   // ================================================================================================================================
   // ================================================================================================================================
   static TextStyle routerPageNotFound = TextStyle();
@@ -387,8 +430,8 @@ class AppTypography {
   // ================================================================================================================================
   static TextStyle settingsAppBarTitle(BuildContext context) => headline3(context);
   static TextStyle settingsSectionTitle(BuildContext context) => headline6(context);
-  static TextStyle settingsItemTitle(BuildContext context) => headline5(context);
-  static TextStyle settingsItemSubtitle(BuildContext context) => subtitle3(context);
+  static TextStyle settingsItemTitle(BuildContext context) => body2(context);
+  static TextStyle settingsItemSubtitle(BuildContext context) => subtitle4(context);
   static TextStyle settingsItemContent(BuildContext context) => body3(context);
   static TextStyle settingsDropdownItem(BuildContext context) => body3(context);
   // ================================================================================================================================

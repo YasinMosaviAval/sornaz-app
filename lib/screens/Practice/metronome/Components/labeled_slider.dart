@@ -1,28 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
-
-// Widget buildSlider({
-//   required double value,
-//   required double min,
-//   required double max,
-//   int? divisions,
-//   required ValueChanged<double> onChanged,
-// }) {
-//   return Slider(
-//     value: value,
-//     min: min,
-//     max: max,
-//     divisions: divisions,
-//     onChanged: onChanged,
-//   );
-// }
-
+import 'package:sornaz/helpers/app_typography.dart';
 
 class LabeledSlider extends StatelessWidget {
   final Widget label;
   final double value;
   final double min;
   final double max;
+  final bool isDark;
   final int? divisions;
   final String unit;
   final ValueChanged<double> onChanged;
@@ -31,10 +17,11 @@ class LabeledSlider extends StatelessWidget {
     super.key,
     required this.label,
     required this.value,
-    required this.min,
-    required this.max,
     required this.onChanged,
-    this.divisions,
+    required this.isDark,
+    this.min = 0,
+    this.max = 100,
+    this.divisions = 100,
     this.unit = '',
   });
 
@@ -44,13 +31,18 @@ class LabeledSlider extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_24),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.space_24, 
+            AppSpacing.space_12, 
+            AppSpacing.space_24, 
+            AppSpacing.space_0
+          ),
           child: Row(
             children: [
               label,
               Text(
                 ' ${value.round()}$unit',
-                style: Theme.of(context).textTheme.bodyLarge,
+                style: AppTypography.body2(context),
               ),
             ],
           ),
@@ -60,6 +52,8 @@ class LabeledSlider extends StatelessWidget {
           min: min,
           max: max,
           divisions: divisions,
+          activeColor: isDark ? AppColors.primary_dark : AppColors.primary_light,
+          inactiveColor: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light,
           label: '${value.round()}$unit',
           onChanged: onChanged,
         ),

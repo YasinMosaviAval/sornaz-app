@@ -10,7 +10,7 @@ class MetronomeController extends ChangeNotifier {
 
   double accentVolume = 1.0;
   double tickVolume = 0.75;
-  double subTickVolume = 0.5;
+  double subTickVolume = 0.1;
 
   int bpm = 120;
   int timeSignature = 4;
@@ -25,11 +25,7 @@ class MetronomeController extends ChangeNotifier {
 
   VoidCallback? onBeat;
 
-
   NoteLength selectedNote = noteLengths.first;
-
-  // NoteLength selectedNote = noteLengths[0];
-
 
   int get subdivisionCount {
     switch (selectedNote.name) {
@@ -72,7 +68,6 @@ class MetronomeController extends ChangeNotifier {
 
   int targetBars = 0;
   int currentBar = 0;
-
 
   Future<void> init() async {
     await _tickPlayer.setAsset('assets/audio/tick.wav');
@@ -163,8 +158,6 @@ class MetronomeController extends ChangeNotifier {
     }
   }
 
-
-
   void setPracticeTimer({
     required int minutes,
     required int seconds,
@@ -194,135 +187,11 @@ class MetronomeController extends ChangeNotifier {
     targetBars = 0;
   }
 
-
-/*
-  void _playBeat() {
-    final isAccent = currentBeat == 1;
-    isAccentBeat = isAccent;
-
-    if (isAccent) {
-      _accentPlayer.seek(Duration.zero);
-      _accentPlayer.play();
-    } else {
-      _tickPlayer.seek(Duration.zero);
-      _tickPlayer.play();
-    }
-
-    onBeat?.call();
-
-    if (isAccent) {
-      currentBar++;
-
-      if (stopMode == StopMode.bars &&
-          targetBars > 0 &&
-          currentBar >= targetBars) {
-        stop();
-        return;
-      }
-    }
-
-    currentBeat++;
-    if (currentBeat > timeSignature) {
-      currentBeat = 1;
-    }
-  }
-*/
-/*
-void _playBeat() {
-  final ticks = selectedNote.ticksPerBeat;
-  final beatDurationMs = (60000 / bpm).round();
-  final subTickInterval = beatDurationMs ~/ ticks;
-
-  // تیک اول (Accent یا Tick اصلی)
-  _playMainTick();
-
-  // تیک‌های بعدی
-  for (int i = 1; i < ticks; i++) {
-    Future.delayed(
-      Duration(milliseconds: subTickInterval * i),
-      () {
-        if (!isPlaying) return;
-        
-        _subTickPlayer.stop();
-        _subTickPlayer.seek(Duration.zero);
-        _subTickPlayer.play();
-      },
-    );
-  }
-
-  onBeat?.call();
-  _advanceBeat();
-}
-
-void _playMainTick() {
-  final isAccent = currentBeat == 1;
-  isAccentBeat = isAccent;
-
-  if (isAccent) {
-    _accentPlayer.seek(Duration.zero);
-    _accentPlayer.play();
-  } else {
-    _tickPlayer.seek(Duration.zero);
-    _tickPlayer.play();
-  }
-}
-
-void _advanceBeat() {
-  if (currentBeat == 1) {
-    currentBar++;
-    if (stopMode == StopMode.bars &&
-        targetBars > 0 &&
-        currentBar >= targetBars) {
-      stop();
-      return;
-    }
-  }
-
-  currentBeat++;
-  if (currentBeat > timeSignature) {
-    currentBeat = 1;
-  }
-}
-*/
-/*
-void _playBeat() {
-  final subdivision = selectedNote.ticksPerBeat;
-
-  final isMainBeat = _subTickIndex == 0;
-  final isAccent = isMainBeat && currentBeat == 1;
-
-  if (isAccent) {
-    _accentPlayer.seek(Duration.zero);
-    _accentPlayer.play();
-  } else if (isMainBeat) {
-    _tickPlayer.seek(Duration.zero);
-    _tickPlayer.play();
-  } else {
-    _subTickPlayer.seek(Duration.zero);
-    _subTickPlayer.play();
-  }
-
-  onBeat?.call();
-
-  _subTickIndex++;
-
-  if (_subTickIndex >= subdivision) {
-    _subTickIndex = 0;
-    currentBeat++;
-
-    if (currentBeat > timeSignature) {
-      currentBeat = 1;
-    }
-  }
-}
-*/
-
   void startTimerFor(int hours, int minutes) {
     final duration = Duration(hours: hours, minutes: minutes);
     _timer?.cancel();
     _timer = Timer(duration, stop);
   }
-
 
   void setNoteLength(NoteLength note) {
     selectedNote = note;
