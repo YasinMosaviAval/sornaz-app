@@ -412,7 +412,8 @@ class ArticlesPageTitleWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: AppTypography.articlesDetailPageArticlesTitle(context),
+      // style: AppTypography.articlesDetailPageArticlesTitle(context),
+      style: AppTypography.articlesTitle(context),
     );
   }
 }

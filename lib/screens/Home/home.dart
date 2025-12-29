@@ -8,6 +8,7 @@ import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 
 
+/*
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/blog_carousel.dart';
 import 'package:sornaz/components/bottom_nav.dart';
@@ -62,7 +63,7 @@ class HomePage extends StatelessWidget {
     );
   }
 }
-
+*/
 
 class ApplicationLogo extends StatelessWidget {
   const ApplicationLogo({super.key, required this.isDark});
@@ -90,6 +91,8 @@ class ApplicationTitle extends StatelessWidget {
     return Text(
       AppStrings.application_name.translate(context),
       style: AppTypography.homeApplicationTitle(context),
+      // textAlign: TextAlign.start,
+      // textAlign: TextAlign.end,
     );
   }
 }
@@ -103,17 +106,14 @@ class HeaderMenuIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return Builder(
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.only(left: AppSpacing.space_16),
-          child: IconButton(
-            icon: Icon(
-              Icons.menu,
-              color: isDark
-                  ? AppColors.text_primary_dark
-                  : AppColors.text_primary_light,
-            ),
-            onPressed: () => Scaffold.of(context).openDrawer(),
+        return IconButton(
+          icon: Icon(
+            Icons.menu,
+            color: isDark
+                ? AppColors.text_primary_dark
+                : AppColors.text_primary_light,
           ),
+          onPressed: () => Scaffold.of(context).openDrawer(),
         );
       },
     );

@@ -809,7 +809,7 @@ https://www.youtube.com/@sornaz.academy
     font_sahel: 'ساحل',
     font_vazir: 'وزیر',
     font_peyda: 'پیدا',
-    application_name: 'سرناز',
+    application_name: 'سُرناز',
     application_fullname: 'برنامه موسیقی سرناز',
     application_email: 'sornaz.ac@gmail.com',
     faq_title: 'سوالات متداول',
