@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sornaz/classes/accordion.dart';
 import 'package:sornaz/components/custom_app_bar.dart';
 import 'package:sornaz/components/justified_text.dart';
 import 'package:sornaz/components/settings_section_header.dart';
-import 'package:sornaz/components/title_description.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
-import 'package:sornaz/helpers/app_typography.dart';
 
 class AboutUsPage extends StatelessWidget {
   const AboutUsPage({super.key});
