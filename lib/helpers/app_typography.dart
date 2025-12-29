@@ -505,9 +505,9 @@ class AppTypography {
   static TextStyle recordDetailsDeleteDialogueConfirmButton(BuildContext context) => body3(context);
   // ================================================================================================================================
   static TextStyle articlesErrorInLoading(BuildContext context) => headline4(context);
-  static TextStyle articlesReleaseDate(BuildContext context) => subtitle3(context);
-  static TextStyle articlesTitle(BuildContext context) => body3(context);
-  static TextStyle articlesBrief(BuildContext context) => subtitle3(context);
+  static TextStyle articlesReleaseDate(BuildContext context) => subtitle4(context);
+  static TextStyle articlesTitle(BuildContext context) => headline6(context);
+  static TextStyle articlesBrief(BuildContext context) => subtitle4(context);
   // ================================================================================================================================
   static TextStyle articlesDetailPageErrorInSendingComment(BuildContext context,) => headline4(context);
   static TextStyle articlesDetailPageLoadMoreComments(BuildContext context) => headline4(context);

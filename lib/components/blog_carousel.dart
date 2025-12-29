@@ -15,7 +15,8 @@ import 'package:sornaz/screens/Articles/article_detail_page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'package:sornaz/screens/Articles/articles.dart';
+import 'package:sornaz/screens/Articles/ui/articles_page.dart';
+
 
 class BlogCarousel extends StatelessWidget {
   const BlogCarousel({super.key});

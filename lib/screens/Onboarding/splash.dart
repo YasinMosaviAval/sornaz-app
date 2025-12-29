@@ -4,8 +4,9 @@ import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_images.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
-import 'package:sornaz/screens/Articles/articles.dart';
 import 'dart:async';
+
+import 'package:sornaz/screens/Articles/ui/articles_page.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
