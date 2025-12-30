@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sornaz/components/app_bar.dart';
+import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/screens/Articles/services/article_api_service.dart';
 import 'package:sornaz/screens/Articles/ui/components/article_author_widget.dart';
@@ -31,12 +33,33 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
   bool hasMoreComments = true;
   final ScrollController _scrollController = ScrollController();
 
+  double _scrollProgress = 0.0;
+
+  void _onScroll() {
+    final max = _scrollController.position.maxScrollExtent;
+    final current = _scrollController.offset;
+
+    setState(() {
+      _scrollProgress = (current / max).clamp(0.0, 1.0);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     _fetchComments();
     _fetchRelatedPosts();
     _scrollController.addListener(_scrollListener);
+    _scrollController.addListener(_onScroll);
+
+    _scrollController.addListener(() {
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final currentScroll = _scrollController.offset;
+      setState(() {
+        _scrollProgress = (currentScroll / maxScroll).clamp(0.0, 1.0);
+      });
+    });
+
   }
 
   @override
@@ -46,10 +69,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
   }
 
   void _scrollListener() {
-    if (_scrollController.offset >=
-            _scrollController.position.maxScrollExtent - 200 &&
-        !_scrollController.position.outOfRange &&
-        hasMoreComments) {
+    if (_scrollController.offset >= _scrollController.position.maxScrollExtent - 200 && !_scrollController.position.outOfRange && hasMoreComments) {
       commentPage++;
       _fetchComments(loadMore: true);
     }
@@ -120,7 +140,23 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
     final isDark = appData.isDark;
 
     return Scaffold(
-      appBar: AppBar(title: Text(title, style: AppTypography.articlesTitle(context))),
+      appBar: AppBar(
+        foregroundColor: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+        titleSpacing: 0,
+        title: Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppTypography.headline3(context),
+        ),
+        elevation: 0,
+        flexibleSpace: _AppBarProgressBackground(
+          progress: _scrollProgress,
+          isDark: isDark,
+        ),
+      ),
+      backgroundColor: isDark ? AppColors.background_dark : AppColors.background_light,
+      // SornazAppBar(title: title),
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: SingleChildScrollView(
@@ -172,6 +208,52 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _AppBarProgressBackground extends StatelessWidget {
+  final double progress;
+  final bool isDark;
+
+  const _AppBarProgressBackground({
+    required this.progress,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final baseColor = isDark ? AppColors.surface_dark : AppColors.surface_light;
+
+    final progressColor = isDark ? AppColors.primary_dark : AppColors.primary_light;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Stack(
+          children: [
+            // بک‌گراند اصلی AppBar
+            Container(color: baseColor),
+
+            // لایه پروگرس
+            Align(
+              alignment: Alignment.centerRight, // RTL
+              child: Container(
+                width: constraints.maxWidth * progress,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerRight,
+                    end: Alignment.centerLeft,
+                    colors: [
+                      progressColor.withAlpha(50),
+                      progressColor.withAlpha(50),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -43,7 +43,7 @@ class ArticleItemWidget extends StatelessWidget {
       child: InkWell(
         onTap: () => navigateWithFade(context, ArticleDetailPage(post: post),),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start, // 👈 مهم
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(
               width: AppSpacing.space_100,
