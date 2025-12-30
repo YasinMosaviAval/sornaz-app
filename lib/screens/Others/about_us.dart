@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sornaz/components/custom_app_bar.dart';
+import 'package:sornaz/components/app_bar.dart';
 import 'package:sornaz/components/justified_text.dart';
 import 'package:sornaz/components/settings_section_header.dart';
 import 'package:sornaz/helpers/app_colors.dart';
@@ -23,7 +23,7 @@ class AboutUsPage extends StatelessWidget {
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: Scaffold(
-        appBar: CustomAppBar(title: AppStrings.about_us_title.translate(context)),
+        appBar: SornazAppBar(title: AppStrings.about_us_title.translate(context)),
         backgroundColor: isDark ? AppColors.background_dark : AppColors.background_light,
         body: SafeArea(
           child: SingleChildScrollView(

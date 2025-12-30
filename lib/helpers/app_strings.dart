@@ -219,6 +219,25 @@ class AppStrings {
   static const voice_recorder_filename_changed_after_filename = 'voiceRecorderFilenameChangedAfterFilename';
   static const voice_recorder_error_in_renaming = 'voiceRecorderErrorInRenaming';
 
+static const tuner_settings_title = 'tunerSettingsTitle';
+static const metronome_settings_title = 'metronomeSettingsTitle';
+static const volumes = 'volumes';
+static const tools = 'tools';
+static const show_bars_division_title = 'showBarsDivisionTilte';
+static const show_bars_division_subtitle = 'showBarsDivisionSubtilte';
+static const show_tap_tempo_title = 'showTapTempoTitle';
+static const show_tap_tempo_subtitle = 'showTapTempoSubtitle';
+static const enable_timer_stopwatch_title = 'enableTimerStopwatchTitle';
+static const enable_timer_stopwatch_subtitle = 'enableTimerStopwatchSubtitle';
+static const enable_bars_stopwatch_title = 'enableBarsStopwatchTitle';
+static const enable_bars_stopwatch_subtitle = 'enableBarsStopwatchSubitle';
+
+static const timer = 'Timer';
+static const bars = 'Bars';
+
+static const minute = 'minute';
+static const second = 'second';
+
   static List<Map<String, dynamic>> getOnboardingPages(String lang) {
     final isEn = lang == 'en';
 
@@ -300,6 +319,18 @@ class AppStrings {
 
   static const voice_recorder_hero_tag_main = "main";
   static const voice_recorder_hero_tag_pause = "pause";
+
+  static const larghissimo = 'Larghissimo';
+  static const grave = 'Grave';
+  static const largo = 'Largo';
+  static const adagio = 'Adagio';
+  static const andante = 'Andante';
+  static const moderato = 'Moderato';
+  static const allegro = 'Allegro';
+  static const presto = 'Presto';
+  static const prestissimo = 'Prestissimo';
+
+  static const bpm_capital = 'BPM';
 
 
   // ===============================================================
@@ -520,6 +551,22 @@ class AppStrings {
     voice_recorder_filename_changed_before_filename,
     voice_recorder_filename_changed_after_filename,
     voice_recorder_error_in_renaming,
+    tuner_settings_title,
+    metronome_settings_title,
+    volumes,
+    tools,
+    show_bars_division_title,
+    show_bars_division_subtitle,
+    show_tap_tempo_title,
+    show_tap_tempo_subtitle,
+    enable_timer_stopwatch_title,
+    enable_timer_stopwatch_subtitle,
+    enable_bars_stopwatch_title,
+    enable_bars_stopwatch_subtitle,
+    timer,
+    bars,
+    minute,
+    second,
   ];
 
   static const en = {
@@ -797,6 +844,23 @@ https://www.youtube.com/@sornaz.academy
     voice_recorder_filename_changed_before_filename: "File name changed to “",
     voice_recorder_filename_changed_after_filename: "”.",
     voice_recorder_error_in_renaming: "Error renaming file!",
+
+    tuner_settings_title: 'Tuner Settings',
+    metronome_settings_title: 'Metronome Settings',
+    volumes: 'Volumes',
+    tools: 'Tools',
+    show_bars_division_title: 'Show Bars Division',
+    show_bars_division_subtitle: 'Set ON for showing bars division',
+    show_tap_tempo_title: 'Show Tap Tempo',
+    show_tap_tempo_subtitle: 'set ON for Showing Tap Tempo',
+    enable_timer_stopwatch_title: 'Enable Timer Stopwatch',
+    enable_timer_stopwatch_subtitle: 'set ON for Enable Timer Stopwatch',
+    enable_bars_stopwatch_title: 'Enable Bars Stopwatch',
+    enable_bars_stopwatch_subtitle: 'set ON for Enable Bars Stopwatch',
+    timer: 'Timer',
+    bars: 'Bars',
+    minute: 'minute',
+    second: 'second',
   };
 
   static const fa = {
@@ -1053,5 +1117,22 @@ https://www.youtube.com/@sornaz.academy
     voice_recorder_filename_changed_before_filename: "نام فایل به «",
     voice_recorder_filename_changed_after_filename: "» تغییر کرد.",
     voice_recorder_error_in_renaming: "خطا در تغییر نام!",
+
+    tuner_settings_title: 'تنظیمات تیونر',
+    metronome_settings_title: 'تنظیمات مترونوم',
+    volumes: 'حجم صدا',
+    tools: 'ابزارها',
+    show_bars_division_title: 'تقسیم‌ میزان‌ها',
+    show_bars_division_subtitle: 'برای نمایش تقسیم‌ میزان‌ها روشن کنید',
+    show_tap_tempo_title: 'تعیین سرعت با ضربه',
+    show_tap_tempo_subtitle: 'برای نمایش تعیین سرعت با ضربه روشن کنید',
+    enable_timer_stopwatch_title: 'کرنومتر زمانی',
+    enable_timer_stopwatch_subtitle: 'برای فعال‌سازی کرنومتر زمانی روشن کنید',
+    enable_bars_stopwatch_title: 'شمارش میزان‌ها',
+    enable_bars_stopwatch_subtitle: 'برای فعال‌سازی شمارش میزان‌ها روشن کنید',
+    timer: 'زمان',
+    bars: 'میزان',
+    minute: 'دقیقه',
+    second: 'ثانیه',
   };
 }

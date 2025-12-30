@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:sornaz/screens/Practice/metronome/classes/note_length.dart';
+import 'package:sornaz/screens/Metronome/classes/note_length.dart';
 
 class MetronomeController extends ChangeNotifier {
   final AudioPlayer _accentPlayer = AudioPlayer();
@@ -87,18 +87,8 @@ class MetronomeController extends ChangeNotifier {
     
     _subTickIndex = 0;
 
-    // final interval = Duration(milliseconds: (60000 / bpm).round());
-    // final interval = Duration(
-    //   milliseconds: (60000 / bpm / selectedNote.ticksPerBeat).round(),
-    // );
-
-    
     final baseIntervalMs = 60000 / bpm;
     final intervalMs = baseIntervalMs / subdivisionCount;
-
-    // _timer = Timer.periodic(interval, (_) {
-    //   _playBeat();
-    // });
 
     _timer = Timer.periodic(
       Duration(milliseconds: intervalMs.round()),

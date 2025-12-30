@@ -20,9 +20,11 @@ class AppSpacing {
   static const double space_48 = 48;
   static const double space_50 = 50;
   static const double space_56 = 56;
+  static const double space_60 = 60;
   static const double space_76 = 76;
   static const double space_85 = 85;
   static const double space_100 = 100;
+  static const double space_120 = 120;
   static const double space_150 = 150;
   static const double space_160 = 160;
   static const double space_170 = 170;
@@ -68,6 +70,7 @@ class AppSpacing {
   static SizedBox sizedBoxH24() => const SizedBox(height: AppSpacing.space_24);
   static SizedBox sizedBoxH32() => const SizedBox(height: AppSpacing.space_32);
   static SizedBox sizedBoxH48() => const SizedBox(height: AppSpacing.space_48);
+  static SizedBox sizedBoxH56() => const SizedBox(height: AppSpacing.space_56);
 
   static SizedBox sizedBoxW2() => const SizedBox(width: AppSpacing.space_2);
   static SizedBox sizedBoxW4() => const SizedBox(width: AppSpacing.space_4);
@@ -77,6 +80,7 @@ class AppSpacing {
   static SizedBox sizedBoxW24() => const SizedBox(width: AppSpacing.space_24);
   static SizedBox sizedBoxW32() => const SizedBox(width: AppSpacing.space_32);
   static SizedBox sizedBoxW48() => const SizedBox(width: AppSpacing.space_48);
+  static SizedBox sizedBoxW56() => const SizedBox(width: AppSpacing.space_56);
 
 }
 

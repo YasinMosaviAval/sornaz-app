@@ -20,7 +20,7 @@ import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
-import 'package:sornaz/screens/Profile/record_details_page.dart';
+import 'package:sornaz/screens/Voice%20Recorder/record_details_page.dart';
 
 class VoiceRecorderPage2 extends StatefulWidget {
   const VoiceRecorderPage2({super.key});

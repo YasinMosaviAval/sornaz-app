@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
+import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 
 class BpmHeader extends StatelessWidget {
@@ -23,7 +24,7 @@ class BpmHeader extends StatelessWidget {
             children: [
               Text(bpm.toString(), style: AppTypography.body0(context)),
               AppSpacing.sizedBoxW8(),
-              Text('BPM', style: AppTypography.subtitle3(context)),
+              Text(AppStrings.bpm_capital, style: AppTypography.subtitle3(context)),
             ],
           ),
         ),

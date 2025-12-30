@@ -11,9 +11,9 @@ import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
-import 'package:sornaz/screens/Profile/Record%20Components/delete_button.dart';
-import 'package:sornaz/screens/Profile/Record%20Components/recorded_voice_information.dart';
-import 'package:sornaz/screens/Profile/Record%20Components/rename_button.dart';
+import 'package:sornaz/screens/Voice%20Recorder/Record%20Components/delete_button.dart';
+import 'package:sornaz/screens/Voice%20Recorder/Record%20Components/recorded_voice_information.dart';
+import 'package:sornaz/screens/Voice%20Recorder/Record%20Components/rename_button.dart';
 
 class RecordDetailsPage extends StatefulWidget {
   final File file;

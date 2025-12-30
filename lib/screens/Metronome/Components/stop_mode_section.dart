@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
-import 'package:sornaz/screens/Practice/metronome/controller/metronome_controller.dart';
+import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/screens/Metronome/controller/metronome_controller.dart';
 
 class StopModeSection extends StatelessWidget {
   final MetronomeController controller;
@@ -35,7 +37,7 @@ class StopModeSection extends StatelessWidget {
           children: [
             if (controller.showTimerStopwatch)
               ChoiceChip(
-                label: const Text('Timer'),
+                label: Text(AppStrings.timer.translate(context)),
                 labelStyle: TextStyle(
                   color: isSelectedTimer
                     ? (isDark ? AppColors.text_primary_light : AppColors.text_primary_dark)
@@ -59,7 +61,7 @@ class StopModeSection extends StatelessWidget {
             const SizedBox(width: 12),
             if (controller.showBarsStopwatch)
               ChoiceChip(
-                label: const Text('Bars'),
+                label: Text(AppStrings.bars.translate(context)),
                 labelStyle: TextStyle(
                   color: isSelectedBars
                     ? (isDark ? AppColors.text_primary_light : AppColors.text_primary_dark)
@@ -86,3 +88,5 @@ class StopModeSection extends StatelessWidget {
     );
   }
 }
+
+

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sornaz/components/custom_app_bar.dart';
+import 'package:sornaz/components/app_bar.dart';
 import 'package:sornaz/components/settings_section_header.dart';
 import 'package:sornaz/components/settings_switch_tile.dart';
 import 'package:sornaz/helpers/app_colors.dart';
@@ -8,8 +8,9 @@ import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
-import 'package:sornaz/screens/Practice/metronome/controller/metronome_controller.dart';
-import 'package:sornaz/screens/Practice/metronome/Components/labeled_slider.dart';
+import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/screens/Metronome/controller/metronome_controller.dart';
+import 'package:sornaz/screens/Metronome/Components/labeled_slider.dart';
 
 class MetronomeSettingsPage extends StatefulWidget {
   final MetronomeController controller;
@@ -35,7 +36,7 @@ class _MetronomeSettingsPageState extends State<MetronomeSettingsPage> {
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child:  Scaffold(
-        appBar: CustomAppBar(title: 'Metronome Settings'),
+        appBar: SornazAppBar(title: AppStrings.metronome_settings_title.translate(context)),
         backgroundColor: isDark ? AppColors.background_dark : AppColors.background_light,
         body: SafeArea(
           child: SingleChildScrollView(
@@ -43,14 +44,14 @@ class _MetronomeSettingsPageState extends State<MetronomeSettingsPage> {
             child: Column(
               children: [
                 SettingsSectionHeader(
-                  title: 'Volumes',
+                  title: AppStrings.volumes.translate(context),
                   leadingIcon: Icons.volume_up,
                   children: [
                     LabeledSlider(
                       label: Icon(
                         Icons.access_alarm,
                         color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-                        size: 20,
+                        size: AppSpacing.space_20,
                       ),
                       value: controller.accentVolume * 100,
                       isDark: isDark,
@@ -62,7 +63,7 @@ class _MetronomeSettingsPageState extends State<MetronomeSettingsPage> {
                       label: Icon(
                         Icons.access_time,
                         color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-                        size: 20,
+                        size: AppSpacing.space_20,
                       ),
                       value: controller.tickVolume * 100,
                       isDark: isDark,
@@ -74,7 +75,7 @@ class _MetronomeSettingsPageState extends State<MetronomeSettingsPage> {
                       label: Icon(
                         Icons.graphic_eq,
                         color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-                        size: 20,
+                        size: AppSpacing.space_20,
                       ),
                       value: controller.subTickVolume  * 100,
                       isDark: isDark,
@@ -85,12 +86,12 @@ class _MetronomeSettingsPageState extends State<MetronomeSettingsPage> {
                   ],
                 ),
                 SettingsSectionHeader(
-                  title: 'Tools',
+                  title: AppStrings.tools.translate(context),
                   leadingIcon: Icons.construction_outlined,
                   children: [
                     SettingsSwitchTile(
-                      title: 'Show Bars Division',
-                      subtitle: 'Set ON for showing bars division',
+                      title: AppStrings.show_bars_division_title.translate(context),
+                      subtitle: AppStrings.show_bars_division_subtitle.translate(context),
                       value: controller.showBarsDivision,
                       isDark: isDark,
                       onChanged: (value) {
@@ -100,8 +101,8 @@ class _MetronomeSettingsPageState extends State<MetronomeSettingsPage> {
                       },
                     ),
                     SettingsSwitchTile(
-                      title: 'Show Tap Tempo',
-                      subtitle: 'set ON for Showing Tap Tempo',
+                      title: AppStrings.show_tap_tempo_title.translate(context),
+                      subtitle: AppStrings.show_tap_tempo_subtitle.translate(context),
                       value: controller.showTapTempo,
                       isDark: isDark,
                       onChanged: (value) {
@@ -110,10 +111,9 @@ class _MetronomeSettingsPageState extends State<MetronomeSettingsPage> {
                         });
                       },
                     ),
-          
                     SettingsSwitchTile(
-                      title: 'Enable Timer Stopwatch',
-                      subtitle: 'set ON for Enable Timer Stopwatch',
+                      title: AppStrings.enable_timer_stopwatch_title.translate(context),
+                      subtitle: AppStrings.enable_timer_stopwatch_subtitle.translate(context),
                       value: controller.showTimerStopwatch,
                       isDark: isDark,
                       onChanged: (value) {
@@ -122,10 +122,9 @@ class _MetronomeSettingsPageState extends State<MetronomeSettingsPage> {
                         });
                       },
                     ),
-          
                     SettingsSwitchTile(
-                      title: 'Enable Bars Stopwatch',
-                      subtitle: 'set ON for Enable Bars Stopwatch',
+                      title: AppStrings.enable_bars_stopwatch_title.translate(context),
+                      subtitle: AppStrings.enable_bars_stopwatch_subtitle.translate(context),
                       value: controller.showBarsStopwatch,
                       isDark: isDark,
                       onChanged: (value) {

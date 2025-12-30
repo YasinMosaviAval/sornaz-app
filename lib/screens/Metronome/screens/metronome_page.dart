@@ -2,21 +2,24 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sornaz/components/app_bar.dart';
 import 'package:sornaz/components/bottom_nav.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
-import 'package:sornaz/screens/Practice/metronome/Components/bpm_header.dart';
-import 'package:sornaz/screens/Practice/metronome/Components/bpm_slider.dart';
-import 'package:sornaz/screens/Practice/metronome/Components/stop_mode_section.dart';
-import 'package:sornaz/screens/Practice/metronome/Components/time_signature_row.dart';
-import 'package:sornaz/screens/Practice/metronome/controller/metronome_controller.dart';
-import 'package:sornaz/screens/Practice/metronome/screens/metronome_settings_page.dart';
-import 'package:sornaz/screens/Practice/metronome/classes/tempo_terms.dart';
-import 'package:sornaz/screens/Practice/metronome/classes/time_signature_option.dart';
+import 'package:sornaz/screens/Metronome/Components/bpm_header.dart';
+import 'package:sornaz/screens/Metronome/Components/bpm_slider.dart';
+import 'package:sornaz/screens/Metronome/Components/stop_mode_section.dart';
+import 'package:sornaz/screens/Metronome/Components/time_signature_row.dart';
+import 'package:sornaz/screens/Metronome/controller/metronome_controller.dart';
+import 'package:sornaz/screens/Metronome/screens/metronome_settings_page.dart';
+import 'package:sornaz/screens/Metronome/classes/tempo_terms.dart';
+import 'package:sornaz/screens/Metronome/classes/time_signature_option.dart';
+
 class MetronomePage extends StatefulWidget {
   const MetronomePage({super.key});
 
@@ -47,7 +50,7 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
   int selectedSeconds = 0;
   int selectedBars = 4;
 
-  TimeOfDay? selectedTime; // <-- اضافه کردن این خط
+  TimeOfDay? selectedTime;
 
   @override
   void initState() {
@@ -123,16 +126,30 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: Scaffold(
-        appBar: _MetronomeAppBar(isDark, _controller),
+        appBar: SornazAppBar(
+          showBackButton: false,
+          centerIcon: Icons.settings,
+          onCenterIconPressed: () async {
+            final result = await Navigator.push<bool>(
+              context,
+              MaterialPageRoute(
+                builder: (_) => MetronomeSettingsPage(controller: _controller),
+              ),
+            );
+            if (result != null) {
+              setState(() {});
+            }
+          },
+        ),
         backgroundColor: isDark? AppColors.background_dark : AppColors.background_light,
         body: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.space_24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               BpmHeader(bpm: bpm, tempoName: tempoName),
 
-              const SizedBox(height: 16),
+              AppSpacing.sizedBoxH16(),
 
               BpmSlider(
                 bpm: bpm,
@@ -143,7 +160,7 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
                 },
               ),
 
-              const SizedBox(height: 56),
+              AppSpacing.sizedBoxH56(),
 
               TimeSignatureSection(
                 controller: _controller,
@@ -157,7 +174,7 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
                 },
               ),
               
-              const SizedBox(height: 56),
+              AppSpacing.sizedBoxH56(),
 
               StopModeSection(
                 controller: _controller,
@@ -178,7 +195,7 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
                 },
               ),
 
-              const SizedBox(height: 8),
+              AppSpacing.sizedBoxH8(),
 
               Center(
                 child: Row(
@@ -193,23 +210,23 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               _minutesDropdown(isDark),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: AppSpacing.space_12),
                               _secondsDropdown(isDark),
                             ],
                           ),
                         ),
                       ),
-                    const SizedBox(width: 48),
+                    const SizedBox(width: AppSpacing.space_48),
                     if (_controller.showBarsStopwatch)
                       _barsDropdown(isDark),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 48),
+              AppSpacing.sizedBoxH48(),
 
               SizedBox(
-                height: 120,
+                height: AppSpacing.space_120,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
@@ -230,8 +247,8 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
                               animation: _controller,
                               builder: (context, child) {
                                 return Container(
-                                  width: 60,
-                                  height: 60,
+                                  width: AppSpacing.space_60,
+                                  height: AppSpacing.space_60,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: _controller.tapActive
@@ -240,7 +257,7 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
                                   ),
                                   child: Icon(
                                     Icons.touch_app,
-                                    size: 32,
+                                    size: AppSpacing.space_32,
                                     color: _controller.tapActive
                                         ? (isDark ?  AppColors.text_primary_light : AppColors.text_primary_dark)
                                         : (isDark ?  AppColors.text_primary_dark : AppColors.text_primary_light),
@@ -300,7 +317,6 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
                   ],
                 ),
               )
-
             ],
           ),
         ),
@@ -311,13 +327,13 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
 
 
   String getTempoName(int bpm) {
-  return tempoTerms
+    return tempoTerms
       .firstWhere(
         (term) => bpm >= term.min && bpm <= term.max,
         orElse: () => const TempoTerm('—', 0, 0),
       )
       .name;
-}
+  }
 
   Widget _minutesDropdown(bool isDark) {
     return DropdownButton<int>(
@@ -331,7 +347,7 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
         (i) => DropdownMenuItem(
           value: i,
           child: Text(
-            '$i min',
+            '$i ${AppStrings.minute.translate(context)}',
             style: AppTypography.body2(context),
           ),
         ),
@@ -361,7 +377,7 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
           (i) => DropdownMenuItem(
             value: i,
             child: Text(
-              '$i sec',
+              '$i ${AppStrings.second.translate(context)}',
               style: AppTypography.body2(context),
             ),
           ),
@@ -395,7 +411,7 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
             (i) => DropdownMenuItem(
               value: i + 2,
               child: Text(
-                '${i + 1} Bars',
+                '${i + 1} ${AppStrings.bars.translate(context)}',
                 style: AppTypography.body2(context)
               ),
             ),
@@ -414,43 +430,4 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
     );
   }
 
-}
-
-class _MetronomeAppBar extends StatelessWidget
-    implements PreferredSizeWidget {
-  final bool isDark;
-  final MetronomeController controller;
-
-  const _MetronomeAppBar(this.isDark, this.controller);
-
-  @override
-  Widget build(BuildContext context) {
-    return AppBar(
-      automaticallyImplyLeading: false,
-      backgroundColor:
-          isDark ? AppColors.surface_dark : AppColors.surface_light,
-      title: IconButton(
-        icon: const Icon(Icons.settings),
-        iconSize: AppSpacing.space_32,
-        color: isDark
-            ? AppColors.text_primary_dark
-            : AppColors.text_primary_light,
-        onPressed: () async {
-          final result = await Navigator.push<bool>(
-            context,
-            MaterialPageRoute(
-              builder: (_) =>
-                  MetronomeSettingsPage(controller: controller),
-            ),
-          );
-          if (result != null) {
-            // فقط برای rebuild
-          }
-        },
-      ),
-    );
-  }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }

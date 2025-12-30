@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:sornaz/screens/Profile/voice_recorder/utils/date_formatter.dart';
+import 'package:sornaz/screens/Voice%20Recorder/voice_recorder/utils/date_formatter.dart';
 
 class RecordItemTile extends StatelessWidget {
   final File file;

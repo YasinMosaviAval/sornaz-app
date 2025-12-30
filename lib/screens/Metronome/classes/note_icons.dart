@@ -64,9 +64,7 @@ class MusicSymbol {
       assetPath,
       width: size ?? defaultSize,
       height: size ?? defaultSize,
-      colorFilter: color == null
-          ? null
-          : ColorFilter.mode(color, BlendMode.srcIn),
+      colorFilter: color == null ? null : ColorFilter.mode(color, BlendMode.srcIn),
     );
   }
 }

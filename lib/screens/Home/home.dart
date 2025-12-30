@@ -7,8 +7,6 @@ import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 
-
-/*
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/blog_carousel.dart';
 import 'package:sornaz/components/bottom_nav.dart';
@@ -63,7 +61,7 @@ class HomePage extends StatelessWidget {
     );
   }
 }
-*/
+
 
 class ApplicationLogo extends StatelessWidget {
   const ApplicationLogo({super.key, required this.isDark});
