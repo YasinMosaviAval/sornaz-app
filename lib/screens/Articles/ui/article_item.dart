@@ -20,11 +20,11 @@ class ArticleItemWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final title = post['title']?['rendered'] ?? '';
-    final excerpt = _stripHtml(
-      post['excerpt']?['rendered'] ?? '',
-    );
+    final excerpt = _stripHtml(post['excerpt']?['rendered'] ?? '');
     final imageUrl = _imageUrl(post);
-    final date = post['date'] ?? '';
+    final publishDate = post['date'] ?? '';
+    final modifiedDate = post['modified'] ?? '';
+    final authorName = _authorName(post);
 
     return Container(
       margin: EdgeInsets.fromLTRB(
@@ -35,57 +35,98 @@ class ArticleItemWidget extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.all(Radius.circular(AppSpacing.space_4)),
-        color: isDark ? AppColors.hovered_dark : AppColors.hovered_light,
+        color: isDark ? AppColors.clicked_dark : AppColors.hovered_light,
       ),
+      
+      padding: const EdgeInsets.all(AppSpacing.space_12),
 
-      child: ListTile(
-        leading: imageUrl.isNotEmpty
-          ? CachedNetworkImage(
-              imageUrl: imageUrl,
-              width: AppSpacing.space_100,
-              fit: BoxFit.cover,
-            )
-          : const Icon(Icons.image),
-        title: Text(
-          title,
-          style: AppTypography.articlesTitle(context),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: InkWell(
+        onTap: () => navigateWithFade(context, ArticleDetailPage(post: post),),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start, // 👈 مهم
           children: [
-            AppSpacing.sizedBoxH8(),
-            Text(
-              excerpt,
-              maxLines: 2,
-              textAlign: TextAlign.justify,
-              overflow: TextOverflow.ellipsis,
-              style: AppTypography.articlesBrief(context),
+            SizedBox(
+              width: AppSpacing.space_100,
+              // height: double.infinity,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  imageUrl.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: imageUrl,
+                          width: AppSpacing.space_100,
+                          height: AppSpacing.space_60,
+                          fit: BoxFit.cover,
+                        )
+                      : const Icon(Icons.image),
+            
+                  AppSpacing.sizedBoxH16(),
+            
+                  Column(
+                    children: [
+                      _MetaText(
+                        text: formatJalaliDate(publishDate),
+                        context: context,
+                      ),
+            
+                      AppSpacing.sizedBoxH8(),
+            
+                      if (authorName.isNotEmpty)
+                        _MetaText(
+                          text: authorName,
+                          context: context,
+                        ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            AppSpacing.sizedBoxH8(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Text(
-                  formatJalaliDate(date),
-                  style: AppTypography.articlesReleaseDate(context),
-                  textAlign: TextAlign.right,
-                ),
-              ],
+
+            AppSpacing.sizedBoxW12(),
+
+            /// TITLE + EXCERPT
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTypography.articlesTitle(context),
+                  ),
+                  AppSpacing.sizedBoxH8(),
+                  Text(
+                    excerpt,
+                    maxLines: 3,
+                    textAlign: TextAlign.justify,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.articlesBrief(context),
+                  ),
+                  AppSpacing.sizedBoxH8(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      if (modifiedDate.isNotEmpty && modifiedDate != publishDate)
+                        _MetaText(
+                          text: 'آپدیت: ${formatJalaliDate(modifiedDate)}',
+                          context: context,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-        onTap: () {
-          navigateWithFade(
-            context,
-            ArticleDetailPage(post: post),
-          );
-        },
-      ),
+          ]
+        )
+      )
     );
   }
 
-  String _stripHtml(String html) =>
-      html.replaceAll(RegExp(r'<[^>]*>'), '');
+
+  
+  // ---------------- helpers ----------------
+
+  String _stripHtml(String html) => html.replaceAll(RegExp(r'<[^>]*>'), '');
 
   String _imageUrl(Map<String, dynamic> post) {
     final embedded = post['_embedded'];
@@ -94,4 +135,37 @@ class ArticleItemWidget extends StatelessWidget {
     if (media == null || media.isEmpty) return '';
     return media[0]['source_url'] ?? '';
   }
+
+  String _authorName(Map<String, dynamic> post) {
+    final embedded = post['_embedded'];
+    if (embedded == null) return '';
+    final authors = embedded['author'];
+    if (authors == null || authors.isEmpty) return '';
+    return authors[0]['name'] ?? '';
+  }
 }
+
+/// 🔹 Small meta text widget
+class _MetaText extends StatelessWidget {
+  const _MetaText({
+    required this.text,
+    required this.context,
+  });
+
+  final String text;
+  final BuildContext context;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      textAlign: TextAlign.center,
+      style: AppTypography.articlesReleaseDate(context).copyWith(
+        fontSize: 10,
+      ),
+    );
+  }
+}
+

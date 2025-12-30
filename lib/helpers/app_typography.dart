@@ -1,4 +1,4 @@
-// ignore_for_file: constant_identifier_names
+// ignore_for_file: constant_identifier_names, non_constant_identifier_names
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -212,6 +212,92 @@ class AppTypography {
     );
   }
 
+  //*** */ primary text color
+  static TextStyle body_reverse0(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    return TextStyle(
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 48),
+      fontWeight: FontWeight.w700,
+      color: isDark
+          ? AppColors.text_primary_light
+          : AppColors.text_primary_dark,
+      letterSpacing: -0.01,
+      fontStyle: FontStyle.normal,
+      textBaseline: TextBaseline.alphabetic,
+      overflow: TextOverflow.visible,
+    );
+  }
+
+  static TextStyle body_reverse1(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    return TextStyle(
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 16),
+      fontWeight: FontWeight.normal,
+      color: isDark
+          ? AppColors.text_primary_light
+          : AppColors.text_primary_dark,
+      letterSpacing: -0.01,
+      fontStyle: FontStyle.normal,
+      textBaseline: TextBaseline.alphabetic,
+      overflow: TextOverflow.visible,
+    );
+  }
+
+  static TextStyle body_reverse2(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    return TextStyle(
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 14),
+      fontWeight: FontWeight.normal,
+      color: isDark
+          ? AppColors.text_primary_light
+          : AppColors.text_primary_dark,
+      letterSpacing: -0.01,
+      fontStyle: FontStyle.normal,
+      textBaseline: TextBaseline.alphabetic,
+      overflow: TextOverflow.visible,
+    );
+  }
+
+  static TextStyle body_reverse3(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    return TextStyle(
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 12),
+      fontWeight: FontWeight.normal,
+      color: isDark
+          ? AppColors.text_primary_light
+          : AppColors.text_primary_dark,
+      letterSpacing: -0.01,
+      fontStyle: FontStyle.normal,
+      textBaseline: TextBaseline.alphabetic,
+      overflow: TextOverflow.visible,
+    );
+  }
+
+  static TextStyle body_reverse4(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    return TextStyle(
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 10),
+      fontWeight: FontWeight.normal,
+      color: isDark
+          ? AppColors.text_primary_light
+          : AppColors.text_primary_dark,
+      letterSpacing: -0.01,
+      fontStyle: FontStyle.normal,
+      textBaseline: TextBaseline.alphabetic,
+      overflow: TextOverflow.visible,
+    );
+  }
+
   //*** */ secondary text color
   static TextStyle subtitle1(BuildContext context) {
     final appData = Provider.of<AppData>(context);
@@ -274,6 +360,75 @@ class AppTypography {
       color: isDark
           ? AppColors.text_secondary_dark
           : AppColors.text_secondary_light,
+      letterSpacing: -0.01,
+      fontStyle: FontStyle.normal,
+      textBaseline: TextBaseline.alphabetic,
+      overflow: TextOverflow.visible,
+    );
+  }
+
+  //*** */ secondary text color
+  static TextStyle subtitle_reverse1(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    return TextStyle(
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 16),
+      fontWeight: FontWeight.w500,
+      color: isDark
+          ? AppColors.text_secondary_light
+          : AppColors.text_secondary_dark,
+      letterSpacing: -0.01,
+      fontStyle: FontStyle.normal,
+      textBaseline: TextBaseline.alphabetic,
+      overflow: TextOverflow.visible,
+    );
+  }
+
+  static TextStyle subtitle_reverse2(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    return TextStyle(
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 14),
+      fontWeight: FontWeight.w500,
+      color: isDark
+          ? AppColors.text_secondary_light
+          : AppColors.text_secondary_dark,
+      letterSpacing: -0.01,
+      fontStyle: FontStyle.normal,
+      textBaseline: TextBaseline.alphabetic,
+      overflow: TextOverflow.visible,
+    );
+  }
+
+  static TextStyle subtitle_reverse3(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    return TextStyle(
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 12),
+      fontWeight: FontWeight.w500,
+      color: isDark
+          ? AppColors.text_secondary_light
+          : AppColors.text_secondary_dark,
+      letterSpacing: -0.01,
+      fontStyle: FontStyle.normal,
+      textBaseline: TextBaseline.alphabetic,
+      overflow: TextOverflow.visible,
+    );
+  }
+  
+  static TextStyle subtitle_reverse4(BuildContext context) {
+    final appData = Provider.of<AppData>(context);
+    final isDark = appData.isDark;
+    return TextStyle(
+      fontFamily: appData.fontFamily,
+      fontSize: _responsiveSize(context, 10),
+      fontWeight: FontWeight.w500,
+      color: isDark
+          ? AppColors.text_secondary_light
+          : AppColors.text_secondary_dark,
       letterSpacing: -0.01,
       fontStyle: FontStyle.normal,
       textBaseline: TextBaseline.alphabetic,
