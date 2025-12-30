@@ -11,11 +11,11 @@ import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
-import 'package:sornaz/screens/Articles/article_detail_page.dart';
+import 'package:sornaz/screens/Articles/ui/screens/article_detail_page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'package:sornaz/screens/Articles/ui/articles_page.dart';
+import 'package:sornaz/screens/Articles/ui/screens/articles_page.dart';
 
 
 class BlogCarousel extends StatelessWidget {
@@ -28,7 +28,7 @@ class BlogCarousel extends StatelessWidget {
     // final theme = Theme.of(context);
 
     return Container(
-      color: AppColors.error,
+      // color: AppColors.error,
       decoration: BoxDecoration(color: AppColors.primary_dark),
       foregroundDecoration: BoxDecoration(color: AppColors.secondary_dark),
       child: Padding(

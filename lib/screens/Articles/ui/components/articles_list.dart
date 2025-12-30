@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:sornaz/helpers/app_colors.dart';
-import 'package:sornaz/helpers/app_functions.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/screens/Articles/provider/articles_provider.dart';
-import 'package:sornaz/screens/Articles/ui/article_item.dart';
+import 'package:sornaz/screens/Articles/ui/components/article_item.dart';
 
 class ArticlesListWidget extends StatelessWidget {
   const ArticlesListWidget({

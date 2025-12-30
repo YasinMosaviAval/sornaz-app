@@ -6,7 +6,7 @@ import 'package:sornaz/helpers/app_images.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'dart:async';
 
-import 'package:sornaz/screens/Articles/ui/articles_page.dart';
+import 'package:sornaz/screens/Articles/ui/screens/articles_page.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

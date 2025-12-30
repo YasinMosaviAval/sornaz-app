@@ -10,7 +10,7 @@ import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
-import 'package:sornaz/screens/Articles/ui/articles_list.dart';
+import 'package:sornaz/screens/Articles/ui/components/articles_list.dart';
 import 'package:sornaz/screens/Home/app_drawer.dart';
 import 'package:sornaz/screens/Articles/provider/articles_provider.dart';
 import 'package:sornaz/screens/Home/home.dart';
