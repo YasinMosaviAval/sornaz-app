@@ -18,30 +18,52 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer2<LocaleProvider, AppData>(
       builder: (context, localeProvider, appData, child) {
-        return MaterialApp(
-          navigatorKey: navigatorKey,
-          debugShowCheckedModeBanner: false,
-          title: AppStrings.application_fullname.translate(context),
-          locale: localeProvider.locale,
-          supportedLocales: const [Locale('en', ''), Locale('fa', '')],
-          localeResolutionCallback: (deviceLocale, supportedLocales) {
-            return localeProvider.locale;
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 350),
+          switchInCurve: Curves.easeOut,
+          switchOutCurve: Curves.easeIn,
+          transitionBuilder: (child, animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: child,
+            );
           },
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          theme: lightTheme(appData),
-          darkTheme: darkTheme(appData),
-          themeMode: appData.isDark ? ThemeMode.dark : ThemeMode.light,
-          home: const SplashScreen(),
-          routes: {
-            '/home': (_) => const HomePage(),
-            '/about': (_) => const AboutUsPage(),
-            '/settings': (_) => const SettingsPage(),
-            '/music_player': (_) => const MusicPlayerPage(),
-          },
+          child: AnimatedTheme(
+            key: ValueKey(
+              '${localeProvider.locale.languageCode}-${appData.isDark}',
+            ),
+            data: appData.isDark ? darkTheme(appData) : lightTheme(appData),
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+            child: MaterialApp(
+              navigatorKey: navigatorKey,
+              debugShowCheckedModeBanner: false,
+              title: AppStrings.application_fullname.translate(context),
+              locale: localeProvider.locale,
+              supportedLocales: const [
+                Locale('en', ''),
+                Locale('fa', ''),
+              ],
+              localeResolutionCallback: (deviceLocale, supportedLocales) {
+                return localeProvider.locale;
+              },
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              theme: lightTheme(appData),
+              darkTheme: darkTheme(appData),
+              themeMode: appData.isDark ? ThemeMode.dark : ThemeMode.light,
+              home: const SplashScreen(),
+              routes: {
+                '/home': (_) => const HomePage(),
+                '/about': (_) => const AboutUsPage(),
+                '/settings': (_) => const SettingsPage(),
+                '/music_player': (_) => const MusicPlayerPage(),
+              },
+            ),
+          ),
         );
       },
     );
@@ -59,5 +81,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-// ==
