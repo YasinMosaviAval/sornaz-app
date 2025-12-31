@@ -9,6 +9,7 @@ import 'package:sornaz/screens/Tuner/widgets/change_frequency_title.dart';
 import 'package:sornaz/screens/Tuner/widgets/detected_frequency.dart';
 import 'package:sornaz/screens/Tuner/widgets/frequency_box.dart';
 import 'package:sornaz/screens/Tuner/widgets/frequency_info_row.dart';
+import 'package:sornaz/screens/Tuner/widgets/note_hold_button.dart';
 
 class TunerPage extends StatelessWidget {
   const TunerPage({super.key});
@@ -62,6 +63,21 @@ class _TunerView extends StatelessWidget {
           DetectedFrequency(
             frequency: tuner.frequency,
           ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              NoteHoldButton(label: 'C', midiNote: 60),
+              SizedBox(width: 8),
+              NoteHoldButton(label: 'D', midiNote: 62),
+              SizedBox(width: 8),
+              NoteHoldButton(label: 'E', midiNote: 64),
+              SizedBox(width: 8),
+              NoteHoldButton(label: 'G', midiNote: 67),
+              SizedBox(width: 8),
+              NoteHoldButton(label: 'A', midiNote: 69),
+            ],
+          ),
+
         ],
       ),
       bottomNavigationBar: const BottomNavBarWidget(),

@@ -30,4 +30,12 @@ class TunerMath {
       cents.clamp(-50, 50),
     );
   }
+
+  static double noteFrequency(
+    int midiNote,
+    double a4,
+  ) {
+    return a4 * pow(2, (midiNote - 69) / 12);
+  }
+
 }

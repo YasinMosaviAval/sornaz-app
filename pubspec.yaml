@@ -42,6 +42,7 @@ dependencies:
   just_audio: ^0.9.38
   flutter_riverpod: ^2.5.1
   volume_controller: ^2.0.7
+  flutter_sound: ^9.2.13
 
   flutter_localizations:
     sdk: flutter

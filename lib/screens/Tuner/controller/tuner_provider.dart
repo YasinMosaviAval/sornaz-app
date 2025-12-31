@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_pitch_detection/flutter_pitch_detection.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/screens/Tuner/audio/note_player.dart';
 import 'package:sornaz/screens/Tuner/utils/tuner_math.dart';
 
 class TunerProvider extends ChangeNotifier {
@@ -11,6 +12,16 @@ class TunerProvider extends ChangeNotifier {
   double a4 = 440.0;
   double noteFreq = 0.0;
   String note = AppStrings.epmty_text;
+
+  final NotePlayer notePlayer = NotePlayer();
+
+  Future<void> playNote(double freq) async {
+    await notePlayer.play(freq);
+  }
+
+  Future<void> stopNote() async {
+    await notePlayer.stop();
+  }
 
   final notes = [
     AppStrings.note_c,
