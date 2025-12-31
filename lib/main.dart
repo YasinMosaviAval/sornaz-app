@@ -10,6 +10,7 @@ import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/audio/audio_player_provider.dart';
 import 'package:sornaz/audio/folder_navigator_provider.dart';
 import 'package:sornaz/screens/Articles/provider/articles_provider.dart';
+import 'package:sornaz/screens/Tuner/controller/tuner_provider.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -34,6 +35,7 @@ void main() async {
         ChangeNotifierProvider(
           create: (_) => AudioPlayerProvider(libraryManager: libraryManager),
         ),
+        ChangeNotifierProvider(create: (_) => TunerProvider()),
         ChangeNotifierProvider(create: (_) => ArticlesProvider()),
         ChangeNotifierProvider(create: (_) => FolderNavigatorProvider()),
       ],

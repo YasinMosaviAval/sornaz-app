@@ -232,6 +232,8 @@ static const enable_timer_stopwatch_subtitle = 'enableTimerStopwatchSubtitle';
 static const enable_bars_stopwatch_title = 'enableBarsStopwatchTitle';
 static const enable_bars_stopwatch_subtitle = 'enableBarsStopwatchSubitle';
 
+static const coming_soon = 'comingSoon';
+
 static const timer = 'Timer';
 static const bars = 'Bars';
 
@@ -567,6 +569,7 @@ static const second = 'second';
     bars,
     minute,
     second,
+    coming_soon,
   ];
 
   static const en = {
@@ -861,6 +864,7 @@ https://www.youtube.com/@sornaz.academy
     bars: 'Bars',
     minute: 'minute',
     second: 'second',
+    coming_soon: 'Coming Soon...',
   };
 
   static const fa = {
@@ -1134,5 +1138,6 @@ https://www.youtube.com/@sornaz.academy
     bars: 'میزان',
     minute: 'دقیقه',
     second: 'ثانیه',
+    coming_soon: 'به زودی ...',
   };
 }

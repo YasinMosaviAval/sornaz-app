@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_data.dart';
@@ -17,24 +18,35 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer2<LocaleProvider, AppData>(
-      builder: (context, localeProvider, appData, child) {
+      builder: (context, localeProvider, appData, _) {
         return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 350),
-          switchInCurve: Curves.easeOut,
-          switchOutCurve: Curves.easeIn,
+          duration: const Duration(milliseconds: 600),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
           transitionBuilder: (child, animation) {
-            return FadeTransition(
-              opacity: animation,
-              child: child,
+            return AnimatedBuilder(
+              animation: animation,
+              builder: (context, _) {
+                final blurValue = (1 - animation.value) / 4;
+                return ImageFiltered(
+                  imageFilter: ImageFilter.blur(
+                    sigmaX: blurValue,
+                    sigmaY: blurValue,
+                  ),
+                  child: child,
+                );
+              },
             );
           },
           child: AnimatedTheme(
             key: ValueKey(
               '${localeProvider.locale.languageCode}-${appData.isDark}',
             ),
-            data: appData.isDark ? darkTheme(appData) : lightTheme(appData),
-            duration: const Duration(milliseconds: 500),
+            duration: const Duration(milliseconds: 600),
             curve: Curves.easeInOut,
+            data: appData.isDark
+                ? darkTheme(appData)
+                : lightTheme(appData),
             child: MaterialApp(
               navigatorKey: navigatorKey,
               debugShowCheckedModeBanner: false,
@@ -44,9 +56,6 @@ class MyApp extends StatelessWidget {
                 Locale('en', ''),
                 Locale('fa', ''),
               ],
-              localeResolutionCallback: (deviceLocale, supportedLocales) {
-                return localeProvider.locale;
-              },
               localizationsDelegates: const [
                 GlobalMaterialLocalizations.delegate,
                 GlobalWidgetsLocalizations.delegate,
@@ -54,7 +63,8 @@ class MyApp extends StatelessWidget {
               ],
               theme: lightTheme(appData),
               darkTheme: darkTheme(appData),
-              themeMode: appData.isDark ? ThemeMode.dark : ThemeMode.light,
+              themeMode:
+                  appData.isDark ? ThemeMode.dark : ThemeMode.light,
               home: const SplashScreen(),
               routes: {
                 '/home': (_) => const HomePage(),
@@ -69,15 +79,6 @@ class MyApp extends StatelessWidget {
     );
   }
 
-  ThemeData darkTheme(AppData appData) {
-    return ThemeData(
-      fontFamily: appData.fontFamily,
-    );
-  }
-
-  ThemeData lightTheme(AppData appData) {
-    return ThemeData(
-      fontFamily: appData.fontFamily,
-    );
-  }
+  ThemeData darkTheme(AppData appData) => ThemeData(fontFamily: appData.fontFamily);
+  ThemeData lightTheme(AppData appData) => ThemeData(fontFamily: appData.fontFamily);
 }

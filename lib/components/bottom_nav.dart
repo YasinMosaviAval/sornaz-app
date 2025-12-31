@@ -11,8 +11,8 @@ import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/screens/Articles/ui/screens/articles_page.dart';
 import 'package:sornaz/screens/Players/music_palyer.dart';
 import 'package:sornaz/screens/Metronome/screens/metronome_page.dart';
-import 'package:sornaz/screens/Tuner/tuner_page.dart';
 import 'package:flutter/services.dart';
+import 'package:sornaz/screens/Tuner/screens/tuner_page.dart';
 import 'package:sornaz/screens/Voice%20Recorder/voice_recorder.dart';
 // import 'package:sornaz/screens/Profile/voice_recorder/view/voice_recorder_page.dart';
 
