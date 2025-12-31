@@ -31,13 +31,11 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => AppData()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
-        ChangeNotifierProvider(create: (_) => libraryManager),
-        ChangeNotifierProvider(
-          create: (_) => AudioPlayerProvider(libraryManager: libraryManager),
-        ),
         ChangeNotifierProvider(create: (_) => TunerProvider()),
         ChangeNotifierProvider(create: (_) => ArticlesProvider()),
         ChangeNotifierProvider(create: (_) => FolderNavigatorProvider()),
+        ChangeNotifierProvider(create: (_) => libraryManager),
+        ChangeNotifierProvider(create: (_) => AudioPlayerProvider(libraryManager: libraryManager),),
       ],
       child: const MyApp(),
     ),

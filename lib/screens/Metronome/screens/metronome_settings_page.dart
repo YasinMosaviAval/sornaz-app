@@ -48,7 +48,7 @@ class _MetronomeSettingsPageState extends State<MetronomeSettingsPage> {
                   leadingIcon: Icons.volume_up,
                   children: [
                     LabeledSlider(
-                      label: Icon(
+                      leadingIcon: Icon(
                         Icons.access_alarm,
                         color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
                         size: AppSpacing.space_20,
@@ -60,7 +60,7 @@ class _MetronomeSettingsPageState extends State<MetronomeSettingsPage> {
                       },
                     ),
                     LabeledSlider(
-                      label: Icon(
+                      leadingIcon: Icon(
                         Icons.access_time,
                         color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
                         size: AppSpacing.space_20,
@@ -72,7 +72,7 @@ class _MetronomeSettingsPageState extends State<MetronomeSettingsPage> {
                       },
                     ),
                     LabeledSlider(
-                      label: Icon(
+                      leadingIcon: Icon(
                         Icons.graphic_eq,
                         color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
                         size: AppSpacing.space_20,

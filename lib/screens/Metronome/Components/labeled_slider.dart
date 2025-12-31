@@ -4,25 +4,27 @@ import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 
 class LabeledSlider extends StatelessWidget {
-  final Widget label;
+  final Widget leadingIcon;
   final double value;
   final double min;
   final double max;
+  final String label;
+  final String unit;
   final bool isDark;
   final int? divisions;
-  final String unit;
   final ValueChanged<double> onChanged;
 
   const LabeledSlider({
     super.key,
-    required this.label,
+    required this.leadingIcon,
     required this.value,
     required this.onChanged,
     required this.isDark,
+    this.label = '',
+    this.unit = '',
     this.min = 0,
     this.max = 100,
     this.divisions = 100,
-    this.unit = '',
   });
 
   @override
@@ -39,11 +41,13 @@ class LabeledSlider extends StatelessWidget {
           ),
           child: Row(
             children: [
-              label,
+              leadingIcon,
+              AppSpacing.sizedBoxW4(),
               Text(
-                ' ${value.round()}$unit',
+                label == '' ? ' ${value.round()}$unit' : label,
                 style: AppTypography.body2(context),
               ),
+
             ],
           ),
         ),

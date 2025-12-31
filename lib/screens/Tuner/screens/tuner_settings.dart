@@ -8,6 +8,7 @@ import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/screens/Metronome/Components/labeled_slider.dart';
 import 'package:sornaz/screens/Tuner/controller/tuner_provider.dart';
 
 class TunerSettingsPage extends StatelessWidget {
@@ -19,11 +20,8 @@ class TunerSettingsPage extends StatelessWidget {
     final appData = context.watch<AppData>();
     final isDark = appData.isDark;
 
-    final localeProvider =
-        Provider.of<LocaleProvider>(context, listen: false);
-    final isEnglish =
-        localeProvider.locale.languageCode ==
-            AppStrings.localization_en;
+    final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
+    final isEnglish = localeProvider.locale.languageCode == AppStrings.localization_en;
 
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
@@ -41,21 +39,46 @@ class TunerSettingsPage extends StatelessWidget {
             child: Column(
               children: [
 
-                /// 🎵 Base Frequency (A4)
                 SettingsSectionHeader(
-                  title:
-                      AppStrings.set_base_frequency.translate(context),
-                  leadingIcon: Icons.tune,
+                  title: AppStrings.volumes.translate(context),
+                  leadingIcon: Icons.volume_up,
                   children: [
-                    Slider(
+                    LabeledSlider(
+                      leadingIcon: Icon(
+                        Icons.access_alarm,
+                        color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+                        size: AppSpacing.space_20,
+                      ),
+                      // label: "Note duration (seconds)",
+                      // unit: "seconds",
+                      // unit: "ثانیه",
+                      label: "کشش نت : ${tuner.noteDurationSeconds} ثانیه",
+                      value: tuner.noteDurationSeconds.toDouble(),
+                      min: 1,
+                      max: 60,
+                      divisions: 59,
+                      isDark: isDark,
+                      onChanged: (value) {
+                        tuner.setNoteDuration(value.toInt());
+                      },
+                    ),
+
+                    LabeledSlider(
+                      leadingIcon: Icon(
+                        Icons.tune,
+                        color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+                        size: AppSpacing.space_20,
+                      ),
+                      label: "${AppStrings.set_base_frequency.translate(context)}${tuner.a4.toStringAsFixed(0)} هرتز",
                       value: tuner.a4,
                       min: 420,
                       max: 460,
                       divisions: 40,
-                      label:
-                          "${tuner.a4.toStringAsFixed(0)} Hz",
+                      isDark: isDark,
                       onChanged: tuner.setA4,
                     ),
+
+
                   ],
                 ),
 

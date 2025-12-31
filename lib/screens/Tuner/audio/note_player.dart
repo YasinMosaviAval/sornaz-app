@@ -15,9 +15,13 @@ class NotePlayer {
     _isInited = true;
   }
 
-  Future<void> play(double frequency, {int durationSeconds = 5}) async {
+  Future<void> play(double frequency, int durationSeconds) async {
     await init();
 
+    if (_player.isPlaying) {
+      await _player.stopPlayer();
+    }
+    
     final pcmData = _generateSineWave(frequency, durationSeconds);
     isPlaying = true;
 
@@ -42,6 +46,7 @@ class NotePlayer {
   Uint8List _generateSineWave(double freq, int durationSeconds) {
     final int samples = sampleRate * durationSeconds;
     final buffer = Int16List(samples);
+    
     final double twoPi = 2 * pi;
 
     for (int i = 0; i < samples; i++) {

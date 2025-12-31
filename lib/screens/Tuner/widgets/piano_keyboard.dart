@@ -1,30 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'dart:math';
-import 'package:sornaz/screens/Tuner/audio/note_player.dart';
+import 'package:sornaz/screens/Tuner/controller/tuner_provider.dart';
 
 class PianoKeyboard extends StatefulWidget {
-  final NotePlayer notePlayer;
   final double a4;
-  final int octaves; // تعداد اکتاوها
+  final int octaves;
 
   const PianoKeyboard({
     super.key,
-    required this.notePlayer,
     this.a4 = 440.0,
     this.octaves = 3,
   });
 
   @override
-  _PianoKeyboardState createState() => _PianoKeyboardState();
+  PianoKeyboardState createState() => PianoKeyboardState();
 }
 
-class _PianoKeyboardState extends State<PianoKeyboard> {
+class PianoKeyboardState extends State<PianoKeyboard> {
   final Set<int> activeKeys = {}; // کلیدهای فعال
   final List<String> noteNames = [
     "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"
   ];
 
   bool _isBlack(String name) => name.contains("#");
+
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +56,7 @@ class _PianoKeyboardState extends State<PianoKeyboard> {
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      child: Container(
+      child: SizedBox(
         width: containerWidth,
         height: whiteKeyHeight,
         child: Stack(
@@ -69,16 +69,15 @@ class _PianoKeyboardState extends State<PianoKeyboard> {
                 return GestureDetector(
                   onTapDown: (_) {
                     setState(() => activeKeys.add(k["midi"]));
-                    widget.notePlayer.play(freq);
-                    // widget.notePlayer.play(freq, durationSeconds: 60);
+                    context.read<TunerProvider>().playNote(freq);
                   },
                   onTapUp: (_) {
                     setState(() => activeKeys.remove(k["midi"]));
-                    widget.notePlayer.stop();
+                    context.read<TunerProvider>().stopNote();
                   },
                   onTapCancel: () {
                     setState(() => activeKeys.remove(k["midi"]));
-                    widget.notePlayer.stop();
+                    context.read<TunerProvider>().stopNote();
                   },
                   child: Container(
                     width: whiteKeyWidth,
@@ -103,8 +102,6 @@ class _PianoKeyboardState extends State<PianoKeyboard> {
             ...blackKeys.map((k) {
               final freq = widget.a4 * pow(2, (k["midi"] - 69) / 12);
               final isActive = activeKeys.contains(k["midi"]);
-
-              // پیدا کردن position کلید سیاه نسبت به کلید سفید
               int indexInOctave = k["midi"] % 12;
               double baseOffset = 0;
               switch (indexInOctave) {
@@ -122,16 +119,15 @@ class _PianoKeyboardState extends State<PianoKeyboard> {
                 child: GestureDetector(
                   onTapDown: (_) {
                     setState(() => activeKeys.add(k["midi"]));
-                    widget.notePlayer.play(freq);
-                    // widget.notePlayer.play(freq, durationSeconds: 60);
+                    context.read<TunerProvider>().playNote(freq);
                   },
                   onTapUp: (_) {
                     setState(() => activeKeys.remove(k["midi"]));
-                    widget.notePlayer.stop();
+                    context.read<TunerProvider>().stopNote();
                   },
                   onTapCancel: () {
                     setState(() => activeKeys.remove(k["midi"]));
-                    widget.notePlayer.stop();
+                    context.read<TunerProvider>().stopNote();
                   },
                   child: Container(
                     width: blackKeyWidth,
@@ -152,7 +148,7 @@ class _PianoKeyboardState extends State<PianoKeyboard> {
                   ),
                 ),
               );
-            }).toList(),
+            }),
           ],
         ),
       ),

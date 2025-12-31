@@ -13,11 +13,24 @@ class TunerProvider extends ChangeNotifier {
   double noteFreq = 0.0;
   String note = AppStrings.epmty_text;
 
-  final NotePlayer notePlayer = NotePlayer();
+  // متغیر مدت زمان پخش نوت
+  int noteDurationSeconds = 1; // مقدار پیش‌فرض 1 ثانیه
 
-  Future<void> playNote(double freq) async {
-    await notePlayer.play(freq);
+  void setNoteDuration(int seconds) {
+    noteDurationSeconds = seconds;
+    notifyListeners();
   }
+
+  void setA4(double frequencyBase) {
+    a4 = frequencyBase;
+    notifyListeners();
+  }
+
+  void playNote(double freq) async {
+    await notePlayer.play(freq, noteDurationSeconds);
+  }
+
+  final NotePlayer notePlayer = NotePlayer();
 
   Future<void> stopNote() async {
     await notePlayer.stop();
@@ -39,6 +52,8 @@ class TunerProvider extends ChangeNotifier {
   ];
 
   Future<void> start() async {
+    await notePlayer.init();
+
     final status = await Permission.microphone.request();
     if (!status.isGranted) return;
 
@@ -48,11 +63,6 @@ class TunerProvider extends ChangeNotifier {
 
   void stop() {
     _pitch.stopDetection();
-  }
-
-  void setA4(double value) {
-    a4 = value;
-    notifyListeners();
   }
 
   void _onPitchDetected(dynamic result) {
@@ -69,4 +79,6 @@ class TunerProvider extends ChangeNotifier {
   TunerResult analyzePitch(double freq) {
     return TunerMath.analyze(freq, a4, notes);
   }
+
+
 }
