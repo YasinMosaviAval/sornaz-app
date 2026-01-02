@@ -15,8 +15,9 @@ class DetectedFrequency extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      "فرکانس: ${TunerMath.removeUnusedZERO(frequency)} ${AppStrings.hz.translate(context)}",
+      "${AppStrings.frequency.translate(context)}: ${TunerMath.removeUnusedZERO(frequency)} ${AppStrings.hz.translate(context)}",
       style: AppTypography.tunerDetectedFrequency(context),
     );
   }
 }
+

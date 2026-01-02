@@ -116,5 +116,14 @@ class TunerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // void toggleQuarterTones(bool value) {
+  //   keyboardSettings.showQuarterTones = value;
+  //   notifyListeners();
+  // }
+
+  void toggleQuarterTones() { 
+    keyboardSettings.showQuarterTones = !keyboardSettings.showQuarterTones;
+    notifyListeners();
+  }
 
 }

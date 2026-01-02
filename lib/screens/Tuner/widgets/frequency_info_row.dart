@@ -35,6 +35,7 @@ class FrequencyInfoRow extends StatelessWidget {
               Text(
                 TunerMath.removeUnusedZERO(cents),
                 style: AppTypography.tunerCentDifference(context),
+                textDirection: TextDirection.ltr,
               ),
               Text(
                 AppStrings.cents.translate(context),
@@ -43,6 +44,7 @@ class FrequencyInfoRow extends StatelessWidget {
             ],
           ),
           Row(
+            textDirection: TextDirection.rtl,
             children: [
               Text(
                 _getOctave(noteFreq).toString(),

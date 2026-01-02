@@ -18,11 +18,11 @@ class PianoKey {
   String get label {
     switch (microTone) {
       case MicroToneType.koron:
-        return "$name♭¼$octave";
+        return "$name↓";
       case MicroToneType.sori:
-        return "$name♯¼$octave";
+        return "$name↑";
       default:
-        return "$name$octave";
+        return name;
     }
   }
 

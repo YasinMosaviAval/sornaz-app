@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/app_bar.dart';
 import 'package:sornaz/components/bottom_nav.dart';
+import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/screens/Tuner/controller/tuner_provider.dart';
 import 'package:sornaz/screens/Tuner/screens/tuner_settings.dart';
@@ -24,6 +26,9 @@ class _TunerView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appData = context.watch<AppData>();
+    final isDark = appData.isDark;
+    
     final tuner = context.watch<TunerProvider>();
     final analyzed = tuner.analyzePitch(tuner.frequency);
     final inRange = analyzed.cents.abs() <= 20;
@@ -39,6 +44,7 @@ class _TunerView extends StatelessWidget {
           );
         },
       ),
+      backgroundColor: isDark ? AppColors.background_dark : AppColors.background_light,
       body: Column(
         children: [
           FrequencyInfoRow(
@@ -51,11 +57,8 @@ class _TunerView extends StatelessWidget {
             inRange: inRange,
           ),
           AppSpacing.sizedBoxH16(),
-          DetectedFrequency(
-            frequency: tuner.frequency,
-          ),
+          DetectedFrequency(frequency: tuner.frequency),
           const SizedBox(height: 16),
-          // پیانو افقی
           Directionality(
             textDirection: TextDirection.ltr,
             child: Expanded(

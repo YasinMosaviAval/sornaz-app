@@ -232,6 +232,24 @@ static const enable_timer_stopwatch_subtitle = 'enableTimerStopwatchSubtitle';
 static const enable_bars_stopwatch_title = 'enableBarsStopwatchTitle';
 static const enable_bars_stopwatch_subtitle = 'enableBarsStopwatchSubitle';
 
+
+static const frequency = 'frequency';
+static const note_stretch = 'noteStretch';
+static const starting_octave = 'startingOctave';
+static const number_of_octaves = 'numberOfOctaves';
+static const highlight_a4_key = 'highlightA4Key';
+static const enable_a4_key_highlight = 'enableA4KeyHighlight';
+static const frequencies_on_white_keys = 'frequenciesOnWhiteKeys';
+static const enable_frequency_display_on_white_keys = 'enableFrequencyDisplayOnWhiteKeys';
+static const frequencies_on_black_keys = 'frequenciesOnBlackKeys';
+static const enable_frequency_display_on_black_keys = 'enableFrequencyDisplayOnBlackKeys';
+static const quarter_tones = 'quarterTones';
+static const enable_iranian_quarter_tones = 'enableIranianQuarterTones';
+
+
+
+
+
 static const coming_soon = 'comingSoon';
 
 static const timer = 'Timer';
@@ -565,11 +583,25 @@ static const second = 'second';
     enable_timer_stopwatch_subtitle,
     enable_bars_stopwatch_title,
     enable_bars_stopwatch_subtitle,
+    frequency,
     timer,
     bars,
     minute,
     second,
     coming_soon,
+    frequency,
+    note_stretch,
+    starting_octave,
+    number_of_octaves,
+    highlight_a4_key,
+    enable_a4_key_highlight,
+    frequencies_on_white_keys,
+    enable_frequency_display_on_white_keys,
+    frequencies_on_black_keys,
+    enable_frequency_display_on_black_keys,
+    quarter_tones,
+    enable_iranian_quarter_tones,
+
   ];
 
   static const en = {
@@ -860,11 +892,25 @@ https://www.youtube.com/@sornaz.academy
     enable_timer_stopwatch_subtitle: 'set ON for Enable Timer Stopwatch',
     enable_bars_stopwatch_title: 'Enable Bars Stopwatch',
     enable_bars_stopwatch_subtitle: 'set ON for Enable Bars Stopwatch',
+    frequency: 'Frequency',
     timer: 'Timer',
     bars: 'Bars',
     minute: 'minute',
     second: 'second',
     coming_soon: 'Coming Soon...',
+
+    note_stretch: "Note Stretch",
+    starting_octave: "Starting Octave",
+    number_of_octaves: "Number of Octaves",
+    highlight_a4_key: "Highlight A4 Key",
+    enable_a4_key_highlight: "Enable A4 key highlight",
+    frequencies_on_white_keys: "Frequencies on White Keys",
+    enable_frequency_display_on_white_keys: "Enable frequency display on white keys",
+    frequencies_on_black_keys: "Frequencies on Black Keys",
+    enable_frequency_display_on_black_keys: "Enable frequency display on black keys",
+    quarter_tones: "Quarter Tones",
+    enable_iranian_quarter_tones: "Enable Persian/Iranian quarter tones",
+
   };
 
   static const fa = {
@@ -1134,10 +1180,23 @@ https://www.youtube.com/@sornaz.academy
     enable_timer_stopwatch_subtitle: 'برای فعال‌سازی کرنومتر زمانی روشن کنید',
     enable_bars_stopwatch_title: 'شمارش میزان‌ها',
     enable_bars_stopwatch_subtitle: 'برای فعال‌سازی شمارش میزان‌ها روشن کنید',
+    frequency: "فرکانس",
     timer: 'زمان',
     bars: 'میزان',
     minute: 'دقیقه',
     second: 'ثانیه',
     coming_soon: 'به زودی ...',
+
+    note_stretch: "کشش نت",
+    starting_octave: "اکتاو پیانو",
+    number_of_octaves: "تعداد اکتاو",
+    highlight_a4_key: "هایلایت کلید A4",
+    enable_a4_key_highlight: "برای هایلایت کلید A4 روشن کنید",
+    frequencies_on_white_keys: "فرکانس کلیدهای سفید",
+    enable_frequency_display_on_white_keys: "برای نمایش فرکانس روی کلیدهای سفید روشن کنید",
+    frequencies_on_black_keys: "فرکانس کلیدهای سیاه",
+    enable_frequency_display_on_black_keys: "برای نمایش فرکانس روی کلیدهای سیاه روشن کنید",
+    quarter_tones: "ربع پرده‌ها",
+    enable_iranian_quarter_tones: "برای نمایش ربع پرده‌های موسیقی ایرانی روشن کنید",
   };
 }
