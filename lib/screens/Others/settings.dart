@@ -81,6 +81,7 @@ class SettingsPage extends StatelessWidget {
                           child: Text(
                             appData.textSize.toInt().toString(),
                             style: AppTypography.settingsItemContent(context),
+                            textDirection: TextDirection.ltr,
                           ),
                         ),
                       ),
@@ -111,21 +112,21 @@ class SettingsPage extends StatelessWidget {
                             : AppColors.surface_light,
                         items: [
                           DropdownMenuItem(
-                            value: AppTypography.iran_sansx_fn,
+                            value: isEnglish ? AppTypography.iran_sansx_en : AppTypography.iran_sansx_fn,
                             child: Text(
                               AppStrings.font_iran_sans.translate(context),
                               style: AppTypography.settingsDropdownItem(context),
                             ),
                           ),
                           DropdownMenuItem(
-                            value: AppTypography.iran_yekan_fn,
+                            value: isEnglish ? AppTypography.iran_yekan_en : AppTypography.iran_yekan_fn,
                             child: Text(
                               AppStrings.font_iran_yekan.translate(context),
                               style: AppTypography.settingsDropdownItem(context),
                             ),
                           ),
                           DropdownMenuItem(
-                            value: AppTypography.kalameh_fn,
+                            value: isEnglish ? AppTypography.kalameh_en : AppTypography.kalameh_fn,
                             child: Text(
                               AppStrings.font_kalameh.translate(context),
                               style: AppTypography.settingsDropdownItem(context),
@@ -138,22 +139,15 @@ class SettingsPage extends StatelessWidget {
                               style: AppTypography.settingsDropdownItem(context),
                             ),
                           ),
-                          // DropdownMenuItem(
-                          //   value: AppTypography.tahrir,
-                          //   child: Text(
-                          //     AppStrings.font_tahrir.translate(context),
-                          //     style: AppTypography.settingsDropdownItem(context),
-                          //   ),
-                          // ),
                           DropdownMenuItem(
-                            value: AppTypography.sahel_fn,
+                            value: isEnglish ? AppTypography.sahel_en : AppTypography.sahel_fn,
                             child: Text(
                               AppStrings.font_sahel.translate(context),
                               style: AppTypography.settingsDropdownItem(context),
                             ),
                           ),
                           DropdownMenuItem(
-                            value: AppTypography.vazir_fn,
+                            value: isEnglish ? AppTypography.vazir_en : AppTypography.vazir_fn,
                             child: Text(
                               AppStrings.font_vazir.translate(context),
                               style: AppTypography.settingsDropdownItem(context),

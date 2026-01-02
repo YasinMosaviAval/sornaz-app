@@ -12,15 +12,14 @@ class AppTypography {
   static const String default_font_family = 'iran_sansx_fn';
   static const String iran_sansx_fn = 'iran_sansx_fn';
   static const String iran_yekan_fn = 'iran_yekan_fn';
-  static const String iran_sansx = 'iran_sansx';
-  static const String iran_yekan = 'iran_yekan';
+  static const String iran_sansx_en = 'iran_sansx_en';
+  static const String iran_yekan_en = 'iran_yekan_en';
   static const String kalameh_fn = 'kalameh_fn';
   static const String sahel_fn = 'sahel_fn';
   static const String vazir_fn = 'vazir_fn';
-  static const String kalameh = 'kalameh';
-  static const String tahrir = 'tahrir';
-  static const String sahel = 'sahel';
-  static const String vazir = 'vazir';
+  static const String kalameh_en = 'kalameh_en';
+  static const String sahel_en = 'sahel_en';
+  static const String vazir_en = 'vazir_en';
   static const String peyda = 'peyda';
 
   //*** */ primary text color
