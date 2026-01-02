@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/app_bar.dart';
 import 'package:sornaz/components/settings_section_header.dart';
+import 'package:sornaz/components/settings_switch_tile.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
@@ -38,7 +39,6 @@ class TunerSettingsPage extends StatelessWidget {
             ),
             child: Column(
               children: [
-
                 SettingsSectionHeader(
                   title: AppStrings.volumes.translate(context),
                   leadingIcon: Icons.volume_up,
@@ -62,7 +62,6 @@ class TunerSettingsPage extends StatelessWidget {
                         tuner.setNoteDuration(value.toInt());
                       },
                     ),
-
                     LabeledSlider(
                       leadingIcon: Icon(
                         Icons.tune,
@@ -77,29 +76,63 @@ class TunerSettingsPage extends StatelessWidget {
                       isDark: isDark,
                       onChanged: tuner.setA4,
                     ),
-
-
                   ],
                 ),
-
-                AppSpacing.sizedBoxH16(),
-
-                /// 🎯 Accuracy / Tolerance (آماده برای آینده)
                 SettingsSectionHeader(
                   title: AppStrings.tools.translate(context),
                   leadingIcon: Icons.construction_outlined,
                   children: [
-                    Text(
-                      AppStrings.coming_soon.translate(context),
-                      style: TextStyle(
-                        color: isDark
-                            ? AppColors.text_secondary_dark
-                            : AppColors.text_secondary_light,
+                    LabeledSlider(
+                      leadingIcon: Icon(
+                        Icons.flag_outlined,
+                        color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+                        size: AppSpacing.space_20,
                       ),
+                      label: "اکتاو شروع پیانو",
+                      value: tuner.keyboardSettings.startOctave.toDouble(),
+                      min: 1,
+                      max: 6,
+                      divisions: 5,
+                      isDark: isDark,
+                      onChanged: (value) => tuner.setStartOctave(value.toInt()),
+                    ),
+                    LabeledSlider(
+                      leadingIcon: Icon(
+                        Icons.arrow_forward_outlined,
+                        color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+                        size: AppSpacing.space_20,
+                      ),
+                      label: "تعداد اکتاو",
+                      value: tuner.keyboardSettings.octaveCount.toDouble(),
+                      min: 1,
+                      max: 6,
+                      divisions: 5,
+                      isDark: isDark,
+                      onChanged: (value) => tuner.setOctaveCount(value.toInt()),
+                    ),
+                    SettingsSwitchTile(
+                      title: "هایلایت A4",
+                      subtitle: "برای هایلایت کلید A4 روشن کنید",
+                      value: tuner.keyboardSettings.highlightA4,
+                      isDark: isDark,
+                      onChanged: tuner.setHighlightA4,
+                    ),
+                    SettingsSwitchTile(
+                      title: "فرکانس کلیدهای سفید",
+                      subtitle: "برای نمایش فرکانس روی کلیدهای سفید روشن کنید",
+                      value: tuner.keyboardSettings.showWhiteKeyFrequencies,
+                      isDark: isDark,
+                      onChanged: (value) => tuner.setShowWhiteKeyFrequencies(value),
+                    ),
+                    SettingsSwitchTile(
+                      title: "فرکانس کلیدهای سیاه",
+                      subtitle: "برای نمایش فرکانس روی کلیدهای سیاه روشن کنید",
+                      value: tuner.keyboardSettings.showBlackKeyFrequencies,
+                      isDark: isDark,
+                      onChanged: (value) => tuner.setShowBlackKeyFrequencies(value),
                     ),
                   ],
                 ),
-
               ],
             ),
           ),
@@ -108,3 +141,4 @@ class TunerSettingsPage extends StatelessWidget {
     );
   }
 }
+

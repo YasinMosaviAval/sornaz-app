@@ -23,6 +23,7 @@ class SornazAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// ===== Style
   final Color? backgroundColor;
   final double iconSize;
+  final double padding;
 
 
 
@@ -46,6 +47,7 @@ class SornazAppBar extends StatelessWidget implements PreferredSizeWidget {
     // style
     this.backgroundColor,
     this.iconSize = AppSpacing.space_32,
+    this.padding = AppSpacing.space_16,
   });
 
 
@@ -63,7 +65,7 @@ class SornazAppBar extends StatelessWidget implements PreferredSizeWidget {
       centerTitle: centerTitle,
       elevation: elevation,
       backgroundColor: backgroundColor ?? (isDark ? AppColors.surface_dark : AppColors.surface_light),
-
+      
       /// ===== Leading (Back)
       leading: showBackButton
           ? IconButton(
@@ -87,6 +89,7 @@ class SornazAppBar extends StatelessWidget implements PreferredSizeWidget {
                   iconSize: iconSize,
                   color: textColor,
                   onPressed: onCenterIconPressed,
+                  padding: EdgeInsets.symmetric(horizontal: padding),
                 )
               : null,
       titleSpacing: 0,

@@ -4,6 +4,7 @@ import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
+import 'package:sornaz/screens/Tuner/utils/tuner_math.dart';
 
 class FrequencyInfoRow extends StatelessWidget {
   final String note;
@@ -32,7 +33,7 @@ class FrequencyInfoRow extends StatelessWidget {
           Column(
             children: [
               Text(
-                cents.toStringAsFixed(2),
+                TunerMath.removeUnusedZERO(cents),
                 style: AppTypography.tunerCentDifference(context),
               ),
               Text(
@@ -57,7 +58,7 @@ class FrequencyInfoRow extends StatelessWidget {
           Column(
             children: [
               Text(
-                noteFreq.toStringAsFixed(2),
+                TunerMath.removeUnusedZERO(noteFreq),
                 style: AppTypography.tunerNearNoteFrequency(context),
               ),
               Text(

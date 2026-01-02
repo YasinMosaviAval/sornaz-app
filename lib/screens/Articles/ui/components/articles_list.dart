@@ -45,13 +45,13 @@ class ArticlesListWidget extends StatelessWidget {
             ),
           );
         }
-
+    
         // 1 → Categories
         if (index == 1) {
           if (provider.categories.isEmpty) {
             return const SizedBox.shrink();
           }
-
+    
           return SizedBox(
             height: 56,
             child: ListView.builder(
@@ -60,7 +60,7 @@ class ArticlesListWidget extends StatelessWidget {
               itemBuilder: (context, i) {
                 final cat = provider.categories[i]['name'];
                 final isSelected = cat == provider.selectedCategory;
-
+    
                 return GestureDetector(
                   onTap: () => provider.updateCategory(cat),
                   child: Container(
@@ -89,15 +89,15 @@ class ArticlesListWidget extends StatelessWidget {
             ),
           );
         }
-
+    
         // 2 → Spacer
         if (index == 2) {
           return const SizedBox(height: 8);
         }
-
+    
         // offset for articles
         final articleIndex = index - 3;
-
+    
         // loading more
         if (articleIndex == posts.length) {
           return const Padding(
@@ -105,9 +105,9 @@ class ArticlesListWidget extends StatelessWidget {
             child: Center(child: CircularProgressIndicator()),
           );
         }
-
+    
         final post = posts[articleIndex];
-
+    
         return ArticleItemWidget(post: post, isDark: isDark);
       },
     );

@@ -38,4 +38,15 @@ class TunerMath {
     return a4 * pow(2, (midiNote - 69) / 12);
   }
 
+
+
+  static String removeUnusedZERO(double freq, [int fixedNumber = 2]) {
+    if (freq % 1 == 0) {
+      return freq.toInt().toString();
+    } else {
+      return freq.toStringAsFixed(fixedNumber);
+    }
+  }
+
+
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
+import 'package:sornaz/screens/Tuner/utils/tuner_math.dart';
 
 class DetectedFrequency extends StatelessWidget {
   final double frequency;
@@ -14,7 +15,7 @@ class DetectedFrequency extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      "${frequency.toStringAsFixed(1)} ${AppStrings.hz.translate(context)}",
+      "فرکانس: ${TunerMath.removeUnusedZERO(frequency)} ${AppStrings.hz.translate(context)}",
       style: AppTypography.tunerDetectedFrequency(context),
     );
   }

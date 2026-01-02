@@ -3,6 +3,7 @@ import 'package:flutter_pitch_detection/flutter_pitch_detection.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/screens/Tuner/audio/note_player.dart';
+import 'package:sornaz/screens/Tuner/models/tuner_keyboard_settings.dart';
 import 'package:sornaz/screens/Tuner/utils/tuner_math.dart';
 
 class TunerProvider extends ChangeNotifier {
@@ -78,6 +79,41 @@ class TunerProvider extends ChangeNotifier {
 
   TunerResult analyzePitch(double freq) {
     return TunerMath.analyze(freq, a4, notes);
+  }
+
+
+
+  final keyboardSettings = TunerKeyboardSettings(
+    startOctave: 3,
+    octaveCount: 3,
+    highlightA4: true,
+  );
+
+  // ---------- setters ----------
+  void setStartOctave(int value) {
+    keyboardSettings.startOctave = value;
+    notifyListeners();
+  }
+
+  void setOctaveCount(int value) {
+    keyboardSettings.octaveCount = value;
+    notifyListeners();
+  }
+
+  void setHighlightA4(bool value) {
+    keyboardSettings.highlightA4 = value;
+    notifyListeners();
+  }
+
+
+  void setShowWhiteKeyFrequencies(bool value) {
+    keyboardSettings.showWhiteKeyFrequencies = value;
+    notifyListeners();
+  }
+
+  void setShowBlackKeyFrequencies(bool value) {
+    keyboardSettings.showBlackKeyFrequencies = value;
+    notifyListeners();
   }
 
 

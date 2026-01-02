@@ -31,7 +31,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => AppData()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
-        ChangeNotifierProvider(create: (_) => TunerProvider()),
+        ChangeNotifierProvider(create: (_) => TunerProvider()..start()),
         ChangeNotifierProvider(create: (_) => ArticlesProvider()),
         ChangeNotifierProvider(create: (_) => FolderNavigatorProvider()),
         ChangeNotifierProvider(create: (_) => libraryManager),

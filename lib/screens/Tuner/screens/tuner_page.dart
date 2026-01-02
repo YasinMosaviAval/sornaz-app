@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/app_bar.dart';
 import 'package:sornaz/components/bottom_nav.dart';
+import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/screens/Tuner/controller/tuner_provider.dart';
 import 'package:sornaz/screens/Tuner/screens/tuner_settings.dart';
 import 'package:sornaz/screens/Tuner/widgets/detected_frequency.dart';
@@ -40,11 +41,6 @@ class _TunerView extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // ChangeFrequencyTitleWidget(a4: tuner.a4),
-          // A4Slider(
-          //   value: tuner.a4,
-          //   onChanged: tuner.setA4,
-          // ),
           FrequencyInfoRow(
             note: analyzed.note,
             cents: analyzed.cents,
@@ -54,6 +50,7 @@ class _TunerView extends StatelessWidget {
             cents: analyzed.cents,
             inRange: inRange,
           ),
+          AppSpacing.sizedBoxH16(),
           DetectedFrequency(
             frequency: tuner.frequency,
           ),
@@ -66,7 +63,6 @@ class _TunerView extends StatelessWidget {
                 alignment: Alignment.bottomCenter,
                 child: PianoKeyboard(
                   a4: tuner.a4,
-                  octaves: 5,
                 ),
               ),
             ),

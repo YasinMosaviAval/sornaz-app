@@ -1,50 +1,173 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
+import 'dart:async';
 
-class FrequencyBox extends StatelessWidget {
+class FrequencyBox extends StatefulWidget {
   final double cents;
   final bool inRange;
+  final int pointsPerSecond;
+  final double pointSize;
+  final double scale;
 
   const FrequencyBox({
     super.key,
     required this.cents,
     required this.inRange,
+    this.pointsPerSecond = 400,
+    this.pointSize = 1.0,
+    this.scale = 4.0,
   });
 
   @override
+  State<FrequencyBox> createState() => _FrequencyBoxState();
+}
+
+class _FrequencyBoxState extends State<FrequencyBox> {
+  late List<double> _points;
+  Timer? _timer;
+  double _lastCents = 0;
+
+final ValueNotifier<int> _repaintTick = ValueNotifier(0);
+
+
+  @override
+  void initState() {
+    super.initState();
+    _points = [];
+    _lastCents = widget.cents;
+
+    _timer = Timer.periodic(
+      Duration(milliseconds: (1000 ~/ widget.pointsPerSecond)),
+      (_) {
+        if (_points.length >= widget.pointsPerSecond) {
+          _points.removeAt(0);
+        }
+        _points.add(_lastCents);
+
+        _repaintTick.value++; // فقط repaint
+      },
+    );
+
+  }
+
+  @override
+  void didUpdateWidget(covariant FrequencyBox oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _lastCents = widget.cents; // ذخیره آخرین مقدار cents
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final appData = context.watch<AppData>();
+    final isDark = appData.isDark;
     final width = MediaQuery.of(context).size.width;
+    final height = AppSpacing.space_300;
 
     return SizedBox(
-      height: AppSpacing.space_300,
+      height: height,
       child: Stack(
         children: [
-          Container(color: AppColors.surface_dark),
+          // پس‌زمینه
+          Container(
+            color: isDark ? AppColors.surface_dark : AppColors.surface_light,
+          ),
 
+          // محدوده سبز مرکزی
           Positioned(
-            left: width / 2 - 50,
+            left: width / 2 - 25,
             top: 0,
             bottom: 0,
             child: Container(
-              width: 100,
-              color: inRange
+              width: 50,
+              color: widget.inRange
                   ? AppColors.success.withAlpha(100)
-                  : AppColors.success.withAlpha(40),
+                  : AppColors.success.withAlpha(30),
             ),
           ),
 
-          Positioned(
-            left: width / 2 + (cents * 3),
-            top: 0,
-            bottom: 0,
-            child: Container(
-              width: 4,
-              color: inRange ? Colors.green : Colors.red,
+          // رسم نقاط و خطوط
+          Positioned.fill(
+            child: CustomPaint(
+              painter: _FrequencyPointsPainter(
+                points: _points,
+                width: width,
+                height: height,
+                pointSize: widget.pointSize,
+                scale: widget.scale,
+                pointsPerSecond: widget.pointsPerSecond,
+                repaint: _repaintTick,
+              ),
             ),
           ),
         ],
       ),
     );
+  }
+
+}
+
+class _FrequencyPointsPainter extends CustomPainter {
+  final List<double> points;
+  final double width;
+  final double height;
+  final double pointSize;
+  final int pointsPerSecond;
+  final double scale;
+
+  _FrequencyPointsPainter({
+    required this.points,
+    required this.width,
+    required this.height,
+    required this.pointSize,
+    required this.pointsPerSecond,
+    this.scale = 1.0,
+    required Listenable repaint,
+  }) : super(repaint: repaint);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (points.isEmpty) return;
+
+    final paintLine = Paint()
+      ..color = Colors.orange
+      ..strokeWidth = 0.6
+      ..style = PaintingStyle.stroke;
+
+    final paintPoint = Paint()
+      ..color = Colors.orange
+      ..style = PaintingStyle.fill;
+
+    final dy = height / (pointsPerSecond - 1);
+
+    final path = Path();
+
+    for (int i = 0; i < points.length; i++) {
+      final y = height - (i * dy);
+      final x = width / 2 + (points[i] * scale);
+
+      canvas.drawCircle(Offset(x, y), pointSize, paintPoint);
+
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+
+    canvas.drawPath(path, paintLine);
+  }
+
+  @override
+  bool shouldRepaint(covariant _FrequencyPointsPainter old) {
+    return old.points.length != points.length; // یا مقایسه دقیق‌تر
   }
 }
