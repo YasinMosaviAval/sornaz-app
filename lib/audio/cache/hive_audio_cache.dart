@@ -8,7 +8,6 @@ class HiveAudioCache implements AudioCacheService {
 
   @override
   Future<void> init() async {
-    // await Hive.initFlutter();
     _box = await Hive.openBox<AudioFileHive>('audio_files_hive');
   }
 
