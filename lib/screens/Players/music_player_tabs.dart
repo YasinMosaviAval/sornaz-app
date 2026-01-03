@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/screens/Players/Components/audio_list.dart';
 import 'package:sornaz/audio/audio_player_provider.dart';
-import 'package:sornaz/screens/Players/equalizer.dart';
-import 'package:sornaz/screens/Players/song_information.dart';
+// import 'package:sornaz/screens/Players/equalizer.dart';
+// import 'package:sornaz/screens/Players/song_information.dart';
 
 class MusicPlayerTabs extends StatefulWidget {
   const MusicPlayerTabs({super.key});
@@ -50,15 +50,18 @@ class _MusicPlayerTabsState extends State<MusicPlayerTabs> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    final audio = context.watch<AudioPlayerProvider>();
-    final hasPlaying = audio.currentAudio != null;
+    // final audio = context.watch<AudioPlayerProvider>();
+    // final hasPlaying = audio.currentAudio != null;
     return Column(
       children: [
         Expanded(
           child: TabBarView(
             controller: _tabController,
             physics: const BouncingScrollPhysics(),
-            children: hasPlaying
+            children: 
+              [AudioList()] 
+              /*
+              hasPlaying
               ? const [
                   AudioList(),
                   NowPlayingInfoTab(),
@@ -68,6 +71,7 @@ class _MusicPlayerTabsState extends State<MusicPlayerTabs> with SingleTickerProv
                   AudioList(),
                   EqualizerTab(),
                 ],
+              */
           ),
         ),
       ],

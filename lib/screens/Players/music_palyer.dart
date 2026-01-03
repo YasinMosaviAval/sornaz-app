@@ -174,7 +174,8 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                 ),
               );
             }
-            return Expanded(child: MusicPlayerTabs());
+            return MusicPlayerTabs();
+            // return Expanded(child: MusicPlayerTabs());
           },
         ),
         bottomNavigationBar: const BottomNavBarWidget(),
