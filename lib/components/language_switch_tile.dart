@@ -25,6 +25,11 @@ class LanguageSwitchTile extends StatelessWidget {
           leadingIcon: Icons.language,
           onChanged: (value) {
             localeProvider.setLocale(value ? AppStrings.localization_en : AppStrings.localization_fa);
+            if(appData.fontFamily.substring(appData.fontFamily.length-2) == AppStrings.localization_en) {
+              appData.updateFontFamily(appData.fontFamily.replaceAll(AppStrings.localization_en, AppStrings.localization_fa));
+            } else {
+              appData.updateFontFamily(appData.fontFamily.replaceAll(AppStrings.localization_fa, AppStrings.localization_en));
+            }
           },
         );
       },

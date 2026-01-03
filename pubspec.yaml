@@ -75,65 +75,65 @@ flutter:
     - assets/audio/tick.wav
     - assets/audio/sub_tick.wav
   fonts:
-    - family: iran_sansx_fn
+    - family: iran_sansx_fa
       fonts:
-        - asset: assets/fonts/iran_sansx_fn/ultra_light.ttf
+        - asset: assets/fonts/iran_sansx_fa/ultra_light.ttf
           weight: 100
-        - asset: assets/fonts/iran_sansx_fn/light.ttf
+        - asset: assets/fonts/iran_sansx_fa/light.ttf
           weight: 200
-        - asset: assets/fonts/iran_sansx_fn/thin.ttf
+        - asset: assets/fonts/iran_sansx_fa/thin.ttf
           weight: 300
-        - asset: assets/fonts/iran_sansx_fn/regular.ttf
+        - asset: assets/fonts/iran_sansx_fa/regular.ttf
           weight: 400
-        - asset: assets/fonts/iran_sansx_fn/medium.ttf
+        - asset: assets/fonts/iran_sansx_fa/medium.ttf
           weight: 500
-        - asset: assets/fonts/iran_sansx_fn/demi_bold.ttf
+        - asset: assets/fonts/iran_sansx_fa/demi_bold.ttf
           weight: 600
-        - asset: assets/fonts/iran_sansx_fn/bold.ttf
+        - asset: assets/fonts/iran_sansx_fa/bold.ttf
           weight: 700
-        - asset: assets/fonts/iran_sansx_fn/extra_bold.ttf
+        - asset: assets/fonts/iran_sansx_fa/extra_bold.ttf
           weight: 800
-        - asset: assets/fonts/iran_sansx_fn/black.ttf
+        - asset: assets/fonts/iran_sansx_fa/black.ttf
           weight: 900
 
-    - family: kalameh_fn
+    - family: kalameh_fa
       fonts:
-        - asset: assets/fonts/kalameh_fn/thin.ttf
+        - asset: assets/fonts/kalameh_fa/thin.ttf
           weight: 100
-        - asset: assets/fonts/kalameh_fn/extra_light.ttf
+        - asset: assets/fonts/kalameh_fa/extra_light.ttf
           weight: 200
-        - asset: assets/fonts/kalameh_fn/light.ttf
+        - asset: assets/fonts/kalameh_fa/light.ttf
           weight: 300
-        - asset: assets/fonts/kalameh_fn/regular.ttf
+        - asset: assets/fonts/kalameh_fa/regular.ttf
           weight: 400
-        - asset: assets/fonts/kalameh_fn/medium.ttf
+        - asset: assets/fonts/kalameh_fa/medium.ttf
           weight: 500
-        - asset: assets/fonts/kalameh_fn/semi_bold.ttf
+        - asset: assets/fonts/kalameh_fa/semi_bold.ttf
           weight: 600
-        - asset: assets/fonts/kalameh_fn/bold.ttf
+        - asset: assets/fonts/kalameh_fa/bold.ttf
           weight: 700
-        - asset: assets/fonts/kalameh_fn/extra_bold.ttf
+        - asset: assets/fonts/kalameh_fa/extra_bold.ttf
           weight: 800
-        - asset: assets/fonts/kalameh_fn/black.ttf
+        - asset: assets/fonts/kalameh_fa/black.ttf
           weight: 900
 
-    - family: iran_yekan_fn
+    - family: iran_yekan_fa
       fonts:
-        - asset: assets/fonts/iran_yekan_fn/thin.ttf
+        - asset: assets/fonts/iran_yekan_fa/thin.ttf
           weight: 100
-        - asset: assets/fonts/iran_yekan_fn/light.ttf
+        - asset: assets/fonts/iran_yekan_fa/light.ttf
           weight: 300
-        - asset: assets/fonts/iran_yekan_fn/regular.ttf
+        - asset: assets/fonts/iran_yekan_fa/regular.ttf
           weight: 400
-        - asset: assets/fonts/iran_yekan_fn/medium.ttf
+        - asset: assets/fonts/iran_yekan_fa/medium.ttf
           weight: 500
-        - asset: assets/fonts/iran_yekan_fn/bold.ttf
+        - asset: assets/fonts/iran_yekan_fa/bold.ttf
           weight: 700
-        - asset: assets/fonts/iran_yekan_fn/extra_bold.ttf
+        - asset: assets/fonts/iran_yekan_fa/extra_bold.ttf
           weight: 800
-        - asset: assets/fonts/iran_yekan_fn/black.ttf
+        - asset: assets/fonts/iran_yekan_fa/black.ttf
           weight: 900
-        # - asset: assets/fonts/iran_yekan_fn/extra_black.ttf
+        # - asset: assets/fonts/iran_yekan_fa/extra_black.ttf
           # weight: 900
 
     - family: peyda
@@ -157,34 +157,34 @@ flutter:
         - asset: assets/fonts/peyda/black.ttf
           weight: 900
 
-    - family: sahel_fn
+    - family: sahel_fa
       fonts:
-        - asset: assets/fonts/sahel_fn/regular.ttf
+        - asset: assets/fonts/sahel_fa/regular.ttf
           weight: 400
-        - asset: assets/fonts/sahel_fn/bold.ttf
+        - asset: assets/fonts/sahel_fa/bold.ttf
           weight: 700
-        - asset: assets/fonts/sahel_fn/black.ttf
+        - asset: assets/fonts/sahel_fa/black.ttf
           weight: 900
 
-    - family: vazir_fn
+    - family: vazir_fa
       fonts:
-        - asset: assets/fonts/vazir_fn/thin.ttf
+        - asset: assets/fonts/vazir_fa/thin.ttf
           weight: 100
-        - asset: assets/fonts/vazir_fn/extra_light.ttf
+        - asset: assets/fonts/vazir_fa/extra_light.ttf
           weight: 200
-        - asset: assets/fonts/vazir_fn/light.ttf
+        - asset: assets/fonts/vazir_fa/light.ttf
           weight: 300
-        - asset: assets/fonts/vazir_fn/regular.ttf
+        - asset: assets/fonts/vazir_fa/regular.ttf
           weight: 400
-        - asset: assets/fonts/vazir_fn/medium.ttf
+        - asset: assets/fonts/vazir_fa/medium.ttf
           weight: 500
-        - asset: assets/fonts/vazir_fn/semi_bold.ttf
+        - asset: assets/fonts/vazir_fa/semi_bold.ttf
           weight: 600
-        - asset: assets/fonts/vazir_fn/bold.ttf
+        - asset: assets/fonts/vazir_fa/bold.ttf
           weight: 700
-        - asset: assets/fonts/vazir_fn/extra_bold.ttf
+        - asset: assets/fonts/vazir_fa/extra_bold.ttf
           weight: 800
-        - asset: assets/fonts/vazir_fn/black.ttf
+        - asset: assets/fonts/vazir_fa/black.ttf
           weight: 900
     
     - family: iran_sansx_en

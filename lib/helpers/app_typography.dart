@@ -9,16 +9,16 @@ class AppTypography {
   static final isDark = false;
   static const int default_font_size_type = 1;
 
-  static const String default_font_family = 'iran_sansx_fn';
-  static const String iran_sansx_fn = 'iran_sansx_fn';
-  static const String iran_yekan_fn = 'iran_yekan_fn';
+  static const String default_font_family = 'iran_sansx_fa';
+  static const String iran_sansx_fa = 'iran_sansx_fa';
   static const String iran_sansx_en = 'iran_sansx_en';
+  static const String iran_yekan_fa = 'iran_yekan_fa';
   static const String iran_yekan_en = 'iran_yekan_en';
-  static const String kalameh_fn = 'kalameh_fn';
-  static const String sahel_fn = 'sahel_fn';
-  static const String vazir_fn = 'vazir_fn';
+  static const String kalameh_fa = 'kalameh_fa';
   static const String kalameh_en = 'kalameh_en';
+  static const String sahel_fa = 'sahel_fa';
   static const String sahel_en = 'sahel_en';
+  static const String vazir_fa = 'vazir_fa';
   static const String vazir_en = 'vazir_en';
   static const String peyda = 'peyda';
 

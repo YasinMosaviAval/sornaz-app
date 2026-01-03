@@ -7,6 +7,7 @@ import 'package:sornaz/components/settings_switch_tile.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
+import 'package:sornaz/helpers/app_logger.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
@@ -22,6 +23,8 @@ class SettingsPage extends StatelessWidget {
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
     // final theme = Theme.of(context);
     final bool isEnglish = localeProvider.locale.languageCode == AppStrings.localization_en;
+    loggingSornaz("isEnglish    $isEnglish");
+    loggingSornaz("fontFamily   ${appData.fontFamily}");
 
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
@@ -112,21 +115,21 @@ class SettingsPage extends StatelessWidget {
                             : AppColors.surface_light,
                         items: [
                           DropdownMenuItem(
-                            value: isEnglish ? AppTypography.iran_sansx_en : AppTypography.iran_sansx_fn,
+                            value: isEnglish ? AppTypography.iran_sansx_en : AppTypography.iran_sansx_fa,
                             child: Text(
                               AppStrings.font_iran_sans.translate(context),
                               style: AppTypography.settingsDropdownItem(context),
                             ),
                           ),
                           DropdownMenuItem(
-                            value: isEnglish ? AppTypography.iran_yekan_en : AppTypography.iran_yekan_fn,
+                            value: isEnglish ? AppTypography.iran_yekan_en : AppTypography.iran_yekan_fa,
                             child: Text(
                               AppStrings.font_iran_yekan.translate(context),
                               style: AppTypography.settingsDropdownItem(context),
                             ),
                           ),
                           DropdownMenuItem(
-                            value: isEnglish ? AppTypography.kalameh_en : AppTypography.kalameh_fn,
+                            value: isEnglish ? AppTypography.kalameh_en : AppTypography.kalameh_fa,
                             child: Text(
                               AppStrings.font_kalameh.translate(context),
                               style: AppTypography.settingsDropdownItem(context),
@@ -140,14 +143,14 @@ class SettingsPage extends StatelessWidget {
                             ),
                           ),
                           DropdownMenuItem(
-                            value: isEnglish ? AppTypography.sahel_en : AppTypography.sahel_fn,
+                            value: isEnglish ? AppTypography.sahel_en : AppTypography.sahel_fa,
                             child: Text(
                               AppStrings.font_sahel.translate(context),
                               style: AppTypography.settingsDropdownItem(context),
                             ),
                           ),
                           DropdownMenuItem(
-                            value: isEnglish ? AppTypography.vazir_en : AppTypography.vazir_fn,
+                            value: isEnglish ? AppTypography.vazir_en : AppTypography.vazir_fa,
                             child: Text(
                               AppStrings.font_vazir.translate(context),
                               style: AppTypography.settingsDropdownItem(context),
@@ -157,13 +160,14 @@ class SettingsPage extends StatelessWidget {
                         onChanged: (value) {
                           if (value != null) {
                             appData.updateFontFamily(value);
+                            loggingSornaz("font    $value");
                           }
                         },
-                        iconEnabledColor: isDark
-                            ? AppColors.text_primary_dark
-                            : AppColors.text_primary_light,
+                        iconEnabledColor: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
                       ),
+                      
                     ),
+                    
                   ],
                 ),
                 AppSpacing.sizedBoxH16(),
