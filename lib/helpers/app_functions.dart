@@ -35,3 +35,15 @@ String formatDuration(Duration d) {
     return "${twoDigits(minutes)}:${twoDigits(seconds)}";
   }
 }
+
+
+String formatSeconds(int seconds) {
+  final m = seconds ~/ 60;
+  final s = seconds % 60;
+  return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+}
+
+String formatJalali(DateTime date) {
+  final j = Jalali.fromDateTime(date);
+  return '${j.year}/${j.month.toString().padLeft(2, '0')}/${j.day.toString().padLeft(2, '0')}';
+}

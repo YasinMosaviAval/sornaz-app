@@ -22,14 +22,22 @@ class RecordingService {
         .onAmplitudeChanged(const Duration(milliseconds: 100))
         .listen((amp) {
       final db = amp.current;
-      final norm = db < -60 ? 0 : (db + 60) / 60;
-      // onAmplitude(norm);
-      onAmplitude(norm as double);
+      final normalized = db < -60 ? 0.0 : (db + 60) / 60;
+      onAmplitude(normalized);
     });
+  }
+
+  Future<void> pause() async {
+    await _recorder.pause();
+  }
+
+  Future<void> resume() async {
+    await _recorder.resume();
   }
 
   Future<void> stop() async {
     await _ampSub?.cancel();
+    _ampSub = null;
     await _recorder.stop();
   }
 }

@@ -25,7 +25,7 @@ class BottomNavBarWidget3 extends StatelessWidget {
     MusicPlayerPage(),
     MetronomePage(),
     TunerPage(),
-    VoiceRecorderPage2(),
+    VoiceRecorderPage(),
   ];
 
   void _onItemTapped(BuildContext context, int index) {
@@ -120,7 +120,7 @@ class _BottomNavBarWidgetState extends State<BottomNavBarWidget> {
     MusicPlayerPage(),
     MetronomePage(),
     TunerPage(),
-    VoiceRecorderPage2(),
+    VoiceRecorderPage(),
   ];
 
   void _onItemTapped(BuildContext context, int index) {
