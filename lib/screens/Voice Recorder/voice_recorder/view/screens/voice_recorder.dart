@@ -642,6 +642,7 @@ import 'package:provider/provider.dart';
 import 'package:sornaz/components/basic_waveform.dart';
 import 'package:sornaz/components/bottom_nav.dart';
 import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_navigation.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_typography.dart';
@@ -654,7 +655,8 @@ class VoiceRecorderPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final appData = context.watch<AppData>();
+    final isDark = appData.isDark;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<VoiceRecorderProvider>().requestPermissions(context);
@@ -666,55 +668,29 @@ class VoiceRecorderPage extends StatelessWidget {
           appBar: AppBar(
             automaticallyImplyLeading: false,
             actions: [
-              // if (vm.isRecording || vm.isPaused) {
-              //   IconButton(
-              //     icon: Icon(
-              //       vm.isFavorite ? Icons.favorite_rounded : Icons.favorite_outline_rounded,
-              //       size: AppSpacing.space_32,
-              //       color: vm.isFavorite
-              //         ? AppColors.error
-              //         : (isDark ? AppColors.text_primary_dark : AppColors.text_primary_light),
-              //     ),
-              //     onPressed: vm.toggleFavorite,
-              //   ),
-              // } else {
-              //   IconButton(
-              //     icon: Icon(
-              //       Icons.folder_open,
-              //       color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-              //     ),
-              //     tooltip: 'Recordings',
-              //     onPressed: () {
-              //       navigateWithFade(context, RecordedFilesPage());
-              //     },
-              //   ),
-              // }
+              if (vm.isRecording || vm.isPaused)
+                IconButton(
+                  icon: Icon(
+                    vm.isFavorite ? Icons.favorite_rounded : Icons.favorite_outline_rounded,
+                    size: AppSpacing.space_32,
+                    color: vm.isFavorite
+                        ? AppColors.error
+                        : (isDark ? AppColors.text_primary_dark : AppColors.text_primary_light),
+                  ),
+                  onPressed: vm.toggleFavorite,
+                ),
 
-    if (vm.isRecording || vm.isPaused)
-      IconButton(
-        icon: Icon(
-          vm.isFavorite ? Icons.favorite_rounded : Icons.favorite_outline_rounded,
-          size: AppSpacing.space_32,
-          color: vm.isFavorite
-              ? AppColors.error
-              : (isDark ? AppColors.text_primary_dark : AppColors.text_primary_light),
-        ),
-        onPressed: vm.toggleFavorite,
-      ),
-
-    /// 📁 Recordings List (فقط قبل از ضبط)
-    if (!vm.isRecording && !vm.isPaused)
-      IconButton(
-        icon: Icon(
-          Icons.folder_open,
-          color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-        ),
-        tooltip: 'Recordings',
-        onPressed: () {
-          navigateWithFade(context, RecordedFilesPage());
-        },
-      ),
-
+              if (!vm.isRecording && !vm.isPaused)
+                IconButton(
+                  icon: Icon(
+                    Icons.folder_open,
+                    color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+                  ),
+                  tooltip: 'Recordings',
+                  onPressed: () {
+                    navigateWithFade(context, RecordedFilesPage());
+                  },
+                ),
             ],
             backgroundColor: isDark ? AppColors.surface_dark : AppColors.surface_light,
           ),

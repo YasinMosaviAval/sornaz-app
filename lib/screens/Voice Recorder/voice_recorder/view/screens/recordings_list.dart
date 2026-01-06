@@ -44,6 +44,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/no_file_found.dart';
 import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_functions.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
@@ -56,7 +57,8 @@ class RecordedFilesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final appData = context.watch<AppData>();
+    final isDark = appData.isDark;
 
     return Consumer<VoiceRecorderProvider>(
       builder: (context, vm, _) {
@@ -67,6 +69,7 @@ class RecordedFilesPage extends StatelessWidget {
               // AppStrings.voice_recorder_recording_list_title.translate(context),
               style: AppTypography.RecordingsListAppBarTitle(context),
             ),
+            foregroundColor: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
             backgroundColor: isDark ? AppColors.surface_dark : AppColors.surface_light,
           ),
           backgroundColor: isDark ? AppColors.surface_dark : AppColors.surface_light,
