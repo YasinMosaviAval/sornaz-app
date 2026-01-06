@@ -5,6 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:sornaz/helpers/app_functions.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/screens/Voice%20Recorder/voice_recorder/services/playback_service.dart';
 import '../services/file_service.dart';
 import '../services/recording_service.dart';
 
@@ -12,10 +13,18 @@ class VoiceRecorderProvider extends ChangeNotifier {
   final FileService fileService;
   final RecordingService recordingService;
 
-  VoiceRecorderProvider(this.fileService, this.recordingService);
+  VoiceRecorderProvider(
+    this.fileService, 
+    this.recordingService,
+    this.playbackService,
+  );
 
   bool isRecording = false;
   bool isPaused = false;
+  bool isPlaying = false;
+  bool isFavorite = false;
+
+  String? currentFilePath;
 
   int seconds = 0;
   String timer = '00:00';
@@ -23,6 +32,12 @@ class VoiceRecorderProvider extends ChangeNotifier {
   List<File> files = [];
   List<double> amplitudes = [];
   Timer? _timer;
+
+@override
+void dispose() {
+  playbackService.dispose();
+  super.dispose();
+}
 
   Future<void> init() async {
     await fileService.init();
@@ -108,6 +123,95 @@ class VoiceRecorderProvider extends ChangeNotifier {
     );
   }
 }
+
+
+Future<void> startRecording() async {
+  if (isRecording) return;
+
+  currentFilePath ??= fileService.newPath();
+
+  await recordingService.start(
+    path: currentFilePath!,
+    onAmplitude: _onAmplitude,
+  );
+
+  isRecording = true;
+  isPaused = false;
+  _startTimer();
+  notifyListeners();
+}
+
+
+Future<void> pauseRecording() async {
+  if (!isRecording) return;
+
+  await recordingService.pause();
+  isPaused = true;
+  isRecording = false;
+  _timer?.cancel();
+
+  notifyListeners();
+}
+
+
+Future<void> resumeRecording() async {
+  if (isRecording) return;
+
+  await recordingService.resume();
+  isRecording = true;
+  isPaused = false;
+  _startTimer();
+
+  notifyListeners();
+}
+
+
+Future<void> stopRecording() async {
+  await recordingService.stop();
+  _timer?.cancel();
+
+  isRecording = false;
+  isPaused = false;
+  seconds = 0;
+  timer = '00:00';
+
+  currentFilePath = null;
+  files = await fileService.loadFiles();
+
+  notifyListeners();
+}
+
+final PlaybackService playbackService;
+
+// Future<void> playCurrent() async {
+//   if (currentFilePath == null) return;
+
+//   isPlaying = true;
+//   notifyListeners();
+
+//   await playbackService.play(currentFilePath!);
+//
+//   isPlaying = false;
+//   notifyListeners();
+// }
+
+Future<void> playCurrent() async {
+  if (currentFilePath == null || isRecording) return;
+
+  await playbackService.play(currentFilePath!);
+}
+
+
+
+void toggleFavorite() {
+  isFavorite = !isFavorite;
+  notifyListeners();
+}
+
+
+
+
+
 
 
 }

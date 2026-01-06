@@ -13,7 +13,7 @@ import 'package:sornaz/screens/Players/music_palyer.dart';
 import 'package:sornaz/screens/Metronome/screens/metronome_page.dart';
 import 'package:flutter/services.dart';
 import 'package:sornaz/screens/Tuner/screens/tuner_page.dart';
-import 'package:sornaz/screens/Voice%20Recorder/voice_recorder.dart';
+import 'package:sornaz/screens/Voice%20Recorder/voice_recorder/view/screens/voice_recorder.dart';
 // import 'package:sornaz/screens/Profile/voice_recorder/view/voice_recorder_page.dart';
 
 class BottomNavBarWidget3 extends StatelessWidget {

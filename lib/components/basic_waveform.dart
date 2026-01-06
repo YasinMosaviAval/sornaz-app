@@ -23,33 +23,26 @@ class BasicWaveformWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.symmetric(
-          horizontal: BorderSide(width: 1, color: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light),
-        ),
-      ),
-      child: Column(
-        children: [
-          Container(
-            height: AppSpacing.space_250,
-            decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.background_dark
-                  : AppColors.background_light,
-              border: Border.symmetric(
-                horizontal: BorderSide(width: 1, color: AppColors.border_light),
-              ),
-            ),
-            child: ClipRRect(
-              child: CustomPaint(
-                painter: WaveformPainter(_amplitudes, _isRecording && !_isPaused, isDark),
-                size: Size.infinite,
-              ),
+    return Column(
+      children: [
+        Container(
+          height: AppSpacing.space_250,
+          decoration: BoxDecoration(
+            color: isDark
+                ? AppColors.surface_dark.withAlpha(150)
+                : AppColors.surface_light.withAlpha(150),
+            // border: Border.symmetric(
+            //   horizontal: BorderSide(width: 1, color: AppColors.border_light),
+            // ),
+          ),
+          child: ClipRRect(
+            child: CustomPaint(
+              painter: WaveformPainter(_amplitudes, _isRecording && !_isPaused, isDark),
+              size: Size.infinite,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

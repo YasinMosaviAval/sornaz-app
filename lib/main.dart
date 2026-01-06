@@ -13,6 +13,7 @@ import 'package:sornaz/screens/Articles/provider/articles_provider.dart';
 import 'package:sornaz/screens/Tuner/controller/tuner_provider.dart';
 import 'package:sornaz/screens/Voice%20Recorder/voice_recorder/provider/voice_recorder_provider.dart';
 import 'package:sornaz/screens/Voice%20Recorder/voice_recorder/services/file_service.dart';
+import 'package:sornaz/screens/Voice%20Recorder/voice_recorder/services/playback_service.dart';
 import 'package:sornaz/screens/Voice%20Recorder/voice_recorder/services/recording_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -39,7 +40,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => FolderNavigatorProvider()),
         ChangeNotifierProvider(create: (_) => libraryManager),
         ChangeNotifierProvider(create: (_) => AudioPlayerProvider(libraryManager: libraryManager),),
-        ChangeNotifierProvider(create: (_) => VoiceRecorderProvider(FileService(), RecordingService())..init()),
+        ChangeNotifierProvider(create: (_) => VoiceRecorderProvider(FileService(), RecordingService(), PlaybackService())..init()),
       ],
       child: const MyApp(),
     ),

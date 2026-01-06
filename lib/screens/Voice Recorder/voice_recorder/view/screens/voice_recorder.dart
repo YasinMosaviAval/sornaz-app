@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 /*
 // ignore_for_file: use_build_context_synchronously
 // ignore_for_file: unused_field
@@ -634,19 +636,17 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
 */
 
 
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sornaz/components/basic_waveform.dart';
 import 'package:sornaz/components/bottom_nav.dart';
-import 'package:sornaz/components/no_file_found.dart';
 import 'package:sornaz/helpers/app_colors.dart';
-import 'package:sornaz/helpers/app_functions.dart';
+import 'package:sornaz/helpers/app_navigation.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
-import 'package:sornaz/helpers/app_strings.dart';
-import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/screens/Voice%20Recorder/voice_recorder/provider/voice_recorder_provider.dart';
+import 'package:sornaz/screens/Voice%20Recorder/voice_recorder/view/screens/recordings_list.dart';
 
 
 class VoiceRecorderPage extends StatelessWidget {
@@ -656,7 +656,6 @@ class VoiceRecorderPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    /// 🔐 Permission request (جایگزین initState قدیمی)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<VoiceRecorderProvider>().requestPermissions(context);
     });
@@ -665,249 +664,70 @@ class VoiceRecorderPage extends StatelessWidget {
       builder: (context, vm, _) {
         return Scaffold(
           appBar: AppBar(
-            title: Text(
-              AppStrings.voice_recorder_title.translate(context),
-            ),
+            automaticallyImplyLeading: false,
+            actions: [
+              // if (vm.isRecording || vm.isPaused) {
+              //   IconButton(
+              //     icon: Icon(
+              //       vm.isFavorite ? Icons.favorite_rounded : Icons.favorite_outline_rounded,
+              //       size: AppSpacing.space_32,
+              //       color: vm.isFavorite
+              //         ? AppColors.error
+              //         : (isDark ? AppColors.text_primary_dark : AppColors.text_primary_light),
+              //     ),
+              //     onPressed: vm.toggleFavorite,
+              //   ),
+              // } else {
+              //   IconButton(
+              //     icon: Icon(
+              //       Icons.folder_open,
+              //       color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+              //     ),
+              //     tooltip: 'Recordings',
+              //     onPressed: () {
+              //       navigateWithFade(context, RecordedFilesPage());
+              //     },
+              //   ),
+              // }
+
+    if (vm.isRecording || vm.isPaused)
+      IconButton(
+        icon: Icon(
+          vm.isFavorite ? Icons.favorite_rounded : Icons.favorite_outline_rounded,
+          size: AppSpacing.space_32,
+          color: vm.isFavorite
+              ? AppColors.error
+              : (isDark ? AppColors.text_primary_dark : AppColors.text_primary_light),
+        ),
+        onPressed: vm.toggleFavorite,
+      ),
+
+    /// 📁 Recordings List (فقط قبل از ضبط)
+    if (!vm.isRecording && !vm.isPaused)
+      IconButton(
+        icon: Icon(
+          Icons.folder_open,
+          color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+        ),
+        tooltip: 'Recordings',
+        onPressed: () {
+          navigateWithFade(context, RecordedFilesPage());
+        },
+      ),
+
+            ],
+            backgroundColor: isDark ? AppColors.surface_dark : AppColors.surface_light,
           ),
+          backgroundColor: isDark ? AppColors.background_dark : AppColors.background_light,
           body: Column(
             children: [
-              /// 🎙️ Recorder Section (UI بدون تغییر)
               _RecorderSection(vm: vm, isDark: isDark),
-
-              const SizedBox(height: AppSpacing.space_16),
-
-              /// 📁 Files List
-              Expanded(
-                child: vm.files.isEmpty
-                    ? NoFilesFoundWidget(
-                        message: AppStrings.no_records_file
-                            .translate(context),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(12),
-                        itemCount: vm.files.length,
-                        itemBuilder: (context, index) {
-                          final file = vm.files[index];
-                          final fileName = file.path
-                              .split('/')
-                              .last
-                              .replaceAll(
-                                  AppStrings.file_type_dot_m4a, '');
-                          final date =
-                              formatJalali(file.lastModifiedSync());
-
-                          return AnimatedSwitcher(
-                            duration:
-                                const Duration(milliseconds: 350),
-                            transitionBuilder:
-                                (child, animation) =>
-                                    SizeTransition(
-                              sizeFactor: animation,
-                              child: child,
-                            ),
-                            child: Card(
-                              key: ValueKey(file.path),
-                              elevation: 2,
-                              color: isDark
-                                  ? AppColors.surface_dark
-                                  : AppColors.surface_light,
-                              child: ListTile(
-                                contentPadding:
-                                    const EdgeInsets.symmetric(
-                                  horizontal:
-                                      AppSpacing.space_16,
-                                ),
-                                horizontalTitleGap: 8,
-                                leading: IconButton(
-                                  iconSize:
-                                      AppSpacing.space_48,
-                                  icon: Icon(
-                                    Icons.play_circle_fill,
-                                    color: isDark
-                                        ? AppColors
-                                            .text_primary_dark
-                                        : AppColors
-                                            .text_primary_light,
-                                  ),
-                                  onPressed: () {
-                                    // playback مثل نسخه قبلی (UI only)
-                                  },
-                                ),
-                                title: Text(
-                                  fileName,
-                                  style: AppTypography
-                                      .voiceRecorderFilename(
-                                          context),
-                                ),
-                                subtitle: Text(
-                                  date,
-                                  style: AppTypography
-                                      .voiceRecorderDate(
-                                          context),
-                                ),
-                                trailing: Row(
-                                  mainAxisSize:
-                                      MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      iconSize:
-                                          AppSpacing
-                                              .space_24,
-                                      icon: const Icon(
-                                        Icons.edit,
-                                        color:
-                                            AppColors.info,
-                                      ),
-                                      onPressed: () =>
-                                          _renameRecording(
-                                        context,
-                                        file,
-                                        isDark,
-                                      ),
-                                    ),
-                                    IconButton(
-                                      iconSize:
-                                          AppSpacing
-                                              .space_24,
-                                      icon: const Icon(
-                                        Icons.delete_forever,
-                                        color: AppColors
-                                            .error,
-                                      ),
-                                      onPressed: () =>
-                                          _confirmDelete(
-                                        context,
-                                        file,
-                                        isDark,
-                                        vm,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-              ),
             ],
           ),
           bottomNavigationBar: const BottomNavBarWidget(),
         );
       },
     );
-  }
-
-  // ------------------------------------------------------------
-  // 📝 Rename Recording (UI logic)
-  // ------------------------------------------------------------
-  Future<void> _renameRecording(
-    BuildContext context,
-    File file,
-    bool isDark,
-  ) async {
-    final oldName = file.path
-        .split('/')
-        .last
-        .replaceAll(AppStrings.file_type_dot_m4a, '');
-
-    final controller = TextEditingController(text: oldName);
-
-    final newName = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor:
-            isDark ? AppColors.surface_dark : AppColors.surface_light,
-        title: Text(
-          AppStrings.voice_recorder_rename_file.translate(context),
-          textAlign: TextAlign.center,
-        ),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: InputDecoration(
-            hintText: AppStrings
-                .voice_recorder_new_filename
-                .translate(context),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(AppStrings.voice_recorder_discard.translate(context)),
-          ),
-          ElevatedButton(
-            onPressed: () =>
-                Navigator.pop(context, controller.text.trim()),
-            child: Text(AppStrings.voice_recorder_save.translate(context)),
-          ),
-        ],
-      ),
-    );
-
-    if (newName == null ||
-        newName.isEmpty ||
-        newName == oldName) return;
-
-    final newPath = file.path.replaceFirst(
-      '$oldName${AppStrings.file_type_dot_m4a}',
-      '$newName${AppStrings.file_type_dot_m4a}',
-    );
-
-    await file.rename(newPath);
-    context.read<VoiceRecorderProvider>().init();
-  }
-
-  // ------------------------------------------------------------
-  // ❌ Confirm Delete Dialog
-  // ------------------------------------------------------------
-  Future<void> _confirmDelete(
-    BuildContext context,
-    File file,
-    bool isDark,
-    VoiceRecorderProvider vm,
-  ) async {
-    final fileName = file.path
-        .split('/')
-        .last
-        .replaceAll(AppStrings.file_type_dot_m4a, '');
-
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor:
-            isDark ? AppColors.surface_dark : AppColors.surface_light,
-        title: Text(
-          AppStrings.voice_recorder_delete_recording
-              .translate(context),
-          textAlign: TextAlign.center,
-        ),
-        content: Text(
-          "$fileName حذف شود؟",
-          textAlign: TextAlign.center,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(AppStrings.voice_recorder_no
-                .translate(context)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(AppStrings.voice_recorder_yes_delete
-                .translate(context)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      await file.delete();
-      await vm.init();
-    }
   }
 }
 
@@ -925,51 +745,128 @@ class _RecorderSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const SizedBox(height: AppSpacing.space_24),
-        Text(
-          vm.timer,
-          style: AppTypography.voiceRecorderRecordingTimer(context),
-        ),
-        const SizedBox(height: AppSpacing.space_16),
-
-        /// 🔴 Buttons (دقیقاً مثل قبل)
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.space_32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            if (vm.isRecording)
-              FloatingActionButton(
-                heroTag: 'pause',
-                backgroundColor: vm.isPaused
-                    ? (isDark
-                        ? AppColors.clicked_dark
-                        : AppColors.clicked_light)
-                    : (isDark
-                        ? AppColors.surface_dark
-                        : AppColors.surface_light),
-                onPressed:
-                    vm.isPaused ? vm.resume : vm.pause,
-                child: Icon(
-                  vm.isPaused
-                      ? Icons.play_arrow
-                      : Icons.pause,
+      
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.space_24),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        vm.timer,
+                        style: AppTypography.voiceRecorderRecordingTimer(context),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            const SizedBox(width: AppSpacing.space_24),
-            FloatingActionButton(
-              heroTag: 'main',
-              backgroundColor: AppColors.error,
-              onPressed:
-                  vm.isRecording ? vm.stop : vm.start,
-              child: Icon(
-                vm.isRecording ? Icons.stop : Icons.mic,
-              ),
+                BasicWaveformWidget(
+                  amplitudes: vm.amplitudes,
+                  isRecording: vm.isRecording,
+                  isPaused: vm.isPaused,
+                ),
+                AppSpacing.sizedBoxH4(),
+                if (vm.isRecording || vm.isPaused)
+                  TextButton(
+                    onPressed: null,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "BOOKMARK",
+                          style: AppTypography.body3(context).copyWith(
+                            color: isDark ? AppColors.primary_dark : AppColors.primary_light,
+                          ),
+                        ),
+                        AppSpacing.sizedBoxW4(),
+                        Icon(
+                          Icons.bookmark_rounded,
+                          size: AppSpacing.space_16,
+                          color: isDark ? AppColors.primary_dark : AppColors.primary_light,
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+            
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                if (vm.isRecording || vm.isPaused)
+                  FloatingActionButton(
+                    heroTag: 'stop',
+                    elevation: 0,
+                    hoverElevation: 0,
+                    highlightElevation: 0,
+                    shape: const CircleBorder(),
+                    backgroundColor: Colors.transparent,
+                    onPressed: vm.stopRecording,
+                    child: Icon(
+                      Icons.stop_rounded,
+                      size: AppSpacing.space_36,
+                      color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+                    ),
+                  ),
+                
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: isDark ? AppColors.surface_dark : AppColors.surface_light,
+                      width: 2,
+                    ),
+                    borderRadius: BorderRadius.all(Radius.circular(50))
+                  ),
+                  padding: EdgeInsets.all(AppSpacing.space_8),
+                  child: SizedBox(
+                    height: AppSpacing.space_48,
+                    width: AppSpacing.space_48,
+                    child: FloatingActionButton(
+                      elevation: 0,
+                      hoverElevation: 0,
+                      highlightElevation: 0,
+                      shape: const CircleBorder(),
+                      backgroundColor: vm.isRecording ? Colors.transparent : AppColors.error,
+                      heroTag: 'main',
+                      onPressed: vm.isRecording ? vm.pauseRecording : vm.resumeRecording,
+                      child: vm.isRecording ? Icon(
+                        Icons.pause_rounded,
+                        size: AppSpacing.space_36,
+                        color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+                      ) : null,
+                    ),
+                  ),
+                ),
+                
+                if (vm.isRecording || vm.isPaused)
+                  FloatingActionButton(
+                    heroTag: 'play',
+                    elevation: 0,
+                    hoverElevation: 0,
+                    highlightElevation: 0,
+                    shape: const CircleBorder(),
+                    backgroundColor: Colors.transparent,
+                    onPressed: vm.isPaused ? vm.playCurrent : null,
+                    child: Icon(
+                      vm.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                      size: AppSpacing.space_36,
+                      color: vm.isPaused
+                        ? isDark ? AppColors.text_primary_dark : AppColors.text_primary_light
+                        : isDark ? AppColors.unselected_item_dark : AppColors.unselected_item_light,
+                    ),
+                  ),
+              ],
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.space_24),
-      ],
+      ),
     );
   }
 }

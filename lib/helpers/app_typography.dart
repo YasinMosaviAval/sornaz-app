@@ -639,7 +639,9 @@ class AppTypography {
   static TextStyle voiceRecorderRenameFileDialogueTextField(BuildContext context) => body3(context);
   static TextStyle voiceRecorderRenameFileMessageSnackBar(BuildContext context) => caption(context);
   static TextStyle voiceRecorderRenameFileErrorMessageSnackBar(BuildContext context) => caption(context);
-  static TextStyle voiceRecorderRecordingTimer(BuildContext context) => headline3(context);
+  static TextStyle voiceRecorderRecordingTimer(BuildContext context) => body0(context).copyWith(
+    fontWeight: FontWeight.w300,
+  );
   // ================================================================================================================================
   static TextStyle recordDetailsAppBar(BuildContext context) => headline3(context);
   static TextStyle recordDetailsFilename(BuildContext context) => body1(context);
@@ -657,6 +659,8 @@ class AppTypography {
   static TextStyle recordDetailsDeleteDialogueContent(BuildContext context) => body2(context);
   static TextStyle recordDetailsDeleteDialogueCancelButton(BuildContext context) => subtitle3(context);
   static TextStyle recordDetailsDeleteDialogueConfirmButton(BuildContext context) => body3(context);
+  // ================================================================================================================================
+  static TextStyle RecordingsListAppBarTitle(BuildContext context) => headline3(context);
   // ================================================================================================================================
   static TextStyle articlesErrorInLoading(BuildContext context) => headline4(context);
   static TextStyle articlesReleaseDate(BuildContext context) => subtitle4(context);
