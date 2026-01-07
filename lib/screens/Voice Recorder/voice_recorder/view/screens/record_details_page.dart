@@ -3,7 +3,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:just_waveform/just_waveform.dart';
-import 'package:sornaz/components/waveform_widget.dart';
+import 'package:sornaz/screens/Voice%20Recorder/waveform_widget.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';

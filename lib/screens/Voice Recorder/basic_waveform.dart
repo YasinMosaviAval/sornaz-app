@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
-import 'package:sornaz/helpers/app_waveform_painter.dart';
+import 'package:sornaz/screens/Voice%20Recorder/app_waveform_painter.dart';
 
 class BasicWaveformWidget extends StatelessWidget {
   const BasicWaveformWidget({

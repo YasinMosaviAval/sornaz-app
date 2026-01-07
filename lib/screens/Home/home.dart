@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:sornaz/components/bottom_nav.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_images.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
@@ -8,11 +9,10 @@ import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 
 import 'package:provider/provider.dart';
-import 'package:sornaz/components/blog_carousel.dart';
-import 'package:sornaz/components/bottom_nav.dart';
 import 'package:sornaz/components/search_bar.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
+import 'package:sornaz/screens/Articles/ui/blog_carousel.dart';
 import 'package:sornaz/screens/Home/app_drawer.dart';
 
 class HomePage extends StatelessWidget {

@@ -639,7 +639,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sornaz/components/basic_waveform.dart';
+import 'package:sornaz/screens/Voice%20Recorder/basic_waveform.dart';
 import 'package:sornaz/components/bottom_nav.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
