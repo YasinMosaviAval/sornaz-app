@@ -210,7 +210,31 @@ void toggleFavorite() {
 
 
 
+// ------------------------------------------------------------
+// ❌ Delete single file
+// ------------------------------------------------------------
+// Future<void> deleteFile(File file) async {
+//   if (await file.exists()) {
+//     await file.delete();
+//   }
 
+//   files.removeWhere((f) => f.path == file.path);
+//   notifyListeners();
+// }
+
+// Future<void> renameFile(File file, String newName) async {
+//   final directory = file.parent.path;
+//   final newPath = '$directory/$newName.m4a';
+
+//   final newFile = await file.rename(newPath);
+
+//   final index = files.indexWhere((f) => f.path == file.path);
+//   if (index != -1) {
+//     files[index] = newFile;
+//   }
+
+//   notifyListeners();
+// }
 
 
 
