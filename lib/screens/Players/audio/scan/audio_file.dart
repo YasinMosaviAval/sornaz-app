@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:sornaz/audio/metadata/audio_metadata.dart';
+import 'package:sornaz/screens/Players/audio/metadata/audio_metadata.dart';
 
 class AudioFile {
   File file;

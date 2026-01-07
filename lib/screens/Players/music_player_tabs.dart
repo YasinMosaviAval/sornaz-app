@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/screens/Players/Components/audio_list.dart';
-import 'package:sornaz/audio/audio_player_provider.dart';
+import 'package:sornaz/screens/Players/audio/audio_player_provider.dart';
 // import 'package:sornaz/screens/Players/equalizer.dart';
 // import 'package:sornaz/screens/Players/song_information.dart';
 

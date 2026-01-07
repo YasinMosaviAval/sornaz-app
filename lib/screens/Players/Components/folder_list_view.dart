@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sornaz/helpers/app_logger.dart';
 import 'package:sornaz/screens/Players/Components/breadcrumb.dart';
 import 'package:sornaz/screens/Players/Components/bottom_player.dart';
 import 'package:sornaz/helpers/app_colors.dart';
@@ -9,11 +8,12 @@ import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
-import 'package:sornaz/audio/audio_player_provider.dart';
+import 'package:sornaz/screens/Players/audio/audio_player_provider.dart';
 import 'package:sornaz/screens/Players/Components/audio_item.dart';
-import 'package:sornaz/audio/folder_navigator_provider.dart';
+import 'package:sornaz/screens/Players/audio/folder_navigator_provider.dart';
 import 'package:sornaz/screens/Players/Components/search_bar.dart';
 
+/*
 class FolderListView extends StatelessWidget {
   const FolderListView({super.key});
 
@@ -59,6 +59,7 @@ class FolderListView extends StatelessWidget {
     );
   }
 }
+*/
 
 /*
 class FolderView extends StatelessWidget {
@@ -340,7 +341,6 @@ class FolderView extends StatelessWidget {
                   ...nav.audioFiles.asMap().entries.map((entry) {
                     final i = entry.key;
                     final audio = entry.value;
-                    loggingSornaz("  ==  $i + ${audio.file.path.substring(0, audio.file.path.lastIndexOf('/') + 1)} + ${audio.file.path.substring(audio.file.path.lastIndexOf('/') + 1)}");
                     return AudioItem(
                       audio: audio,
                       index: i,

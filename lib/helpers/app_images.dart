@@ -9,6 +9,5 @@ class AppImages {
   static const String onboarding_image_2 = 'assets/images/onboarding_2.png';
 
   // static const String sample_image = 'assets/images/sornaz_logo.png';
-  static const String sample_online_images =
-      'https://via.placeholder.com/60?text=Author';
+  static const String sample_online_images = 'https://via.placeholder.com/60?text=Author';
 }

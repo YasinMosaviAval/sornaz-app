@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sornaz/audio/scan/audio_file.dart';
-import 'package:sornaz/audio/audio_player_provider.dart';
+import 'package:sornaz/screens/Players/audio/scan/audio_file.dart';
+import 'package:sornaz/screens/Players/audio/audio_player_provider.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 

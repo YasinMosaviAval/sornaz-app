@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sornaz/audio/library/audio_library_manager.dart';
+import 'package:sornaz/screens/Players/audio/library/audio_library_manager.dart';
 import 'package:sornaz/screens/Players/Components/flat_list_view.dart';
 import 'package:sornaz/screens/Players/Components/folder_list_view.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
-import 'package:sornaz/audio/audio_player_provider.dart';
-import 'package:sornaz/audio/folder_navigator_provider.dart';
+import 'package:sornaz/screens/Players/audio/audio_player_provider.dart';
+import 'package:sornaz/screens/Players/audio/folder_navigator_provider.dart';
 
 class AudioList extends StatelessWidget {
   const AudioList({super.key});

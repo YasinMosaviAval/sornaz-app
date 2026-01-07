@@ -15,5 +15,3 @@ class LocaleProvider extends ChangeNotifier {
     setLocale(_locale.languageCode == 'fa' ? 'en' : 'fa');
   }
 }
-
-// ==

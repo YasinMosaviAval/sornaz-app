@@ -1,3 +1,4 @@
+import 'package:logger/logger.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 
 String formatJalaliDate(String isoDate) {
@@ -22,6 +23,13 @@ String formatJalaliDate(String isoDate) {
   }
 }
 
+String formatJalali(DateTime date) {
+  final j = Jalali.fromDateTime(date);
+  return '${j.year}/${j.month.toString().padLeft(2, '0')}/${j.day.toString().padLeft(2, '0')}';
+}
+
+
+
 String formatDuration(Duration d) {
   String twoDigits(int n) => n.toString().padLeft(2, '0');
 
@@ -36,14 +44,15 @@ String formatDuration(Duration d) {
   }
 }
 
-
 String formatSeconds(int seconds) {
   final m = seconds ~/ 60;
   final s = seconds % 60;
   return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
 }
 
-String formatJalali(DateTime date) {
-  final j = Jalali.fromDateTime(date);
-  return '${j.year}/${j.month.toString().padLeft(2, '0')}/${j.day.toString().padLeft(2, '0')}';
+
+
+void loggingSornaz(String message) {
+  final logger = Logger();
+  logger.i("logging Sornaz ======= $message");
 }

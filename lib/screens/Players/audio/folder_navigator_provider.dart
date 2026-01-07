@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:sornaz/audio/scan/audio_file.dart';
-import 'package:sornaz/helpers/app_logger.dart';
+import 'package:sornaz/screens/Players/audio/scan/audio_file.dart';
+import 'package:sornaz/helpers/app_functions.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 
 class FolderNavigatorProvider extends ChangeNotifier {

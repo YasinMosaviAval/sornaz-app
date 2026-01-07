@@ -1,2 +1,24 @@
 {
+  "files.exclude": {
+    "**/.gitignore": true,
+    "**/sornaz.iml": true,
+    "**/analysis_options.yaml": true,
+    "**/README.md": true,
+    "**/pubspec.lock": true,
+    "**/.dart_tool": true,
+    "**/.idea": true,
+    "**/build": true,
+    "**/linux": true,
+    "**/macos": true,
+    "**/test": true,
+    "**/web": true,
+    "**/.flutter-plugins-dependencies": true,
+    "**/.metadata": true,
+    "**/windows": true,
+    "**/.vs": true,
+    "**/ios": true,
+    // "**/": true,
+    // "**/": true,
+    // "**/": true,
+  }
 }

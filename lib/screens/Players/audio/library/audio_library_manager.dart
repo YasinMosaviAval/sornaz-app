@@ -1,10 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:sornaz/audio/cache/audio_cache_factory.dart';
-import 'package:sornaz/audio/scan/audio_file.dart';
-import 'package:sornaz/audio/scan/audio_file_loader.dart';
-import 'package:sornaz/audio/scan/scan_progress.dart';
-import 'package:sornaz/helpers/app_logger.dart';
+import 'package:sornaz/screens/Players/audio/cache/audio_cache_factory.dart';
+import 'package:sornaz/screens/Players/audio/scan/audio_file.dart';
+import 'package:sornaz/screens/Players/audio/scan/audio_file_loader.dart';
+import 'package:sornaz/screens/Players/audio/scan/scan_progress.dart';
 
 class AudioLibraryManager extends ChangeNotifier {
   List<Directory> roots = [];
@@ -70,7 +69,6 @@ class AudioLibraryManager extends ChangeNotifier {
       progress = 0.0;
       currentPath = 'خطا در بارگذاری';
       notifyListeners();
-      loggingSornaz("خطا در loadOrScan: $e");
     }
   }
 

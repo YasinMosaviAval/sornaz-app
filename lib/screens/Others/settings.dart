@@ -7,7 +7,6 @@ import 'package:sornaz/components/settings_switch_tile.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
-import 'package:sornaz/helpers/app_logger.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
@@ -23,8 +22,6 @@ class SettingsPage extends StatelessWidget {
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
     // final theme = Theme.of(context);
     final bool isEnglish = localeProvider.locale.languageCode == AppStrings.localization_en;
-    loggingSornaz("isEnglish    $isEnglish");
-    loggingSornaz("fontFamily   ${appData.fontFamily}");
 
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
@@ -160,7 +157,6 @@ class SettingsPage extends StatelessWidget {
                         onChanged: (value) {
                           if (value != null) {
                             appData.updateFontFamily(value);
-                            loggingSornaz("font    $value");
                           }
                         },
                         iconEnabledColor: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,

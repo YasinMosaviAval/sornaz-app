@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:hive/hive.dart';
-import 'package:sornaz/audio/scan/audio_file.dart';
+import 'package:sornaz/screens/Players/audio/scan/audio_file.dart';
 // import 'audio_metadata.dart';
 
 part 'audio_file_hive.g.dart'; // تولید می‌شه

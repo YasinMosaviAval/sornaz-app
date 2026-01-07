@@ -1,15 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:metadata_god/metadata_god.dart';
-import 'package:sornaz/audio/library/audio_library_manager.dart';
-import 'package:sornaz/audio/metadata/audio_metadata.dart';
-import 'package:sornaz/audio/metadata/metadata_service.dart';
-import 'package:sornaz/audio/playback/playback_history.dart';
-import 'package:sornaz/audio/playback/playback_queue_manager.dart';
-import 'package:sornaz/audio/scan/audio_file.dart';
-import 'package:sornaz/classes/playback_undo.dart';
+import 'package:sornaz/screens/Players/audio/library/audio_library_manager.dart';
+import 'package:sornaz/screens/Players/audio/metadata/audio_metadata.dart';
+import 'package:sornaz/screens/Players/audio/metadata/metadata_service.dart';
+import 'package:sornaz/screens/Players/audio/playback/playback_history.dart';
+import 'package:sornaz/screens/Players/audio/playback/playback_queue_manager.dart';
+import 'package:sornaz/screens/Players/audio/scan/audio_file.dart';
+import 'package:sornaz/screens/Players/audio/playback/playback_undo.dart';
 import 'package:sornaz/main.dart';
-import 'package:sornaz/audio/controller/audio_player_controller.dart';
+import 'package:sornaz/screens/Players/audio/controller/audio_player_controller.dart';
 
 class AudioPlayerProvider extends ChangeNotifier {
   

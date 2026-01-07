@@ -76,7 +76,6 @@ class RecordedFilesPage extends StatelessWidget {
           body: vm.files.isEmpty
               ? NoFilesFoundWidget(message: AppStrings.no_records_file.translate(context))
               : ListView.builder(
-                  // padding: const EdgeInsets.all(12),
                   itemCount: vm.files.length,
                   itemBuilder: (context, index) {
                     final file = vm.files[index];

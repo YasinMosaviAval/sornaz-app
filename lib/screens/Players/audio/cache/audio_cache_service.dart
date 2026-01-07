@@ -1,4 +1,4 @@
-import 'package:sornaz/audio/scan/audio_file.dart';
+import 'package:sornaz/screens/Players/audio/scan/audio_file.dart';
 
 abstract class AudioCacheService {
   Future<void> init();

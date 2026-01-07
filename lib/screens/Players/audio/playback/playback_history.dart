@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:sornaz/classes/playback_undo.dart';
+import 'package:sornaz/screens/Players/audio/playback/playback_undo.dart';
 
 class PlaybackHistoryManager {
   final List<PlaybackUndo> _stack = [];

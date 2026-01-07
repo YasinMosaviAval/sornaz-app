@@ -1,7 +1,7 @@
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:sornaz/audio/cache/audio_cache_service.dart';
-import 'package:sornaz/audio/scan/audio_file.dart';
-import 'package:sornaz/audio/scan/audio_file_hive.dart';
+import 'package:sornaz/screens/Players/audio/cache/audio_cache_service.dart';
+import 'package:sornaz/screens/Players/audio/scan/audio_file.dart';
+import 'package:sornaz/screens/Players/audio/scan/audio_file_hive.dart';
 
 class HiveAudioCache implements AudioCacheService {
   Box<AudioFileHive>? _box;

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sornaz/audio/scan/audio_file.dart';
+import 'package:sornaz/screens/Players/audio/scan/audio_file.dart';
 import 'package:sornaz/screens/Players/Components/file_actions.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
-import 'package:sornaz/audio/audio_player_provider.dart';
+import 'package:sornaz/screens/Players/audio/audio_player_provider.dart';
 import 'package:sornaz/screens/Players/Components/marquee_text.dart';
 import 'package:sornaz/helpers/app_functions.dart';
 import 'package:sornaz/helpers/app_typography.dart';
