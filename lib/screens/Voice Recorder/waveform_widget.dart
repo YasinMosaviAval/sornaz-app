@@ -7,9 +7,8 @@ import 'dart:math';
 
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
-import 'package:sornaz/helpers/app_strings.dart';
-import 'package:sornaz/helpers/app_translations.dart';
 
+/*
 class WaveformViewer extends StatefulWidget {
   final List<int> samples;
   final Color color;
@@ -17,7 +16,7 @@ class WaveformViewer extends StatefulWidget {
   const WaveformViewer({
     super.key,
     required this.samples,
-    this.color = Colors.blue,
+    this.color = AppColors.voice_recorder_waveform_player_color,
   });
 
   @override
@@ -56,6 +55,8 @@ class _WaveformViewerState extends State<WaveformViewer> {
     );
   }
 }
+*/
+
 
 class WavePainter extends CustomPainter {
   final List<int> samples;
@@ -101,7 +102,7 @@ class WaveformPlayerView extends StatefulWidget {
     required this.samples,
     required this.duration,
     required this.filePath,
-    this.color = Colors.blue,
+    this.color = AppColors.voice_recorder_waveform_player_color,
   });
 
   @override
@@ -158,14 +159,20 @@ class _WaveformPlayerViewState extends State<WaveformPlayerView> {
         Row(
           children: [
             IconButton(
-              icon: Icon(Icons.play_arrow, color: isDark? AppColors.text_primary_dark: AppColors.text_primary_light),
+              icon: Icon(
+                Icons.play_arrow,
+                color: AppColors.voice_recorder_waveform_player_play_icon_color(isDark: isDark)
+              ),
               onPressed: () async {
                 await player.stop();
                 await player.play(DeviceFileSource(widget.filePath));
               },
             ),
             IconButton(
-              icon: Icon(Icons.pause, color: isDark? AppColors.text_primary_dark: AppColors.text_primary_light),
+              icon: Icon(
+                Icons.pause, 
+                color: AppColors.voice_recorder_waveform_player_pause_icon_color(isDark: isDark)
+              ),
               onPressed: () async {
                 await player.pause();
               },
@@ -189,6 +196,7 @@ class _WaveformPlayerViewState extends State<WaveformPlayerView> {
                   samples: widget.samples,
                   color: widget.color,
                   playheadX: playheadX,
+                  isDark: isDark
                 ),
               ),
             ),
@@ -203,11 +211,13 @@ class WaveformPainter extends CustomPainter {
   final List<int> samples;
   final Color color;
   final double playheadX;
+  final bool isDark;
 
   WaveformPainter({
     required this.samples,
     required this.color,
     required this.playheadX,
+    required this.isDark,
   });
 
   @override
@@ -230,7 +240,7 @@ class WaveformPainter extends CustomPainter {
     }
 
     final playheadPaint = Paint()
-      ..color = Colors.red
+      ..color = AppColors.voice_recorder_waveform_player_playhead_color(isDark: isDark)
       ..strokeWidth = 2;
 
     canvas.drawLine(

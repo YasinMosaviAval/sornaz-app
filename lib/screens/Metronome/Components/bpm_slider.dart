@@ -19,8 +19,8 @@ class BpmSlider extends StatelessWidget {
       value: bpm.toDouble(),
       min: 40,
       max: 200,
-      activeColor: isDark ? AppColors.primary_dark : AppColors.primary_light,
-      inactiveColor: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light,
+      activeColor: AppColors.bpm_slider_active_color(isDark: isDark),
+      inactiveColor: AppColors.bpm_slider_inactive_color(isDark: isDark),
       onChanged: (v) => onChanged(v.toInt()),
     );
   }

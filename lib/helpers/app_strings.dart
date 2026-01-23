@@ -115,8 +115,10 @@ class AppStrings {
   static const notification_title = 'notificationTitle';
   static const appearance_title = 'appearanceTitle';
   static const elements = 'elements';
-  static const text_size = 'textSize';
-  static const text_size_description = 'textSizeDescription';
+  static const font_size = 'fontSize';
+  static const font_size_description = 'fontSizeDescription';
+  static const font_weight = 'fontWeight';
+  static const font_weight_description = 'fontWeightDescription';
   static const grant_audio_permission = 'grantAudioPermission';
   static const error_loading_files = 'errorLoadingFiles';
   static const set_base_frequency = 'setBaseFrequency';
@@ -219,44 +221,87 @@ class AppStrings {
   static const voice_recorder_filename_changed_after_filename = 'voiceRecorderFilenameChangedAfterFilename';
   static const voice_recorder_error_in_renaming = 'voiceRecorderErrorInRenaming';
 
-static const tuner_settings_title = 'tunerSettingsTitle';
-static const metronome_settings_title = 'metronomeSettingsTitle';
-static const volumes = 'volumes';
-static const tools = 'tools';
-static const show_bars_division_title = 'showBarsDivisionTilte';
-static const show_bars_division_subtitle = 'showBarsDivisionSubtilte';
-static const show_tap_tempo_title = 'showTapTempoTitle';
-static const show_tap_tempo_subtitle = 'showTapTempoSubtitle';
-static const enable_timer_stopwatch_title = 'enableTimerStopwatchTitle';
-static const enable_timer_stopwatch_subtitle = 'enableTimerStopwatchSubtitle';
-static const enable_bars_stopwatch_title = 'enableBarsStopwatchTitle';
-static const enable_bars_stopwatch_subtitle = 'enableBarsStopwatchSubitle';
+  static const tuner_settings_title = 'tunerSettingsTitle';
+  static const metronome_settings_title = 'metronomeSettingsTitle';
+  static const volumes = 'volumes';
+  static const tools = 'tools';
+  static const show_bars_division_title = 'showBarsDivisionTilte';
+  static const show_bars_division_subtitle = 'showBarsDivisionSubtilte';
+  static const show_tap_tempo_title = 'showTapTempoTitle';
+  static const show_tap_tempo_subtitle = 'showTapTempoSubtitle';
+  static const enable_timer_stopwatch_title = 'enableTimerStopwatchTitle';
+  static const enable_timer_stopwatch_subtitle = 'enableTimerStopwatchSubtitle';
+  static const enable_bars_stopwatch_title = 'enableBarsStopwatchTitle';
+  static const enable_bars_stopwatch_subtitle = 'enableBarsStopwatchSubitle';
 
 
-static const frequency = 'frequency';
-static const note_stretch = 'noteStretch';
-static const starting_octave = 'startingOctave';
-static const number_of_octaves = 'numberOfOctaves';
-static const highlight_a4_key = 'highlightA4Key';
-static const enable_a4_key_highlight = 'enableA4KeyHighlight';
-static const frequencies_on_white_keys = 'frequenciesOnWhiteKeys';
-static const enable_frequency_display_on_white_keys = 'enableFrequencyDisplayOnWhiteKeys';
-static const frequencies_on_black_keys = 'frequenciesOnBlackKeys';
-static const enable_frequency_display_on_black_keys = 'enableFrequencyDisplayOnBlackKeys';
-static const quarter_tones = 'quarterTones';
-static const enable_iranian_quarter_tones = 'enableIranianQuarterTones';
+  static const frequency = 'frequency';
+  static const note_stretch = 'noteStretch';
+  static const starting_octave = 'startingOctave';
+  static const number_of_octaves = 'numberOfOctaves';
+  static const highlight_a4_key = 'highlightA4Key';
+  static const enable_a4_key_highlight = 'enableA4KeyHighlight';
+  static const frequencies_on_white_keys = 'frequenciesOnWhiteKeys';
+  static const enable_frequency_display_on_white_keys = 'enableFrequencyDisplayOnWhiteKeys';
+  static const frequencies_on_black_keys = 'frequenciesOnBlackKeys';
+  static const enable_frequency_display_on_black_keys = 'enableFrequencyDisplayOnBlackKeys';
+  static const quarter_tones = 'quarterTones';
+  static const enable_iranian_quarter_tones = 'enableIranianQuarterTones';
+
+  static const update = 'update';
+
+  static const need_permission = 'needPermission';
+  static const need_permission_for_scanning_audio_files = 'needPermissionForScanningAudioFiles';
+  static const later = 'later';
+  static const go_to_settings = 'goToSettings';
+
+  static const bass = 'bass';
+  static const mid = 'mid';
+  static const treble = 'treble';
+
+  static const memory = 'memory';
+
+  static const show_all_folders = 'showAllFolders';
+  static const show_folders_contains_audio_files = 'showFoldersContainsAudioFiles';
+  static const no_folder_or_audio_file_found_in_this_path = 'noFolderOrAudioFileFoundInThisPath';
+
+  static const coming_soon = 'comingSoon';
+  static const timer = 'Timer';
+  static const bars = 'Bars';
+  static const minute = 'minute';
+  static const second = 'second';
 
 
+  static const delete_confirm_dialog_title = 'deleteConfirmDialogTitle';
+  static const delete_confirm_dialog_content_before_filename = 'deleteConfirmDialogContentBeforeFilename';
+  static const delete_confirm_dialog_content_after_filename = 'deleteConfirmDialogContentAfterFilename';
+  static const delete_confirm_dialog_cancel_button = 'deleteConfirmDialogCancelButton';
+  static const delete_confirm_dialog_delete_button = 'deleteConfirmDialogDeleteButton';
+
+  static const voice_recorder_recording_icon_button_tooltip = 'voiceRecorderRecordingIconButtonTooltip';
+  static const voice_recorder_bookmark_text_button = 'voiceRecorderBookmarkTextButton';
+
+  static const recording_list_title = 'recordingListTitle';
+  static const recording_list_search_hint = 'recordingListSearchHint';
+  static const recording_list_multi_item_selected = 'recordingListMultiItemSelected';
+  static const recording_list_share = 'recordingListShare';
+  static const recording_list_favorite = 'recordingListFavorite';
+  static const recording_list_rename = 'recordingListRename';
+  static const recording_list_delete = 'recordingListDelete';
+  static const recording_list_multi_item_delete_content = 'recordingListMultiItemDeleteContent';
+  static const recording_list_delete_content = 'recordingListDeleteContent';
+
+  static const audio_library_manager_preparing = 'audioLibraryManagerPreparing';
+  static const audio_library_manager_fininshed_loading_from_memory = 'audioLibraryManagerFininshedLoadingFromMemory';
+  static const audio_library_manager_calculating_audio_files = 'audioLibraryManagerCalculatingAudioFiles';
+  static const audio_library_manager_error_in_loading = 'audioLibraryManagerErrorInLoading';
+  static const audio_file_loader_calculating = 'audioFileLoaderCalculating';
+  static const audio_library_manager_fininshed_calculating = 'audioLibraryManagerFininshedCalculating';
 
 
+  static const utton = '';
 
-static const coming_soon = 'comingSoon';
 
-static const timer = 'Timer';
-static const bars = 'Bars';
-
-static const minute = 'minute';
-static const second = 'second';
 
   static List<Map<String, dynamic>> getOnboardingPages(String lang) {
     final isEn = lang == 'en';
@@ -295,68 +340,6 @@ static const second = 'second';
     ];
   }
 
-  // ===============================================================
-  // ===============================================================
-  // ===============================================================
-  // ===============================================================
-  static const String epmty_text = '';
-  static const String empty_duration_time = '--:--';
-  static const String sample_email = 'bruno203@gmail.com';
-  static const String sample_phone = '0911223344';
-  static const String sample_username = 'bruno203';
-
-  static const String file_type_mp3 = 'mp3';
-  static const String file_type_wav = 'wav';
-  static const String file_type_m4a = 'm4a';
-  static const String file_type_ogg = 'ogg';
-  static const String file_type_flac = 'flac';
-  static const String file_type_aac = 'aac';
-  static const String audio_controls_speed_sign = 'x';
-  
-  static const String file_type_dot_mp3 = '.mp3';
-  static const String file_type_dot_wav = '.wav';
-  static const String file_type_dot_m4a = '.m4a';
-  static const String file_type_dot_ogg = '.ogg';
-  static const String file_type_dot_flac = '.flac';
-  static const String file_type_dot_aac = '.aac';
-
-  static const String bitrate_unit = 'kbps';
-  static const note_c = "C";
-  static const note_c_sharp = "C#";
-  static const note_d = "D";
-  static const note_d_sharp = "D#";
-  static const note_e = "E";
-  static const note_f = "F";
-  static const note_f_sharp = "F#";
-  static const note_g = "G";
-  static const note_g_sharp = "G#";
-  static const note_a = "A";
-  static const note_a_sharp = "A#";
-  static const note_b = "B";
-
-  static const localization_fa = 'fa';
-  static const localization_en = 'en';
-
-  static const voice_recorder_hero_tag_main = "main";
-  static const voice_recorder_hero_tag_pause = "pause";
-
-  static const larghissimo = 'Larghissimo';
-  static const grave = 'Grave';
-  static const largo = 'Largo';
-  static const adagio = 'Adagio';
-  static const andante = 'Andante';
-  static const moderato = 'Moderato';
-  static const allegro = 'Allegro';
-  static const presto = 'Presto';
-  static const prestissimo = 'Prestissimo';
-
-  static const bpm_capital = 'BPM';
-
-
-  // ===============================================================
-  // ===============================================================
-  // ===============================================================
-  // ===============================================================
 
   static const allKeys = [
     select_font_title,
@@ -469,8 +452,10 @@ static const second = 'second';
     notification_title,
     appearance_title,
     elements,
-    text_size,
-    text_size_description,
+    font_size,
+    font_size_description,
+    font_weight,
+    font_weight_description,
     grant_audio_permission,
     error_loading_files,
     set_base_frequency,
@@ -601,6 +586,44 @@ static const second = 'second';
     enable_frequency_display_on_black_keys,
     quarter_tones,
     enable_iranian_quarter_tones,
+    update,
+    need_permission,
+    need_permission_for_scanning_audio_files,
+    later,
+    go_to_settings,
+    bass,
+    mid,
+    treble,
+    memory,
+    show_all_folders,
+    show_folders_contains_audio_files,
+    no_folder_or_audio_file_found_in_this_path,
+
+    delete_confirm_dialog_title,
+    delete_confirm_dialog_content_before_filename,
+    delete_confirm_dialog_content_after_filename,
+    delete_confirm_dialog_cancel_button,
+    delete_confirm_dialog_delete_button,
+
+    voice_recorder_recording_icon_button_tooltip,
+    voice_recorder_bookmark_text_button,
+
+    recording_list_title,
+    recording_list_search_hint,
+    recording_list_multi_item_selected,
+    recording_list_share,
+    recording_list_favorite,
+    recording_list_rename,
+    recording_list_delete,
+    recording_list_multi_item_delete_content,
+    recording_list_delete_content,
+
+    audio_library_manager_preparing,
+    audio_library_manager_fininshed_loading_from_memory,
+    audio_library_manager_calculating_audio_files,
+    audio_library_manager_error_in_loading,
+    audio_file_loader_calculating,
+    audio_library_manager_fininshed_calculating,
 
   ];
 
@@ -734,8 +757,10 @@ static const second = 'second';
     notification_title: 'Notification',
     appearance_title: 'Appearance',
     elements: 'Elements',
-    text_size: 'Text Size',
-    text_size_description: 'Set text size',
+    font_size: 'Font Size',
+    font_size_description: 'Set Font Size',
+    font_weight: 'Font Weight',
+    font_weight_description: 'Set Font Weight',
 
     grant_audio_permission: 'Please grant permission to access audio files in the app settings.',
     error_loading_files: 'Error loading files',
@@ -910,6 +935,59 @@ https://www.youtube.com/@sornaz.academy
     enable_frequency_display_on_black_keys: "Enable frequency display on black keys",
     quarter_tones: "Quarter Tones",
     enable_iranian_quarter_tones: "Enable Persian/Iranian quarter tones",
+    update: "Update",
+
+
+    need_permission: "Need Permission",
+    need_permission_for_scanning_audio_files: "Need Permission for Scanning Audio Files from your Device Memory. Please Active Permission from AppSettings",
+    later: "Later",
+    go_to_settings: "Go to Settings",
+
+    bass: 'Bass',
+    mid: 'Mid',
+    treble: 'Treble',
+    
+    memory: 'Memory',
+
+    show_all_folders: "Show All Folders",
+    show_folders_contains_audio_files: "Show Folders Contains Audio Files",
+    no_folder_or_audio_file_found_in_this_path: "No Folder or Audio File Found in this Path",
+
+    delete_confirm_dialog_title: 'Delete recording',
+    delete_confirm_dialog_content_before_filename: 'Delete',
+    delete_confirm_dialog_content_after_filename: '?',
+    delete_confirm_dialog_cancel_button: 'Cancel',
+    delete_confirm_dialog_delete_button: 'Delete',
+
+    
+    voice_recorder_recording_icon_button_tooltip: "Recordings",
+    voice_recorder_bookmark_text_button: "BOOKMARK",
+
+    recording_list_title: "Recordings List",
+    recording_list_search_hint: "Search recordings...",
+    recording_list_multi_item_selected: "selected",
+    recording_list_share: 'Share',
+    recording_list_favorite: 'Favorite',
+    recording_list_rename: 'Rename',
+    recording_list_delete: 'Delete',
+
+    recording_list_multi_item_delete_content: 'Delete Files?',
+    recording_list_delete_content: 'Delete?',
+
+    audio_library_manager_preparing: 'Preparing...',
+    audio_library_manager_fininshed_loading_from_memory: 'Fininshed Loading from Memory',
+    audio_library_manager_calculating_audio_files: 'Calculating Audio Files...',
+    audio_library_manager_error_in_loading: 'Error in Loading',
+    audio_file_loader_calculating: 'Calculating...',
+    audio_library_manager_fininshed_calculating: 'Fininshed Calculating',
+
+    // ======================================================
+    // ======================================================
+    // ======================================================
+    // ======================================================
+    // ======================================================
+    // ======================================================
+
 
   };
 
@@ -1031,8 +1109,10 @@ https://www.youtube.com/@sornaz.academy
     notification_title: 'اطلاعیه',
     appearance_title: 'ظاهر',
     elements: 'ابزار',
-    text_size: 'اندازه متن',
-    text_size_description: 'اندازه متن اپلیکیشن',
+    font_size: 'اندازه متن',
+    font_size_description: 'اندازه متن اپلیکیشن',
+    font_weight: 'ضخامت متن',
+    font_weight_description: 'ضخامت متن اپلیکیشن',
 
     grant_audio_permission: 'لطفا اجازه دسترسی به فایل‌های صوتی را بدهید',
     error_loading_files: 'خطا در بارگذاری فایل‌ها',
@@ -1198,5 +1278,47 @@ https://www.youtube.com/@sornaz.academy
     enable_frequency_display_on_black_keys: "برای نمایش فرکانس روی کلیدهای سیاه روشن کنید",
     quarter_tones: "ربع پرده‌ها",
     enable_iranian_quarter_tones: "برای نمایش ربع پرده‌های موسیقی ایرانی روشن کنید",
+    update: "آپدیت",
+    need_permission: "دسترسی لازم است",
+    need_permission_for_scanning_audio_files: "برای اسکن فایل‌های موسیقی، دسترسی به حافظه دستگاه لازم است. لطفاً در تنظیمات برنامه مجوز را فعال کنید.",
+    later: "بعداً",
+    go_to_settings: "رفتن به تنظیمات",
+    // ======================================================
+    // ======================================================
+    // ======================================================
+    bass: 'بم',
+    mid: 'میانی',
+    treble: 'زیر',
+    // ======================================================
+    // ======================================================
+    // ======================================================
+    memory: 'حافظه',
+    show_all_folders: "نمایش همه فولدرها",
+    show_folders_contains_audio_files: "فقط فولدرهای دارای آهنگ",
+    no_folder_or_audio_file_found_in_this_path: "هیچ فولدر یا آهنگی در این مسیر یافت نشد",
+    delete_confirm_dialog_title: 'حذف فایل ضبط شده',
+    delete_confirm_dialog_content_before_filename: 'آیا فایل',
+    delete_confirm_dialog_content_after_filename: 'حذف شود؟',
+    delete_confirm_dialog_cancel_button: 'خیر',
+    delete_confirm_dialog_delete_button: 'حذف',
+    voice_recorder_recording_icon_button_tooltip: "ضبط ها",
+    voice_recorder_bookmark_text_button: "نشانه گذاری",
+    recording_list_title: "لیست فایل های ضبط شده",
+    recording_list_search_hint: "جستجو...",
+    recording_list_multi_item_selected: "انتخاب شده",
+    recording_list_share: 'ارسال',
+    recording_list_favorite: 'علاقمندی',
+    recording_list_rename: 'تغییر نام',
+    recording_list_delete: 'حذف',
+    recording_list_multi_item_delete_content: 'فایل حذف شود؟',
+    recording_list_delete_content: 'حذف شود؟',
+    audio_library_manager_preparing: 'در حال آماده‌سازی...',
+    audio_library_manager_fininshed_loading_from_memory: 'بارگذاری از حافظه تکمیل شد',
+    audio_library_manager_calculating_audio_files: 'در حال شمارش فایل‌ها...',
+    audio_library_manager_error_in_loading: 'خطا در بارگذاری',
+    audio_file_loader_calculating: 'در حال شمارش...',
+    audio_library_manager_fininshed_calculating: 'شمارش تمام شد',
+
+
   };
 }

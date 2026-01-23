@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_functions.dart';
 
 class RecordItemTile extends StatelessWidget {
@@ -16,7 +17,7 @@ class RecordItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = file.path.split('/').last.replaceAll('.m4a', '');
+    final name = file.path.split('/').last.replaceAll(AppConstants.DOT_M4A, '');
     final date = formatJalali(file.lastModifiedSync());
 
     return Card(

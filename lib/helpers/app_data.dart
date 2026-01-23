@@ -18,10 +18,17 @@ class AppData extends ChangeNotifier {
     notifyListeners();
   }
 
-  double textSize = 0;
+  double fontSize = 0;
 
-  Future<void> updateTextSize(double value) async {
-    textSize = value;
+  Future<void> updateFontSize(double value) async {
+    fontSize = value;
+    notifyListeners();
+  }
+
+  double fontWeight = 0;
+
+  Future<void> updateFontWeight(double value) async {
+    fontWeight = value;
     notifyListeners();
   }
 

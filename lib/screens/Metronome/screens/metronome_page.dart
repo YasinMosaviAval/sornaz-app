@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:sornaz/components/app_bar.dart';
 import 'package:sornaz/components/bottom_nav.dart';
 import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
@@ -41,8 +42,8 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
   late TimeSignatureOption selectedTimeSignature;
 
   String formatDuration(Duration d) {
-    final minutes = d.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    final minutes = d.inMinutes.remainder(60).toString().padLeft(2, AppConstants.NUMBER_0);
+    final seconds = d.inSeconds.remainder(60).toString().padLeft(2, AppConstants.NUMBER_0);
     return '$minutes:$seconds';
   }
 
@@ -119,7 +120,7 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
-    final isEnglish = localeProvider.locale.languageCode == AppStrings.localization_en;
+    final isEnglish = localeProvider.locale.languageCode == AppConstants.LOCALIZATION_EN;
 
     final tempoName = getTempoName(bpm);
 
@@ -141,7 +142,7 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
             }
           },
         ),
-        backgroundColor: isDark? AppColors.background_dark : AppColors.background_light,
+        backgroundColor: AppColors.metronome_page_background_color(isDark: isDark),
         body: Padding(
           padding: const EdgeInsets.all(AppSpacing.space_24),
           child: Column(
@@ -252,15 +253,15 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: _controller.tapActive
-                                        ? (isDark ? AppColors.primary_dark : AppColors.primary_light)
-                                        : (isDark ? AppColors.clicked_dark : AppColors.clicked_light),
+                                      ? AppColors.metronome_page_tapping_icon_active_decoration_color(isDark: isDark)
+                                      : AppColors.metronome_page_tapping_icon_inactive_decoration_color(isDark: isDark),
                                   ),
                                   child: Icon(
                                     Icons.touch_app,
                                     size: AppSpacing.space_32,
                                     color: _controller.tapActive
-                                        ? (isDark ?  AppColors.text_primary_light : AppColors.text_primary_dark)
-                                        : (isDark ?  AppColors.text_primary_dark : AppColors.text_primary_light),
+                                      ? AppColors.metronome_page_tapping_icon_active_color(isDark: isDark)
+                                      : AppColors.metronome_page_tapping_icon_inactive_color(isDark: isDark),
                                   ),
                                 );
                               },
@@ -299,15 +300,15 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: _controller.isAccentBeat
-                                  ? isDark ? AppColors.primary_dark : AppColors.primary_light
-                                  : (isDark ? AppColors.clicked_dark : AppColors.clicked_light),
+                                ? AppColors.metronome_page_accent_beat_icon_active_decoration_color(isDark: isDark)
+                                : AppColors.metronome_page_accent_beat_icon_inactive_decoration_color(isDark: isDark),
                             ),
                             child: Icon(
                               _controller.isPlaying ? Icons.pause : Icons.play_arrow,
                               size: AppSpacing.space_56,
                               color: _controller.isAccentBeat
-                                  ? isDark ? AppColors.surface_dark : AppColors.surface_light
-                                  : isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+                                ? AppColors.metronome_page_accent_beat_icon_active_color(isDark: isDark)
+                                : AppColors.metronome_page_accent_beat_icon_inactive_color(isDark: isDark),
                             ),
                           ),
                         ),
@@ -330,7 +331,7 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
     return tempoTerms
       .firstWhere(
         (term) => bpm >= term.min && bpm <= term.max,
-        orElse: () => const TempoTerm('—', 0, 0),
+        orElse: () => const TempoTerm(AppConstants.DASH, 0, 0),
       )
       .name;
   }
@@ -338,9 +339,9 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
   Widget _minutesDropdown(bool isDark) {
     return DropdownButton<int>(
       value: selectedMinutes,
-      dropdownColor: isDark ? AppColors.surface_dark : AppColors.surface_light,
-      iconEnabledColor: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light,
-      iconDisabledColor: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light,
+      dropdownColor: AppColors.metronome_page_drop_down_color(isDark: isDark),
+      iconEnabledColor: AppColors.metronome_page_icon_enabled_color(isDark: isDark),
+      iconDisabledColor: AppColors.metronome_page_icon_disabled_color(isDark: isDark),
       underline: null,
       items: List.generate(
         60,
@@ -348,7 +349,7 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
           value: i,
           child: Text(
             '$i ${AppStrings.minute.translate(context)}',
-            style: AppTypography.body2(context),
+            style: AppTypography.metronomePageDropDownItem(context),
           ),
         ),
       ),
@@ -368,9 +369,9 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
   Widget _secondsDropdown(bool isDark) {
       return DropdownButton<int>(
         value: selectedSeconds,
-        dropdownColor: isDark ? AppColors.surface_dark : AppColors.surface_light,
-        iconEnabledColor: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light,
-        iconDisabledColor: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light,
+        dropdownColor: AppColors.metronome_page_drop_down_color(isDark: isDark),
+        iconEnabledColor: AppColors.metronome_page_icon_enabled_color(isDark: isDark),
+        iconDisabledColor: AppColors.metronome_page_icon_disabled_color(isDark: isDark),
         underline: null,
         items: List.generate(
           60,
@@ -378,7 +379,7 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
             value: i,
             child: Text(
               '$i ${AppStrings.second.translate(context)}',
-              style: AppTypography.body2(context),
+              style: AppTypography.metronomePageDropDownItem(context),
             ),
           ),
         ),
@@ -402,9 +403,9 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
         opacity: _controller.stopMode == StopMode.bars ? 1.0 : 0.3,
         child: DropdownButton<int>(
           value: selectedBars,
-          dropdownColor: isDark ? AppColors.surface_dark : AppColors.surface_light,
-          iconEnabledColor: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light,
-          iconDisabledColor: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light,
+          dropdownColor: AppColors.metronome_page_drop_down_color(isDark: isDark),
+          iconEnabledColor: AppColors.metronome_page_icon_enabled_color(isDark: isDark),
+          iconDisabledColor: AppColors.metronome_page_icon_disabled_color(isDark: isDark),
           underline: null,
           items: List.generate(
             64,
@@ -412,7 +413,7 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
               value: i + 2,
               child: Text(
                 '${i + 1} ${AppStrings.bars.translate(context)}',
-                style: AppTypography.body2(context)
+                style: AppTypography.metronomePageDropDownItem(context)
               ),
             ),
           ),

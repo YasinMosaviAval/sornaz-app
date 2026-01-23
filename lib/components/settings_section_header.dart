@@ -99,7 +99,7 @@ class _SettingsSectionHeaderState extends State<SettingsSectionHeader> {
   Widget build(BuildContext context) {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
-    final textColor = isDark ? AppColors.text_primary_dark : AppColors.text_primary_light;
+    final textColor = AppColors.settings_section_header_text_color(isDark: isDark);
 
     Widget header = InkWell(
       onTap: _isCollapsible ? _toggle : null,
@@ -125,9 +125,7 @@ class _SettingsSectionHeaderState extends State<SettingsSectionHeader> {
             Expanded(
               child: Text(
                 widget.title,
-                style: AppTypography.settingsSectionTitle(context).copyWith(
-                  color: textColor,
-                ),
+                style: AppTypography.settingsSectionHeaderTitle(context, textColor),
               ),
             ),
 
@@ -157,28 +155,27 @@ class _SettingsSectionHeaderState extends State<SettingsSectionHeader> {
       padding: const EdgeInsets.only(top: AppSpacing.space_16),
       child: Container(
         decoration: BoxDecoration(
-          color: isDark ? AppColors.hovered_dark : AppColors.hovered_light,
+          color: AppColors.settings_section_header_box_decoration_color(isDark: isDark),
           borderRadius: BorderRadius.all(Radius.circular(AppSpacing.space_8))
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             header,
-        
+
             if (widget.showDivider)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_8),
                 child: Divider(
                   height: AppSpacing.space_16,
                   thickness: 1,
-                  color: isDark ? AppColors.clicked_dark : AppColors.clicked_light,
+                  color: AppColors.settings_section_header_divider_color(isDark: isDark),
                 ),
               ),
 
             if (widget.children != null)
               AnimatedSize(
                 duration: const Duration(milliseconds: 300),
-                // curve: Curves.easeOutCubic,
                 curve: Curves.easeInOut,
                 alignment: Alignment.topCenter,
                 child: ClipRect(
@@ -188,12 +185,10 @@ class _SettingsSectionHeaderState extends State<SettingsSectionHeader> {
                     child: AnimatedOpacity(
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeInOut,
-                      // curve: Curves.easeOut,
                       opacity: _contentVisible ? 1.0 : 0.0,
                       child: AnimatedSlide(
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeInOut,
-                        // curve: Curves.easeOut,
                         offset: _contentVisible ? Offset.zero : const Offset(0, -0.05),
                         child: Column(
                           children: widget.children!,
@@ -209,59 +204,4 @@ class _SettingsSectionHeaderState extends State<SettingsSectionHeader> {
       ),
     );
   }
-
-
-
 }
-
-
-/// Use Cases
-
-/*
-
-SettingsSectionHeader(
-  title: 'Tools',
-),
-
-
-SettingsSectionHeader(
-  title: 'Volumes',
-  showDivider: true,
-),
-
-
-SettingsSectionHeader(
-  title: 'Playback',
-  leadingIcon: Icons.play_circle_outline,
-),
-
-
-SettingsSectionHeader(
-  title: 'Advanced',
-  animated: false,
-),
-
-
-SettingsSectionHeader(
-  title: 'Tools',
-  leadingIcon: Icons.build,
-  showDivider: true,
-  children: [
-    SettingsSwitchTile(
-      title: 'Show Bars Division',
-      subtitle: 'set ON for Showing Bars Division',
-      value: controller.showBarsDivision,
-      isDark: isDark,
-      onChanged: (v) => controller.showBarsDivision = v,
-    ),
-    SettingsSwitchTile(
-      title: 'Show Tap Tempo',
-      subtitle: 'Enable Tap Tempo button',
-      value: controller.showTapTempo,
-      isDark: isDark,
-      onChanged: controller.setShowTapTempo,
-    ),
-  ],
-),
-
-*/

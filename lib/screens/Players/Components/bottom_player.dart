@@ -19,7 +19,7 @@ class BottomPlayerWidget extends StatelessWidget {
     if (provider.currentIndex == -1) return const SizedBox.shrink();
 
     return Container(
-      decoration: BoxDecoration(color: isDark? AppColors.surface_dark : AppColors.surface_light),
+      decoration: BoxDecoration(color: AppColors.music_player_bottom_player_background_color(isDark: isDark)),
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_16, vertical: AppSpacing.space_4),
       child: Column(
         children: [

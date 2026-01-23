@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sornaz/helpers/app_constants.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/screens/Players/audio/playback/playback_queue_manager.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
@@ -25,19 +27,19 @@ class AudioControls extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.forward_10),
               iconSize: AppSpacing.space_32,
-              color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+              color: AppColors.music_player_audio_controls_main_icon_color(isDark: isDark),
               onPressed: provider.seekForward10,
             ),
             IconButton(
               icon: const Icon(Icons.skip_next),
               iconSize: AppSpacing.space_32,
-              color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+              color: AppColors.music_player_audio_controls_main_icon_color(isDark: isDark),
               onPressed: provider.playNext,
             ),
             IconButton(
               icon: Icon(provider.isPlaying ? Icons.pause : Icons.play_arrow),
               iconSize: AppSpacing.space_32,
-              color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+              color: AppColors.music_player_audio_controls_main_icon_color(isDark: isDark),
               onPressed: provider.isPlaying
                   ? provider.pause
                   : () => provider.play(provider.currentIndex),
@@ -45,13 +47,13 @@ class AudioControls extends StatelessWidget {
             IconButton(
               icon: Icon(provider.isUndoMode ? Icons.undo : Icons.skip_previous),
               iconSize: AppSpacing.space_32,
-              color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+              color: AppColors.music_player_audio_controls_main_icon_color(isDark: isDark),
               onPressed: provider.previousOrUndo,
             ),
             IconButton(
               icon: const Icon(Icons.replay_10),
               iconSize: AppSpacing.space_32,
-              color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+              color: AppColors.music_player_audio_controls_main_icon_color(isDark: isDark),
               onPressed: provider.seekBackward10,
             ),
         
@@ -66,7 +68,7 @@ class AudioControls extends StatelessWidget {
               IconButton(
                 icon: Icon(
                   provider.folderMode ? Icons.list : Icons.folder,
-                  color: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light
+                  color: AppColors.music_player_audio_controls_sub_level_icon_color(isDark: isDark)
                 ),
                 iconSize: AppSpacing.space_24,
                 onPressed: () => provider.toggleFolderMode(),
@@ -75,8 +77,8 @@ class AudioControls extends StatelessWidget {
                 icon: Icon(
                   Icons.shuffle,
                   color: provider.isShuffle
-                      ? (isDark ? AppColors.primary_dark : AppColors.primary_light)
-                      : (isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light),
+                      ? AppColors.music_player_audio_controls_sub_level_active_icon_color(isDark: isDark)
+                      : AppColors.music_player_audio_controls_sub_level_icon_color(isDark: isDark),
                 ),
                 iconSize: AppSpacing.space_24,
                 onPressed: provider.toggleShuffle,
@@ -91,17 +93,15 @@ class AudioControls extends StatelessWidget {
                           : Icons.repeat,
                 ),
                 color: provider.repeatMode == RepeatMode.off
-                    ? (isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light)
-                    : isDark
-                        ? AppColors.primary_dark
-                        : AppColors.primary_light,
+                    ? AppColors.music_player_audio_controls_sub_level_icon_color(isDark: isDark)
+                    : AppColors.music_player_audio_controls_sub_level_active_icon_color(isDark: isDark),
                 onPressed: provider.toggleRepeatMode,
                 iconSize: AppSpacing.space_24,
               ),
 
               Text(
-                "${provider.playbackSpeed}${AppStrings.audio_controls_speed_sign}",
-                style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light),
+                "${provider.playbackSpeed}${AppConstants.AUDIO_CONTROLS_SPEED_SIGN}",
+                style: AppTypography.musicPlayerAudioControlsSpeed(context),
               ),
 
               Theme(
@@ -125,7 +125,7 @@ class AudioControls extends StatelessWidget {
                   child: Icon(
                     Icons.speed,
                     size: AppSpacing.space_24,
-                    color: isDark ? const Color.fromARGB(255, 26, 3, 3) : AppColors.text_primary_light,
+                    color: AppColors.music_player_audio_controls_main_icon_color(isDark: isDark),
                   ),
                 ),
               ),

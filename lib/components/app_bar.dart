@@ -6,22 +6,17 @@ import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 
 class SornazAppBar extends StatelessWidget implements PreferredSizeWidget {
-  /// ===== Content
   final String? title;
   final IconData? centerIcon;
   final VoidCallback? onCenterIconPressed;
 
-  /// ===== Navigation
   final bool showBackButton;
   final VoidCallback? onBack;
 
-  /// ===== Layout
   final List<Widget>? actions;
   final bool centerTitle;
   final double elevation;
 
-  /// ===== Style
-  final Color? backgroundColor;
   final double iconSize;
   final double padding;
 
@@ -30,22 +25,17 @@ class SornazAppBar extends StatelessWidget implements PreferredSizeWidget {
   const SornazAppBar({
     super.key,
 
-    // content
     this.title,
     this.centerIcon,
     this.onCenterIconPressed,
 
-    // navigation
     this.showBackButton = true,
     this.onBack,
 
-    // layout
     this.actions,
     this.centerTitle = false,
     this.elevation = 0,
 
-    // style
-    this.backgroundColor,
     this.iconSize = AppSpacing.space_32,
     this.padding = AppSpacing.space_16,
   });
@@ -56,17 +46,14 @@ class SornazAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final isDark = Provider.of<AppData>(context).isDark;
 
-    final textColor = isDark
-        ? AppColors.text_primary_dark
-        : AppColors.text_primary_light;
+    final textColor = AppColors.sornaz_app_bar_text_color(isDark: isDark);
 
     return AppBar(
       automaticallyImplyLeading: false,
       centerTitle: centerTitle,
       elevation: elevation,
-      backgroundColor: backgroundColor ?? (isDark ? AppColors.surface_dark : AppColors.surface_light),
+      backgroundColor: AppColors.sornaz_app_bar_background_color(isDark: isDark),
       
-      /// ===== Leading (Back)
       leading: showBackButton
           ? IconButton(
               icon: const Icon(Icons.arrow_back),
@@ -75,13 +62,10 @@ class SornazAppBar extends StatelessWidget implements PreferredSizeWidget {
             )
           : null,
 
-      /// ===== Title / Center Icon
       title: title != null
           ? Text(
               title!,
-              style: AppTypography.headline3(context).copyWith(
-                color: textColor,
-              ),
+              style: AppTypography.sornazAppBarTitle(context, textColor),
             )
           : centerIcon != null
               ? IconButton(
@@ -93,7 +77,6 @@ class SornazAppBar extends StatelessWidget implements PreferredSizeWidget {
                 )
               : null,
       titleSpacing: 0,
-      /// ===== Actions
       actions: actions,
     );
   }

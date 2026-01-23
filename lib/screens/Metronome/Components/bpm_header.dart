@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
-import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 
 class BpmHeader extends StatelessWidget {
@@ -22,13 +22,13 @@ class BpmHeader extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(bpm.toString(), style: AppTypography.body0(context)),
+              Text(bpm.toString(), style: AppTypography.metronomeBpmHeaderNumber(context)),
               AppSpacing.sizedBoxW8(),
-              Text(AppStrings.bpm_capital, style: AppTypography.subtitle3(context)),
+              Text(AppConstants.BPM_CAPITAL, style: AppTypography.metronomeBpmHeaderUnit(context)),
             ],
           ),
         ),
-        Text(tempoName, style: AppTypography.subtitle1(context)),
+        Text(tempoName, style: AppTypography.metronomeBpmHeaderName(context)),
       ],
     );
   }

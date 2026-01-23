@@ -44,7 +44,7 @@ class _TunerView extends StatelessWidget {
           );
         },
       ),
-      backgroundColor: isDark ? AppColors.background_dark : AppColors.background_light,
+      backgroundColor: AppColors.tuner_page_background_color(isDark: isDark),
       body: Column(
         children: [
           FrequencyInfoRow(

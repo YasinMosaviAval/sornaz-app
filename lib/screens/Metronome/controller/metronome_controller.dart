@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/screens/Metronome/classes/note_length.dart';
 
 class MetronomeController extends ChangeNotifier {
@@ -29,13 +30,13 @@ class MetronomeController extends ChangeNotifier {
 
   int get subdivisionCount {
     switch (selectedNote.name) {
-      case '1':
+      case AppConstants.NUMBER_1:
         return 1;
-      case '2':
+      case AppConstants.NUMBER_2:
         return 2;
-      case '3':
+      case AppConstants.NUMBER_3:
         return 3;
-      case '4':
+      case AppConstants.NUMBER_4:
         return 4;
       default:
         return 1;
@@ -70,9 +71,9 @@ class MetronomeController extends ChangeNotifier {
   int currentBar = 0;
 
   Future<void> init() async {
-    await _tickPlayer.setAsset('assets/audio/tick.wav');
-    await _accentPlayer.setAsset('assets/audio/accent.wav');
-    await _subTickPlayer.setAsset('assets/audio/sub_tick.wav');
+    await _tickPlayer.setAsset(AppConstants.TICK_WAV);
+    await _accentPlayer.setAsset(AppConstants.ACCENT_WAV);
+    await _subTickPlayer.setAsset(AppConstants.SUB_TICK_WAV);
     
     _subTickPlayer.setVolume(subTickVolume);
     _tickPlayer.setVolume(tickVolume);

@@ -12,8 +12,8 @@ class BasicWaveformWidget extends StatelessWidget {
     required bool isRecording,
     required bool isPaused,
   }) : _amplitudes = amplitudes,
-       _isRecording = isRecording,
-       _isPaused = isPaused;
+      _isRecording = isRecording,
+      _isPaused = isPaused;
 
   final List<double> _amplitudes;
   final bool _isRecording;
@@ -28,16 +28,11 @@ class BasicWaveformWidget extends StatelessWidget {
         Container(
           height: AppSpacing.space_250,
           decoration: BoxDecoration(
-            color: isDark
-                ? AppColors.surface_dark.withAlpha(150)
-                : AppColors.surface_light.withAlpha(150),
-            // border: Border.symmetric(
-            //   horizontal: BorderSide(width: 1, color: AppColors.border_light),
-            // ),
+            color: AppColors.voice_recorder_basic_waveform_decoration_color(isDark: isDark),
           ),
           child: ClipRRect(
             child: CustomPaint(
-              painter: WaveformPainter(_amplitudes, _isRecording && !_isPaused, isDark),
+              painter: WaveformPainter(_amplitudes, _isRecording && !_isPaused, context, isDark),
               size: Size.infinite,
             ),
           ),

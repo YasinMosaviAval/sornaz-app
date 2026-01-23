@@ -45,7 +45,7 @@ class LabeledSlider extends StatelessWidget {
               AppSpacing.sizedBoxW4(),
               Text(
                 label == '' ? ' ${value.round()}$unit' : label,
-                style: AppTypography.body2(context),
+                style: AppTypography.metronomeLabeledSlider(context),
               ),
 
             ],
@@ -56,8 +56,8 @@ class LabeledSlider extends StatelessWidget {
           min: min,
           max: max,
           divisions: divisions,
-          activeColor: isDark ? AppColors.primary_dark : AppColors.primary_light,
-          inactiveColor: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light,
+          activeColor: AppColors.labled_slider_active_color(isDark: isDark),
+          inactiveColor: AppColors.labled_slider_inactive_color(isDark: isDark),
           label: '${value.round()}$unit',
           onChanged: onChanged,
         ),

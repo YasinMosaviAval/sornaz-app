@@ -27,13 +27,13 @@ class SettingsSwitchTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveTextColor = !enabled
-        ? (isDark
-            ? AppColors.text_secondary_dark
-            : AppColors.text_secondary_light)
-        : (isDark
-            ? AppColors.text_primary_dark
-            : AppColors.text_primary_light);
+    final effectiveTitleColor = !enabled
+        ? AppColors.settings_switch_tile_not_enabled_title_color(isDark: isDark)
+        : AppColors.settings_switch_tile_enabled_title_color(isDark: isDark);
+
+    final effectiveSubtitleColor = !enabled
+        ? AppColors.settings_switch_tile_not_enabled_subtitle_color(isDark: isDark)
+        : AppColors.settings_switch_tile_enabled_subtitle_color(isDark: isDark);
 
     return InkWell(
       // onTap: enabled ? () => onChanged(!value) : null,
@@ -55,44 +55,28 @@ class SettingsSwitchTile extends StatelessWidget {
             leading: leadingIcon != null
                 ? Icon(
                     leadingIcon,
-                    color: effectiveTextColor,
+                    color: effectiveTitleColor,
                   )
                 : null,
 
             title: Text(
               title,
-              style: AppTypography.settingsItemTitle(context).copyWith(
-                color: effectiveTextColor,
-              ),
+              style: AppTypography.settingsSwitchTileItemTitle(context, effectiveTitleColor),
             ),
 
             subtitle: Text(
               subtitle,
-              style: AppTypography.settingsItemSubtitle(context).copyWith(
-                color: effectiveTextColor.withAlpha(200),
-              ),
+              style: AppTypography.settingsSwitchTileItemSubtitle(context, effectiveSubtitleColor),
             ),
 
             // ===== Switch
             trailing: Switch(
               value: value,
               onChanged: enabled ? onChanged : null,
-
-              inactiveThumbColor: isDark
-                  ? AppColors.text_secondary_dark
-                  : AppColors.text_secondary_light,
-
-              inactiveTrackColor: isDark
-                  ? AppColors.surface_dark
-                  : AppColors.surface_light,
-
-              activeTrackColor: isDark
-                  ? AppColors.primary_dark
-                  : AppColors.primary_light,
-
-              activeThumbColor: isDark
-                  ? AppColors.surface_dark
-                  : AppColors.surface_light,
+              inactiveThumbColor: AppColors.settings_switch_tile_inactive_thumb_color(isDark: isDark),
+              inactiveTrackColor: AppColors.settings_switch_tile_inactive_track_color(isDark: isDark),
+              activeTrackColor: AppColors.settings_switch_tile_active_track_color(isDark: isDark),
+              activeThumbColor: AppColors.settings_switch_tile_active_thumb_color(isDark: isDark),
             ),
             onTap: null,
 

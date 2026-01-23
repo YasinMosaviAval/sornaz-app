@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
+import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/helpers/app_functions.dart';
 import 'package:sornaz/helpers/app_navigation.dart';
@@ -19,11 +22,11 @@ class ArticleItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = post['title']?['rendered'] ?? '';
-    final excerpt = _stripHtml(post['excerpt']?['rendered'] ?? '');
+    final title = post[AppConstants.TITLE]?[AppConstants.RENDERED] ?? '';
+    final excerpt = _stripHtml(post[AppConstants.EXCERPT]?[AppConstants.RENDERED] ?? '');
     final imageUrl = _imageUrl(post);
-    final publishDate = post['date'] ?? '';
-    final modifiedDate = post['modified'] ?? '';
+    final publishDate = post[AppConstants.DATE] ?? '';
+    final modifiedDate = post[AppConstants.MODIFIED] ?? '';
     final authorName = _authorName(post);
 
     return Container(
@@ -35,9 +38,8 @@ class ArticleItemWidget extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.all(Radius.circular(AppSpacing.space_4)),
-        color: isDark ? AppColors.clicked_dark : AppColors.hovered_light,
+        color: AppColors.article_item_box_decoration_color(isDark: isDark),
       ),
-      
       padding: const EdgeInsets.all(AppSpacing.space_12),
 
       child: InkWell(
@@ -108,7 +110,7 @@ class ArticleItemWidget extends StatelessWidget {
                     children: [
                       if (modifiedDate.isNotEmpty && modifiedDate != publishDate)
                         _MetaText(
-                          text: 'آپدیت: ${formatJalaliDate(modifiedDate)}',
+                          text: '${AppStrings.update.translate(context)}: ${formatJalaliDate(modifiedDate)}',
                           context: context,
                       ),
                     ],
@@ -126,26 +128,26 @@ class ArticleItemWidget extends StatelessWidget {
   
   // ---------------- helpers ----------------
 
-  String _stripHtml(String html) => html.replaceAll(RegExp(r'<[^>]*>'), '');
+  String _stripHtml(String html) => html.replaceAll(RegExp(AppConstants.STRIP_HTML_REGEX), '');
 
   String _imageUrl(Map<String, dynamic> post) {
-    final embedded = post['_embedded'];
+    final embedded = post[AppConstants.UNDERLINE_EMBEDDED];
     if (embedded == null) return '';
-    final media = embedded['wp:featuredmedia'];
+    final media = embedded[AppConstants.WP_FEATUREDMEDIA];
     if (media == null || media.isEmpty) return '';
-    return media[0]['source_url'] ?? '';
+    return media[0][AppConstants.SOURCE_URL] ?? '';
   }
 
   String _authorName(Map<String, dynamic> post) {
-    final embedded = post['_embedded'];
+    final embedded = post[AppConstants.UNDERLINE_EMBEDDED];
     if (embedded == null) return '';
-    final authors = embedded['author'];
+    final authors = embedded[AppConstants.AUTHOR];
     if (authors == null || authors.isEmpty) return '';
-    return authors[0]['name'] ?? '';
+    return authors[0][AppConstants.NAME] ?? '';
   }
 }
 
-/// 🔹 Small meta text widget
+
 class _MetaText extends StatelessWidget {
   const _MetaText({
     required this.text,

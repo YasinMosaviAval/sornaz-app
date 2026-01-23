@@ -1,5 +1,6 @@
 import 'package:logger/logger.dart';
 import 'package:shamsi_date/shamsi_date.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 
 String formatJalaliDate(String isoDate) {
   try {
@@ -8,30 +9,30 @@ String formatJalaliDate(String isoDate) {
 
     final formatter = jalali.formatter;
     final dayName = [
-      'شنبه',
-      'یکشنبه',
-      'دوشنبه',
-      'سه‌شنبه',
-      'چهارشنبه',
-      'پنجشنبه',
-      'جمعه',
+      AppConstants.SATURDAY,
+      AppConstants.SUNDAY,
+      AppConstants.MONDAY,
+      AppConstants.TUESDAY,
+      AppConstants.WEDNESDAY,
+      AppConstants.THURSDAY,
+      AppConstants.FRIDAY
     ][jalali.weekDay - 1];
 
     return '$dayName، ${jalali.day} ${formatter.mN} ${jalali.year}';
   } catch (e) {
-    return 'تاریخ نامشخص';
+    return AppConstants.UNKNOWN_DATE;
   }
 }
 
 String formatJalali(DateTime date) {
   final j = Jalali.fromDateTime(date);
-  return '${j.year}/${j.month.toString().padLeft(2, '0')}/${j.day.toString().padLeft(2, '0')}';
+  return '${j.year}/${j.month.toString().padLeft(2, AppConstants.NUMBER_0)}/${j.day.toString().padLeft(2, AppConstants.NUMBER_0)}';
 }
 
 
 
 String formatDuration(Duration d) {
-  String twoDigits(int n) => n.toString().padLeft(2, '0');
+  String twoDigits(int n) => n.toString().padLeft(2, AppConstants.NUMBER_0);
 
   int hours = d.inHours;
   int minutes = d.inMinutes.remainder(60);
@@ -47,12 +48,12 @@ String formatDuration(Duration d) {
 String formatSeconds(int seconds) {
   final m = seconds ~/ 60;
   final s = seconds % 60;
-  return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  return '${m.toString().padLeft(2, AppConstants.NUMBER_0)}:${s.toString().padLeft(2, AppConstants.NUMBER_0)}';
 }
 
 
 
 void loggingSornaz(String message) {
   final logger = Logger();
-  logger.i("logging Sornaz ======= $message");
+  logger.i("${AppConstants.LOGGING_SORNAZ} ======= $message");
 }

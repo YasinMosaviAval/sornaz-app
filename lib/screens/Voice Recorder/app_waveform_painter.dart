@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_constants.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 
 class WaveformPainter extends CustomPainter {
   final List<double> amplitudes;
   final bool isActive;
   final bool isDark;
   final double samplesPerSecond;
+  final BuildContext context;
 
   WaveformPainter(
     this.amplitudes,
     this.isActive,
+    this.context,
     this.isDark, {
     this.samplesPerSecond = 10,
   });
@@ -21,8 +25,8 @@ class WaveformPainter extends CustomPainter {
 
     final paint = Paint()
       ..color = isActive
-          ? (isDark ? AppColors.text_primary_dark : AppColors.text_primary_light)
-          : (isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light)
+          ? AppColors.voice_recorder_app_waveform_painter_active_color(isDark: isDark)
+          : AppColors.voice_recorder_app_waveform_painter_inactive_color(isDark: isDark)
       ..strokeWidth = 1.2
       ..strokeCap = StrokeCap.round;
 
@@ -35,11 +39,11 @@ class WaveformPainter extends CustomPainter {
 
     // GRID PAINTS
     final minorTickPaint = Paint()
-      ..color = isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light
+      ..color = AppColors.voice_recorder_app_waveform_painter_minor_tick_color(isDark: isDark)
       ..strokeWidth = 0.2;
 
     final majorTickPaint = Paint()
-      ..color = isDark ? AppColors.text_primary_dark : AppColors.text_primary_light
+      ..color = AppColors.voice_recorder_app_waveform_painter_major_tick_color(isDark: isDark)
       ..strokeWidth = 1;
 
     final double samplesPerMinorTick = samplesPerSecond / 5;
@@ -59,19 +63,14 @@ class WaveformPainter extends CustomPainter {
 
         if (isMajor) {
           final totalSeconds = (globalIndex / samplesPerSecond).floor();
-          final minutes = (totalSeconds ~/ 60).toString().padLeft(2, '0');
-          final seconds = (totalSeconds % 60).toString().padLeft(2, '0');
+          final minutes = (totalSeconds ~/ 60).toString().padLeft(2, AppConstants.NUMBER_0);
+          final seconds = (totalSeconds % 60).toString().padLeft(2, AppConstants.NUMBER_0);
           final timeString = "$minutes:$seconds";
 
           final textPainter = TextPainter(
             text: TextSpan(
               text: timeString,
-              style: TextStyle(
-                fontSize: 10,
-                color: isDark
-                    ? AppColors.text_primary_dark
-                    : AppColors.text_primary_light,
-              ),
+              style: AppTypography.voiceRecorderAppWaveformPainterTimeText(context),
             ),
             textDirection: TextDirection.ltr,
           );

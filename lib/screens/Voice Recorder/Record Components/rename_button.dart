@@ -22,10 +22,8 @@ class RenameButtonWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: ElevatedButton.icon(
-        icon: Icon(Icons.edit, color: isDark? AppColors.text_primary_dark : AppColors.text_primary_light,),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: isDark? AppColors.surface_dark : AppColors.surface_light,
-        ),
+        icon: Icon(Icons.edit, color: AppColors.voice_recorder_rename_button_icon_color(isDark: isDark)),
+        style: ElevatedButton.styleFrom(backgroundColor: AppColors.voice_recorder_rename_button_icon_style_color(isDark: isDark)),
         label: Text(
           AppStrings.rename_button_widget_rename.translate(context),
           style: AppTypography.recordDetailsRenameTitle(context),
@@ -50,10 +48,7 @@ class RenameButtonWidget extends StatelessWidget {
                   onPressed: () => Navigator.pop(context),
                   child: Text(
                     AppStrings.rename_button_widget_discard.translate(context),
-                    style:
-                        AppTypography.recordDetailsRenameDialogueCancelButton(
-                          context,
-                        ),
+                    style: AppTypography.recordDetailsRenameDialogueCancelButton(context),
                   ),
                 ),
                 ElevatedButton(
@@ -61,10 +56,7 @@ class RenameButtonWidget extends StatelessWidget {
                       Navigator.pop(context, controller.text.trim()),
                   child: Text(
                     AppStrings.rename_button_widget_save.translate(context),
-                    style:
-                        AppTypography.recordDetailsRenameDialogueConfirmButton(
-                          context,
-                        ),
+                    style: AppTypography.recordDetailsRenameDialogueConfirmButton(context)
                   ),
                 ),
               ],

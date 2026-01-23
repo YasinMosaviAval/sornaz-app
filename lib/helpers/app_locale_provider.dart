@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 
 class LocaleProvider extends ChangeNotifier {
-  Locale _locale = const Locale('fa');
+  Locale _locale = const Locale(AppConstants.LOCALIZATION_FA);
 
   Locale get locale => _locale;
 
@@ -12,6 +13,6 @@ class LocaleProvider extends ChangeNotifier {
   }
 
   void toggle() {
-    setLocale(_locale.languageCode == 'fa' ? 'en' : 'fa');
+    setLocale(_locale.languageCode == AppConstants.LOCALIZATION_FA ? AppConstants.LOCALIZATION_EN : AppConstants.LOCALIZATION_FA);
   }
 }

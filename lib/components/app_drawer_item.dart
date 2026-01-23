@@ -11,7 +11,6 @@ class AppDrawerItem extends StatelessWidget {
     required this.icon,
     required this.text,
     required this.link,
-    this.messageColor = Colors.white,
     this.message = '',
     super.key,
   });
@@ -19,7 +18,6 @@ class AppDrawerItem extends StatelessWidget {
   final IconData icon;
   final String text;
   final Widget link;
-  final Color messageColor;
   final String message;
 
   @override
@@ -28,19 +26,14 @@ class AppDrawerItem extends StatelessWidget {
     final bool isDark = appData.isDark;
     return ListTile(
       leading: Icon(icon),
-      iconColor: isDark
-          ? AppColors.text_secondary_dark
-          : AppColors.text_secondary_light,
+      iconColor: AppColors.app_drawer_item_icon_color(isDark: isDark),
       title: Text(text, style: AppTypography.appDrawerItemTitle(context)),
-
       trailing: message == ''
           ? SizedBox()
           : Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.space_8,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_8),
               decoration: BoxDecoration(
-                color: messageColor,
+                color: AppColors.app_drawer_item_message_box_decoration_color(isDark: isDark),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(

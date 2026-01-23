@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:sornaz/screens/Players/audio/scan/audio_file.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_functions.dart';
-import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/screens/Players/audio/scan/audio_file.dart';
 
 class FolderNavigatorProvider extends ChangeNotifier {
   Directory? rootDir;
@@ -17,7 +17,7 @@ class FolderNavigatorProvider extends ChangeNotifier {
   /*
   void toggleShowOnlyAudioFolders() {
     showOnlyFoldersWithAudio = !showOnlyFoldersWithAudio;
-    _loadRealFolder();  // دوباره لود کن تا فیلتر اعمال بشه
+    _loadRealFolder();
   }
   */
 
@@ -186,7 +186,14 @@ void _filterSubFolders() async {
         try {
           return dir.listSync().any((e) =>
               e is File &&
-              [AppStrings.file_type_mp3, AppStrings.file_type_wav, AppStrings.file_type_aac, AppStrings.file_type_m4a, AppStrings.file_type_flac, AppStrings.file_type_ogg].contains(e.path.split('.').last.toLowerCase()));
+              [
+                AppConstants.MP3, 
+                AppConstants.WAV, 
+                AppConstants.AAC, 
+                AppConstants.M4A, 
+                AppConstants.FLAC, 
+                AppConstants.OGG
+              ].contains(e.path.split('.').last.toLowerCase()));
         } catch (e) {
           return false;
         }
@@ -197,7 +204,7 @@ void _filterSubFolders() async {
 
     subFolders.sort((a, b) => a.path.compareTo(b.path));
   } catch (e) {
-    loggingSornaz("خطا در فیلتر فولدرها: $e");
+    loggingSornaz(" --------------- ");
   }
 }
 
@@ -212,7 +219,14 @@ Future<void> _loadRealFolder() async {
     for (var entity in entities) {
       if (entity is File) {
         final ext = entity.path.split('.').last.toLowerCase();
-        if (['mp3', 'wav', 'aac', 'm4a', 'flac', 'ogg'].contains(ext)) {
+        if ([
+          AppConstants.MP3, 
+          AppConstants.WAV, 
+          AppConstants.AAC, 
+          AppConstants.M4A, 
+          AppConstants.FLAC, 
+          AppConstants.OGG
+        ].contains(ext)) {
           audioFiles.add(AudioFile(
             file: entity,
             fileName: entity.path.split('/').last,
@@ -228,7 +242,7 @@ Future<void> _loadRealFolder() async {
     _filterSubFolders();
     notifyListeners();
   } catch (e) {
-    loggingSornaz("خطا در لود فولدر واقعی: $e");
+    loggingSornaz(" ================== ");
   }
 }
 }

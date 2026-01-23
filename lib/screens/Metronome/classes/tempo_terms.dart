@@ -1,4 +1,4 @@
-import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 
 class TempoTerm {
   final String name;
@@ -9,13 +9,13 @@ class TempoTerm {
 }
 
 List<TempoTerm> tempoTerms = [
-  TempoTerm(AppStrings.larghissimo, 0, 24),
-  TempoTerm(AppStrings.grave, 25, 40),
-  TempoTerm(AppStrings.largo, 40, 60),
-  TempoTerm(AppStrings.adagio, 61, 76),
-  TempoTerm(AppStrings.andante, 77, 108),
-  TempoTerm(AppStrings.moderato, 109, 120),
-  TempoTerm(AppStrings.allegro, 121, 156),
-  TempoTerm(AppStrings.presto, 157, 176),
-  TempoTerm(AppStrings.prestissimo, 177, 200),
+  TempoTerm(AppConstants.LARGHISSIMO, 0, 24),
+  TempoTerm(AppConstants.GRAVE, 25, 40),
+  TempoTerm(AppConstants.LARGO, 40, 60),
+  TempoTerm(AppConstants.ADAGIO, 61, 76),
+  TempoTerm(AppConstants.ANDANTE, 77, 108),
+  TempoTerm(AppConstants.MODERATO, 109, 120),
+  TempoTerm(AppConstants.ALLEGRO, 121, 156),
+  TempoTerm(AppConstants.PRESTO, 157, 176),
+  TempoTerm(AppConstants.PRESTISSIMO, 177, 200),
 ];

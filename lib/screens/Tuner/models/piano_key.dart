@@ -31,6 +31,6 @@ class PianoKey {
 
 enum MicroToneType {
   normal,
-  koron, // ربع پرده پایین
-  sori,  // ربع پرده بالا
+  koron,
+  sori,
 }

@@ -1,10 +1,11 @@
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 
 class HiveArticlesCache {
   Box? _box;
 
   Future<void> init() async {
-    _box ??= await Hive.openBox('articles');
+    _box ??= await Hive.openBox(AppConstants.ARTICLES);
   }
 
   Future<List<Map<String, dynamic>>> loadArticles() async {

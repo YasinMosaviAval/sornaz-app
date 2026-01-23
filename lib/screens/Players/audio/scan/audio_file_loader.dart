@@ -1,18 +1,23 @@
 import 'dart:io';
 import 'dart:isolate';
+import 'package:flutter/material.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_translations.dart';
 import 'scan_progress.dart';
 import 'audio_file.dart';
 
 class AudioFileLoader {
   static Future<void> scanWithIsolate({
+    required BuildContext context,
     required List<Directory> roots,
     required Function(ScanStatus) onProgress,
     required Function(List<AudioFile>) onDone,
   }) async {
     final receivePort = ReceivePort();
     
-    await Isolate.spawn(_scanIsolate, [receivePort.sendPort, roots]);
+    await Isolate.spawn(_scanIsolate as void Function(List<Object> message), [receivePort.sendPort, roots]);
+    // await Isolate.spawn(_scanIsolate, [receivePort.sendPort, roots]);
     
     receivePort.listen((message) {
       if (message is ScanStatus) {
@@ -27,16 +32,16 @@ class AudioFileLoader {
   static bool _isAudioFile(FileSystemEntity file) {
     final ext = file.path.split('.').last.toLowerCase();
     return [
-      AppStrings.file_type_mp3,
-      AppStrings.file_type_wav,
-      AppStrings.file_type_aac,
-      AppStrings.file_type_m4a,
-      AppStrings.file_type_flac,
-      AppStrings.file_type_ogg
+      AppConstants.MP3,
+      AppConstants.WAV,
+      AppConstants.AAC,
+      AppConstants.M4A,
+      AppConstants.FLAC,
+      AppConstants.OGG
     ].contains(ext);
   }
 
-  static void _scanIsolate(List args) async {
+  static void _scanIsolate(List args, BuildContext context) async {
     SendPort sendPort = args[0];
     List<Directory> roots = args[1];
 
@@ -58,7 +63,8 @@ class AudioFileLoader {
       }
     }
 
-    sendPort.send(ScanStatus(scanned: 0, total: 0, currentPath: 'در حال شمارش...'));
+    sendPort.send(ScanStatus(scanned: 0, total: 0, currentPath: AppStrings.audio_file_loader_calculating.translate(context)));
+    // sendPort.send(ScanStatus(scanned: 0, total: 0, currentPath: 'در حال شمارش...'));
     for (var root in roots) {
       if (root.existsSync()) {
         await scanDirectory(root, (file) {
@@ -69,8 +75,9 @@ class AudioFileLoader {
         });
       }
     }
-
-    sendPort.send(ScanStatus(scanned: 0, total: total, currentPath: 'شمارش تمام شد'));
+    if(!context.mounted) return;
+    sendPort.send(ScanStatus(scanned: 0, total: total, currentPath: AppStrings.audio_library_manager_fininshed_calculating.translate(context)));
+    // sendPort.send(ScanStatus(scanned: 0, total: total, currentPath: 'شمارش تمام شد'));
     if (total == 0) {
       sendPort.send(files);
       return;

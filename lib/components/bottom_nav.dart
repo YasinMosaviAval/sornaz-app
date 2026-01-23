@@ -45,13 +45,10 @@ class _BottomNavBarWidgetState extends State<BottomNavBarWidget> {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
     final currentIndex = appData.bottomNavIndex;
-    // final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
-    // final bool isEnglish = localeProvider.locale.languageCode == 'en';
 
     return Directionality(
       textDirection: TextDirection.ltr,
       child: PopScope(
-        // canPop: false,
         onPopInvokedWithResult: (didPop, result) {
           if (didPop) return;
       
@@ -64,12 +61,11 @@ class _BottomNavBarWidgetState extends State<BottomNavBarWidget> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    AppStrings.two_times_press_back_button_for_exit_application
-                        .translate(context),
+                    AppStrings.two_times_press_back_button_for_exit_application .translate(context),
                     style: AppTypography.bottomNavSnackBar(context),
                   ),
                   duration: Duration(seconds: 2),
-                  backgroundColor: Colors.black87,
+                  backgroundColor: AppColors.bottom_nav_snack_bar_background_color(isDark: isDark),
                 ),
               );
               return;
@@ -84,17 +80,9 @@ class _BottomNavBarWidgetState extends State<BottomNavBarWidget> {
         child: BottomNavigationBar(
           currentIndex: currentIndex,
           type: BottomNavigationBarType.fixed,
-          backgroundColor: isDark
-              ? AppColors.surface_dark
-              : AppColors.surface_light,
-              // ? AppColors.background_dark
-              // : AppColors.background_light,
-          selectedItemColor: isDark
-              ? AppColors.primary_dark
-              : AppColors.primary_light,
-          unselectedItemColor: isDark
-              ? AppColors.unselected_item_dark
-              : AppColors.unselected_item_light,
+          backgroundColor: AppColors.bottom_nav_item_background_color(isDark: isDark),
+          selectedItemColor: AppColors.bottom_nav_selected_item_color(isDark: isDark),
+          unselectedItemColor: AppColors.bottom_nav_unselected_item_color(isDark: isDark),
           selectedFontSize: 11,
           unselectedFontSize: 11,
           onTap: (index) => _onItemTapped(context, index),

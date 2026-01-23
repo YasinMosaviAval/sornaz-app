@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/screens/Articles/services/article_api_service.dart';
 import 'package:sornaz/screens/Articles/ui/components/article_author_widget.dart';
@@ -75,7 +76,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
   }
 
   Future<void> _fetchComments({bool loadMore = false}) async {
-    final postId = widget.post['id'];
+    final postId = widget.post[AppConstants.ID];
     final newComments = await ArticleApiService.fetchComments(postId, commentPage);
     setState(() {
       if (loadMore) {
@@ -89,13 +90,13 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
   }
 
   Future<void> _fetchRelatedPosts() async {
-    final categories = widget.post['categories'] as List?;
+    final categories = widget.post[AppConstants.CATEGORIES] as List?;
     if (categories == null || categories.isEmpty) {
       setState(() => isLoadingRelated = false);
       return;
     }
     final catId = categories[0];
-    final postId = widget.post['id'];
+    final postId = widget.post[AppConstants.ID];
     final related = await ArticleApiService.fetchRelatedPosts(postId, catId);
     setState(() {
       relatedPosts = related;
@@ -104,7 +105,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
   }
 
   Future<void> _sendComment() async {
-    final postId = widget.post['id'];
+    final postId = widget.post[AppConstants.ID];
     final content = commentController.text;
     if (content.isEmpty) return;
 
@@ -129,24 +130,24 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final title = widget.post['title']['rendered'] ?? AppStrings.without_title.translate(context);
-    final content = widget.post['content']['rendered'] ?? AppStrings.without_content.translate(context);
-    final imageUrl = widget.post['_embedded']?['wp:featuredmedia']?[0]?['source_url'] ?? '';
-    final author = widget.post['_embedded']?['author']?[0]?['name'] ?? AppStrings.unknown.translate(context);
-    final isoDate = widget.post['date'] as String? ?? '';
+    final title = widget.post[AppConstants.TITLE][AppConstants.RENDERED] ?? AppStrings.without_title.translate(context);
+    final content = widget.post[AppConstants.CONTENT][AppConstants.RENDERED] ?? AppStrings.without_content.translate(context);
+    final imageUrl = widget.post[AppConstants.UNDERLINE_EMBEDDED]?[AppConstants.WP_FEATUREDMEDIA]?[0]?[AppConstants.SOURCE_URL] ?? '';
+    final author = widget.post[AppConstants.UNDERLINE_EMBEDDED]?[AppConstants.AUTHOR]?[0]?[AppConstants.NAME] ?? AppStrings.unknown.translate(context);
+    final isoDate = widget.post[AppConstants.DATE] as String? ?? '';
 
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
 
     return Scaffold(
       appBar: AppBar(
-        foregroundColor: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+        foregroundColor: AppColors.article_details_page_app_bar_foreground_color(isDark: isDark),
         titleSpacing: 0,
         title: Text(
           title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: AppTypography.headline3(context),
+          style: AppTypography.articleDetailsPageAppBar(context),
         ),
         elevation: 0,
         flexibleSpace: _AppBarProgressBackground(
@@ -154,7 +155,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
           isDark: isDark,
         ),
       ),
-      backgroundColor: isDark ? AppColors.background_dark : AppColors.background_light,
+      backgroundColor: AppColors.article_details_page_background_color(isDark: isDark),
       // SornazAppBar(title: title),
       body: Directionality(
         textDirection: TextDirection.rtl,
@@ -175,21 +176,36 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                 const Center(child: CircularProgressIndicator())
               else
                 ...relatedPosts.map((related) {
-                  final relTitle = related['title']['rendered'] ?? '';
-                  final relImage = related['_embedded']?['wp:featuredmedia']?[0]?['source_url'] ?? '';
-                  final relDate = related['date'] as String? ?? '';
+                  final relTitle = related[AppConstants.TITLE][AppConstants.RENDERED] ?? '';
+                  final relImage = related[AppConstants.UNDERLINE_EMBEDDED]?[AppConstants.WP_FEATUREDMEDIA]?[0]?[AppConstants.SOURCE_URL] ?? '';
+                  final relDate = related[AppConstants.DATE] as String? ?? '';
                   return ListTile(
                     leading: relImage.isNotEmpty ? Image.network(relImage, width: AppSpacing.space_100, fit: BoxFit.cover) : const Icon(Icons.image),
-                    title: Text(relTitle, style: AppTypography.articlesDetailPageSimilarArticlesItemTitle(context)),
-                    subtitle: Text(relDate, style: AppTypography.articlesDetailPageSimilarArticlesItemSubtitle(context)),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ArticleDetailPage(post: related))),
+                    title: Text(
+                      relTitle,
+                      style: AppTypography.articlesDetailPageSimilarArticlesItemTitle(context)
+                    ),
+                    subtitle: Text(
+                      relDate,
+                      style: AppTypography.articlesDetailPageSimilarArticlesItemSubtitle(context)
+                    ),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => ArticleDetailPage(post: related))
+                    ),
                   );
                 }),
               const SizedBox(height: AppSpacing.space_32),
-              Text('${AppStrings.take_your_point_to_article.translate(context)}:', style: AppTypography.articlesDetailPageSendStarPoint(context)),
+              Text(
+                '${AppStrings.take_your_point_to_article.translate(context)}:',
+                style: AppTypography.articlesDetailPageSendStarPoint(context)
+              ),
               // rating bar here...
               const SizedBox(height: AppSpacing.space_16),
-              Text('${AppStrings.write_your_comments.translate(context)}:', style: AppTypography.articlesDetailPageWriteComment(context)),
+              Text(
+                '${AppStrings.write_your_comments.translate(context)}:',
+                style: AppTypography.articlesDetailPageWriteComment(context)
+              ),
               TextField(controller: commentController, decoration: InputDecoration(border: OutlineInputBorder())),
               ElevatedButton(onPressed: _sendComment, child: Text(AppStrings.send_comment.translate(context))),
               const SizedBox(height: AppSpacing.space_32),
@@ -197,10 +213,11 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                 const Center(child: CircularProgressIndicator())
               else
                 ...comments.map((comment) {
-                  final comContent = comment['content']['rendered'].replaceAll(RegExp(r'<[^>]*>'), '');
-                  final comAuthor = comment['author_name'] ?? '';
-                  final comAvatar = comment['author_avatar_urls']?['96'] ?? '';
-                  final comDate = comment['date'] as String? ?? '';
+                  // final comContent = comment[AppConstants.CONTENT][AppConstants.RENDERED].replaceAll(RegExp(r'<[^>]*>'), '');
+                  final comContent = comment[AppConstants.CONTENT][AppConstants.RENDERED].replaceAll(RegExp(AppConstants.STRIP_HTML_REGEX), '');
+                  final comAuthor = comment[AppConstants.AUTHOR_NAME] ?? '';
+                  final comAvatar = comment[AppConstants.AUTHOR_AVATAR_URLS]?[AppConstants.NUMBER_96] ?? '';
+                  final comDate = comment[AppConstants.DATE] as String? ?? '';
                   return ArticleCommentsListWidget(comAvatar: comAvatar, comAuthor: comAuthor, comContent: comContent, comDate: comDate, isDark: isDark);
                 }),
             ],
@@ -222,16 +239,12 @@ class _AppBarProgressBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final baseColor = isDark ? AppColors.surface_dark : AppColors.surface_light;
-
-    final progressColor = isDark ? AppColors.primary_dark : AppColors.primary_light;
-
     return LayoutBuilder(
       builder: (context, constraints) {
         return Stack(
           children: [
             // بک‌گراند اصلی AppBar
-            Container(color: baseColor),
+            Container(color: AppColors.article_details_page_app_bar_base_color(isDark: isDark)),
 
             // لایه پروگرس
             Align(
@@ -243,8 +256,8 @@ class _AppBarProgressBackground extends StatelessWidget {
                     begin: Alignment.centerRight,
                     end: Alignment.centerLeft,
                     colors: [
-                      progressColor.withAlpha(50),
-                      progressColor.withAlpha(50),
+                      AppColors.article_details_page_app_bar_progress_color(isDark: isDark),
+                      AppColors.article_details_page_app_bar_progress2_color(isDark: isDark),
                     ],
                   ),
                 ),

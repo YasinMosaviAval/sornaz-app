@@ -21,7 +21,7 @@ class MetronomeButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: isDark ? AppColors.surface_dark : AppColors.surface_light,
+        backgroundColor: AppColors.metronome_button_background_color(isDark: isDark),
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.space_24,
           vertical: AppSpacing.space_12,

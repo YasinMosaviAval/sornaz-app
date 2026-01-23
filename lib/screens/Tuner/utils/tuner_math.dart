@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:sornaz/helpers/app_constants.dart';
+
 class TunerResult {
   final String note;
   final double targetFreq;
@@ -12,7 +14,7 @@ class TunerMath {
   static TunerResult analyze(
       double freq, double a4, List<String> notes) {
     if (freq <= 0) {
-      return TunerResult("--", 0, 0);
+      return TunerResult(AppConstants.DOUBLE_DASH, 0, 0);
     }
 
     final midi = 69 + 12 * log(freq / a4) / ln2;

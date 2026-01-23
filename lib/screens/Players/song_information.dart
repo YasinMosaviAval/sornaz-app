@@ -2,8 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_functions.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/screens/Players/audio/audio_player_provider.dart';
 import 'package:sornaz/helpers/app_images.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
@@ -21,13 +23,11 @@ class NowPlayingInfoTab extends StatelessWidget {
 
     if (audio.currentIndex == -1) {
       return Container(
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.background_dark : AppColors.background_light
-        ),
+        decoration: BoxDecoration(color: AppColors.music_player_song_information_background_color(isDark: isDark)),
         child: Center(
           child: Text(
             AppStrings.song_information_no_song_playing.translate(context),
-            style: const TextStyle(fontSize: 18, color: Colors.grey),
+            style: AppTypography.musicPlayerNotPlayingAudioFile(context),
           ),
         ),
       );
@@ -40,15 +40,13 @@ class NowPlayingInfoTab extends StatelessWidget {
     final genre = meta?.genre ?? AppStrings.unknown.translate(context);
     final year = meta?.year?.toString() ?? AppStrings.unknown.translate(context);
     final durationStr = meta?.duration?.toString().split('.').first ?? formatDuration(audio.duration);
-    final bitrate = meta?.bitrate != null ? '${meta?.bitrate} ${AppStrings.bitrate_unit}' : AppStrings.unknown.translate(context);
+    final bitrate = meta?.bitrate != null ? '${meta?.bitrate} ${AppConstants.BITRATE_UNIT}' : AppStrings.unknown.translate(context);
     // final bitrate = AppStrings.unknown.translate(context);
 
 
     
     return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.background_dark : AppColors.background_light
-      ),
+      decoration: BoxDecoration(color: AppColors.music_player_song_information_background_color(isDark: isDark)),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -73,28 +71,28 @@ class NowPlayingInfoTab extends StatelessWidget {
                     ),
             ),
             AppSpacing.sizedBoxH32(),
-            _info(AppStrings.song_information_title.translate(context), title, AppStrings.unknown.translate(context)),
-            _info(AppStrings.song_information_artists.translate(context), artist, AppStrings.unknown.translate(context)),
-            _info(AppStrings.song_information_album.translate(context), album, AppStrings.unknown.translate(context)),
-            _info(AppStrings.song_information_genre.translate(context), genre, AppStrings.unknown.translate(context)),
-            _info(AppStrings.song_information_year.translate(context), year, AppStrings.unknown.translate(context)),
-            _info(AppStrings.song_information_duration.translate(context), durationStr, AppStrings.unknown.translate(context)),
-            _info(AppStrings.song_information_bitrate.translate(context), bitrate, AppStrings.unknown.translate(context)),
+            _info(AppStrings.song_information_title.translate(context), title, AppStrings.unknown.translate(context), isDark, context),
+            _info(AppStrings.song_information_artists.translate(context), artist, AppStrings.unknown.translate(context), isDark, context),
+            _info(AppStrings.song_information_album.translate(context), album, AppStrings.unknown.translate(context), isDark, context),
+            _info(AppStrings.song_information_genre.translate(context), genre, AppStrings.unknown.translate(context), isDark, context),
+            _info(AppStrings.song_information_year.translate(context), year, AppStrings.unknown.translate(context), isDark, context),
+            _info(AppStrings.song_information_duration.translate(context), durationStr, AppStrings.unknown.translate(context), isDark, context),
+            _info(AppStrings.song_information_bitrate.translate(context), bitrate, AppStrings.unknown.translate(context), isDark, context),
           ],
         ),
       ),
     );
   }
 
-  Widget _info(String label, String? value, String localizationValue) {
+  Widget _info(String label, String? value, String localizationValue, bool isDark, BuildContext context) {
     if (value == null || value.isEmpty || value == localizationValue) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: Colors.grey)),
-          Text(value, style: const TextStyle(fontSize: 16)),
+          Text(label, style: AppTypography.songInformationLabel(context)),
+          Text(value, style: AppTypography.songInformationValue(context)),
         ],
       ),
     );

@@ -4,6 +4,7 @@ import 'package:sornaz/components/app_bar.dart';
 import 'package:sornaz/components/settings_section_header.dart';
 import 'package:sornaz/components/settings_switch_tile.dart';
 import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
@@ -22,21 +23,16 @@ class TunerSettingsPage extends StatelessWidget {
     final isDark = appData.isDark;
 
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
-    final isEnglish = localeProvider.locale.languageCode == AppStrings.localization_en;
+    final isEnglish = localeProvider.locale.languageCode == AppConstants.LOCALIZATION_EN;
 
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: Scaffold(
-        appBar: SornazAppBar(
-          title: AppStrings.tuner_settings_title.translate(context),
-        ),
-        backgroundColor:
-            isDark ? AppColors.background_dark : AppColors.background_light,
+        appBar: SornazAppBar(title: AppStrings.tuner_settings_title.translate(context)),
+        backgroundColor: AppColors.tuner_settings_background_color(isDark: isDark),
         body: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.space_16,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_16),
             child: Column(
               children: [
                 SettingsSectionHeader(
@@ -46,12 +42,11 @@ class TunerSettingsPage extends StatelessWidget {
                     LabeledSlider(
                       leadingIcon: Icon(
                         Icons.access_alarm,
-                        color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+                        color: AppColors.tuner_settings_icon_color(isDark: isDark),
                         size: AppSpacing.space_20,
                       ),
                       // label: "Note duration (seconds)",
-                      // unit: "seconds",
-                      // unit: "ثانیه",
+                      // unit: AppStrings.second.translate(context),
                       label: "${AppStrings.note_stretch.translate(context)} : ${tuner.noteDurationSeconds} ${AppStrings.second.translate(context)}",
                       value: tuner.noteDurationSeconds.toDouble(),
                       min: 1,
@@ -65,7 +60,7 @@ class TunerSettingsPage extends StatelessWidget {
                     LabeledSlider(
                       leadingIcon: Icon(
                         Icons.tune,
-                        color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+                        color: AppColors.tuner_settings_icon_color(isDark: isDark),
                         size: AppSpacing.space_20,
                       ),
                       label: "${AppStrings.set_base_frequency.translate(context)}${tuner.a4.toStringAsFixed(0)} ${AppStrings.hz.translate(context)}",
@@ -85,7 +80,7 @@ class TunerSettingsPage extends StatelessWidget {
                     LabeledSlider(
                       leadingIcon: Icon(
                         Icons.flag_outlined,
-                        color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+                        color: AppColors.tuner_settings_icon_color(isDark: isDark),
                         size: AppSpacing.space_20,
                       ),
                       label: "${AppStrings.starting_octave.translate(context)}: ${tuner.keyboardSettings.startOctave}",
@@ -99,7 +94,7 @@ class TunerSettingsPage extends StatelessWidget {
                     LabeledSlider(
                       leadingIcon: Icon(
                         Icons.arrow_forward_outlined,
-                        color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+                        color: AppColors.tuner_settings_icon_color(isDark: isDark),
                         size: AppSpacing.space_20,
                       ),
                       label: "${AppStrings.number_of_octaves.translate(context)}: ${tuner.keyboardSettings.octaveCount}",

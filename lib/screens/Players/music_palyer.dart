@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/screens/Players/audio/library/audio_library_manager.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
@@ -55,17 +56,18 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
 
     List<Directory> availableRoots = [];
 
-    final internalStorage = Directory('/storage/emulated/0');
+    final internalStorage = Directory(AppConstants.STORAGE_EMULATED_0);
     if (await internalStorage.exists()) availableRoots.add(internalStorage);
 
-    final storageDir = Directory('/storage');
+    final storageDir = Directory(AppConstants.STORAGE);
     if (await storageDir.exists()) {
       try {
         final List<FileSystemEntity> entities = storageDir.listSync();
         for (var entity in entities) {
           if (entity is Directory) {
             final String path = entity.path;
-            if (path != '/storage/emulated' && path != '/storage/self' && !path.startsWith('/storage/0000-0000') && RegExp(r'^/storage/[A-F0-9]{4}-[A-F0-9]{4}$').hasMatch(path)) {
+            // if (path != AppConstants.STORAGE_EMULATED && path != AppConstants.STORAGE_SELF && !path.startsWith(AppConstants.STORAGE_0000_0000) && RegExp(r'^/storage/[A-F0-9]{4}-[A-F0-9]{4}$').hasMatch(path)) {
+            if (path != AppConstants.STORAGE_EMULATED && path != AppConstants.STORAGE_SELF && !path.startsWith(AppConstants.STORAGE_0000_0000) && RegExp(AppConstants.MUSIC_PLAYER_REGEX).hasMatch(path)) {
               if (await entity.exists()) {
                 availableRoots.add(entity);
               }
@@ -73,20 +75,18 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
           }
         }
       } catch (e) {
-        loggingSornaz("خطا در خواندن /storage: $e");
+        loggingSornaz(" ////////////////// ");
       }
     }
 
     if (availableRoots.isEmpty && await internalStorage.exists()) availableRoots.add(internalStorage);
     await libraryManager.setRoots(availableRoots);
-
-    // loggingSornaz("مسیرهای یافت شده برای اسکن: ${availableRoots.map((d) => d.path).toList()}");
     
     await libraryManager.setRoots(availableRoots);
 
     if (!mounted) return;
 
-    await libraryManager.loadOrScan();
+    await libraryManager.loadOrScan(context: context);
 
     if (availableRoots.isNotEmpty) {
       await folderNav.startRealNavigation(availableRoots.first);
@@ -108,21 +108,19 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text("دسترسی لازم است"),
-        content: const Text(
-          "برای اسکن فایل‌های موسیقی، دسترسی به حافظه دستگاه لازم است. لطفاً در تنظیمات برنامه مجوز را فعال کنید.",
-        ),
+        title: Text(AppStrings.need_permission.translate(context)),
+        content: Text(AppStrings.need_permission_for_scanning_audio_files.translate(context)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("بعداً"),
+            child: Text(AppStrings.later.translate(context)),
           ),
           ElevatedButton(
             onPressed: () {
               openAppSettings();
               Navigator.pop(context);
             },
-            child: const Text("رفتن به تنظیمات"),
+            child: Text(AppStrings.go_to_settings.translate(context)),
           ),
         ],
       ),
@@ -134,7 +132,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
-    final bool isEnglish = localeProvider.locale.languageCode == AppStrings.localization_en;
+    final bool isEnglish = localeProvider.locale.languageCode == AppConstants.LOCALIZATION_EN;
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: Scaffold(
@@ -142,7 +140,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
           builder: (_, library, _) {
             if (library.isScanning) {
               return Container(
-                color: isDark ? AppColors.background_dark : AppColors.background_light,
+                color: AppColors.music_player_is_scanning_background_color(isDark: isDark),
                 child: Center(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_24),
@@ -183,3 +181,4 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
     );
   }
 }
+

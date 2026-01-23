@@ -37,8 +37,8 @@ class AudioSlider extends StatelessWidget {
           textDirection: TextDirection.ltr,
           child: Expanded(
             child: Slider(
-              activeColor: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-              inactiveColor: isDark ? AppColors.border_dark : AppColors.border_light,
+              activeColor: AppColors.music_player_audio_slider_active_color(isDark: isDark),
+              inactiveColor: AppColors.music_player_audio_slider_inactive_color(isDark: isDark),
               value: currentPosition.clamp(0.0, totalDuration),
               max: totalDuration,
               onChangeStart: (_) => [provider.startSliding()],

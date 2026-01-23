@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/screens/Articles/cache/hive_articles_cache.dart';
 
@@ -144,7 +145,7 @@ class ArticlesProvider extends ChangeNotifier {
         'https://sornaz.com/wp-json/wp/v2/posts?per_page=10&page=$page&_embed';
 
     if (search.isNotEmpty) {
-      url += '&search=${Uri.encodeComponent(search)}';
+      url += '&${AppConstants.SEARCH}=${Uri.encodeComponent(search)}';
     }
 
     if (category != AppStrings.all) {
@@ -154,11 +155,11 @@ class ArticlesProvider extends ChangeNotifier {
       if (catResponse.statusCode == 200) {
         final cats = json.decode(catResponse.body);
         final matchedCat = cats.firstWhere(
-          (c) => c['name'] == category,
+          (c) => c[AppConstants.NAME] == category,
           orElse: () => null,
         );
         if (matchedCat != null) {
-          url += '&categories=${matchedCat['id']}';
+          url += '&${AppConstants.CATEGORIES}=${matchedCat[AppConstants.ID]}';
         }
       }
     }

@@ -1,9 +1,8 @@
 import 'dart:io';
 import 'package:hive/hive.dart';
 import 'package:sornaz/screens/Players/audio/scan/audio_file.dart';
-// import 'audio_metadata.dart';
 
-part 'audio_file_hive.g.dart'; // تولید می‌شه
+part 'audio_file_hive.g.dart';
 
 @HiveType(typeId: 0)
 class AudioFileHive extends HiveObject {
@@ -17,7 +16,7 @@ class AudioFileHive extends HiveObject {
   String folderName;
 
   @HiveField(3)
-  int durationMs; // Duration رو به میلی‌ثانیه ذخیره کن
+  int durationMs;
 
   AudioFileHive({
     required this.filePath,
@@ -26,18 +25,16 @@ class AudioFileHive extends HiveObject {
     required this.durationMs,
   });
 
-  // تبدیل به AudioFile اصلی
   AudioFile toAudioFile() {
     return AudioFile(
       file: File(filePath),
       fileName: fileName,
       folderName: folderName,
       duration: Duration(milliseconds: durationMs),
-      metadata: null, // metadata رو بعداً می‌تونی اضافه کنی
+      metadata: null,
     );
   }
 
-  // از AudioFile اصلی
   factory AudioFileHive.fromAudioFile(AudioFile audio) {
     return AudioFileHive(
       filePath: audio.file.path,

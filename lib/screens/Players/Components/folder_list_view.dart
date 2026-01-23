@@ -4,7 +4,6 @@ import 'package:sornaz/screens/Players/Components/breadcrumb.dart';
 import 'package:sornaz/screens/Players/Components/bottom_player.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
-import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
@@ -100,7 +99,7 @@ class FolderView extends StatelessWidget {
                       ),
                     ),
                     child: ListTile(
-                      leading: Icon(Icons.folder, color: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light),
+                      leading: Icon(Icons.folder, color: AppColors.music_player_folder_list_view_leading_icon_color(isDark: isDark)),
                       title: Text(dir.path.split("/").last, style: AppTypography.musicPlayerFolderViewTitle(context)),
                       subtitle: Padding(
                         padding: const EdgeInsets.only(top: AppSpacing.space_8),
@@ -112,7 +111,7 @@ class FolderView extends StatelessWidget {
                       contentPadding: EdgeInsets.symmetric(horizontal: AppSpacing.space_16),
                       trailing: Icon(
                         Icons.chevron_right,
-                        color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+                        color: AppColors.music_player_folder_list_view_trailing_icon_color(isDark: isDark),
                       ),
                       onTap: () => nav.enterFolder(dir),
                     ),
@@ -230,7 +229,7 @@ class FolderView extends StatelessWidget {
                     nav.showOnlyFoldersWithAudio 
                         ? "فقط فولدرهای دارای آهنگ" 
                         : "نمایش همه فولدرها",
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    style: AppTypography.musicPlayerFolderListViewSwitchText(context),
                   ),
                   Switch(
                     value: nav.showOnlyFoldersWithAudio,
@@ -255,9 +254,9 @@ class FolderView extends StatelessWidget {
                   if (index < nav.subFolders.length) {
                     final dir = nav.subFolders[index];
                     return ListTile(
-                      leading: Icon(Icons.folder, color: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light),
+                      leading: Icon(Icons.folder, color: AppColors.music_player_folder_list_view_leading_icon_color(isDark: isDark)),
                       title: Text(dir.path.split('/').last, style: AppTypography.musicPlayerFolderViewTitle(context)),
-                      trailing: Icon(Icons.chevron_right, color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light),
+                      trailing: Icon(Icons.chevron_right, color: AppColors.music_player_folder_list_view_trailing_icon_color(isDark: isDark)),
                       onTap: () => nav.enterRealFolder(dir),
                     );
                   }
@@ -299,24 +298,22 @@ class FolderView extends StatelessWidget {
 
         final hasContent = nav.subFolders.isNotEmpty || nav.audioFiles.isNotEmpty;
 
-        if (!hasContent) return const Center(child: Text("هیچ فولدر یا آهنگی در این مسیر یافت نشد"));
+        if (!hasContent) return Center(child: Text(AppStrings.no_folder_or_audio_file_found_in_this_path.translate(context)));
 
         return Column(
           children: [
-            // Row(
-            //   children: [
-                const SearchBarWidget(),
-                const BreadcrumbWidget(),
-            //   ],
-            // ),
+            const SearchBarWidget(),
+            const BreadcrumbWidget(),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    nav.showOnlyFoldersWithAudio ? "فقط فولدرهای دارای آهنگ" : "نمایش همه فولدرها",
-                    style: const TextStyle(fontSize: AppSpacing.space_14, fontWeight: FontWeight.w500),
+                    nav.showOnlyFoldersWithAudio 
+                      ? AppStrings.show_folders_contains_audio_files.translate(context)
+                      : AppStrings.show_all_folders.translate(context),
+                    style: AppTypography.musicPlayerFolderListViewSwitchText(context),
                   ),
                   Switch(
                     value: nav.showOnlyFoldersWithAudio,
@@ -332,9 +329,9 @@ class FolderView extends StatelessWidget {
                   ...nav.subFolders.map((dir) {
                     // loggingSornaz("  ==  ${dir.path.split('/').last}");
                     return ListTile(
-                      leading: Icon(Icons.folder, color: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light),
+                      leading: Icon(Icons.folder, color: AppColors.music_player_folder_list_view_leading_icon_color(isDark: isDark)),
                       title: Text(dir.path.split('/').last, style: AppTypography.musicPlayerFolderViewTitle(context)),
-                      trailing: Icon(Icons.chevron_right, color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light),
+                      trailing: Icon(Icons.chevron_right, color: AppColors.music_player_folder_list_view_trailing_icon_color(isDark: isDark)),
                       onTap: () => nav.enterRealFolder(dir),
                     );
                   }),
@@ -358,3 +355,4 @@ class FolderView extends StatelessWidget {
     );
   }
 }
+

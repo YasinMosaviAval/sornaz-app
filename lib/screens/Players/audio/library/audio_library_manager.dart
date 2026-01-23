@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/screens/Players/audio/cache/audio_cache_factory.dart';
 import 'package:sornaz/screens/Players/audio/scan/audio_file.dart';
 import 'package:sornaz/screens/Players/audio/scan/audio_file_loader.dart';
@@ -20,13 +22,13 @@ class AudioLibraryManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadOrScan() async {
+  Future<void> loadOrScan({required BuildContext context}) async {
     if (roots.isEmpty) return;
 
     isLoadingFromCache = false;
     isScanning = true;
     progress = 0.0;
-    currentPath = 'در حال آماده‌سازی...';
+    currentPath = AppStrings.audio_library_manager_preparing.translate(context);
     notifyListeners();
 
     try {
@@ -37,7 +39,8 @@ class AudioLibraryManager extends ChangeNotifier {
         allFiles = cachedFiles;
         isScanning = false;
         progress = 1.0;
-        currentPath = 'بارگذاری از حافظه تکمیل شد';
+        if(!context.mounted) return;
+        currentPath = AppStrings.audio_library_manager_fininshed_loading_from_memory.translate(context);
         notifyListeners();
         return;
       }
@@ -45,10 +48,12 @@ class AudioLibraryManager extends ChangeNotifier {
       progress = 0.0;
       scannedFiles = 0;
       totalFiles = 0;
-      currentPath = 'در حال شمارش فایل‌ها...';
+      if(!context.mounted) return;
+      currentPath = AppStrings.audio_library_manager_calculating_audio_files.translate(context);
       notifyListeners();
       await AudioFileLoader.scanWithIsolate(
         roots: roots,
+        context: context,
         onProgress: (ScanStatus status) {
           scannedFiles = status.scanned;
           totalFiles = status.total;
@@ -67,7 +72,8 @@ class AudioLibraryManager extends ChangeNotifier {
     } catch (e) {
       isScanning = false;
       progress = 0.0;
-      currentPath = 'خطا در بارگذاری';
+      if(!context.mounted) return;
+      currentPath = AppStrings.audio_library_manager_error_in_loading.translate(context);
       notifyListeners();
     }
   }

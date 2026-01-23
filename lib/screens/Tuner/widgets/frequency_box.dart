@@ -30,7 +30,7 @@ class _FrequencyBoxState extends State<FrequencyBox> {
   Timer? _timer;
   double _lastCents = 0;
 
-final ValueNotifier<int> _repaintTick = ValueNotifier(0);
+  final ValueNotifier<int> _repaintTick = ValueNotifier(0);
 
 
   @override
@@ -47,7 +47,7 @@ final ValueNotifier<int> _repaintTick = ValueNotifier(0);
         }
         _points.add(_lastCents);
 
-        _repaintTick.value++; // فقط repaint
+        _repaintTick.value++;
       },
     );
 
@@ -56,7 +56,7 @@ final ValueNotifier<int> _repaintTick = ValueNotifier(0);
   @override
   void didUpdateWidget(covariant FrequencyBox oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _lastCents = widget.cents; // ذخیره آخرین مقدار cents
+    _lastCents = widget.cents;
   }
 
   @override
@@ -76,12 +76,10 @@ final ValueNotifier<int> _repaintTick = ValueNotifier(0);
       height: height,
       child: Stack(
         children: [
-          // پس‌زمینه
           Container(
-            color: isDark ? AppColors.surface_dark : AppColors.surface_light,
+            color: AppColors.tuner_frequency_box_background_color(isDark: isDark),
           ),
 
-          // محدوده سبز مرکزی
           Positioned(
             left: width / 2 - 25,
             top: 0,
@@ -89,8 +87,8 @@ final ValueNotifier<int> _repaintTick = ValueNotifier(0);
             child: Container(
               width: 50,
               color: widget.inRange
-                  ? AppColors.success.withAlpha(100)
-                  : AppColors.success.withAlpha(30),
+                  ? AppColors.tuner_frequency_box_in_range_frequency_color(isDark: isDark)
+                  : AppColors.tuner_frequency_box_not_in_range_frequency_color(isDark: isDark),
             ),
           ),
 
@@ -104,6 +102,7 @@ final ValueNotifier<int> _repaintTick = ValueNotifier(0);
                 pointSize: widget.pointSize,
                 scale: widget.scale,
                 pointsPerSecond: widget.pointsPerSecond,
+                isDark: isDark,
                 repaint: _repaintTick,
               ),
             ),
@@ -121,6 +120,7 @@ class _FrequencyPointsPainter extends CustomPainter {
   final double height;
   final double pointSize;
   final int pointsPerSecond;
+  final bool isDark;
   final double scale;
 
   _FrequencyPointsPainter({
@@ -129,6 +129,7 @@ class _FrequencyPointsPainter extends CustomPainter {
     required this.height,
     required this.pointSize,
     required this.pointsPerSecond,
+    required this.isDark,
     this.scale = 1.0,
     required Listenable repaint,
   }) : super(repaint: repaint);
@@ -138,12 +139,12 @@ class _FrequencyPointsPainter extends CustomPainter {
     if (points.isEmpty) return;
 
     final paintLine = Paint()
-      ..color = Colors.orange
+      ..color = AppColors.tuner_frequency_box_line_color(isDark: isDark)
       ..strokeWidth = 0.6
       ..style = PaintingStyle.stroke;
 
     final paintPoint = Paint()
-      ..color = Colors.orange
+      ..color = AppColors.tuner_frequency_box_point_color(isDark: isDark)
       ..style = PaintingStyle.fill;
 
     final dy = height / (pointsPerSecond - 1);
@@ -168,6 +169,6 @@ class _FrequencyPointsPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _FrequencyPointsPainter old) {
-    return old.points.length != points.length; // یا مقایسه دقیق‌تر
+    return old.points.length != points.length;
   }
 }

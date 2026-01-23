@@ -36,11 +36,11 @@ class AudioItem extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border.all(
           width: 0.8,
-          color: isDark ? AppColors.border_dark : AppColors.border_light,
+          color: AppColors.music_player_audio_item_border_color(isDark: isDark),
         ),
         color: isPlaying
-            ? isDark ? AppColors.clicked_dark : AppColors.clicked_light
-            : Colors.transparent,
+            ? AppColors.music_player_audio_item_playing_background_color(isDark: isDark)
+            : AppColors.music_player_audio_item_not_playing_background_color(isDark: isDark),
       ),
       child: GestureDetector(
         onLongPress: () => showFileOptions(context, audio),
@@ -53,8 +53,8 @@ class AudioItem extends StatelessWidget {
           leading: Icon(
             isPlaying ? Icons.pause_circle_filled :  Icons.play_circle_filled,
             color: isPlaying
-                ? (isDark ? AppColors.text_primary_dark : AppColors.text_primary_light)
-                : (isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light),
+                ? AppColors.music_player_audio_item_playing_icon_background_color(isDark: isDark)
+                : AppColors.music_player_audio_item_not_playing_icon_background_color(isDark: isDark),
             size: AppSpacing.space_32,
           ),
           minTileHeight: AppSpacing.space_24,

@@ -18,9 +18,7 @@ class AppDrawer extends StatelessWidget {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
     return Drawer(
-      backgroundColor: isDark
-          ? AppColors.surface_dark
-          : AppColors.surface_light,
+      backgroundColor: AppColors.app_drawer_background_color(isDark: isDark),
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
@@ -39,9 +37,7 @@ class AppDrawer extends StatelessWidget {
               ),
             ),
             decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.background_dark
-                  : AppColors.background_light,
+              color: AppColors.app_drawer_box_decoration_color(isDark: isDark),
             ),
           ),
           AppDrawerItem(

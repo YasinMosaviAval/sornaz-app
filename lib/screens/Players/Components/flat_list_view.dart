@@ -1,6 +1,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/screens/Players/Components/file_actions.dart';
 import 'package:sornaz/screens/Players/Components/audio_item.dart';
 import 'package:sornaz/screens/Players/Components/bottom_player.dart';
@@ -10,7 +13,7 @@ import 'package:sornaz/screens/Players/audio/audio_player_provider.dart';
 import 'package:sornaz/screens/Players/Components/search_bar.dart';
 
 class FlatListView extends StatelessWidget {
-  final ScrollController? scrollController;  // <<< جدید
+  final ScrollController? scrollController;
 
   const FlatListView({super.key, this.scrollController});
 
@@ -24,8 +27,8 @@ class FlatListView extends StatelessWidget {
         if (provider.filteredFiles.isEmpty && !provider.isHiveLoading) {
           return Center(
             child: Text(
-              "فایل صوتی یافت نشد",
-              style: TextStyle(fontSize: 18, color: Colors.grey),
+              AppStrings.audio_file_not_found.translate(context),
+              style: AppTypography.musicPlayerAudioFileNotFound(context),
             ),
           );
         }
@@ -35,10 +38,10 @@ class FlatListView extends StatelessWidget {
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.background_dark : AppColors.background_light,
+                  color: AppColors.music_player_flat_list_view_decoration_color(isDark: isDark),
                 ),
                 child: ListView.builder(
-                  controller: scrollController,  // <<< استفاده کن
+                  controller: scrollController,
                   padding: EdgeInsets.all(0),
                   itemCount: provider.filteredFiles.length,
                   itemBuilder: (context, index) {

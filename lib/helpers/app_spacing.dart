@@ -51,9 +51,7 @@ class AppSpacing {
   //   return SizedBox(height: responsiveSpace);
   // }
 
-  static Widget spacer({int flex = 1}) {
-    return Spacer(flex: flex);
-  }
+  static Widget spacer({int flex = 1}) =>  Spacer(flex: flex);
 
   //   static double _responsive(double base, BuildContext context) {
   //     final screenWidth = MediaQuery.of(context).size.width;
@@ -85,46 +83,28 @@ class AppSpacing {
 }
 
 class AppPadding {
-  // static EdgeInsets all(double value = AppSpacing.medium) {
-  //   return EdgeInsets.all(value);
-  // }
+  // static EdgeInsets all(double value = AppSpacing.medium) => EdgeInsets.all(value);
 
   static EdgeInsets symmetric({
     double horizontal = AppSpacing.medium,
     double vertical = AppSpacing.medium,
-  }) {
-    return EdgeInsets.symmetric(horizontal: horizontal, vertical: vertical);
-  }
+  }) => EdgeInsets.symmetric(horizontal: horizontal, vertical: vertical);
 
   static EdgeInsets only({
     double left = 0,
     double top = 0,
     double right = 0,
     double bottom = 0,
-  }) {
-    return EdgeInsets.only(left: left, top: top, right: right, bottom: bottom);
-  }
+  }) => EdgeInsets.only(left: left, top: top, right: right, bottom: bottom);
 
   // static EdgeInsets responsiveAll(BuildContext context, double base = AppSpacing.medium) {
   //   final responsiveValue = AppSpacing._responsive(base, context);
   //   return EdgeInsets.all(responsiveValue);
   // }
 
-  static EdgeInsets screenPadding() {
-    return const EdgeInsets.all(AppSpacing.large);
-  }
+  static EdgeInsets screenPadding() => const EdgeInsets.all(AppSpacing.large);
 
-  static EdgeInsets cardPadding() {
-    return const EdgeInsets.symmetric(
-      horizontal: AppSpacing.medium,
-      vertical: AppSpacing.small,
-    );
-  }
+  static EdgeInsets cardPadding() => const EdgeInsets.symmetric(horizontal: AppSpacing.medium, vertical: AppSpacing.small);
 
-  static EdgeInsets buttonPadding() {
-    return const EdgeInsets.symmetric(
-      horizontal: AppSpacing.large,
-      vertical: AppSpacing.small,
-    );
-  }
+  static EdgeInsets buttonPadding() => const EdgeInsets.symmetric(horizontal: AppSpacing.large, vertical: AppSpacing.small);
 }

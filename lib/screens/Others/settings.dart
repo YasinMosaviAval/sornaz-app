@@ -5,6 +5,7 @@ import 'package:sornaz/components/language_switch_tile.dart';
 import 'package:sornaz/components/settings_section_header.dart';
 import 'package:sornaz/components/settings_switch_tile.dart';
 import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
@@ -20,14 +21,13 @@ class SettingsPage extends StatelessWidget {
     final appData = Provider.of<AppData>(context);
     final bool isDark = appData.isDark;
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
-    // final theme = Theme.of(context);
-    final bool isEnglish = localeProvider.locale.languageCode == AppStrings.localization_en;
+    final bool isEnglish = localeProvider.locale.languageCode == AppConstants.LOCALIZATION_EN;
 
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: Scaffold(
         appBar: SornazAppBar(title: AppStrings.settings_title.translate(context)),
-        backgroundColor: isDark ? AppColors.background_dark : AppColors.background_light,
+        backgroundColor: AppColors.settings_background_color(isDark: isDark),
         body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_16),
@@ -54,12 +54,12 @@ class SettingsPage extends StatelessWidget {
                   children: [
                     ListTile(
                       title: Text(
-                        AppStrings.text_size.translate(context),
+                        AppStrings.font_size.translate(context),
                         style: AppTypography.settingsItemTitle(context),
                       ),
-                      textColor: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+                      textColor: AppColors.settings_list_tile_text_color(isDark: isDark),
                       subtitle: Text(
-                        AppStrings.text_size_description.translate(context),
+                        AppStrings.font_size_description.translate(context),
                         style: AppTypography.settingsItemSubtitle(context),
                       ),
                       trailing: SizedBox(
@@ -69,17 +69,11 @@ class SettingsPage extends StatelessWidget {
                           alignment: Alignment.center,
                           padding: const EdgeInsets.all(AppSpacing.space_8),
                           decoration: BoxDecoration(
-                            border: Border.all(
-                              color: isDark
-                                  ? AppColors.border_dark
-                                  : AppColors.border_light,
-                            ),
-                            color: isDark
-                                ? AppColors.surface_dark
-                                : AppColors.surface_light,
+                            border: Border.all(color: AppColors.settings_list_tile_border_color(isDark: isDark)),
+                            color: AppColors.settings_list_tile_decoration_color(isDark: isDark),
                           ),
                           child: Text(
-                            appData.textSize.toInt().toString(),
+                            appData.fontSize.toInt().toString(),
                             style: AppTypography.settingsItemContent(context),
                             textDirection: TextDirection.ltr,
                           ),
@@ -87,15 +81,80 @@ class SettingsPage extends StatelessWidget {
                       ),
                     ),
                     Slider(
-                      activeColor: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-                      inactiveColor: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light,
-                      label: appData.textSize.toInt().toString(),
-                      value: appData.textSize,
+                      activeColor: AppColors.settings_slider_active_color(isDark: isDark),
+                      inactiveColor: AppColors.settings_slider_inactive_color(isDark: isDark),
+                      label: appData.fontSize.toInt().toString(),
+                      value: appData.fontSize,
                       min: -2,
                       max: 2,
                       divisions: 4,
-                      onChanged: appData.updateTextSize,
+                      onChanged: appData.updateFontSize,
                     ),
+                    
+
+
+
+
+
+
+                    ListTile(
+                      title: Text(
+                        AppStrings.font_weight.translate(context),
+                        style: AppTypography.settingsItemTitle(context),
+                      ),
+                      textColor: AppColors.settings_list_tile_text_color(isDark: isDark),
+                      subtitle: Text(
+                        AppStrings.font_weight_description.translate(context),
+                        style: AppTypography.settingsItemSubtitle(context),
+                      ),
+                      trailing: SizedBox(
+                        height: AppSpacing.space_36,
+                        width: AppSpacing.space_36,
+                        child: Container(
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.all(AppSpacing.space_8),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: AppColors.settings_list_tile_border_color(isDark: isDark)),
+                            color: AppColors.settings_list_tile_decoration_color(isDark: isDark),
+                          ),
+                          child: Text(
+                            appData.fontWeight.toInt().toString(),
+                            style: AppTypography.settingsItemContent(context),
+                            textDirection: TextDirection.ltr,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Slider(
+                      activeColor: AppColors.settings_slider_active_color(isDark: isDark),
+                      inactiveColor: AppColors.settings_slider_inactive_color(isDark: isDark),
+                      label: appData.fontWeight.toInt().toString(),
+                      value: appData.fontWeight,
+                      min: -2,
+                      max: 2,
+                      divisions: 4,
+                      onChanged: appData.updateFontWeight,
+                    ),
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                     ListTile(
                       title: Text(
                         AppStrings.select_font_title.translate(context),
@@ -107,9 +166,7 @@ class SettingsPage extends StatelessWidget {
                       ),
                       trailing: DropdownButton<String>(
                         value: appData.fontFamily,
-                        dropdownColor: isDark
-                            ? AppColors.surface_dark
-                            : AppColors.surface_light,
+                        dropdownColor: AppColors.settings_drop_down_color(isDark: isDark),
                         items: [
                           DropdownMenuItem(
                             value: isEnglish ? AppTypography.iran_sansx_en : AppTypography.iran_sansx_fa,
@@ -159,7 +216,7 @@ class SettingsPage extends StatelessWidget {
                             appData.updateFontFamily(value);
                           }
                         },
-                        iconEnabledColor: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
+                        iconEnabledColor: AppColors.settings_icon_enabled_color(isDark: isDark),
                       ),
                       
                     ),

@@ -1,30 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:provider/provider.dart';
-import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
-
-// class ArticlesContentWidget extends StatelessWidget {
-//   const ArticlesContentWidget({super.key, required this.content});
-//   final String content;
-
-//   @override
-//   Widget build(BuildContext context) {
-//     final appData = Provider.of<AppData>(context);
-//     final isDark = appData.isDark;
-
-//     return Html(
-//       data: content,
-//       style: {'img': Style(height: Height.auto())},
-//     );
-//   }
-// }
+import 'package:sornaz/helpers/app_constants.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 
 class ArticlesContentWidget extends StatelessWidget {
   const ArticlesContentWidget({super.key, required this.content});
 
   final String content;
-  // final bool isDark;
 
   @override
   Widget build(BuildContext context) {
@@ -33,62 +17,18 @@ class ArticlesContentWidget extends StatelessWidget {
     return Html(
       data: content,
       style: {
-        'body': Style(
-          color: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light,
-          fontSize: FontSize(14),
-          fontWeight: FontWeight.w400
-        ),
-        'a': Style(
-          color: isDark ? AppColors.primary_dark : AppColors.primary_light,
-          textDecoration: TextDecoration.underline,
-        ),
-        'p': Style(
-          color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-        ),
-
-        'h1': Style(
-          color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-          fontSize: FontSize(20),
-          fontWeight: FontWeight.w700
-        ),
-        'h2': Style(
-          color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-          fontSize: FontSize(18),
-          fontWeight: FontWeight.w700
-        ),
-        'h3': Style(
-          color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-          fontSize: FontSize(16),
-          fontWeight: FontWeight.w700
-        ),
-        'h4': Style(
-          color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-          fontSize: FontSize(14),
-          fontWeight: FontWeight.w600
-        ),
-        'h5': Style(
-          color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-          fontSize: FontSize(14),
-          fontWeight: FontWeight.w600
-        ),
-        'h6': Style(
-          color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light,
-          fontSize: FontSize(14),
-          fontWeight: FontWeight.w600
-        ),
-        
-        'strong': Style(
-          fontWeight: FontWeight.bold,
-          fontSize: FontSize(14),
-        ),
-        'em': Style(
-          fontStyle: FontStyle.italic,
-          fontSize: FontSize(14),
-        ),
-        'img': Style(
-          width: Width(300),
-          // height: Height(double.minPositive)
-        ),
+        AppConstants.HTML_A: AppTypography.articleContentHtmlA(context: context, isDark: isDark),
+        AppConstants.HTML_P: AppTypography.articleContentHtmlP(context: context, isDark: isDark),
+        AppConstants.HTML_H1: AppTypography.articleContentHtmlH1(context: context, isDark: isDark),
+        AppConstants.HTML_H2: AppTypography.articleContentHtmlH2(context: context, isDark: isDark),
+        AppConstants.HTML_H3: AppTypography.articleContentHtmlH3(context: context, isDark: isDark),
+        AppConstants.HTML_H4: AppTypography.articleContentHtmlH4(context: context, isDark: isDark),
+        AppConstants.HTML_H5: AppTypography.articleContentHtmlH5(context: context, isDark: isDark),
+        AppConstants.HTML_H6: AppTypography.articleContentHtmlH6(context: context, isDark: isDark),
+        AppConstants.HTML_EM: AppTypography.articleContentHtmlEm(context: context, isDark: isDark),
+        AppConstants.HTML_IMG: AppTypography.articleContentHtmlImg(context: context, isDark: isDark),
+        AppConstants.HTML_BODY: AppTypography.articleContentHtmlBody(context: context, isDark: isDark),
+        AppConstants.HTML_STRONG: AppTypography.articleContentHtmlStrong(context: context, isDark: isDark),
       },
       // onLinkTap: (url, context, attributes, element) {
       //   if (url != null) {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_pitch_detection/flutter_pitch_detection.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/screens/Tuner/audio/note_player.dart';
 import 'package:sornaz/screens/Tuner/models/tuner_keyboard_settings.dart';
 import 'package:sornaz/screens/Tuner/utils/tuner_math.dart';
@@ -12,10 +12,9 @@ class TunerProvider extends ChangeNotifier {
   double frequency = 0.0;
   double a4 = 440.0;
   double noteFreq = 0.0;
-  String note = AppStrings.epmty_text;
+  String note = AppConstants.EMPTY_TEXT;
 
-  // متغیر مدت زمان پخش نوت
-  int noteDurationSeconds = 1; // مقدار پیش‌فرض 1 ثانیه
+  int noteDurationSeconds = 1;
 
   void setNoteDuration(int seconds) {
     noteDurationSeconds = seconds;
@@ -38,18 +37,18 @@ class TunerProvider extends ChangeNotifier {
   }
 
   final notes = [
-    AppStrings.note_c,
-    AppStrings.note_c_sharp,
-    AppStrings.note_d,
-    AppStrings.note_d_sharp,
-    AppStrings.note_e,
-    AppStrings.note_f,
-    AppStrings.note_f_sharp,
-    AppStrings.note_g,
-    AppStrings.note_g_sharp,
-    AppStrings.note_a,
-    AppStrings.note_a_sharp,
-    AppStrings.note_b
+    AppConstants.C,
+    AppConstants.C_SHARP,
+    AppConstants.D,
+    AppConstants.D_SHARP,
+    AppConstants.E,
+    AppConstants.F,
+    AppConstants.F_SHARP,
+    AppConstants.G,
+    AppConstants.G_SHARP,
+    AppConstants.A,
+    AppConstants.A_SHARP,
+    AppConstants.B
   ];
 
   Future<void> start() async {
@@ -67,7 +66,7 @@ class TunerProvider extends ChangeNotifier {
   }
 
   void _onPitchDetected(dynamic result) {
-    final freq = (result['frequency'] ?? 0).toDouble();
+    final freq = (result[AppConstants.FREQUENCY] ?? 0).toDouble();
     frequency = freq;
 
     final analyzed = analyzePitch(freq);

@@ -121,7 +121,9 @@ void showDeleteConfirm(BuildContext context, AudioFile file) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                        removed ? AppStrings.file_action_removed_file_from_list.translate(context) : AppStrings.file_action_error_in_removed_file_from_list.translate(context)),
+                      removed 
+                        ? AppStrings.file_action_removed_file_from_list.translate(context) 
+                        : AppStrings.file_action_error_in_removed_file_from_list.translate(context)),
                   ),
                 );
               }
@@ -142,7 +144,9 @@ void showDeleteConfirm(BuildContext context, AudioFile file) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                        success ? AppStrings.file_action_deleted_file_from_memory.translate(context) : AppStrings.file_action_error_in_deleted_file_from_memory.translate(context)),
+                        success 
+                          ? AppStrings.file_action_deleted_file_from_memory.translate(context) 
+                          : AppStrings.file_action_error_in_deleted_file_from_memory.translate(context)),
                   ),
                 );
               });

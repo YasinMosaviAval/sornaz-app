@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 
 class AppLocalizations {
   static final Map<String, Map<String, String>> _localizedValues = {
-    "fa": AppStrings.fa,
-    "en": AppStrings.en,
+    AppConstants.LOCALIZATION_FA: AppStrings.fa,
+    AppConstants.LOCALIZATION_EN: AppStrings.en,
   };
 
   final Locale locale;
@@ -19,7 +20,7 @@ class AppLocalizations {
 
   String translate(String key) {
     return _localizedValues[locale.languageCode]?[key] ??
-        _localizedValues['en']![key] ??
+        _localizedValues[AppConstants.LOCALIZATION_EN]![key] ??
         key;
   }
 }

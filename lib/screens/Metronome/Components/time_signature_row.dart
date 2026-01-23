@@ -33,7 +33,7 @@ class TimeSignatureSection extends StatelessWidget {
               width: AppSpacing.space_48,
               height: AppSpacing.space_48,
               decoration: BoxDecoration(
-                color: isDark ? AppColors.clicked_dark : AppColors.clicked_light,
+                color: AppColors.time_signature_row_decoration_color(isDark: isDark),
                 borderRadius: BorderRadius.circular(AppSpacing.space_4),
               ),
               child: DropdownButton<TimeSignatureOption>(
@@ -41,14 +41,14 @@ class TimeSignatureSection extends StatelessWidget {
                 isExpanded: true,
                 underline: const SizedBox(),
                 icon: const SizedBox(),
-                dropdownColor: isDark ? AppColors.surface_dark : AppColors.surface_light,
+                dropdownColor: AppColors.time_signature_row_drop_down_color(isDark: isDark),
                 items: timeSignatures.map((option) {
                   return DropdownMenuItem(
                     value: option,
                     child: Center(
                       child: Text(
                         option.label, 
-                        style: AppTypography.body1(context),
+                        style: AppTypography.timeSignatureDropDownItemLabel(context),
                       ),
                     ),
                   );
@@ -70,7 +70,9 @@ class TimeSignatureSection extends StatelessWidget {
                       child: note.nameBox(
                         isDark: isDark,
                         isSelected: isSelected,
-                        style: isSelected ? AppTypography.body1(context) : AppTypography.subtitle1(context),
+                        style: isSelected 
+                          ? AppTypography.timeSignatureSelectedDivisionNumber(context)
+                          : AppTypography.timeSignatureUnelectedDivisionNumber(context),
                       ),
                       
                     ),

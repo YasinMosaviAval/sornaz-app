@@ -1,12 +1,16 @@
-import 'dart:convert';
 import 'package:hive/hive.dart';
-import 'package:http/http.dart' as http;
+import 'package:sornaz/helpers/app_constants.dart';
+// import 'dart:convert';
+// import 'package:flutter/widgets.dart';
+// import 'package:http/http.dart' as http;
+// import 'package:sornaz/helpers/app_strings.dart';
+// import 'package:sornaz/helpers/app_translations.dart';
 
 class ArticlesRepository {
-  final Box box = Hive.box('articlesBox');
+  final Box box = Hive.box(AppConstants.ARTICLES_BOX);
 
-  static const _postsKey = 'posts';
-  static const _lastUpdatedKey = 'lastUpdated';
+  static const _postsKey = AppConstants.POSTS;
+  static const _lastUpdatedKey = AppConstants.LAST_UPDATED;
 
 
   List<dynamic> loadCachedPosts() {
@@ -30,20 +34,35 @@ class ArticlesRepository {
   }
 
 
-  Future<List<dynamic>> fetchPosts({
-    required int page,
-    int perPage = 10,
-  }) async {
-    final url = 'https://sornaz.com/wp-json/wp/v2/posts?_embed&page=$page&per_page=$perPage';
+// COMMENT THIS FUNCTION IN NO INTERNET DAYS
+// COMMENT THIS FUNCTION IN NO INTERNET DAYS
+// COMMENT THIS FUNCTION IN NO INTERNET DAYS
+// COMMENT THIS FUNCTION IN NO INTERNET DAYS
 
-    final response = await http.get(Uri.parse(url));
+  // Future<List<dynamic>> fetchPosts({
+  //   required int page,
+  //   int perPage = 10,
+  //   required BuildContext context
+  // }) async {
+  //   final url = 'https://sornaz.com/wp-json/wp/v2/posts?_embed&page=$page&per_page=$perPage';
 
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else if (response.statusCode == 400) {
-      return [];
-    } else {
-      throw Exception('Failed to load posts');
-    }
-  }
+  //   final response = await http.get(Uri.parse(url));
+
+  //   if (response.statusCode == 200) {
+  //     return json.decode(response.body);
+  //   } else if (response.statusCode == 400) {
+  //     return [];
+  //   } else {
+  //     if(context.mounted) {
+  //       throw Exception(AppStrings.failed_to_load_posts.translate(context));
+  //     }
+  //     // throw Exception('Failed to load posts');
+  //   }
+  // }
+
+// COMMENT THIS FUNCTION IN NO INTERNET DAYS
+// COMMENT THIS FUNCTION IN NO INTERNET DAYS
+// COMMENT THIS FUNCTION IN NO INTERNET DAYS
+// COMMENT THIS FUNCTION IN NO INTERNET DAYS
+
 }

@@ -2,31 +2,32 @@
 
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/widgets.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 
 class NoteIcons {
 
-  static const String _basePath = 'assets/icons/notes/';
+  static const String _basePath = AppConstants.BASE_PATH;
 
   static final Widget quarter = SvgPicture.asset(
-    '${_basePath}quarter.svg',
+    '$_basePath${AppConstants.QUARTER_SVG}',
     width: 24,
     height: 24,
   );
 
   static final Widget eighth = SvgPicture.asset(
-    '${_basePath}eighth.svg',
+    '$_basePath${AppConstants.EIGHTH_SVG}',
     width: 24,
     height: 24,
   );
 
   static final Widget triplet = SvgPicture.asset(
-    '${_basePath}triplet.svg',
+    '$_basePath${AppConstants.TRIPLET_SVG}',
     width: 24,
     height: 24,
   );
 
   static final Widget half = SvgPicture.asset(
-    '${_basePath}half.svg',
+    '$_basePath${AppConstants.HALF_SVG}',
     width: 24,
     height: 24,
   );
@@ -34,7 +35,7 @@ class NoteIcons {
 
   static Widget quarterNote({double size = 24, Color? color}) {
     return SvgPicture.asset(
-      '${_basePath}quarter.svg',
+      '$_basePath${AppConstants.QUARTER_SVG}',
       width: size,
       height: size,
       // color: color,
@@ -46,9 +47,9 @@ class NoteIcons {
 
 /// مدل هر نماد موسیقی
 class MusicSymbol {
-  final String name;       // نام نماد
-  final String type;       // note, rest, articulation, dynamic
-  final String assetPath;  // مسیر SVG
+  final String name;
+  final String type;
+  final String assetPath;
   final double defaultSize;
 
   const MusicSymbol({
@@ -71,15 +72,15 @@ class MusicSymbol {
 
 /// مجموعه تمام نت‌ها و علائم موسیقی
 class MusicSymbols {
-  static const String _notePath = 'assets/icons/notes/';
-  static const String _restPath = 'assets/icons/rests/';
-  // static const String _artPath = 'assets/icons/articulations/';
-  // static const String _dynPath = 'assets/icons/dynamics/';
-  static const String _signaturePath = 'assets/icons/signatures/';
+  static const String _notePath = AppConstants.NOTES_PATH;
+  static const String _restPath = AppConstants.RESTS_PATH;
+  // static const String _artPath = AppConstants.ARTICULATIONS_PATH;
+  // static const String _dynPath = AppConstants.DYNAMICS_PATH;
+  static const String _signaturePath = AppConstants.SIGNATURES_PATH;
 
   static Widget quarter({double size = 24, Color? color}) {
     return SvgPicture.asset(
-      '${_notePath}quarter.svg',
+      '$_notePath${AppConstants.QUARTER_SVG}',
       width: size,
       height: size,
       colorFilter: color == null
@@ -90,7 +91,7 @@ class MusicSymbols {
 
   static Widget eighth({double size = 24, Color? color}) {
     return SvgPicture.asset(
-      '${_notePath}eighth.svg',
+      '$_notePath${AppConstants.EIGHTH_SVG}',
       width: size,
       height: size,
       colorFilter: color == null
@@ -98,39 +99,37 @@ class MusicSymbols {
           : ColorFilter.mode(color, BlendMode.srcIn),
     );
   }
-  /// نت‌ها
-  static const MusicSymbol double_whole_note = MusicSymbol(name: 'Double Whole Note', type: 'note', assetPath: '${_notePath}double_whole.svg');
-  static const MusicSymbol whole_note = MusicSymbol(name: 'Whole Note', type: 'note', assetPath: '${_notePath}whole.svg');
-  static const MusicSymbol half_note = MusicSymbol(name: 'Half Note', type: 'note', assetPath: '${_notePath}half.svg');
-  static const MusicSymbol half_note_reverse = MusicSymbol(name: 'Half Note Reverse', type: 'note', assetPath: '${_notePath}half_reverse.svg');
-  static const MusicSymbol quarter_note = MusicSymbol(name: 'Quarter Note', type: 'note', assetPath: '${_notePath}quarter.svg');
-  static const MusicSymbol quarter_note_reverse = MusicSymbol(name: 'Quarter Note Reverse', type: 'note', assetPath: '${_notePath}quarter_reverse.svg');
-  static const MusicSymbol eighth_note = MusicSymbol(name: 'Eighth Note', type: 'note', assetPath: '${_notePath}eighth.svg');
-  static const MusicSymbol eighth_note_reverse = MusicSymbol(name: 'Eighth Note Reverse', type: 'note', assetPath: '${_notePath}eighth_reverse.svg');
-  static const MusicSymbol sixteenth_note = MusicSymbol(name: 'Sixteenth Note', type: 'note', assetPath: '${_notePath}sixteenth.svg');
-  static const MusicSymbol sixteenth_note_reverse = MusicSymbol(name: 'Sixteenth Note Reverse', type: 'note', assetPath: '${_notePath}sixteenth_reverse.svg');
 
-  /// سکوت‌ها
-  static const MusicSymbol full_rest = MusicSymbol(name: 'Full Rest', type: 'rest', assetPath: '${_restPath}full_rest.svg');
-  static const MusicSymbol whole_rest = MusicSymbol(name: 'Whole Rest', type: 'rest', assetPath: '${_restPath}whole_rest.svg');
-  static const MusicSymbol half_rest = MusicSymbol(name: 'Half Rest', type: 'rest', assetPath: '${_restPath}half_rest.svg');
-  static const MusicSymbol quarter_rest = MusicSymbol(name: 'Quarter Rest', type: 'rest', assetPath: '${_restPath}quarter_rest.svg');
-  static const MusicSymbol eighth_rest = MusicSymbol(name: 'Eighth Rest', type: 'rest', assetPath: '${_restPath}eighth_rest.svg');
-  static const MusicSymbol sixteenth_rest = MusicSymbol(name: 'Sixteenth Rest', type: 'rest', assetPath: '${_restPath}sixteenth_rest.svg');
+  static const MusicSymbol double_whole_note = MusicSymbol(name: AppConstants.DOUBLE_WHOLE_NOTE_NAME, type: AppConstants.NOTE, assetPath: '$_notePath${AppConstants.DOUBLE_WHOLE_SVG}');
+  static const MusicSymbol whole_note = MusicSymbol(name: AppConstants.WHOLE_NOTE_NAME, type: AppConstants.NOTE, assetPath: '$_notePath${AppConstants.WHOLE_SVG}');
+  static const MusicSymbol half_note = MusicSymbol(name: AppConstants.HALF_NOTE_NAME, type: AppConstants.NOTE, assetPath: '$_notePath${AppConstants.HALF_SVG}');
+  static const MusicSymbol half_note_reverse = MusicSymbol(name: AppConstants.HALF_NOTE_REVERSE_NAME, type: AppConstants.NOTE, assetPath: '$_notePath${AppConstants.HALF_REVERSE_SVG}');
+  static const MusicSymbol quarter_note = MusicSymbol(name: AppConstants.QUARTER_NOTE_NAME, type: AppConstants.NOTE, assetPath: '$_notePath${AppConstants.QUARTER_SVG}');
+  static const MusicSymbol quarter_note_reverse = MusicSymbol(name: AppConstants.QUARTER_NOTE_REVERSE_NAME, type: AppConstants.NOTE, assetPath: '$_notePath${AppConstants.QUARTER_REVERSE_SVG}');
+  static const MusicSymbol eighth_note = MusicSymbol(name: AppConstants.EIGHTH_NOTE_NAME, type: AppConstants.NOTE, assetPath: '$_notePath${AppConstants.EIGHTH_SVG}');
+  static const MusicSymbol eighth_note_reverse = MusicSymbol(name: AppConstants.EIGHTH_NOTE_REVERSE_NAME, type: AppConstants.NOTE, assetPath: '$_notePath${AppConstants.EIGHTH_REVERSE_SVG}');
+  static const MusicSymbol sixteenth_note = MusicSymbol(name: AppConstants.SIXTEENTH_NOTE_NAME, type: AppConstants.NOTE, assetPath: '$_notePath${AppConstants.SIXTEENTH_SVG}');
+  static const MusicSymbol sixteenth_note_reverse = MusicSymbol(name: AppConstants.SIXTEENTH_NOTE_REVERSE_NAME, type: AppConstants.NOTE, assetPath: '$_notePath${AppConstants.SIXTEENTH_REVERSE_SVG}');
 
+  static const MusicSymbol full_rest = MusicSymbol(name: AppConstants.FULL_REST_NAME, type: AppConstants.REST, assetPath: '$_restPath${AppConstants.FULL_REST_SVG}');
+  static const MusicSymbol whole_rest = MusicSymbol(name: AppConstants.WHOLE_REST_NAME, type: AppConstants.REST, assetPath: '$_restPath${AppConstants.WHOLE_REST_SVG}');
+  static const MusicSymbol half_rest = MusicSymbol(name: AppConstants.HALF_REST_NAME, type: AppConstants.REST, assetPath: '$_restPath${AppConstants.HALF_REST_SVG}');
+  static const MusicSymbol quarter_rest = MusicSymbol(name: AppConstants.QUARTER_REST_NAME, type: AppConstants.REST, assetPath: '$_restPath${AppConstants.QUARTER_REST_SVG}');
+  static const MusicSymbol eighth_rest = MusicSymbol(name: AppConstants.EIGHTH_REST_NAME, type: AppConstants.REST, assetPath: '$_restPath${AppConstants.EIGHTH_REST_SVG}');
+  static const MusicSymbol sixteenth_rest = MusicSymbol(name: AppConstants.SIXTEENTH_REST_NAME, type: AppConstants.REST, assetPath: '$_restPath${AppConstants.SIXTEENTH_REST_SVG}');
 
 
-  static const MusicSymbol clef_c = MusicSymbol(name: 'Clef C', type: 'signatures', assetPath: '${_signaturePath}clef_c.svg');
-  static const MusicSymbol clef_f = MusicSymbol(name: 'Clef F', type: 'signatures', assetPath: '${_signaturePath}clef_f.svg');
-  static const MusicSymbol clef_g = MusicSymbol(name: 'Clef G', type: 'signatures', assetPath: '${_signaturePath}clef_g.svg');
+  static const MusicSymbol clef_c = MusicSymbol(name: AppConstants.CLEF_C_NAME, type: AppConstants.SIGNATURE, assetPath: '$_signaturePath${AppConstants.CLEF_C_SVG}');
+  static const MusicSymbol clef_f = MusicSymbol(name: AppConstants.CLEF_F_NAME, type: AppConstants.SIGNATURE, assetPath: '$_signaturePath${AppConstants.CLEF_F_SVG}');
+  static const MusicSymbol clef_g = MusicSymbol(name: AppConstants.CLEF_G_NAME, type: AppConstants.SIGNATURE, assetPath: '$_signaturePath${AppConstants.CLEF_G_SVG}');
 
-  static const MusicSymbol bemol = MusicSymbol(name: 'Bemol', type: 'signatures', assetPath: '${_signaturePath}bemol.svg');
-  static const MusicSymbol sharp = MusicSymbol(name: 'Sharp', type: 'signatures', assetPath: '${_signaturePath}sharp.svg');
-  static const MusicSymbol becarre = MusicSymbol(name: 'Becarre', type: 'signatures', assetPath: '${_signaturePath}becarre.svg');
-  static const MusicSymbol double_bemol = MusicSymbol(name: 'Double Bemol', type: 'signatures', assetPath: '${_signaturePath}double_bemol.svg');
-  static const MusicSymbol double_sharp = MusicSymbol(name: 'Double Sharp', type: 'signatures', assetPath: '${_signaturePath}double_sharp.svg');
-  static const MusicSymbol becarre_bemol = MusicSymbol(name: 'Becarre Bemol', type: 'signatures', assetPath: '${_signaturePath}becarre_bemol.svg');
-  static const MusicSymbol becarre_sharp = MusicSymbol(name: 'Becarre Sharp', type: 'signatures', assetPath: '${_signaturePath}becarre_sharp.svg');
+  static const MusicSymbol bemol = MusicSymbol(name: AppConstants.BEMOL_NAME, type: AppConstants.SIGNATURE, assetPath: '$_signaturePath${AppConstants.BEMOL_SVG}');
+  static const MusicSymbol sharp = MusicSymbol(name: AppConstants.SHARP_NAME, type: AppConstants.SIGNATURE, assetPath: '$_signaturePath${AppConstants.SHARP_SVG}');
+  static const MusicSymbol becarre = MusicSymbol(name: AppConstants.BECARRE_NAME, type: AppConstants.SIGNATURE, assetPath: '$_signaturePath${AppConstants.BECARRE_SVG}');
+  static const MusicSymbol double_bemol = MusicSymbol(name: AppConstants.DOUBLE_BEMOL_NAME, type: AppConstants.SIGNATURE, assetPath: '$_signaturePath${AppConstants.DOUBLE_BEMOL_SVG}');
+  static const MusicSymbol double_sharp = MusicSymbol(name: AppConstants.DOUBLE_SHARP_NAME, type: AppConstants.SIGNATURE, assetPath: '$_signaturePath${AppConstants.DOUBLE_SHARP_SVG}');
+  static const MusicSymbol becarre_bemol = MusicSymbol(name: AppConstants.BECARRE_BEMOL_NAME, type: AppConstants.SIGNATURE, assetPath: '$_signaturePath${AppConstants.BECARRE_BEMOL_SVG}');
+  static const MusicSymbol becarre_sharp = MusicSymbol(name: AppConstants.BECARRE_SHARP_NAME, type: AppConstants.SIGNATURE, assetPath: '$_signaturePath${AppConstants.BECARRE_SHARP_SVG}');
 
 
 }

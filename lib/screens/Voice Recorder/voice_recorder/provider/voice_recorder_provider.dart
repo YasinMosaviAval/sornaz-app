@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_functions.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
@@ -27,7 +28,7 @@ class VoiceRecorderProvider extends ChangeNotifier {
   String? currentFilePath;
 
   int seconds = 0;
-  String timer = '00:00';
+  String timer = AppConstants.TIMER_00_00;
 
   List<File> files = [];
   List<double> amplitudes = [];
@@ -60,7 +61,7 @@ void dispose() {
     isPaused = false;
     amplitudes.clear();
     seconds = 0;
-    timer = '00:00';
+    timer = AppConstants.TIMER_00_00;
     _startTimer();
 
     await recordingService.start(
@@ -78,7 +79,7 @@ void dispose() {
     isRecording = false;
     isPaused = false;
     seconds = 0;
-    timer = '00:00';
+    timer = AppConstants.TIMER_00_00;
     files = await fileService.loadFiles();
 
     notifyListeners();
@@ -173,7 +174,7 @@ Future<void> stopRecording() async {
   isRecording = false;
   isPaused = false;
   seconds = 0;
-  timer = '00:00';
+  timer = AppConstants.TIMER_00_00;
 
   currentFilePath = null;
   files = await fileService.loadFiles();

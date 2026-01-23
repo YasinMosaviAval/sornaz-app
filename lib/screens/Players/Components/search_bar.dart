@@ -31,14 +31,14 @@ class SearchBarWidget extends StatelessWidget implements PreferredSizeWidget {
           border: InputBorder.none,
           prefixIcon: Icon(
             Icons.search,
-            color: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light,
+            color: AppColors.music_player_search_bar_prefix_icon_color(isDark: isDark),
           ),
         ),
-        cursorColor: isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light,
+        cursorColor: AppColors.music_player_search_bar_cursor_color(isDark: isDark),
         style: AppTypography.searchBarText(context),
       ),
-      backgroundColor: isDark ? AppColors.surface_dark : AppColors.surface_light,
-      iconTheme: IconThemeData(color: isDark ? AppColors.text_primary_dark : AppColors.text_primary_light),
+      backgroundColor: AppColors.music_player_search_bar_background_color(isDark: isDark),
+      iconTheme: IconThemeData(color: AppColors.music_player_search_bar_icon_theme_color(isDark: isDark)),
     );
   }
 }

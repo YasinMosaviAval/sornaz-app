@@ -40,16 +40,16 @@ class StopModeSection extends StatelessWidget {
                 label: Text(AppStrings.timer.translate(context)),
                 labelStyle: TextStyle(
                   color: isSelectedTimer
-                    ? (isDark ? AppColors.text_primary_light : AppColors.text_primary_dark)
-                    : (isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light),
+                    ? AppColors.stop_mode_section_selected_timer_lable_color(isDark: isDark)
+                    : AppColors.stop_mode_section_unselected_timer_lable_color(isDark: isDark),
                 ),
-                checkmarkColor: isDark? AppColors.text_primary_light : AppColors.text_primary_dark,
-                selectedColor: isDark? AppColors.primary_dark : AppColors.primary_light,
-                backgroundColor: isDark ? AppColors.surface_dark : AppColors.surface_light,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(AppSpacing.space_2)),
+                checkmarkColor: AppColors.stop_mode_section_checkmark_color(isDark: isDark),
+                selectedColor: AppColors.stop_mode_section_selected_color(isDark: isDark),
+                backgroundColor: AppColors.stop_mode_section_background_color(isDark: isDark),
+                shape: RoundedRectangleBorder(
+                  borderRadius: const BorderRadius.all(Radius.circular(AppSpacing.space_2)),
                   side: BorderSide(
-                    color: Colors.transparent,
+                    color: AppColors.stop_mode_section_border_color(isDark: isDark),
                     width: 0,
                   )
                 ),
@@ -64,16 +64,16 @@ class StopModeSection extends StatelessWidget {
                 label: Text(AppStrings.bars.translate(context)),
                 labelStyle: TextStyle(
                   color: isSelectedBars
-                    ? (isDark ? AppColors.text_primary_light : AppColors.text_primary_dark)
-                    : (isDark ? AppColors.text_secondary_dark : AppColors.text_secondary_light),
+                    ? AppColors.stop_mode_section_selected_timer_lable_color(isDark: isDark)
+                    : AppColors.stop_mode_section_unselected_timer_lable_color(isDark: isDark),
                 ),
-                checkmarkColor: isDark? AppColors.text_primary_light : AppColors.text_primary_dark,
-                selectedColor: isDark? AppColors.primary_dark : AppColors.primary_light,
-                backgroundColor: isDark ? AppColors.surface_dark : AppColors.surface_light,
-                shape: const RoundedRectangleBorder(
+                checkmarkColor: AppColors.stop_mode_section_checkmark_color(isDark: isDark),
+                selectedColor: AppColors.stop_mode_section_selected_color(isDark: isDark),
+                backgroundColor: AppColors.stop_mode_section_background_color(isDark: isDark),
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(AppSpacing.space_2)),
                   side: BorderSide(
-                    color: Colors.transparent,
+                    color: AppColors.stop_mode_section_border_color(isDark: isDark),
                     width: 0,
                   )
                 ),

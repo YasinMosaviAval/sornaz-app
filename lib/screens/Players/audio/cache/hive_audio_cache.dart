@@ -1,4 +1,5 @@
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/screens/Players/audio/cache/audio_cache_service.dart';
 import 'package:sornaz/screens/Players/audio/scan/audio_file.dart';
 import 'package:sornaz/screens/Players/audio/scan/audio_file_hive.dart';
@@ -8,7 +9,7 @@ class HiveAudioCache implements AudioCacheService {
 
   @override
   Future<void> init() async {
-    _box = await Hive.openBox<AudioFileHive>('audio_files_hive');
+    _box = await Hive.openBox<AudioFileHive>(AppConstants.AUDIO_FILES_HIVE);
   }
 
   @override

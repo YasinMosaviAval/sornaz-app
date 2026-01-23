@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'package:sornaz/components/bottom_nav.dart';
 import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
@@ -23,18 +24,16 @@ class ArticlesPage extends StatelessWidget {
     final isDark = appData.isDark;
     
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
-    final isEnglish = localeProvider.locale.languageCode == AppStrings.localization_en;
+    final isEnglish = localeProvider.locale.languageCode == AppConstants.LOCALIZATION_EN;
 
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: isDark ? AppColors.surface_dark : AppColors.surface_light,
+          backgroundColor: AppColors.articles_page_app_bar_background_color(isDark: isDark),
           elevation: 0,
           automaticallyImplyLeading: false,
-          // leadingWidth: AppSpacing.space_48,
           titleSpacing: AppSpacing.space_16,
-          // actionsPadding: const EdgeInsets.only(right: AppSpacing.space_0),
           leading: HeaderMenuIcon(isDark: isDark),
           title: ApplicationTitle(isDark: isDark),
           actions: [
@@ -44,7 +43,7 @@ class ArticlesPage extends StatelessWidget {
         ),
         drawer: const AppDrawer(),
         body: Container(
-          color: isDark ? AppColors.background_dark : AppColors.background_light,
+          color: AppColors.articles_page_body_background_color(isDark: isDark),
           child: Consumer<ArticlesProvider>(
             builder: (context, provider, _) {
               if (provider.isLoading && provider.posts.isEmpty) {

@@ -1,7 +1,7 @@
-
 import 'package:flutter/material.dart';
 import 'package:sornaz/components/bottom_nav.dart';
 import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_images.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
@@ -23,15 +23,15 @@ class HomePage extends StatelessWidget {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
-    final bool isEnglish = localeProvider.locale.languageCode == AppStrings.localization_en;
+    final bool isEnglish = localeProvider.locale.languageCode == AppConstants.LOCALIZATION_EN;
 
     return
     Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: isDark ? AppColors.background_dark : AppColors.background_light,
+        backgroundColor: AppColors.home_body_background_color(isDark: isDark),
         appBar: AppBar(
-          backgroundColor: isDark ? AppColors.surface_dark : AppColors.surface_light,
+          backgroundColor: AppColors.home_app_bar_background_color(isDark: isDark),
           elevation: 0,
           automaticallyImplyLeading: false,
           leadingWidth: AppSpacing.space_48,
@@ -107,9 +107,7 @@ class HeaderMenuIcon extends StatelessWidget {
         return IconButton(
           icon: Icon(
             Icons.menu,
-            color: isDark
-                ? AppColors.text_primary_dark
-                : AppColors.text_primary_light,
+            color: AppColors.home_header_menu_icon_color(isDark: isDark),
           ),
           onPressed: () => Scaffold.of(context).openDrawer(),
         );

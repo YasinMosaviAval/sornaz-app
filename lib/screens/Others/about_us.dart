@@ -4,6 +4,7 @@ import 'package:sornaz/components/app_bar.dart';
 import 'package:sornaz/components/justified_text.dart';
 import 'package:sornaz/components/settings_section_header.dart';
 import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
@@ -18,13 +19,13 @@ class AboutUsPage extends StatelessWidget {
     final appData = Provider.of<AppData>(context);
     final bool isDark = appData.isDark;
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
-    final bool isEnglish = localeProvider.locale.languageCode == AppStrings.localization_en;
+    final bool isEnglish = localeProvider.locale.languageCode == AppConstants.LOCALIZATION_EN;
 
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: Scaffold(
         appBar: SornazAppBar(title: AppStrings.about_us_title.translate(context)),
-        backgroundColor: isDark ? AppColors.background_dark : AppColors.background_light,
+        backgroundColor: AppColors.about_us_background_color(isDark: isDark),
         body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_16),

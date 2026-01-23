@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
@@ -58,7 +59,7 @@ class ArticlesListWidget extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               itemCount: provider.categories.length,
               itemBuilder: (context, i) {
-                final cat = provider.categories[i]['name'];
+                final cat = provider.categories[i][AppConstants.NAME];
                 final isSelected = cat == provider.selectedCategory;
     
                 return GestureDetector(
@@ -73,14 +74,16 @@ class ArticlesListWidget extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_12, vertical: AppSpacing.space_8),
                     decoration: BoxDecoration(
                       color: isSelected 
-                        ? isDark ? AppColors.primary_dark : AppColors.primary_light
-                        : isDark ? AppColors.surface_dark : AppColors.surface_light,
+                        ? AppColors.article_list_selected_box_decoration_color(isDark: isDark)
+                        : AppColors.article_list_unselected_box_decoration_color(isDark: isDark),
                       borderRadius: BorderRadius.circular(AppSpacing.space_4),
                     ),
                     child: Center(
                       child: Text(
                         cat,
-                        style: isSelected ? AppTypography.body_reverse2(context) : AppTypography.body2(context),
+                        style: isSelected 
+                          ? AppTypography.articlesListSelectedCategory(context)
+                          : AppTypography.articlesListUnselectedCategory(context),
                       ),
                     ),
                   ),

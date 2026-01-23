@@ -37,16 +37,12 @@ class ComponentSearchBar extends StatelessWidget {
               prefixIcon: Icon(
                 Icons.search,
                 size: AppSpacing.space_24,
-                color: isDark
-                    ? AppColors.text_secondary_dark
-                    : AppColors.text_secondary_light,
+                color: AppColors.component_search_bar_prefix_icon_color(isDark: isDark),
               ),
               suffixIcon: Icon(
                 Icons.tune,
                 size: AppSpacing.space_22,
-                color: isDark
-                    ? AppColors.text_secondary_dark
-                    : AppColors.text_secondary_light,
+                color: AppColors.component_search_bar_suffix_icon_color(isDark: isDark),
               ),
               contentPadding: EdgeInsets.symmetric(
                 horizontal: AppSpacing.space_16,
@@ -57,9 +53,7 @@ class ComponentSearchBar extends StatelessWidget {
                 borderSide: BorderSide.none,
               ),
               filled: true,
-              fillColor: isDark
-                  ? AppColors.surface_dark
-                  : AppColors.surface_light,
+              fillColor: AppColors.component_search_bar_fill_color(isDark: isDark),
             ),
           ),
         ),

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:sornaz/helpers/app_constants.dart';
 
 class ArticleApiService {
   static Future<List<dynamic>> fetchComments(int postId, int page) async {
@@ -21,14 +22,14 @@ class ArticleApiService {
   static Future<bool> sendComment(int postId, String content, String authorName) async {
     final url = 'https://sornaz.com/wp-json/wp/v2/comments';
     final body = json.encode({
-      'post': postId,
-      'content': content,
-      'author_name': authorName,
+      AppConstants.POST: postId,
+      AppConstants.CONTENT: content,
+      AppConstants.AUTHOR_NAME: authorName,
     });
 
     final response = await http.post(
       Uri.parse(url),
-      headers: {'Content-Type': 'application/json'},
+      headers: {AppConstants.CONTENT_TYPE: AppConstants.APPLICATION_JSON},
       body: body,
     );
     return response.statusCode == 201;

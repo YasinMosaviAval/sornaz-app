@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/section_title.dart';
 import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_functions.dart';
 import 'package:sornaz/helpers/app_navigation.dart';
@@ -28,9 +29,8 @@ class BlogCarousel extends StatelessWidget {
     // final theme = Theme.of(context);
 
     return Container(
-      // color: AppColors.error,
-      decoration: BoxDecoration(color: AppColors.primary_dark),
-      foregroundDecoration: BoxDecoration(color: AppColors.secondary_dark),
+      decoration: BoxDecoration(color: AppColors.blog_carousel_decoration_color(isDark: isDark)),
+      foregroundDecoration: BoxDecoration(color: AppColors.blog_carousel_foreground_decoration_color(isDark: isDark)),
       child: Padding(
         padding: EdgeInsets.fromLTRB(
           AppSpacing.space_0,
@@ -67,29 +67,20 @@ class BlogCarousel extends StatelessWidget {
                         itemCount: snapshot.data!.length,
                         itemBuilder: (context, index) {
                           final post = snapshot.data![index];
-                          final title =
-                              post['title']['rendered'] ??
-                              AppStrings.no_title.translate(context);
+                          final title = post[AppConstants.TITLE][AppConstants.RENDERED] ?? AppStrings.no_title.translate(context);
                           // final excerpt =
                           //     (post['excerpt']['rendered'] as String?)?.replaceAll(
                           //       RegExp(r'<[^>]*>'),
                           //       '',
                           //     ) ??
                           //     'بدون خلاصه';
-                          final featuredMedia = post['featured_media'];
-                          final imageUrl =
-                              (featuredMedia is int &&
-                                  featuredMedia > 0 &&
-                                  post['_embedded'] != null)
-                              ? (post['_embedded']['wp:featuredmedia']?[0]?['source_url']
-                                        as String?) ??
-                                    ''
+                          final featuredMedia = post[AppConstants.FEATURED_MEDIA];
+                          final imageUrl = (featuredMedia is int && featuredMedia > 0 && post[AppConstants.UNDERLINE_EMBEDDED] != null)
+                              ? (post[AppConstants.UNDERLINE_EMBEDDED][AppConstants.WP_FEATUREDMEDIA]?[0]?[AppConstants.SOURCE_URL] as String?) ?? ''
                               : '';
-                          // final date =
-                          //     (post['date'] as String?)?.substring(0, 10) ?? 'نامشخص';
+                          // final date = (post['date'] as String?)?.substring(0, 10) ?? 'نامشخص';
 
-                          final isoDate =
-                              post['date'] as String? ?? AppStrings.epmty_text;
+                          final isoDate = post[AppConstants.DATE] as String? ?? AppConstants.EMPTY_TEXT;
                           return BlogCard(
                             post: post,
                             imageUrl: imageUrl,
@@ -153,14 +144,12 @@ class BlogCard extends StatelessWidget {
         width: AppSpacing.space_150,
         margin: const EdgeInsets.symmetric(horizontal: AppSpacing.space_8),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.surface_dark : AppColors.surface_light,
-          border: Border.all(
-            color: isDark ? AppColors.border_dark : AppColors.border_light,
-          ),
+          color: AppColors.blog_card_decoration_color(isDark),
+          border: Border.all(color: AppColors.blog_card_border_color(isDark)),
           borderRadius: BorderRadius.all(Radius.circular(AppSpacing.space_4)),
           boxShadow: [
             BoxShadow(
-              color: isDark ? AppColors.shadow_dark : AppColors.shadow_light,
+              color: AppColors.blog_card_box_shadow_color(isDark),
               blurRadius: AppSpacing.space_4,
               spreadRadius: AppSpacing.space_1,
             ),
@@ -194,7 +183,7 @@ class BlogCard extends StatelessWidget {
         Container(
           height: AppSpacing.space_100,
           width: double.infinity,
-          color: isDark ? AppColors.surface_dark : AppColors.surface_light,
+          color: AppColors.blog_card_empty_image_color(isDark),
           child: const Icon(Icons.image, size: AppSpacing.space_50),
         ),
 
