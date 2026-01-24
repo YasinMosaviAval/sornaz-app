@@ -487,119 +487,21 @@ class AppTypography {
     return baseSize + appData.fontSize;
   }
 
+  static FontWeight _responsiveFontWeight(
+    BuildContext context,
+    FontWeight baseWeight,
+  ) {
+    final appData = Provider.of<AppData>(context, listen: false);
 
-  static FontWeight newWeight = FontWeight.w400;
+    final base = baseWeight.index * 100 + 100; 
+    // w400.index = 3 → 400
 
-  static FontWeight _responsiveFontWeight(BuildContext context, FontWeight baseWeight) {
-    final appData = Provider.of<AppData>(context);
-    // if(appData.fontWeight == -2) newWight = FontWeight.w00
-    // else if(appData.fontWeight == -1) newWight = FontWeight.w00
-    // else if(appData.fontWeight == 0) newWight = FontWeight.w00
-    // else if(appData.fontWeight == 1) newWight = FontWeight.w00
-    // else if(appData.fontWeight == 2) newWight = FontWeight.w00
+    final adjusted = base + (appData.fontWeight * 100);
 
-    // ignore: exhaustive_cases
-    switch (baseWeight) {
-      case FontWeight.w700:
-        switch (appData.fontWeight) {
-          case -2:
-            newWeight = FontWeight.w500;
-            break;
-          case -1:
-            newWeight = FontWeight.w600;
-            break; 
-          case 0:
-            newWeight = FontWeight.w700;
-            break;
-          case 1:
-            newWeight = FontWeight.w800;
-            break;
-          case 1:
-            newWeight = FontWeight.w900;
-            break;
-        }
-        break;
-      case FontWeight.w600:
-        switch (appData.fontWeight) {
-          case -2:
-            newWeight = FontWeight.w400;
-            break;
-          case -1:
-            newWeight = FontWeight.w500;
-            break; 
-          case 0:
-            newWeight = FontWeight.w600;
-            break;
-          case 1:
-            newWeight = FontWeight.w700;
-            break;
-          case 1:
-            newWeight = FontWeight.w800;
-            break;
-        }
-        break; 
-      case FontWeight.w500:
-        switch (appData.fontWeight) {
-          case -2:
-            newWeight = FontWeight.w300;
-            break;
-          case -1:
-            newWeight = FontWeight.w400;
-            break; 
-          case 0:
-            newWeight = FontWeight.w500;
-            break;
-          case 1:
-            newWeight = FontWeight.w600;
-            break;
-          case 1:
-            newWeight = FontWeight.w700;
-            break;
-        }
-        break;
-      case FontWeight.w400:
-        switch (appData.fontWeight) {
-          case -2:
-            newWeight = FontWeight.w200;
-            break;
-          case -1:
-            newWeight = FontWeight.w300;
-            break; 
-          case 0:
-            newWeight = FontWeight.w400;
-            break;
-          case 1:
-            newWeight = FontWeight.w500;
-            break;
-          case 1:
-            newWeight = FontWeight.w600;
-            break;
-        }
-        break;
-      case FontWeight.w300:
-        switch (appData.fontWeight) {
-          case -2:
-            newWeight = FontWeight.w100;
-            break;
-          case -1:
-            newWeight = FontWeight.w200;
-            break; 
-          case 0:
-            newWeight = FontWeight.w300;
-            break;
-          case 1:
-            newWeight = FontWeight.w400;
-            break;
-          case 1:
-            newWeight = FontWeight.w500;
-            break;
-        }
-        break;
-    }
-    return newWeight;
+    final clamped = adjusted.clamp(100, 900);
+
+    return FontWeight.values[(clamped ~/ 100) - 1];
   }
-
-
 
   // ================================================================================================================================
   // ================================================================================================================================

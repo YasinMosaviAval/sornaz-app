@@ -90,13 +90,6 @@ class SettingsPage extends StatelessWidget {
                       divisions: 4,
                       onChanged: appData.updateFontSize,
                     ),
-                    
-
-
-
-
-
-
                     ListTile(
                       title: Text(
                         AppStrings.font_weight.translate(context),
@@ -130,31 +123,11 @@ class SettingsPage extends StatelessWidget {
                       inactiveColor: AppColors.settings_slider_inactive_color(isDark: isDark),
                       label: appData.fontWeight.toInt().toString(),
                       value: appData.fontWeight,
-                      min: -2,
-                      max: 2,
-                      divisions: 4,
+                      min: 0,
+                      max: 5,
+                      divisions: 5,
                       onChanged: appData.updateFontWeight,
                     ),
-                    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                     ListTile(
                       title: Text(
                         AppStrings.select_font_title.translate(context),
@@ -220,7 +193,6 @@ class SettingsPage extends StatelessWidget {
                       ),
                       
                     ),
-                    
                   ],
                 ),
                 AppSpacing.sizedBoxH16(),
