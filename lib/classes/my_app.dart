@@ -6,12 +6,12 @@ import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/main.dart';
-import 'package:sornaz/screens/Onboarding/splash.dart';
-import 'package:sornaz/screens/Others/about_us.dart';
-import 'package:sornaz/screens/Others/settings.dart';
-import 'package:sornaz/screens/Players/music_palyer.dart';
-import 'package:sornaz/screens/home/home.dart';
+import 'package:sornaz/screens/Home/ui/pages/home.dart';
+import 'package:sornaz/screens/Onboarding/ui/pages/splash.dart';
+import 'package:sornaz/screens/Others/ui/pages/about_us.dart';
+import 'package:sornaz/screens/Others/ui/pages/settings.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:sornaz/screens/Players/ui/pages/music_palyer.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

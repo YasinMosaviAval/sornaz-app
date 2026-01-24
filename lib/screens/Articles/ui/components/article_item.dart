@@ -8,7 +8,7 @@ import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/helpers/app_functions.dart';
 import 'package:sornaz/helpers/app_navigation.dart';
-import 'package:sornaz/screens/Articles/ui/screens/article_detail_page.dart';
+import 'package:sornaz/screens/Articles/ui/pages/article_detail_page.dart';
 
 class ArticleItemWidget extends StatelessWidget {
   const ArticleItemWidget({
