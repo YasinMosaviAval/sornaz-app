@@ -277,3 +277,6 @@ flutter:
           weight: 800
         - asset: assets/fonts/vazir_en/black.ttf
           weight: 900
+
+dependency_overrides:
+  html: 0.15.6

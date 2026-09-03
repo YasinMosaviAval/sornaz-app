@@ -1,5 +1,6 @@
 allprojects {
     repositories {
+        maven { url = uri('https://maven.aliyun.com/repository/google') }
         google()
         mavenCentral()
     }
@@ -8,6 +9,7 @@ allprojects {
 buildscript {
     ext.kotlin_version = '2.1.20'
     repositories {
+        maven { url = uri('https://maven.aliyun.com/repository/google') }
         google()
         mavenCentral()
     }
