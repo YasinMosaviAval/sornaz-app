@@ -1179,7 +1179,7 @@ https://www.youtube.com/@sornaz.academy
 
 📱 شبکه‌های اجتماعی:
 
-https://www.instagram.com/direct/t/17844708771473835/
+https://www.instagram.com/sornaz.ac/
 
 https://www.youtube.com/@sornaz.academy
 
