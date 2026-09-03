@@ -1,7 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:sornaz/helpers/app_strings.dart';
-import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/screens/Players/cache/audio_cache_factory.dart';
 import 'package:sornaz/screens/Players/scan/audio_file.dart';
 import 'package:sornaz/screens/Players/scan/audio_file_loader.dart';
@@ -22,13 +20,14 @@ class AudioLibraryManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadOrScan({required BuildContext context}) async {
+  Future<void> loadOrScan() async {
     if (roots.isEmpty) return;
 
     isLoadingFromCache = false;
     isScanning = true;
     progress = 0.0;
-    currentPath = AppStrings.audio_library_manager_preparing.translate(context);
+    currentPath = 'در حال آماده‌سازی...';
+    // currentPath = AppStrings.audio_library_manager_preparing.translate(context);
     notifyListeners();
 
     try {
@@ -39,8 +38,9 @@ class AudioLibraryManager extends ChangeNotifier {
         allFiles = cachedFiles;
         isScanning = false;
         progress = 1.0;
-        if(!context.mounted) return;
-        currentPath = AppStrings.audio_library_manager_fininshed_loading_from_memory.translate(context);
+        // if(!context.mounted) return;
+        currentPath = 'بارگذاری از حافظه تکمیل شد';
+        // currentPath = AppStrings.audio_library_manager_fininshed_loading_from_memory.translate(context);
         notifyListeners();
         return;
       }
@@ -48,8 +48,9 @@ class AudioLibraryManager extends ChangeNotifier {
       progress = 0.0;
       scannedFiles = 0;
       totalFiles = 0;
-      if(!context.mounted) return;
-      currentPath = AppStrings.audio_library_manager_calculating_audio_files.translate(context);
+      // if(!context.mounted) return;
+      currentPath = 'در حال شمارش فایل‌ها...';
+      // currentPath = AppStrings.audio_library_manager_calculating_audio_files.translate(context);
       notifyListeners();
       await AudioFileLoader.scanWithIsolate(
         roots: roots,
@@ -72,8 +73,9 @@ class AudioLibraryManager extends ChangeNotifier {
     } catch (e) {
       isScanning = false;
       progress = 0.0;
-      if(!context.mounted) return;
-      currentPath = AppStrings.audio_library_manager_error_in_loading.translate(context);
+      // if(!context.mounted) return;
+      currentPath = 'خطا در بارگذاری';
+      // currentPath = AppStrings.audio_library_manager_error_in_loading.translate(context);
       notifyListeners();
     }
   }

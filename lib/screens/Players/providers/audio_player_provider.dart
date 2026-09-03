@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide RepeatMode;
 import 'package:metadata_god/metadata_god.dart';
 import 'package:sornaz/main.dart';
 import 'package:sornaz/screens/Players/controller/audio_player_controller.dart';

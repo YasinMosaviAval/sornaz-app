@@ -75,7 +75,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
           }
         }
       } catch (e) {
-        loggingSornaz(" ////////////////// ");
+        loggingSornaz(" ============= ");
       }
     }
 
@@ -86,7 +86,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
 
     if (!mounted) return;
 
-    await libraryManager.loadOrScan(context: context);
+    await libraryManager.loadOrScan();
 
     if (availableRoots.isNotEmpty) {
       await folderNav.startRealNavigation(availableRoots.first);
