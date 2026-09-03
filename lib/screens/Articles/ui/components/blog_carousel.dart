@@ -14,8 +14,7 @@ import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/screens/Articles/ui/pages/article_detail_page.dart';
 import 'package:sornaz/screens/Articles/ui/pages/articles_page.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:sornaz/screens/Articles/services/article_api_service.dart';
 
 
 
@@ -245,12 +244,9 @@ class BlogInformation extends StatelessWidget {
 
 // فانکشن برای گرفتن ۱۰ پست آخر
 Future<List<dynamic>> fetchRecentPosts(BuildContext context) async {
-  final response = await http.get(
-    Uri.parse('https://sornaz.com/wp-json/wp/v2/posts?per_page=10&_embed'),
-  );
-  if (response.statusCode == 200) {
-    return json.decode(response.body);
-  } else {
+  try {
+    return await ArticleApiService.fetchPosts(page: 1);
+  } catch (_) {
     throw Exception(AppStrings.failed_to_load_posts.translate(context));
   }
 }
