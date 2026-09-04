@@ -1,5 +1,7 @@
 allprojects {
     repositories {
+        // Flutter engine artifacts cached locally for reliable/offline builds.
+        maven { url = uri("$rootDir/offline-maven") }
         maven { url = uri('https://maven.aliyun.com/repository/google') }
         google()
         mavenCentral()
