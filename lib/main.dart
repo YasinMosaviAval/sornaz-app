@@ -5,6 +5,7 @@ import 'package:sornaz/helpers/app_data.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/screens/Articles/provider/articles_provider.dart';
+import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 import 'package:sornaz/screens/Players/cache/audio_cache_factory.dart';
 import 'package:sornaz/screens/Players/library/audio_library_manager.dart';
 import 'package:sornaz/screens/Players/providers/audio_player_provider.dart';
@@ -37,10 +38,19 @@ void main() async {
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ChangeNotifierProvider(create: (_) => TunerProvider()..start()),
         ChangeNotifierProvider(create: (_) => ArticlesProvider()),
+        ChangeNotifierProvider(create: (_) => AuthSession()..restore()),
         ChangeNotifierProvider(create: (_) => FolderNavigatorProvider()),
         ChangeNotifierProvider(create: (_) => libraryManager),
-        ChangeNotifierProvider(create: (_) => AudioPlayerProvider(libraryManager: libraryManager),),
-        ChangeNotifierProvider(create: (_) => VoiceRecorderProvider(FileService(), RecordingService(), PlaybackService())..init()),
+        ChangeNotifierProvider(
+          create: (_) => AudioPlayerProvider(libraryManager: libraryManager),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => VoiceRecorderProvider(
+            FileService(),
+            RecordingService(),
+            PlaybackService(),
+          )..init(),
+        ),
       ],
       child: const MyApp(),
     ),

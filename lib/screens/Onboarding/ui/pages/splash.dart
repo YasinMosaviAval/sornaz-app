@@ -3,11 +3,14 @@ import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_images.dart';
-import 'package:sornaz/helpers/app_spacing.dart';
 import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:sornaz/screens/Authentication/ui/pages/authentication.dart';
+import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 import 'package:sornaz/screens/Articles/ui/pages/articles_page.dart';
-
+import 'package:sornaz/screens/Onboarding/ui/pages/onboarding.dart';
+import 'package:sornaz/screens/Onboarding/ui/pages/startup_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -20,11 +23,25 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Timer(const Duration(seconds: 2), () {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const ArticlesPage()),
-      );
-    });
+    Timer(const Duration(seconds: 1), _continueToApp);
+  }
+
+  Future<void> _continueToApp() async {
+    final preferences = await SharedPreferences.getInstance();
+    final onboardingCompleted =
+        preferences.getBool(OnboardingScreen.completedPreferenceKey) ?? false;
+    if (!mounted) return;
+    final authenticated =
+        context.read<AuthSession?>()?.isAuthenticated ?? false;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => !onboardingCompleted
+            ? const StartupPreferencesScreen()
+            : authenticated
+            ? const ArticlesPage()
+            : const SignInScreen(),
+      ),
+    );
   }
 
   @override
@@ -37,8 +54,8 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Image.asset(
           isDark ? AppImages.logo_dark : AppImages.logo_light,
           fit: BoxFit.contain,
-          width: AppSpacing.space_300,
-          height: AppSpacing.space_300,
+          width: 90,
+          height: 154,
         ),
       ),
     );
