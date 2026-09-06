@@ -1,10 +1,10 @@
+import 'package:sornaz/components/app_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/bottom_nav.dart';
 import 'package:sornaz/helpers/app_data.dart';
-import 'package:sornaz/helpers/app_images.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
-import 'package:sornaz/screens/Articles/services/article_api_service.dart';
+import 'package:sornaz/screens/Articles/provider/articles_provider.dart';
 import 'package:sornaz/screens/Articles/ui/pages/article_detail_page.dart';
 import 'package:sornaz/screens/Articles/ui/pages/articles_page.dart';
 import 'package:sornaz/screens/Home/ui/components/app_drawer.dart';
@@ -65,7 +65,13 @@ class _HomeContentState extends State<HomeContent> {
   }
 
   Future<void> load() async {
-    await Future.wait([loadCourses(), loadArticles()]);
+    await Future.wait([
+      loadCourses(),
+      loadArticles(),
+      if (widget.articleLoader == null &&
+          context.read<ArticlesProvider?>() != null)
+        context.read<ArticlesProvider>().synchronize(),
+    ]);
     if (mounted) setState(() => loading = false);
   }
 
@@ -87,7 +93,9 @@ class _HomeContentState extends State<HomeContent> {
     try {
       final rows =
           await (widget.articleLoader?.call() ??
-              ArticleApiService.fetchPosts(page: 1));
+              Future.value(
+                context.read<ArticlesProvider?>()?.allPosts ?? <Json>[],
+              ));
       if (mounted)
         setState(() {
           articles = objects(rows);
@@ -169,9 +177,13 @@ class _HomeContentState extends State<HomeContent> {
         .toList();
     final updated = [...filtered]
       ..sort((a, b) => '${b['updated_at']}'.compareTo('${a['updated_at']}'));
-    final blogs = articles
-        .where((p) => title(p).toLowerCase().contains(query.toLowerCase()))
-        .toList();
+    final library = context.watch<ArticlesProvider?>();
+    final blogs =
+        (widget.articleLoader == null && library != null
+                ? library.allPosts
+                : articles)
+            .where((p) => title(p).toLowerCase().contains(query.toLowerCase()))
+            .toList();
     final people = authors
         .where(
           (a) => '${a['name']}'.toLowerCase().contains(query.toLowerCase()),
@@ -186,10 +198,7 @@ class _HomeContentState extends State<HomeContent> {
             automaticallyImplyLeading: false,
             title: Align(
               alignment: AlignmentDirectional.centerStart,
-              child: Image.asset(
-                dark ? AppImages.logo_dark : AppImages.logo_light,
-                height: 34,
-              ),
+              child: AppLogo(size: 40, withBackground: false),
             ),
             actions: [
               Builder(

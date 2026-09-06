@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
-import 'package:sornaz/helpers/app_navigation.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 
@@ -25,15 +24,20 @@ class AppDrawerItem extends StatelessWidget {
     final appData = Provider.of<AppData>(context);
     final bool isDark = appData.isDark;
     return ListTile(
+      minTileHeight: 44,
       leading: Icon(icon),
       iconColor: AppColors.app_drawer_item_icon_color(isDark: isDark),
       title: Text(text, style: AppTypography.appDrawerItemTitle(context)),
       trailing: message == ''
           ? SizedBox()
           : Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_8),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.space_8,
+              ),
               decoration: BoxDecoration(
-                color: AppColors.app_drawer_item_message_box_decoration_color(isDark: isDark),
+                color: AppColors.app_drawer_item_message_box_decoration_color(
+                  isDark: isDark,
+                ),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -41,7 +45,11 @@ class AppDrawerItem extends StatelessWidget {
                 style: AppTypography.appDrawerItemsubtitle(context),
               ),
             ),
-      onTap: () => navigateWithFade(context, link),
+      onTap: () {
+        final navigator = Navigator.of(context);
+        navigator.pop();
+        navigator.push(MaterialPageRoute(builder: (_) => link));
+      },
     );
   }
 }

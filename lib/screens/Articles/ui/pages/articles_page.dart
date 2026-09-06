@@ -1,3 +1,4 @@
+import 'package:sornaz/screens/Articles/ui/components/article_progress.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -22,16 +23,23 @@ class ArticlesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
-    
-    final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
-    final isEnglish = localeProvider.locale.languageCode == AppConstants.LOCALIZATION_EN;
+
+    final localeProvider = Provider.of<LocaleProvider>(context);
+    final isEnglish =
+        localeProvider.locale.languageCode == AppConstants.LOCALIZATION_EN;
 
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: AppColors.articles_page_app_bar_background_color(isDark: isDark),
+          backgroundColor: AppColors.articles_page_app_bar_background_color(
+            isDark: isDark,
+          ),
           elevation: 0,
+          flexibleSpace: ArticleProgressBackground(
+            progress: context.read<ArticlesProvider>().progress,
+            isDark: isDark,
+          ),
           automaticallyImplyLeading: false,
           titleSpacing: AppSpacing.space_16,
           leading: HeaderMenuIcon(isDark: isDark),
@@ -46,11 +54,11 @@ class ArticlesPage extends StatelessWidget {
           color: AppColors.articles_page_body_background_color(isDark: isDark),
           child: Consumer<ArticlesProvider>(
             builder: (context, provider, _) {
-              if (provider.isLoading && provider.posts.isEmpty) {
+              if (provider.isLoading && provider.allPosts.isEmpty) {
                 return const Center(child: CircularProgressIndicator());
               }
-          
-              if (provider.hasError && provider.posts.isEmpty) {
+
+              if (provider.hasError && provider.allPosts.isEmpty) {
                 return Center(
                   child: Text(
                     AppStrings.error_in_loading.translate(context),
@@ -58,9 +66,9 @@ class ArticlesPage extends StatelessWidget {
                   ),
                 );
               }
-          
+
               return RefreshIndicator(
-                onRefresh: provider.loadInitial,
+                onRefresh: provider.refreshArticles,
                 child: ArticlesListWidget(
                   scrollController: provider.scrollController,
                   posts: provider.posts,
@@ -72,7 +80,7 @@ class ArticlesPage extends StatelessWidget {
             },
           ),
         ),
-        bottomNavigationBar: const BottomNavBarWidget(selectedIndex:3),
+        bottomNavigationBar: const BottomNavBarWidget(selectedIndex: 3),
       ),
     );
   }

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:sornaz/helpers/app_colors.dart';
-import 'package:sornaz/helpers/app_constants.dart';
-import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
@@ -17,23 +15,26 @@ class ArticlesListWidget extends StatelessWidget {
     required this.isDark,
     required this.provider,
   });
-
   final ScrollController scrollController;
   final List<dynamic> posts;
-  final bool isLoadingMore;
-  final bool isDark;
+  final bool isLoadingMore, isDark;
   final ArticlesProvider provider;
-
   @override
   Widget build(BuildContext context) {
+    final filters = [
+      {'id': null, 'name': AppStrings.all.translate(context)},
+      ...provider.categories,
+    ];
     return ListView.builder(
+      key: const Key('article-list'),
       controller: scrollController,
-      itemCount: posts.length + 3 + (isLoadingMore ? 1 : 0),
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.only(bottom: 16),
+      itemCount: posts.length + 3,
       itemBuilder: (context, index) {
-        // 0 → Search
         if (index == 0) {
           return Padding(
-            padding: const EdgeInsets.all(AppSpacing.space_16),
+            padding: const EdgeInsets.all(16),
             child: TextField(
               onChanged: provider.updateSearchQuery,
               decoration: InputDecoration(
@@ -46,72 +47,72 @@ class ArticlesListWidget extends StatelessWidget {
             ),
           );
         }
-    
-        // 1 → Categories
         if (index == 1) {
-          if (provider.categories.isEmpty) {
-            return const SizedBox.shrink();
-          }
-    
-          return SizedBox(
-            height: 56,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: provider.categories.length,
-              itemBuilder: (context, i) {
-                final cat = provider.categories[i][AppConstants.NAME];
-                final isSelected = cat == provider.selectedCategory;
-    
-                return GestureDetector(
-                  onTap: () => provider.updateCategory(cat),
-                  child: Container(
-                    margin: EdgeInsets.fromLTRB(
-                      i == provider.categories.length - 1 ? AppSpacing.space_16 : AppSpacing.space_0,
-                      AppSpacing.space_8,
-                      AppSpacing.space_16,
-                      AppSpacing.space_8
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_12, vertical: AppSpacing.space_8),
-                    decoration: BoxDecoration(
-                      color: isSelected 
-                        ? AppColors.article_list_selected_box_decoration_color(isDark: isDark)
-                        : AppColors.article_list_unselected_box_decoration_color(isDark: isDark),
-                      borderRadius: BorderRadius.circular(AppSpacing.space_4),
-                    ),
-                    child: Center(
-                      child: Text(
-                        cat,
-                        style: isSelected 
-                          ? AppTypography.articlesListSelectedCategory(context)
-                          : AppTypography.articlesListUnselectedCategory(context),
+          return SingleChildScrollView(
+            key: const Key('article-filters'),
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                for (var i = 0; i < filters.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(4),
+                      onTap: () => provider.updateCategory(
+                        filters[i]['id']?.toString() ?? AppStrings.all,
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          color: filters[i]['id'] == provider.selectedCategoryId
+                              ? AppColors.article_list_selected_box_decoration_color(
+                                  isDark: isDark,
+                                )
+                              : AppColors.article_list_unselected_box_decoration_color(
+                                  isDark: isDark,
+                                ),
+                        ),
+                        child: Text(
+                          '${filters[i]['name']}',
+                          style: filters[i]['id'] == provider.selectedCategoryId
+                              ? AppTypography.articlesListSelectedCategory(
+                                  context,
+                                )
+                              : AppTypography.articlesListUnselectedCategory(
+                                  context,
+                                ),
+                        ),
                       ),
                     ),
                   ),
-                );
-              },
+                ],
+              ],
             ),
           );
         }
-    
-        // 2 → Spacer
         if (index == 2) {
-          return const SizedBox(height: 8);
+          return posts.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(
+                    provider.locale == 'en'
+                        ? 'No articles match this filter.'
+                        : 'مقاله‌ای با این فیلتر پیدا نشد.',
+                  ),
+                )
+              : const SizedBox(height: 8);
         }
-    
-        // offset for articles
-        final articleIndex = index - 3;
-    
-        // loading more
-        if (articleIndex == posts.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
-    
-        final post = posts[articleIndex];
-    
-        return ArticleItemWidget(post: post, isDark: isDark);
+        return ArticleItemWidget(
+          key: ValueKey(posts[index - 3]['id']),
+          post: Map<String, dynamic>.from(posts[index - 3]),
+          isDark: isDark,
+        );
       },
     );
   }

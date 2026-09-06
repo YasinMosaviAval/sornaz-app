@@ -1,10 +1,13 @@
+import 'package:sornaz/components/app_logo.dart';
+import 'package:flutter/cupertino.dart' show CupertinoSwitch;
 import 'package:flutter/material.dart';
-import 'package:sornaz/screens/Social/user_panel.dart';
+import 'package:sornaz/screens/Home/ui/pages/home.dart';
+import 'package:sornaz/components/drawer_theme.dart';
+import 'package:sornaz/screens/Others/ui/pages/share_app.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/app_drawer_item.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
-import 'package:sornaz/helpers/app_images.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
@@ -13,7 +16,6 @@ import 'package:sornaz/screens/Others/ui/pages/settings.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 import 'package:sornaz/screens/Authentication/ui/pages/authentication.dart';
 import 'package:sornaz/screens/Others/ui/pages/support_pages.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -22,201 +24,312 @@ class AppDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
-    final authUser = context.watch<AuthSession>().user;
-    return Drawer(
-      backgroundColor: AppColors.app_drawer_background_color(isDark: isDark),
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          UserAccountsDrawerHeader(
-            accountName: Text(
-              authUser?.fullName ??
-                  AppStrings.application_fullname.translate(context),
-              style: AppTypography.appDrawerApplicationFullname(context),
-            ),
-            accountEmail: Text(
-              authUser?.contact ??
-                  AppStrings.application_email.translate(context),
-              style: AppTypography.appDrawerApplicationEmail(context),
-            ),
-            currentAccountPicture: SizedBox(
-              child: Image.asset(
-                isDark ? AppImages.logo_dark : AppImages.logo_light,
+    final session = context.watch<AuthSession>();
+    final authUser = session.user;
+    return DrawerThemeScope(
+      child: Drawer(
+        shape: const RoundedRectangleBorder(),
+        backgroundColor: isDark ? Colors.black : Colors.white,
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Row(
+                            children: [
+                              ClipOval(
+                                child: AppLogo(size: 48, withBackground: true),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      authUser?.fullName ??
+                                          AppStrings.application_fullname
+                                              .translate(context),
+                                      style:
+                                          AppTypography.appDrawerApplicationFullname(
+                                            context,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      authUser?.contact ??
+                                          AppStrings.application_email
+                                              .translate(context),
+                                      style:
+                                          AppTypography.appDrawerApplicationEmail(
+                                            context,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Ink(
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? const Color(0xff111111)
+                                  : const Color(0xfff7f7f7),
+                              border: Border.all(
+                                color: isDark ? Colors.white12 : Colors.black12,
+                              ),
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'حالت تاریک',
+                                          style:
+                                              AppTypography.appDrawerItemTitle(
+                                                context,
+                                              ),
+                                        ),
+                                        Text(
+                                          'نمایش برنامه با تم تاریک',
+                                          style:
+                                              AppTypography.appDrawerApplicationEmail(
+                                                context,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Transform.scale(
+                                    scale: 0.8,
+                                    child: CupertinoSwitch(
+                                      activeTrackColor: isDark
+                                          ? const Color(0xffbfa02a)
+                                          : const Color(0xff3478ff),
+                                      value: isDark,
+                                      onChanged: appData.toggleDarkMode,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.fromLTRB(20, 16, 20, 4),
+                          child: Text('برنامه'),
+                        ),
+                        AppDrawerItem(
+                          icon: Icons.info,
+                          text: AppStrings.about_us_title.translate(context),
+                          link: AboutUsPage(),
+                        ),
+                        AppDrawerItem(
+                          icon: Icons.bookmark_border,
+                          text: 'نشان‌شده‌ها',
+                          link: const SimpleInfoPage(
+                            title: 'نشان‌شده‌ها',
+                            icon: Icons.bookmark_border,
+                            body:
+                                'محتواهایی که نشان می‌کنید در این بخش نمایش داده می‌شوند.',
+                          ),
+                        ),
+                        const AppDrawerItem(
+                          icon: Icons.share_outlined,
+                          text: 'اشتراک‌گذاری برنامه',
+                          link: ShareAppPage(),
+                        ),
+                        AppDrawerItem(
+                          icon: Icons.help_outline,
+                          text: 'پرسش‌های متداول',
+                          link: const FaqPage(),
+                        ),
+                        AppDrawerItem(
+                          icon: Icons.settings,
+                          text: AppStrings.settings_title.translate(context),
+                          link: SettingsPage(),
+                        ),
+                        AppDrawerItem(
+                          icon: Icons.emoji_events_outlined,
+                          text: 'دستاوردها',
+                          link: const SimpleInfoPage(
+                            title: 'دستاوردها',
+                            icon: Icons.emoji_events_outlined,
+                            body:
+                                'دستاوردها و روند پیشرفت آموزشی شما در این بخش نمایش داده می‌شود.',
+                          ),
+                        ),
+                        AppDrawerItem(
+                          icon: Icons.privacy_tip_outlined,
+                          text: 'حریم خصوصی',
+                          link: const SimpleInfoPage(
+                            title: 'حریم خصوصی',
+                            icon: Icons.privacy_tip_outlined,
+                            body:
+                                'اطلاعات شخصی کاربران محرمانه نگهداری می‌شود و جز در موارد قانونی یا با رضایت کاربر در اختیار شخص ثالث قرار نمی‌گیرد.',
+                          ),
+                        ),
+                        const Divider(),
+                        const Padding(
+                          padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
+                          child: Text(
+                            'جامعه',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ),
+                        AppDrawerItem(
+                          icon: Icons.rate_review_outlined,
+                          text: 'تماس با ما',
+                          link: const ContactUsPage(),
+                        ),
+                        AppDrawerItem(
+                          icon: Icons.card_membership_outlined,
+                          text: 'عضویت',
+                          link: const SimpleInfoPage(
+                            title: 'عضویت',
+                            icon: Icons.card_membership_outlined,
+                            body:
+                                'جزئیات عضویت و خدمات حساب شما پس از فعال شدن طرح‌های عضویت اینجا قرار می‌گیرد.',
+                          ),
+                        ),
+                      ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Ink(
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? const Color(0xff111111)
+                              : const Color(0xfff7f7f7),
+                          border: Border.all(
+                            color: isDark ? Colors.white12 : Colors.black12,
+                          ),
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.all(12),
+                              child: Text('حساب من'),
+                            ),
+                            ListTile(
+                              textColor: isDark
+                                  ? const Color(0xffbfa02a)
+                                  : const Color(0xff3478ff),
+                              title: Text(
+                                authUser == null
+                                    ? 'ورود یا ثبت‌نام'
+                                    : 'ورود با حساب دیگر',
+                              ),
+                              onTap: session.isChanging
+                                  ? null
+                                  : () => _accounts(context),
+                            ),
+                            if (authUser != null)
+                              ListTile(
+                                textColor: AppColors.error,
+                                title: const Text('خروج از حساب'),
+                                onTap: session.isChanging
+                                    ? null
+                                    : () async {
+                                        final session = context
+                                            .read<AuthSession>();
+                                        await session.clear();
+                                        if (context.mounted) _home(context);
+                                      },
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            decoration: BoxDecoration(
-              color: AppColors.app_drawer_box_decoration_color(isDark: isDark),
-            ),
           ),
-          SwitchListTile(
-            // Theme preference also applies to the social panel.
-            secondary: const Icon(Icons.dark_mode_outlined),
-            title: const Text('حالت تاریک'),
-            subtitle: const Text('نمایش برنامه با تم تاریک'),
-            value: isDark,
-            onChanged: appData.toggleDarkMode,
-          ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Text(
-              'برنامه',
-              style: TextStyle(fontSize: 11, color: Colors.grey),
-            ),
-          ),
-          AppDrawerItem(
-            icon: Icons.person_outline,
-            text: 'پنل کاربری و پروفایل',
-            link: const UserPanelPage(),
-          ),
-          AppDrawerItem(
-            icon: Icons.info,
-            text: AppStrings.about_us_title.translate(context),
-            link: AboutUsPage(),
-          ),
-          AppDrawerItem(
-            icon: Icons.bookmark_border,
-            text: 'نشان‌شده‌ها',
-            link: const SimpleInfoPage(
-              title: 'نشان‌شده‌ها',
-              icon: Icons.bookmark_border,
-              body: 'محتواهایی که نشان می‌کنید در این بخش نمایش داده می‌شوند.',
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.share_outlined),
-            title: const Text('اشتراک‌گذاری برنامه'),
-            onTap: () => launchUrl(
-              Uri.parse('https://sornaz.com'),
-              mode: LaunchMode.externalApplication,
-            ),
-          ),
-          AppDrawerItem(
-            icon: Icons.help_outline,
-            text: 'پرسش‌های متداول',
-            link: const FaqPage(),
-          ),
-          AppDrawerItem(
-            icon: Icons.settings,
-            text: AppStrings.settings_title.translate(context),
-            link: SettingsPage(),
-          ),
-          AppDrawerItem(
-            icon: Icons.emoji_events_outlined,
-            text: 'دستاوردها',
-            link: const SimpleInfoPage(
-              title: 'دستاوردها',
-              icon: Icons.emoji_events_outlined,
-              body:
-                  'دستاوردها و روند پیشرفت آموزشی شما در این بخش نمایش داده می‌شود.',
-            ),
-          ),
-          AppDrawerItem(
-            icon: Icons.privacy_tip_outlined,
-            text: 'حریم خصوصی',
-            link: const SimpleInfoPage(
-              title: 'حریم خصوصی',
-              icon: Icons.privacy_tip_outlined,
-              body:
-                  'اطلاعات شخصی کاربران محرمانه نگهداری می‌شود و جز در موارد قانونی یا با رضایت کاربر در اختیار شخص ثالث قرار نمی‌گیرد.',
-            ),
-          ),
-          const Divider(),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
-            child: Text(
-              'جامعه',
-              style: TextStyle(fontSize: 11, color: Colors.grey),
-            ),
-          ),
-          AppDrawerItem(
-            icon: Icons.rate_review_outlined,
-            text: 'ارسال بازخورد',
-            link: const ContactUsPage(feedback: true),
-          ),
-          AppDrawerItem(
-            icon: Icons.contact_support_outlined,
-            text: 'تماس با ما',
-            link: const ContactUsPage(),
-          ),
-          AppDrawerItem(
-            icon: Icons.card_membership_outlined,
-            text: 'عضویت',
-            link: const SimpleInfoPage(
-              title: 'عضویت',
-              icon: Icons.card_membership_outlined,
-              body:
-                  'جزئیات عضویت و خدمات حساب شما پس از فعال شدن طرح‌های عضویت اینجا قرار می‌گیرد.',
-            ),
-          ),
-          const Divider(),
-          if (authUser == null)
-            ListTile(
-              leading: const Icon(Icons.login),
-              title: const Text('ورود یا ثبت‌نام'),
-              onTap: () => Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => const SignInScreen()),
-                (_) => false,
-              ),
-            )
-          else ...[
-            ListTile(
-              leading: const Icon(Icons.switch_account_outlined),
-              title: const Text('ورود با حساب دیگر'),
-              onTap: () async {
-                await context.read<AuthSession>().clear();
-                if (context.mounted)
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (_) => const SignInScreen()),
-                    (_) => false,
-                  );
-              },
-            ),
-            ListTile(
-              textColor: AppColors.error,
-              iconColor: AppColors.error,
-              leading: const Icon(Icons.logout),
-              title: const Text('خروج از حساب'),
-              onTap: () async {
-                await context.read<AuthSession>().clear();
-                if (context.mounted)
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (_) => const SignInScreen()),
-                    (_) => false,
-                  );
-              },
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }
+
+  void _home(BuildContext context) {
+    context.read<AppData>().setBottomNavIndex(0);
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const HomePage()),
+      (_) => false,
+    );
+  }
+
+  Future<void> _accounts(BuildContext context) async {
+    final session = context.read<AuthSession>();
+    final navigator = Navigator.of(context);
+    final selection = await showModalBottomSheet<int>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => DrawerThemeScope(
+        child: Builder(
+          builder: (context) => Material(
+            color: Theme.of(context).colorScheme.surface,
+            child: SafeArea(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Text('حساب‌های کاربری'),
+                    ),
+                    for (final account in session.accounts)
+                      ListTile(
+                        leading: const Icon(Icons.account_circle_outlined),
+                        title: Text(account.fullName),
+                        subtitle: Text(account.contact),
+                        trailing: account.id == session.user?.id
+                            ? const Icon(Icons.check)
+                            : null,
+                        onTap: () => Navigator.pop(context, account.id),
+                      ),
+                    ListTile(
+                      leading: const Icon(Icons.person_add_alt),
+                      title: const Text('افزودن حساب کاربری'),
+                      onTap: () => Navigator.pop(context, -1),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    if (selection == null || !context.mounted) return;
+    if (selection == -1) {
+      navigator.pop();
+      navigator.push(MaterialPageRoute(builder: (_) => const SignInScreen()));
+    } else {
+      await session.switchTo(selection);
+      if (context.mounted) _home(context);
+    }
+  }
 }
-
-// class SwitchAcountItem extends StatelessWidget {
-//   const SwitchAcountItem({required this.text, required this.color, super.key});
-
-//   final String text;
-//   final Color color;
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return ListTile(
-//       title: Text(text, style: AppTypography.appDrawerSwitchAcountItem),
-//       onTap: () {},
-//     );
-//   }
-// }
-
-// class HeaderItemPart extends StatelessWidget {
-//   const HeaderItemPart({required this.text, super.key});
-
-//   final String text;
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Padding(
-//       padding: EdgeInsets.symmetric(horizontal: AppSpacing.space_16),
-//       child: Text(text, style: AppTypography.appDrawerHeaderItemPart),
-//     );
-//   }
-// }

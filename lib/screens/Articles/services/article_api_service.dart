@@ -1,113 +1,132 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:sornaz/helpers/app_constants.dart';
+
+class ArticleApiException implements Exception {
+  const ArticleApiException(this.message, this.status);
+  final String message;
+  final int status;
+  @override
+  String toString() => message;
+}
 
 class ArticleApiService {
-  static const String _baseUrl = String.fromEnvironment(
+  ArticleApiService({http.Client? client}) : client = client ?? http.Client();
+  final http.Client client;
+  static const baseUrl = String.fromEnvironment(
     'SORNAZ_API_BASE_URL',
     defaultValue: 'https://sornaz.com/api/sornaz/v1',
   );
-
-  static dynamic _responseData(http.Response response) {
-    if (response.body.trim().isEmpty) {
-      throw const FormatException('The API returned an empty response.');
-    }
-    final decoded = json.decode(utf8.decode(response.bodyBytes));
-    if (decoded is Map<String, dynamic> && decoded.containsKey('data')) {
-      return decoded['data'];
-    }
-    return decoded;
-  }
-
-  static Future<List<dynamic>> fetchPosts({
-    required int page,
-    String search = '',
-    int? categoryId,
+  Future<dynamic> request(
+    String path, {
+    required String locale,
+    Map<String, String> query = const {},
+    String? token,
+    Map<String, dynamic>? body,
   }) async {
-    final query = <String, String>{
-      'per_page': '10',
-      'page': '$page',
-      if (search.isNotEmpty) 'search': search,
-      if (categoryId != null) 'category_id': '$categoryId',
+    final uri = Uri.parse(
+      '$baseUrl$path',
+    ).replace(queryParameters: {...query, 'locale': locale});
+    final headers = {
+      'Accept': 'application/json',
+      'Accept-Language': locale,
+      if (token?.isNotEmpty == true) 'Authorization': 'Bearer $token',
+      if (body != null) 'Content-Type': 'application/json',
     };
-    final response = await http
-        .get(
-          Uri.parse('$_baseUrl/articles').replace(queryParameters: query),
-          headers: _headers,
-        )
-        .timeout(const Duration(seconds: 12));
-    if (response.statusCode == 200) {
-      return List<dynamic>.from(_responseData(response) as List? ?? const []);
+    final response =
+        await (body == null
+                ? client.get(uri, headers: headers)
+                : client.post(uri, headers: headers, body: jsonEncode(body)))
+            .timeout(const Duration(seconds: 20));
+    dynamic data = jsonDecode(utf8.decode(response.bodyBytes));
+    if (data is Map && data.containsKey('data')) data = data['data'];
+    if (response.statusCode < 200 ||
+        response.statusCode >= 300 ||
+        data is Map && data['success'] == false) {
+      throw ArticleApiException(
+        data is Map
+            ? '${data['message'] ?? 'Request failed'}'
+            : 'Request failed',
+        response.statusCode,
+      );
     }
-    if (response.statusCode == 400 || response.statusCode == 404) return [];
-    throw Exception('Failed to load articles');
+    return data;
   }
 
-  static Future<List<dynamic>> fetchCategories() async {
-    final response = await http
-        .get(Uri.parse('$_baseUrl/article-categories'), headers: _headers)
-        .timeout(const Duration(seconds: 12));
-    if (response.statusCode == 200) {
-      return List<dynamic>.from(_responseData(response) as List? ?? const []);
-    }
-    throw Exception('Failed to load article categories');
-  }
-
-  static Future<List<dynamic>> fetchComments(int postId, int page) async {
-    final url = Uri.parse(
-      '$_baseUrl/articles/$postId/comments',
-    ).replace(queryParameters: {'per_page': '10', 'page': '$page'});
-    final response = await http
-        .get(url, headers: _headers)
-        .timeout(const Duration(seconds: 12));
-    if (response.statusCode == 200) {
-      return List<dynamic>.from(_responseData(response) as List? ?? const []);
-    }
-    return [];
-  }
-
-  static Future<List<dynamic>> fetchRelatedPosts(int postId, int catId) async {
-    final url = Uri.parse(
-      '$_baseUrl/articles/$postId/related',
-    ).replace(queryParameters: {'category_id': '$catId', 'per_page': '2'});
-    final response = await http
-        .get(url, headers: _headers)
-        .timeout(const Duration(seconds: 12));
-    if (response.statusCode == 200) {
-      return List<dynamic>.from(_responseData(response) as List? ?? const []);
-    }
-    return [];
-  }
-
-  static Future<bool> sendComment(
-    int postId,
-    String content,
-    String authorName,
-  ) async {
-    final url = '$_baseUrl/articles/$postId/comments';
-    final body = json.encode({
-      AppConstants.POST: postId,
-      AppConstants.CONTENT: content,
-      AppConstants.AUTHOR_NAME: authorName,
-    });
-
-    final response = await http
-        .post(
-          Uri.parse(url),
-          headers: {
-            ..._headers,
-            AppConstants.CONTENT_TYPE: AppConstants.APPLICATION_JSON,
-          },
-          body: body,
-        )
-        .timeout(const Duration(seconds: 12));
-    if (response.statusCode != 201) return false;
-    final data = _responseData(response);
-    return data is Map<String, dynamic> && data['success'] == true;
-  }
-
-  static const Map<String, String> _headers = {
-    'Accept': AppConstants.APPLICATION_JSON,
-    'Accept-Language': 'fa',
-  };
+  Future<Map<String, dynamic>> manifest(String locale) async =>
+      Map<String, dynamic>.from(
+        await request('/articles/manifest', locale: locale),
+      );
+  Future<List<Map<String, dynamic>>> fetchPosts({
+    required String locale,
+    int page = 1,
+    List<int>? ids,
+  }) async => _list(
+    await request(
+      '/articles',
+      locale: locale,
+      query: {
+        'per_page': '50',
+        'page': '$page',
+        if (ids != null) 'ids': ids.join(','),
+      },
+    ),
+  );
+  Future<Map<String, dynamic>> fetchPost(int id, String locale) async =>
+      Map<String, dynamic>.from(await request('/articles/$id', locale: locale));
+  Future<List<Map<String, dynamic>>> fetchComments(
+    int id, {
+    required String locale,
+    required int page,
+    String? token,
+    List<String> receipts = const [],
+  }) async => _list(
+    await request(
+      '/articles/$id/comments',
+      locale: locale,
+      token: token,
+      query: {
+        'page': '$page',
+        'per_page': '20',
+        if (receipts.isNotEmpty) 'receipts': receipts.join(','),
+      },
+    ),
+  );
+  Future<Map<String, dynamic>> sendComment(
+    int id, {
+    required String locale,
+    required String content,
+    String? token,
+    String author = '',
+    String email = '',
+    int parent = 0,
+  }) async => Map<String, dynamic>.from(
+    await request(
+      '/articles/$id/comments',
+      locale: locale,
+      token: token,
+      body: {
+        'content': content,
+        'author_name': author,
+        'author_email': email,
+        'parent': parent,
+      },
+    ),
+  );
+  Future<Map<String, dynamic>> rating(
+    String type,
+    int id, {
+    required String locale,
+    String? token,
+    int? score,
+  }) async => Map<String, dynamic>.from(
+    await request(
+      '/article-ratings/$type/$id',
+      locale: locale,
+      token: token,
+      body: score == null ? null : {'score': score},
+    ),
+  );
+  List<Map<String, dynamic>> _list(dynamic data) =>
+      (data as List).map((e) => Map<String, dynamic>.from(e)).toList();
+  void dispose() => client.close();
 }

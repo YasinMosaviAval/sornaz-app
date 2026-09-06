@@ -3,6 +3,10 @@
 class AppImages {
   static const String logo_light = 'assets/images/sornaz_logo.png';
   static const String logo_dark = 'assets/images/sornaz_white_logo.png';
+  static const String logo_light_background =
+      'assets/images/sornaz_logo_with_background.png';
+  static const String logo_dark_background =
+      'assets/images/sornaz_white_logo_with_background.png';
 
   static const String onboarding_image_0 = 'assets/images/onboarding_0.png';
   static const String onboarding_image_1 = 'assets/images/onboarding_1.png';

@@ -37,7 +37,11 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AppData()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ChangeNotifierProvider(create: (_) => TunerProvider()..start()),
-        ChangeNotifierProvider(create: (_) => ArticlesProvider()),
+        ChangeNotifierProxyProvider<LocaleProvider, ArticlesProvider>(
+          create: (_) => ArticlesProvider(),
+          update: (_, locale, library) =>
+              library!..setLocale(locale.locale.languageCode),
+        ),
         ChangeNotifierProvider(create: (_) => AuthSession()..restore()),
         ChangeNotifierProvider(create: (_) => FolderNavigatorProvider()),
         ChangeNotifierProvider(create: (_) => libraryManager),

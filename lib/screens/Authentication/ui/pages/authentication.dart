@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
-import 'package:sornaz/helpers/app_images.dart';
+import 'package:sornaz/components/app_logo.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
@@ -11,11 +11,15 @@ import 'package:sornaz/screens/Home/ui/pages/home.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 import 'package:sornaz/screens/Authentication/services/auth_api_service.dart';
 
+
+
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
   @override
   State<SignInScreen> createState() => _SignInScreenState();
 }
+
+
 
 class _SignInScreenState extends State<SignInScreen> {
   bool remember = false;
@@ -54,8 +58,9 @@ class _SignInScreenState extends State<SignInScreen> {
       if (!mounted) return;
       await context.read<AuthSession>().save(result);
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(
+      Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const HomePage()),
+        (_) => false,
       );
     } catch (e) {
       if (mounted) {
@@ -151,18 +156,26 @@ class _SignInScreenState extends State<SignInScreen> {
         ),
         TextButton(
           onPressed: () => _continueAsGuest(context),
-          child: Text(en ? 'Continue as guest' : 'ادامه بدون ورود'),
+          child: Text(
+            context.watch<AuthSession>().isAuthenticated
+                ? (en ? 'Continue with current account' : 'ادامه با حساب فعلی')
+                : (en ? 'Continue as guest' : 'ادامه بدون ورود'),
+          ),
         ),
       ],
     );
   }
 }
 
+
+
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
 }
+
+
 
 class _SignUpScreenState extends State<SignUpScreen> {
   bool hidden = true;
@@ -381,6 +394,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 }
 
+
+
 class _AuthPage extends StatelessWidget {
   const _AuthPage({required this.title, required this.children});
   final String title;
@@ -418,6 +433,8 @@ class _AuthPage extends StatelessWidget {
   }
 }
 
+
+
 class _Header extends StatelessWidget {
   const _Header();
   @override
@@ -425,14 +442,7 @@ class _Header extends StatelessWidget {
     final color = context.watch<AppData>().isDark ? Colors.white : Colors.black;
     return Column(
       children: [
-        ClipOval(
-          child: Image.asset(
-            AppImages.auth_profile,
-            width: 120,
-            height: 120,
-            fit: BoxFit.cover,
-          ),
-        ),
+        ClipOval(child: const AppLogo(size: 120, withBackground: true)),
         const SizedBox(height: 18),
         Text(
           'Sornaz',
@@ -447,6 +457,8 @@ class _Header extends StatelessWidget {
     );
   }
 }
+
+
 
 class _Field extends StatelessWidget {
   const _Field({
@@ -504,6 +516,8 @@ class _Field extends StatelessWidget {
   }
 }
 
+
+
 class _MainButton extends StatelessWidget {
   const _MainButton({
     required this.label,
@@ -540,12 +554,16 @@ class _MainButton extends StatelessWidget {
   }
 }
 
+
+
 void _continueAsGuest(BuildContext context) {
   Navigator.of(context).pushAndRemoveUntil(
     MaterialPageRoute(builder: (_) => const HomePage()),
     (_) => false,
   );
 }
+
+
 
 class _OtpDialog extends StatefulWidget {
   const _OtpDialog({required this.destination});
@@ -554,13 +572,19 @@ class _OtpDialog extends StatefulWidget {
   State<_OtpDialog> createState() => _OtpDialogState();
 }
 
+
+
 class _OtpDialogState extends State<_OtpDialog> {
   final controllers = List.generate(6, (_) => TextEditingController());
   final nodes = List.generate(6, (_) => FocusNode());
   @override
   void dispose() {
-    for (final item in controllers) item.dispose();
-    for (final item in nodes) item.dispose();
+    for (final item in controllers) {
+      item.dispose();
+    }
+    for (final item in nodes) {
+      item.dispose();
+    }
     super.dispose();
   }
 
@@ -591,10 +615,12 @@ class _OtpDialogState extends State<_OtpDialog> {
                       LengthLimitingTextInputFormatter(1),
                     ],
                     onChanged: (value) {
-                      if (value.isNotEmpty && index < 5)
+                      if (value.isNotEmpty && index < 5) {
                         nodes[index + 1].requestFocus();
-                      if (value.isEmpty && index > 0)
+                      }
+                      if (value.isEmpty && index > 0) {
                         nodes[index - 1].requestFocus();
+                      }
                     },
                     decoration: const InputDecoration(
                       counterText: '',
@@ -623,6 +649,8 @@ class _OtpDialogState extends State<_OtpDialog> {
     ],
   );
 }
+
+
 
 class _TermsDialog extends StatelessWidget {
   const _TermsDialog();
@@ -691,6 +719,8 @@ class _TermsDialog extends StatelessWidget {
   );
 }
 
+
+
 class _Prompt extends StatelessWidget {
   const _Prompt({
     required this.prefix,
@@ -726,6 +756,8 @@ class _Prompt extends StatelessWidget {
     );
   }
 }
+
+
 
 TextStyle _muted(BuildContext context) {
   final dark = context.watch<AppData>().isDark;

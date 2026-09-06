@@ -1,3 +1,9 @@
+import 'package:sornaz/components/drawer_theme.dart';
+import 'package:sornaz/components/settings_section_header.dart';
+import 'package:sornaz/components/justified_text.dart';
+import 'package:sornaz/components/app_bar.dart';
+import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_data.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -15,21 +21,27 @@ class SimpleInfoPage extends StatelessWidget {
   final IconData icon;
   final String body;
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(title)),
-    body: Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(28),
-        child: Column(
-          children: [
-            Icon(icon, size: 64, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(height: 24),
-            Text(
-              body,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, height: 1.8),
-            ),
-          ],
+  Widget build(BuildContext context) => DrawerThemeScope(
+    child: Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                size: 64,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(height: 24),
+              Text(
+                body,
+                textAlign: TextAlign.center,
+                style: const TextStyle(height: 1.8),
+              ),
+            ],
+          ),
         ),
       ),
     ),
@@ -53,24 +65,26 @@ class FaqPage extends StatelessWidget {
     ),
   ];
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('پرسش‌های متداول')),
-    body: ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        for (final item in items)
-          Card(
-            child: ExpansionTile(
-              title: Text(item.$1),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(item.$2, style: const TextStyle(height: 1.6)),
-                ),
-              ],
-            ),
-          ),
-      ],
+  Widget build(BuildContext context) => DrawerThemeScope(
+    child: Scaffold(
+      appBar: const SornazAppBar(title: 'پرسش‌های متداول'),
+      backgroundColor: AppColors.about_us_background_color(
+        isDark: context.watch<AppData>().isDark,
+      ),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            for (final item in items)
+              SettingsSectionHeader(
+                title: item.$1,
+                leadingIcon: Icons.help_outline,
+                initiallyExpanded: false,
+                children: [JustifiedText(text: item.$2)],
+              ),
+          ],
+        ),
+      ),
     ),
   );
 }
@@ -98,7 +112,13 @@ class _ContactUsPageState extends State<ContactUsPage> {
   }
 
   Future<void> submit() async {
-    if (message.text.trim().isEmpty) return;
+    if (message.text.trim().isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('متن پیام را وارد کنید.')));
+      return;
+    }
+    final user = context.read<AuthSession>().user;
     setState(() => loading = true);
     try {
       final response = await http
@@ -106,8 +126,12 @@ class _ContactUsPageState extends State<ContactUsPage> {
             Uri.parse('https://sornaz.com/api/sornaz/v1/contact'),
             headers: {'Accept': 'application/json'},
             body: {
-              'name': name.text.trim(),
-              'email': email.text.trim(),
+              'name': name.text.trim().isNotEmpty
+                  ? name.text.trim()
+                  : (user?.fullName ?? ''),
+              'email': email.text.trim().isNotEmpty
+                  ? email.text.trim()
+                  : (user?.email ?? ''),
               'subject': subject.text.trim(),
               'message': message.text.trim(),
             },
@@ -117,8 +141,10 @@ class _ContactUsPageState extends State<ContactUsPage> {
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
       if (response.statusCode < 200 ||
           response.statusCode >= 300 ||
-          json['success'] != true)
+          json['success'] != true &&
+              (json['data'] is! Map || json['data']['success'] != true)) {
         throw Exception();
+      }
       if (!mounted) return;
       message.clear();
       subject.clear();
@@ -128,14 +154,15 @@ class _ContactUsPageState extends State<ContactUsPage> {
         ),
       );
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              'ارسال پیام انجام نشد؛ پس از انتشار API دوباره تلاش کنید.',
+              'ارسال پیام انجام نشد؛ اتصال اینترنت را بررسی کنید و دوباره تلاش کنید.',
             ),
           ),
         );
+      }
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -144,68 +171,96 @@ class _ContactUsPageState extends State<ContactUsPage> {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthSession>().user;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.feedback ? 'ارسال بازخورد' : 'تماس با ما'),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Text(
-            widget.feedback
-                ? 'نظر شما به بهتر شدن سرناز کمک می‌کند.'
-                : 'ارتباط با ما — ارسال پیام جدید',
-            style: const TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 24),
-          if (user == null) ...[
-            TextField(
-              controller: name,
-              decoration: const InputDecoration(
-                labelText: 'نام و نام خانوادگی *',
-                border: OutlineInputBorder(),
+    return DrawerThemeScope(
+      child: Scaffold(
+        appBar: AppBar(title: const Text('تماس با ما')),
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'ارتباط با ما — ارسال پیام جدید',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 24),
+                        if (user == null) ...[
+                          TextField(
+                            controller: name,
+                            decoration: const InputDecoration(
+                              labelText: 'نام و نام خانوادگی',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                        ],
+                        if (user?.email?.isNotEmpty != true) ...[
+                          TextField(
+                            controller: email,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: const InputDecoration(
+                              labelText: 'ایمیل پاسخ (اختیاری)',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                        ],
+                        TextField(
+                          controller: subject,
+                          decoration: const InputDecoration(
+                            labelText: 'موضوع',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Expanded(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(minHeight: 180),
+                            child: TextField(
+                              key: const Key('contact-message'),
+                              controller: message,
+                              expands: true,
+                              maxLines: null,
+                              textAlignVertical: TextAlignVertical.top,
+                              decoration: const InputDecoration(
+                                labelText: 'متن پیام *',
+                                alignLabelWithHint: true,
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        FilledButton(
+                          key: const Key('contact-send'),
+                          onPressed: loading ? null : submit,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            child: loading
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text('ارسال پیام'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: email,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'ایمیل *',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 14),
-          ],
-          TextField(
-            controller: subject,
-            decoration: const InputDecoration(
-              labelText: 'موضوع',
-              border: OutlineInputBorder(),
-            ),
           ),
-          const SizedBox(height: 14),
-          TextField(
-            controller: message,
-            minLines: 5,
-            maxLines: 8,
-            decoration: const InputDecoration(
-              labelText: 'متن پیام *',
-              alignLabelWithHint: true,
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            height: 50,
-            child: FilledButton(
-              onPressed: loading ? null : submit,
-              child: loading
-                  ? const CircularProgressIndicator()
-                  : const Text('ارسال پیام'),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -1,6 +1,5 @@
+import 'package:sornaz/components/app_logo.dart';
 import 'package:flutter/material.dart';
-import 'package:sornaz/helpers/app_images.dart';
-import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
@@ -14,12 +13,7 @@ class ApplicationLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Image.asset(
-        isDark ? AppImages.logo_dark : AppImages.logo_light,
-        height: AppSpacing.space_32,
-      ),
-    );
+    return Center(child: AppLogo(size: 40, withBackground: false));
   }
 }
 

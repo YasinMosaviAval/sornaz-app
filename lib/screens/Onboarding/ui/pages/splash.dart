@@ -1,8 +1,8 @@
+import 'package:sornaz/components/app_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
-import 'package:sornaz/helpers/app_images.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -50,14 +50,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final isDark = appData.isDark;
     return Scaffold(
       backgroundColor: AppColors.splash_background_color(isDark: isDark),
-      body: Center(
-        child: Image.asset(
-          isDark ? AppImages.logo_dark : AppImages.logo_light,
-          fit: BoxFit.contain,
-          width: 90,
-          height: 154,
-        ),
-      ),
+      body: Center(child: AppLogo(size: 154, withBackground: false)),
     );
   }
 }

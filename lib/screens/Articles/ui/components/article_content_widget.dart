@@ -2,40 +2,49 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_data.dart';
-import 'package:sornaz/helpers/app_constants.dart';
-import 'package:sornaz/helpers/app_typography.dart';
 
 class ArticlesContentWidget extends StatelessWidget {
-  const ArticlesContentWidget({super.key, required this.content});
-
+  const ArticlesContentWidget({
+    super.key,
+    required this.content,
+    this.onLinkTap,
+  });
   final String content;
-
+  final ValueChanged<String>? onLinkTap;
   @override
   Widget build(BuildContext context) {
-    final appData = Provider.of<AppData>(context);
-    final isDark = appData.isDark;
+    final app = context.watch<AppData>();
     return Html(
       data: content,
-      style: {
-        AppConstants.HTML_A: AppTypography.articleContentHtmlA(context: context, isDark: isDark),
-        AppConstants.HTML_P: AppTypography.articleContentHtmlP(context: context, isDark: isDark),
-        AppConstants.HTML_H1: AppTypography.articleContentHtmlH1(context: context, isDark: isDark),
-        AppConstants.HTML_H2: AppTypography.articleContentHtmlH2(context: context, isDark: isDark),
-        AppConstants.HTML_H3: AppTypography.articleContentHtmlH3(context: context, isDark: isDark),
-        AppConstants.HTML_H4: AppTypography.articleContentHtmlH4(context: context, isDark: isDark),
-        AppConstants.HTML_H5: AppTypography.articleContentHtmlH5(context: context, isDark: isDark),
-        AppConstants.HTML_H6: AppTypography.articleContentHtmlH6(context: context, isDark: isDark),
-        AppConstants.HTML_EM: AppTypography.articleContentHtmlEm(context: context, isDark: isDark),
-        AppConstants.HTML_IMG: AppTypography.articleContentHtmlImg(context: context, isDark: isDark),
-        AppConstants.HTML_BODY: AppTypography.articleContentHtmlBody(context: context, isDark: isDark),
-        AppConstants.HTML_STRONG: AppTypography.articleContentHtmlStrong(context: context, isDark: isDark),
+      onLinkTap: (url, attributes, element) {
+        if (url != null) onLinkTap?.call(url);
       },
-      // onLinkTap: (url, context, attributes, element) {
-      //   if (url != null) {
-      //     // لینک رو باز کن
-      //     launchUrl(Uri.parse(url));
-      //   }
-      // },
+      style: {
+        'body': Style(
+          margin: Margins.zero,
+          padding: HtmlPaddings.zero,
+          fontFamily: app.fontFamily,
+          fontSize: FontSize(14 + app.fontSize),
+          color: app.isDark ? Colors.white : const Color(0xff374151),
+          lineHeight: const LineHeight(1.8),
+        ),
+        'p': Style(
+          textAlign: TextAlign.justify,
+          margin: Margins.only(bottom: 16, left: 0, right: 0),
+        ),
+        'div': Style(textAlign: TextAlign.justify),
+        'img': Style(width: Width(100, Unit.percent), height: Height.auto()),
+        'a': Style(
+          color: app.isDark ? const Color(0xffd3ae32) : const Color(0xff4f46e5),
+          textDecoration: TextDecoration.underline,
+        ),
+        'blockquote': Style(
+          padding: HtmlPaddings.all(16),
+          backgroundColor: app.isDark
+              ? const Color(0xff222222)
+              : const Color(0xfff3f4f6),
+        ),
+      },
     );
   }
 }

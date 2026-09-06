@@ -1,7 +1,7 @@
+import 'package:sornaz/components/app_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_data.dart';
-import 'package:sornaz/helpers/app_images.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/screens/Onboarding/ui/pages/onboarding.dart';
 
@@ -22,11 +22,7 @@ class StartupPreferencesScreen extends StatelessWidget {
             child: Column(
               children: [
                 const Spacer(),
-                Image.asset(
-                  app.isDark ? AppImages.logo_dark : AppImages.logo_light,
-                  width: 78,
-                  height: 130,
-                ),
+                AppLogo(size: 130, withBackground: false),
                 const SizedBox(height: 24),
                 Text(
                   english ? 'Set up your experience' : 'تنظیم تجربه کاربری',
