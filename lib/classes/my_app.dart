@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:sornaz/screens/Social/user_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_data.dart';
@@ -67,6 +68,7 @@ class MyApp extends StatelessWidget {
                   appData.isDark ? ThemeMode.dark : ThemeMode.light,
               home: const SplashScreen(),
               routes: {
+                '/profile': (_) => const UserPanelPage(),
                 '/home': (_) => const HomePage(),
                 '/about': (_) => const AboutUsPage(),
                 '/settings': (_) => const SettingsPage(),

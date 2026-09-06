@@ -72,7 +72,7 @@ class ArticlesPage extends StatelessWidget {
             },
           ),
         ),
-        bottomNavigationBar: const BottomNavBarWidget(),
+        bottomNavigationBar: const BottomNavBarWidget(selectedIndex:3),
       ),
     );
   }

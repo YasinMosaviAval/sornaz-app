@@ -1,129 +1,68 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
-import 'package:sornaz/helpers/app_navigation.dart';
-import 'package:sornaz/helpers/app_strings.dart';
-import 'package:sornaz/helpers/app_translations.dart';
-import 'package:sornaz/helpers/app_typography.dart';
+import 'package:sornaz/screens/Home/ui/pages/home.dart';
+import 'package:sornaz/screens/Home/ui/pages/music_tools.dart';
 import 'package:sornaz/screens/Articles/ui/pages/articles_page.dart';
-import 'package:sornaz/screens/Metronome/ui/pages/metronome_page.dart';
-import 'package:flutter/services.dart';
-import 'package:sornaz/screens/Players/ui/pages/music_palyer.dart';
-import 'package:sornaz/screens/Tuner/ui/pages/tuner_page.dart';
-import 'package:sornaz/screens/Voice%20Recorder/ui/pages/voice_recorder.dart';
+import 'package:sornaz/screens/Social/user_panel.dart';
+import 'package:sornaz/screens/Social/course_catalog.dart';
+import 'package:sornaz/screens/Social/social_widgets.dart';
 
-
-class BottomNavBarWidget extends StatefulWidget {
-  const BottomNavBarWidget({super.key});
-  @override
-  State<BottomNavBarWidget> createState() => _BottomNavBarWidgetState();
-}
-
-class _BottomNavBarWidgetState extends State<BottomNavBarWidget> {
-  DateTime? _lastBackPressed;
-
-  // لیست صفحات — مهم: ترتیب باید دقیقاً با آیتم‌ها یکی باشه
-  static const List<Widget> _pages = [
-    ArticlesPage(),
-    MusicPlayerPage(),
-    MetronomePage(),
-    TunerPage(),
-    VoiceRecorderPage(),
-  ];
-
-  void _onItemTapped(BuildContext context, int index) {
-    Provider.of<AppData>(context, listen: false).setBottomNavIndex(index);
-
-    navigateWithFade(context, _pages[index]);
-  }
-
+class BottomNavBarWidget extends StatelessWidget {
+  const BottomNavBarWidget({super.key, this.selectedIndex});
+  final int? selectedIndex;
   @override
   Widget build(BuildContext context) {
-    final appData = Provider.of<AppData>(context);
-    final isDark = appData.isDark;
-    final currentIndex = appData.bottomNavIndex;
-
+    final data = context.watch<AppData>();
+    final current = selectedIndex ?? data.bottomNavIndex.clamp(0, 4);
     return Directionality(
       textDirection: TextDirection.ltr,
-      child: PopScope(
-        onPopInvokedWithResult: (didPop, result) {
-          if (didPop) return;
-      
-          if (currentIndex == 0) {
-            // در صفحه اصلی هستیم
-            final now = DateTime.now();
-            if (_lastBackPressed == null ||
-                now.difference(_lastBackPressed!) > const Duration(seconds: 2)) {
-              _lastBackPressed = now;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    AppStrings.two_times_press_back_button_for_exit_application .translate(context),
-                    style: AppTypography.bottomNavSnackBar(context),
-                  ),
-                  duration: Duration(seconds: 2),
-                  backgroundColor: AppColors.bottom_nav_snack_bar_background_color(isDark: isDark),
-                ),
-              );
-              return;
-            }
-            // دوبار در ۲ ثانیه → خروج کامل
-            SystemNavigator.pop(); // فقط اندروید
-          } else {
-            // در صفحه دیگه → برگرد به خانه
-            appData.setBottomNavIndex(0);
-          }
+      child: BottomNavigationBar(
+        currentIndex: current,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: data.isDark
+            ? const Color(0xff202020)
+            : const Color(0xfff1f1f1),
+        selectedItemColor: data.isDark
+            ? const Color(0xffd3ae32)
+            : const Color(0xff0064fb),
+        unselectedItemColor: data.isDark ? Colors.white60 : Colors.black54,
+        selectedFontSize: 10,
+        unselectedFontSize: 10,
+        onTap: (index) {
+          if (index == current) return;
+          data.setBottomNavIndex(index);
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const [
+                HomePage(),
+                MusicToolsPage(),
+                CourseCatalogPage(),
+                ArticlesPage(),
+                UserPanelPage(),
+              ][index],
+            ),
+          );
         },
-        child: BottomNavigationBar(
-          currentIndex: currentIndex,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: AppColors.bottom_nav_item_background_color(isDark: isDark),
-          selectedItemColor: AppColors.bottom_nav_selected_item_color(isDark: isDark),
-          unselectedItemColor: AppColors.bottom_nav_unselected_item_color(isDark: isDark),
-          selectedFontSize: 11,
-          unselectedFontSize: 11,
-          onTap: (index) => _onItemTapped(context, index),
-          items: [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
-              label: AppStrings.home_title.translate(context),
+        items: [
+          for (final item in [
+            (Icons.home_outlined, Icons.home, 'خانه', 'Home'),
+            (
+              Icons.music_note_outlined,
+              Icons.music_note,
+              'ابزار موسیقی',
+              'Music tools',
             ),
-            // BottomNavigationBarItem(
-            //   icon: Icon(Icons.music_note_outlined),
-            //   activeIcon: Icon(Icons.music_note),
-            //   label: AppStrings.music_sheet_title.translate(context),
-            // ),
+            (Icons.menu_book_outlined, Icons.menu_book, 'دوره‌ها', 'Courses'),
+            (Icons.article_outlined, Icons.article, 'مقاله‌ها', 'Articles'),
+            (Icons.person_outline, Icons.person, 'پروفایل', 'Profile'),
+          ])
             BottomNavigationBarItem(
-              icon: Icon(Icons.library_music_outlined),
-              activeIcon: Icon(Icons.library_music),
-              label: AppStrings.music_player_title.translate(context),
+              icon: Icon(item.$1),
+              activeIcon: Icon(item.$2),
+              label: socialText(context, item.$3, item.$4),
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.punch_clock_outlined),
-              activeIcon: Icon(Icons.punch_clock),
-              label: AppStrings.metronome_title.translate(context),
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.tune_outlined),
-              activeIcon: Icon(Icons.tune_rounded),
-              label: AppStrings.tuner_title.translate(context),
-            ),
-            // BottomNavigationBarItem(
-            //   icon: Icon(Icons.person_outlined),
-            //   activeIcon: Icon(Icons.person),
-            //   label: AppStrings.profile_title.translate(context),
-            // ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.keyboard_voice_outlined),
-              activeIcon: Icon(Icons.keyboard_voice),
-              label: AppStrings.voice_recorder_title.translate(context),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }

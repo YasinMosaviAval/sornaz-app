@@ -1,67 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:sornaz/components/bottom_nav.dart';
-import 'package:sornaz/helpers/app_colors.dart';
-import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_images.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
-
-import 'package:provider/provider.dart';
-import 'package:sornaz/components/search_bar.dart';
-import 'package:sornaz/helpers/app_data.dart';
-import 'package:sornaz/helpers/app_locale_provider.dart';
-import 'package:sornaz/screens/Articles/ui/components/blog_carousel.dart';
-import 'package:sornaz/screens/Home/ui/components/app_drawer.dart';
-
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final appData = Provider.of<AppData>(context);
-    final isDark = appData.isDark;
-    final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
-    final bool isEnglish = localeProvider.locale.languageCode == AppConstants.LOCALIZATION_EN;
-
-    return
-    Directionality(
-      textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: AppColors.home_body_background_color(isDark: isDark),
-        appBar: AppBar(
-          backgroundColor: AppColors.home_app_bar_background_color(isDark: isDark),
-          elevation: 0,
-          automaticallyImplyLeading: false,
-          leadingWidth: AppSpacing.space_48,
-          titleSpacing: AppSpacing.space_16,
-          actionsPadding: const EdgeInsets.only(right: AppSpacing.space_24),
-          leading: HeaderMenuIcon(isDark: isDark),
-          title: ApplicationTitle(isDark: isDark),
-          actions: [ApplicationLogo(isDark: isDark)],
-        ),
-        drawer: const AppDrawer(),
-        body: const SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ComponentSearchBar(),
-              BlogCarousel(),
-              // NewCourseCardCarousel(),
-              // UpdatedCoursesCarousel(),
-              // ImportantCoursesList(),
-              // AuthorsCarousel(),
-            ],
-          ),
-        ),
-        bottomNavigationBar: const BottomNavBarWidget(),
-      ),
-      // ),
-    );
-  }
-}
-
+import 'package:sornaz/helpers/app_colors.dart';
+export 'learning_home.dart';
 
 class ApplicationLogo extends StatelessWidget {
   const ApplicationLogo({super.key, required this.isDark});

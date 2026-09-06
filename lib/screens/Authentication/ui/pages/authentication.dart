@@ -7,7 +7,7 @@ import 'package:sornaz/helpers/app_images.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
-import 'package:sornaz/screens/Articles/ui/pages/articles_page.dart';
+import 'package:sornaz/screens/Home/ui/pages/home.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 import 'package:sornaz/screens/Authentication/services/auth_api_service.dart';
 
@@ -55,7 +55,7 @@ class _SignInScreenState extends State<SignInScreen> {
       await context.read<AuthSession>().save(result);
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const ArticlesPage()),
+        MaterialPageRoute(builder: (_) => const HomePage()),
       );
     } catch (e) {
       if (mounted) {
@@ -236,7 +236,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       await context.read<AuthSession>().save(result);
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const ArticlesPage()),
+        MaterialPageRoute(builder: (_) => const HomePage()),
         (_) => false,
       );
     } catch (e) {
@@ -542,7 +542,7 @@ class _MainButton extends StatelessWidget {
 
 void _continueAsGuest(BuildContext context) {
   Navigator.of(context).pushAndRemoveUntil(
-    MaterialPageRoute(builder: (_) => const ArticlesPage()),
+    MaterialPageRoute(builder: (_) => const HomePage()),
     (_) => false,
   );
 }

@@ -8,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:sornaz/screens/Authentication/ui/pages/authentication.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
-import 'package:sornaz/screens/Articles/ui/pages/articles_page.dart';
+import 'package:sornaz/screens/Home/ui/pages/home.dart';
 import 'package:sornaz/screens/Onboarding/ui/pages/onboarding.dart';
 import 'package:sornaz/screens/Onboarding/ui/pages/startup_preferences.dart';
 
@@ -38,7 +38,7 @@ class _SplashScreenState extends State<SplashScreen> {
         builder: (context) => !onboardingCompleted
             ? const StartupPreferencesScreen()
             : authenticated
-            ? const ArticlesPage()
+            ? const HomePage()
             : const SignInScreen(),
       ),
     );

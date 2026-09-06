@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sornaz/screens/Social/user_panel.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/app_drawer_item.dart';
 import 'package:sornaz/helpers/app_colors.dart';
@@ -48,6 +49,7 @@ class AppDrawer extends StatelessWidget {
             ),
           ),
           SwitchListTile(
+            // Theme preference also applies to the social panel.
             secondary: const Icon(Icons.dark_mode_outlined),
             title: const Text('حالت تاریک'),
             subtitle: const Text('نمایش برنامه با تم تاریک'),
@@ -60,6 +62,11 @@ class AppDrawer extends StatelessWidget {
               'برنامه',
               style: TextStyle(fontSize: 11, color: Colors.grey),
             ),
+          ),
+          AppDrawerItem(
+            icon: Icons.person_outline,
+            text: 'پنل کاربری و پروفایل',
+            link: const UserPanelPage(),
           ),
           AppDrawerItem(
             icon: Icons.info,
