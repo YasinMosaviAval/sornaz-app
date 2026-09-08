@@ -4,6 +4,7 @@ import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 
 class WaveformPainter extends CustomPainter {
+  final int totalSamples;
   final List<double> amplitudes;
   final bool isActive;
   final bool isDark;
@@ -16,6 +17,7 @@ class WaveformPainter extends CustomPainter {
     this.context,
     this.isDark, {
     this.samplesPerSecond = 10,
+    required this.totalSamples,
   });
 
   @override
@@ -25,8 +27,12 @@ class WaveformPainter extends CustomPainter {
 
     final paint = Paint()
       ..color = isActive
-          ? AppColors.voice_recorder_app_waveform_painter_active_color(isDark: isDark)
-          : AppColors.voice_recorder_app_waveform_painter_inactive_color(isDark: isDark)
+          ? AppColors.voice_recorder_app_waveform_painter_active_color(
+              isDark: isDark,
+            )
+          : AppColors.voice_recorder_app_waveform_painter_inactive_color(
+              isDark: isDark,
+            )
       ..strokeWidth = 1.2
       ..strokeCap = StrokeCap.round;
 
@@ -39,11 +45,15 @@ class WaveformPainter extends CustomPainter {
 
     // GRID PAINTS
     final minorTickPaint = Paint()
-      ..color = AppColors.voice_recorder_app_waveform_painter_minor_tick_color(isDark: isDark)
+      ..color = AppColors.voice_recorder_app_waveform_painter_minor_tick_color(
+        isDark: isDark,
+      )
       ..strokeWidth = 0.2;
 
     final majorTickPaint = Paint()
-      ..color = AppColors.voice_recorder_app_waveform_painter_major_tick_color(isDark: isDark)
+      ..color = AppColors.voice_recorder_app_waveform_painter_major_tick_color(
+        isDark: isDark,
+      )
       ..strokeWidth = 1;
 
     final double samplesPerMinorTick = samplesPerSecond / 5;
@@ -51,7 +61,7 @@ class WaveformPainter extends CustomPainter {
 
     for (int i = 0; i < visible.length; i++) {
       final x = centerX - (visible.length - 1 - i) * barWidth;
-      final globalIndex = amplitudes.length - visible.length + i;
+      final globalIndex = totalSamples - visible.length + i;
 
       if (globalIndex % samplesPerMinorTick.round() == 0) {
         final bool isMajor = (globalIndex % samplesPerMajorTick == 0);
@@ -63,14 +73,22 @@ class WaveformPainter extends CustomPainter {
 
         if (isMajor) {
           final totalSeconds = (globalIndex / samplesPerSecond).floor();
-          final minutes = (totalSeconds ~/ 60).toString().padLeft(2, AppConstants.NUMBER_0);
-          final seconds = (totalSeconds % 60).toString().padLeft(2, AppConstants.NUMBER_0);
+          final minutes = (totalSeconds ~/ 60).toString().padLeft(
+            2,
+            AppConstants.NUMBER_0,
+          );
+          final seconds = (totalSeconds % 60).toString().padLeft(
+            2,
+            AppConstants.NUMBER_0,
+          );
           final timeString = "$minutes:$seconds";
 
           final textPainter = TextPainter(
             text: TextSpan(
               text: timeString,
-              style: AppTypography.voiceRecorderAppWaveformPainterTimeText(context),
+              style: AppTypography.voiceRecorderAppWaveformPainterTimeText(
+                context,
+              ),
             ),
             textDirection: TextDirection.ltr,
           );
@@ -98,5 +116,3 @@ class WaveformPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
-
-

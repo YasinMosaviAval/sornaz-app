@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_pitch_detection/flutter_pitch_detection.dart';
@@ -8,6 +9,11 @@ import 'package:sornaz/screens/Tuner/models/tuner_keyboard_settings.dart';
 import 'package:sornaz/screens/Tuner/utils/tuner_math.dart';
 
 class TunerProvider extends ChangeNotifier {
+  Timer? _pitchTimer;
+  bool _polling = false;
+  bool _running = false;
+  bool _disposed = false;
+  Future<void>? _starting;
   final FlutterPitchDetection _pitch = FlutterPitchDetection();
 
   double frequency = 0.0;
@@ -49,28 +55,67 @@ class TunerProvider extends ChangeNotifier {
     AppConstants.G_SHARP,
     AppConstants.A,
     AppConstants.A_SHARP,
-    AppConstants.B
+    AppConstants.B,
   ];
 
   bool get supportsPitchDetection => Platform.isAndroid || Platform.isIOS;
 
-  Future<void> start() async {
+  Future<void> start() =>
+      _starting ??= _start().whenComplete(() => _starting = null);
+
+  Future<void> _start() async {
+    if (_running || _disposed) return;
     await notePlayer.init();
     if (!supportsPitchDetection) return;
 
     final status = await Permission.microphone.request();
     if (!status.isGranted) return;
 
-    _pitch.startDetection();
-    _pitch.onPitchDetected.listen(_onPitchDetected);
+    if (_disposed) return;
+
+    await _pitch.startDetection(
+      sampleRate: 44100,
+      bufferSize: 4096,
+      overlap: 3072,
+    );
+    await _pitch.setMinPrecision(0.7);
+    _running = true;
+    // Request only the frequency; the plugin's event stream copies a full
+    // second of raw audio on every callback, which stalls Flutter rendering.
+    _pitchTimer = Timer.periodic(const Duration(milliseconds: 40), (_) async {
+      if (_polling || !_running || _disposed) return;
+      _polling = true;
+      try {
+        final value = await _pitch.getFrequency();
+        if (_running && !_disposed)
+          _onPitchDetected({AppConstants.FREQUENCY: value});
+      } catch (_) {
+        // A stopped microphone can race with the last pending frequency read.
+      } finally {
+        _polling = false;
+      }
+    });
   }
 
-  void stop() {
-    if (supportsPitchDetection) _pitch.stopDetection();
+  Future<void> stop() async {
+    await _starting;
+    if (_running && supportsPitchDetection) await _pitch.stopDetection();
+    _running = false;
+    _pitchTimer?.cancel();
+    _pitchTimer = null;
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    unawaited(stop());
+    unawaited(notePlayer.stop());
+    super.dispose();
   }
 
   void _onPitchDetected(dynamic result) {
     final freq = (result[AppConstants.FREQUENCY] ?? 0).toDouble();
+    if (_disposed || !freq.isFinite || freq < 25 || freq > 5000) return;
     frequency = freq;
 
     final analyzed = analyzePitch(freq);
@@ -83,8 +128,6 @@ class TunerProvider extends ChangeNotifier {
   TunerResult analyzePitch(double freq) {
     return TunerMath.analyze(freq, a4, notes);
   }
-
-
 
   final keyboardSettings = TunerKeyboardSettings(
     startOctave: 3,
@@ -108,7 +151,6 @@ class TunerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-
   void setShowWhiteKeyFrequencies(bool value) {
     keyboardSettings.showWhiteKeyFrequencies = value;
     notifyListeners();
@@ -124,9 +166,8 @@ class TunerProvider extends ChangeNotifier {
   //   notifyListeners();
   // }
 
-  void toggleQuarterTones() { 
+  void toggleQuarterTones() {
     keyboardSettings.showQuarterTones = !keyboardSettings.showQuarterTones;
     notifyListeners();
   }
-
 }

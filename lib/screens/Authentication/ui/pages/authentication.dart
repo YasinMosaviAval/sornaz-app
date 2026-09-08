@@ -257,7 +257,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
       final submittedForm = form;
       await api.sendRegistrationOtp(submittedForm);
       if (!mounted) return;
-      final otp = await _askForOtp(submittedForm[submittedForm['register_method']]!);
+      final otp = await _askForOtp(
+        submittedForm[submittedForm['register_method']]!,
+      );
       if (otp == null || !mounted) return;
       final result = await api.register(submittedForm, otp);
       if (!mounted) return;
@@ -300,7 +302,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     final en = context.watch<LocaleProvider>().locale.languageCode == 'en';
     return _AuthPage(
-      showBack: false,
       children: [
         const _Header(),
         const SizedBox(height: 18),
@@ -455,8 +456,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 }
 
 class _AuthPage extends StatelessWidget {
-  const _AuthPage({required this.children, this.showBack = true});
-  final bool showBack;
+  const _AuthPage({required this.children});
   final List<Widget> children;
   @override
   Widget build(BuildContext context) {
@@ -468,16 +468,7 @@ class _AuthPage extends StatelessWidget {
         backgroundColor: dark
             ? AppColors.background_dark
             : AppColors.background_light,
-        appBar: AppBar(
-          automaticallyImplyLeading: showBack,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          backgroundColor: Colors.transparent,
-          foregroundColor: dark ? Colors.white : Colors.black,
-          titleSpacing: 0,
-        ),
         body: SafeArea(
-          top: false,
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 22, 20, 24),
             child: Column(children: children),
@@ -654,6 +645,7 @@ class _OtpDialogState extends State<_OtpDialog> {
                     autofocus: index == 0,
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 20, height: 1.2),
                     inputFormatters: [
                       FilteringTextInputFormatter.digitsOnly,
                       LengthLimitingTextInputFormatter(1),
@@ -667,6 +659,11 @@ class _OtpDialogState extends State<_OtpDialog> {
                       }
                     },
                     decoration: const InputDecoration(
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(
+                        vertical: 14,
+                        horizontal: 0,
+                      ),
                       counterText: '',
                       border: OutlineInputBorder(),
                     ),

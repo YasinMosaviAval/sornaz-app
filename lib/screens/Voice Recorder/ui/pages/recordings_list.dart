@@ -1,502 +1,356 @@
-import 'dart:io'; 
-import 'package:flutter/material.dart'; 
-import 'package:provider/provider.dart'; 
-import 'package:sornaz/components/no_file_found.dart'; 
-import 'package:sornaz/helpers/app_colors.dart';
-import 'package:sornaz/helpers/app_constants.dart'; 
-import 'package:sornaz/helpers/app_data.dart'; 
-import 'package:sornaz/helpers/app_spacing.dart'; 
-import 'package:sornaz/helpers/app_translations.dart'; 
-import 'package:sornaz/helpers/app_typography.dart';
-import 'package:sornaz/helpers/app_functions.dart'; 
-import 'package:sornaz/helpers/app_strings.dart'; 
-import 'package:sornaz/screens/Voice%20Recorder/provider/voice_recorder_provider.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sornaz/helpers/app_functions.dart';
+import 'package:sornaz/screens/Social/social_widgets.dart';
+import '../../provider/voice_recorder_provider.dart';
+import '../../services/file_service.dart';
 
 class RecordedFilesPage extends StatefulWidget {
   const RecordedFilesPage({super.key});
-
-  @override State<RecordedFilesPage> createState() => _RecordedFilesPageState(); 
-} 
+  @override
+  State<RecordedFilesPage> createState() => _RecordedFilesPageState();
+}
 
 class _RecordedFilesPageState extends State<RecordedFilesPage> {
-  bool _isSearching = false;
-  String _query = ''; 
-  
-  final Set<File> _selectedFiles = {};
-  
-  bool get _isSelectionMode => _selectedFiles.isNotEmpty;
-
-  @override Widget build(BuildContext context) {
-    final appData = context.watch<AppData>(); 
-    final isDark = appData.isDark;
-
-    return Consumer<VoiceRecorderProvider>( builder: (context, vm, _) {
-      final files = vm.files.where((file) {
-        final name = file.path.split('/').last.toLowerCase();
-        return name.contains(_query);
-      }).toList();
-      return PopScope(
-        canPop: !_isSelectionMode,
-        onPopInvoked: (didPop) {
-          if (_isSelectionMode) {
-            setState(() {
-              _selectedFiles.clear();
-            });
-          }
-        },
-        child: Scaffold(
-          appBar: AppBar(
-            foregroundColor: AppColors.voice_recorder_recordings_list_page_app_bar_foreground_color(isDark: isDark),
-            backgroundColor: AppColors.voice_recorder_recordings_list_page_app_bar_background_color(isDark: isDark),
-            title: _isSelectionMode
-              ? Text('${_selectedFiles.length} ${AppStrings.recording_list_multi_item_selected.translate(context)}')
-              : _isSearching ? TextField(
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: AppStrings.recording_list_search_hint.translate(context),
-                  border: InputBorder.none,
-                ),
-                onChanged: (value) {
-                  setState(() => _query = value.toLowerCase());
-                },
-              ) 
-              : Text(
-                AppStrings.recording_list_title.translate(context),
-                style: AppTypography.RecordingsListAppBarTitle(context),
-              ), 
-            actions: [
-              IconButton(
-                padding: EdgeInsets.symmetric(horizontal: AppSpacing.space_16),
-                icon: Icon(_isSearching ? Icons.close : Icons.search),
-                onPressed: () {
-                  setState(() {
-                    _isSearching = !_isSearching;
-                    _query = '';
-                  });
-                },
-              ),
-            ],
+  String query = '';
+  final selected = <String>{};
+  final favorites = <String>{};
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted)
+        _run(() => context.read<VoiceRecorderProvider>().refreshFiles());
+    });
+    SharedPreferences.getInstance().then((prefs) {
+      if (mounted)
+        setState(
+          () => favorites.addAll(
+            prefs.getStringList('recording.favorites') ?? [],
           ),
-          backgroundColor: AppColors.voice_recorder_recordings_list_page_background_color(isDark: isDark),
-          body: files.isEmpty 
-            ? NoFilesFoundWidget(message: AppStrings.no_records_file.translate(context)) 
-            : ListView.builder(
-              itemCount: files.length,
-              itemBuilder: (context, index) {
-                final File file = files[index];
-                final fileName = file.path.split('/').last.replaceAll(AppConstants.DOT_M4A, '');
-                final date = formatJalali(file.lastModifiedSync());
-                return AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 350),
-                  transitionBuilder: (child, animation) => SizeTransition(
-                    sizeFactor: animation,
-                    child: child,
-                  ),
-                  child: Card(
-                    key: ValueKey(file.path),
-                    elevation: 0,
-                    margin: EdgeInsets.zero,
-                    color: _selectedFiles.contains(file)
-                      ? AppColors.voice_recorder_recordings_list_page_selected_file_card_color(isDark: isDark)
-                      : AppColors.voice_recorder_recordings_list_page_not_selected_file_card_color(isDark: isDark),
-                    shape: Border(
-                      bottom: BorderSide(
-                        width: AppSpacing.space_1,
-                        color: AppColors.voice_recorder_recordings_list_page_card_border_color(isDark: isDark),
-                      ),
-                    ),
-                    child: InkWell(
-                      onLongPress: () {
-                        setState(() {
-                          _selectedFiles.add(file);
-                        });
-                      },
-                      onTap: () {
-                        if (_isSelectionMode) {
-                          setState(() {
-                            _selectedFiles.contains(file)
-                                ? _selectedFiles.remove(file)
-                                : _selectedFiles.add(file);
-                          });
-                        }
-                      },
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_16),
-                        leading: IconButton(
-                          iconSize: AppSpacing.space_32,
-                          icon: Icon(
-                            Icons.play_arrow_rounded,
-                            color: AppColors.voice_recorder_recordings_list_page_card_leading_icon_color(isDark: isDark),
-                          ),
-                          onPressed: () {
-                            // playback (UI-only مثل قبل) 
-                          },
-                        ),
-                        title: Text(
-                          fileName,
-                          style: AppTypography.voiceRecorderFilename(context),
-                        ),
-                        subtitle: Text(
-                          date,
-                          style: AppTypography.voiceRecorderDate(context),
-                        ),
-                        trailing: _isSelectionMode
-                          ? null
-                          : PopupMenuButton<String>(
-                            icon: const Icon(Icons.more_vert),
-                            onSelected: (value) async {
-                              switch (value) {
-                                case AppConstants.SHARE:
-                                  // share logic
-                                  break;
-                                case AppConstants.FAVORITE:
-                                  // favorite logic 
-                                  break; 
-                                case AppConstants.EDIT:
-                                  _renameRecording(context, file, isDark);
-                                break;
-                                case AppConstants.DELETE:
-                                  if (_isSelectionMode) {
-                                    for (final f in _selectedFiles) {
-                                      await f.delete();
-                                    }
-                                    _selectedFiles.clear();
-                                    await vm.init();
-                                    setState(() {});
-                                  } else {
-                                    _confirmDelete(context, file, isDark, vm);
-                                  }
-                                  break;
-                              }
-                            },
-                            itemBuilder: (context) => [
-                              PopupMenuItem(
-                                padding: EdgeInsets.symmetric(horizontal: AppSpacing.space_4),
-                                // value: 'share',
-                                value: AppConstants.SHARE,
-                                child: ListTile(
-                                  leading: Icon(
-                                    Icons.share,
-                                    color: AppColors.voice_recorder_recordings_list_page_card_trailing_icons_color(isDark: isDark),
-                                  ),
-                                  title: Text(AppStrings.recording_list_share.translate(context)),
-                                ),
-                              ),
-                              PopupMenuItem(
-                                padding: EdgeInsets.symmetric(horizontal: AppSpacing.space_4),
-                                value: AppConstants.FAVORITE,
-                                // value: 'favorite',
-                                child: ListTile(
-                                  leading: Icon(
-                                    Icons.favorite_border,
-                                    color: AppColors.voice_recorder_recordings_list_page_card_trailing_icons_color(isDark: isDark),
-                                  ),
-                                  title: Text(AppStrings.recording_list_favorite.translate(context))
-                                ),
-                              ),
-                              if (!_isSelectionMode)
-                                PopupMenuItem(
-                                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.space_4),
-                                  value: AppConstants.EDIT,
-                                  // value: 'edit',
-                                  child: ListTile(
-                                    leading: Icon(
-                                      Icons.edit,
-                                      color: AppColors.voice_recorder_recordings_list_page_card_trailing_icons_color(isDark: isDark),
-                                    ),
-                                    title: Text(AppStrings.recording_list_rename.translate(context)),
-                                  ),
-                                ),
-                              PopupMenuItem(
-                                padding: EdgeInsets.symmetric(horizontal: AppSpacing.space_4),
-                                value: AppConstants.DELETE,
-                                // value: 'delete',
-                                child: ListTile(
-                                  leading: Icon(
-                                    Icons.delete,
-                                    color: AppColors.voice_recorder_recordings_list_page_card_trailing_icons_color(isDark: isDark),
-                                  ),
-                                  title: Text(AppStrings.recording_list_delete.translate(context)),
-                                ),
-                              ),
-                            ],
-                          ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-            bottomNavigationBar: AnimatedSlide(
-              offset: _isSelectionMode ? Offset.zero : const Offset(0, 1),
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeOutCubic,
-              child: AnimatedOpacity(
-                opacity: _isSelectionMode ? 1 : 0,
-                duration: const Duration(milliseconds: 200),
-                child: SafeArea(
-                  child: _SelectionBottomBar(
-                    selectedCount: _selectedFiles.length,
-                    onDelete: _deleteSelected,
-                    onShare: _shareSelected,
-                    onFavorite: _favoriteSelected,
-                  ),
-                ),
-              ),
-            ),
-          ),
-      );
-      },
-    );
+        );
+    });
   }
 
+  Future<void> _run(Future<void> Function() action) async {
+    try {
+      await action();
+    } catch (_) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              socialText(
+                context,
+                'عملیات انجام نشد؛ دسترسی فایل یا فضای خالی گوشی را بررسی کنید.',
+                'Could not complete the action. Check file access and available storage.',
+              ),
+            ),
+          ),
+        );
+    }
+  }
 
-  Future<void> _deleteSelected() async {
-    final isDark = context.read<AppData>().isDark;
-
-    final confirm = await showDialog<bool>(
+  Future<void> _delete(List<SavedRecording> files) async {
+    final yes = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.voice_recorder_recordings_list_page_dialog_background_color(isDark: isDark),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
         title: Text(
-          AppStrings.voice_recorder_delete_recording.translate(context),
-          textAlign: TextAlign.center,
-        ),
-        content: Text(
-          '${_selectedFiles.length} ${AppStrings.recording_list_multi_item_delete_content.translate(context)}',
-          textAlign: TextAlign.center,
+          socialText(context, 'حذف فایل ضبط‌شده؟', 'Delete recording?'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(AppStrings.voice_recorder_no.translate(context)),
+            child: Text(socialText(context, 'انصراف', 'Cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(
-              AppStrings.voice_recorder_yes_delete.translate(context),
-              style: AppTypography.voiceRecorderConfirmDelete(context, isDark),
-            ),
+            child: Text(socialText(context, 'حذف', 'Delete')),
           ),
         ],
       ),
     );
-
-    if (confirm != true || !mounted) return;
-
-    for (final file in _selectedFiles) {
-      await file.delete();
-    }
-
-    _selectedFiles.clear();
-    context.read<VoiceRecorderProvider>().init();
-    setState(() {});
+    if (yes != true || !mounted) return;
+    final vm = context.read<VoiceRecorderProvider>();
+    await _run(() async {
+      await vm.playbackService.stop();
+      for (final file in files) {
+        await vm.fileService.delete(file);
+      }
+      await vm.refreshFiles();
+      if (mounted) setState(selected.clear);
+    });
   }
 
-
-  void _shareSelected() {
-    // اتصال به share_plus یا منطق فعلی خودت
-    _selectedFiles.clear();
-    setState(() {});
+  Future<void> _rename(SavedRecording file) async {
+    final field = TextEditingController(
+      text: file.name.replaceFirst(RegExp(r'\.m4a$'), ''),
+    );
+    final name = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(socialText(context, 'تغییر نام', 'Rename')),
+        content: TextField(controller: field, autofocus: true, maxLength: 100),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(socialText(context, 'انصراف', 'Cancel')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, field.text.trim()),
+            child: Text(socialText(context, 'ذخیره', 'Save')),
+          ),
+        ],
+      ),
+    );
+    field.dispose();
+    if (name == null || name.isEmpty || !mounted) return;
+    final vm = context.read<VoiceRecorderProvider>();
+    await _run(() async {
+      await vm.playbackService.stop();
+      await vm.fileService.rename(file, name);
+      await vm.refreshFiles();
+    });
   }
-
-
-  void _favoriteSelected() {
-    // اگر favorite واقعی داری، اینجا وصلش کن
-    _selectedFiles.clear();
-    setState(() {});
-  }
-
-}
-
-
-class _SelectionBottomBar extends StatelessWidget {
-  final int selectedCount;
-  final VoidCallback onDelete;
-  final VoidCallback onShare;
-  final VoidCallback onFavorite;
-
-  const _SelectionBottomBar({
-    required this.selectedCount,
-    required this.onDelete,
-    required this.onShare,
-    required this.onFavorite,
-  });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      height: kBottomNavigationBarHeight,
-      padding: EdgeInsets.symmetric(horizontal: AppSpacing.space_16),
-      decoration: BoxDecoration(
-        color: AppColors.voice_recorder_recordings_list_page_selection_bottom_bar_background_color(isDark: isDark),
-        border: Border(
-          top: BorderSide(
-            color: AppColors.voice_recorder_recordings_list_page_selection_bottom_bar_border_color(isDark: isDark),
-            width: 1,
-          ),
-        ),
+    final vm = context.watch<VoiceRecorderProvider>();
+    final files = vm.files
+        .where((f) => f.name.toLowerCase().contains(query))
+        .toList();
+    final player = vm.playbackService;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(socialText(context, 'صداهای ضبط‌شده', 'Recordings')),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: Column(
         children: [
-          Text(
-            '$selectedCount ${AppStrings.recording_list_multi_item_selected.translate(context)}',
-            style: AppTypography.recordingListMultiItemSelected(context),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: TextField(
+              onChanged: (value) => setState(() => query = value.toLowerCase()),
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search),
+                hintText: socialText(
+                  context,
+                  'جستجوی فایل',
+                  'Search recordings',
+                ),
+              ),
+            ),
           ),
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.share),
-                onPressed: onShare,
-              ),
-              IconButton(
-                icon: const Icon(Icons.favorite),
-                onPressed: onFavorite,
-              ),
-              IconButton(
-                icon: Icon(Icons.delete, color: AppColors.voice_recorder_recordings_list_page_selection_bottom_bar_delete_icon_color(isDark: isDark)),
-                onPressed: onDelete,
-              ),
-            ],
+          const Text('Music / Sornaz', textDirection: TextDirection.ltr),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: vm.refreshFiles,
+              child: files.isEmpty
+                  ? ListView(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(32),
+                          child: Text(
+                            socialText(
+                              context,
+                              'فایل ضبط‌شده‌ای وجود ندارد.',
+                              'No recordings yet.',
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(12),
+                      itemCount: files.length,
+                      itemBuilder: (context, index) {
+                        final file = files[index];
+                        final active = player.currentPath == file.uri;
+                        return Card(
+                          child: Column(
+                            children: [
+                              ListTile(
+                                selected: selected.contains(file.uri),
+                                onLongPress: () =>
+                                    setState(() => selected.add(file.uri)),
+                                onTap: () {
+                                  if (selected.isNotEmpty) {
+                                    setState(
+                                      () => selected.contains(file.uri)
+                                          ? selected.remove(file.uri)
+                                          : selected.add(file.uri),
+                                    );
+                                  } else {
+                                    _run(() => vm.playSaved(file));
+                                  }
+                                },
+                                leading: IconButton(
+                                  icon: Icon(
+                                    active && player.isPlaying
+                                        ? Icons.pause
+                                        : Icons.play_arrow,
+                                  ),
+                                  onPressed: () =>
+                                      _run(() => vm.playSaved(file)),
+                                ),
+                                title: Text(file.name),
+                                subtitle: Text(
+                                  file.isPublic
+                                      ? formatJalali(file.modified)
+                                      : socialText(
+                                          context,
+                                          'ذخیره در گوشی در انتظار تلاش مجدد',
+                                          'Pending save to phone',
+                                        ),
+                                ),
+                                trailing: PopupMenuButton<String>(
+                                  onSelected: (action) async {
+                                    if (action == 'delete')
+                                      await _delete([file]);
+                                    if (action == 'rename') await _rename(file);
+                                    if (action == 'share')
+                                      await _run(
+                                        () => vm.fileService.share(file),
+                                      );
+                                    if (action == 'favorite') {
+                                      setState(
+                                        () => favorites.contains(file.uri)
+                                            ? favorites.remove(file.uri)
+                                            : favorites.add(file.uri),
+                                      );
+                                      final prefs =
+                                          await SharedPreferences.getInstance();
+                                      await prefs.setStringList(
+                                        'recording.favorites',
+                                        favorites.toList(),
+                                      );
+                                    }
+                                  },
+                                  itemBuilder: (_) => [
+                                    PopupMenuItem(
+                                      value: 'rename',
+                                      child: Text(
+                                        socialText(
+                                          context,
+                                          'تغییر نام',
+                                          'Rename',
+                                        ),
+                                      ),
+                                    ),
+                                    if (file.isPublic)
+                                      PopupMenuItem(
+                                        value: 'share',
+                                        child: Text(
+                                          socialText(
+                                            context,
+                                            'اشتراک‌گذاری',
+                                            'Share',
+                                          ),
+                                        ),
+                                      ),
+                                    PopupMenuItem(
+                                      value: 'favorite',
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            favorites.contains(file.uri)
+                                                ? Icons.favorite
+                                                : Icons.favorite_border,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            socialText(
+                                              context,
+                                              'علاقه‌مندی',
+                                              'Favorite',
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'delete',
+                                      child: Text(
+                                        socialText(context, 'حذف', 'Delete'),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (active)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        formatSeconds(
+                                          player.position.inSeconds,
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Slider(
+                                          value: player.position.inMilliseconds
+                                              .toDouble()
+                                              .clamp(
+                                                0,
+                                                player.duration.inMilliseconds
+                                                    .toDouble(),
+                                              ),
+                                          max:
+                                              player.duration.inMilliseconds > 0
+                                              ? player.duration.inMilliseconds
+                                                    .toDouble()
+                                              : 1,
+                                          onChanged:
+                                              player.duration.inMilliseconds > 0
+                                              ? (value) => player.seek(
+                                                  Duration(
+                                                    milliseconds: value.round(),
+                                                  ),
+                                                )
+                                              : null,
+                                        ),
+                                      ),
+                                      Text(
+                                        formatSeconds(
+                                          player.duration.inSeconds,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+            ),
           ),
         ],
       ),
+      bottomNavigationBar: selected.isEmpty
+          ? null
+          : SafeArea(
+              child: Row(
+                children: [
+                  TextButton(
+                    onPressed: () => setState(selected.clear),
+                    child: Text(socialText(context, 'انصراف', 'Cancel')),
+                  ),
+                  Text('${selected.length}'),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () => _delete(
+                      vm.files.where((f) => selected.contains(f.uri)).toList(),
+                    ),
+                    icon: const Icon(Icons.delete),
+                  ),
+                ],
+              ),
+            ),
     );
-  }
-}
-
-
-
-// ------------------------------------------------------------ 
-// 📝 Rename Recording 
-// ------------------------------------------------------------ 
-Future<void> _renameRecording(
-  BuildContext context,
-  File file,
-  bool isDark,
-) async {
-  final oldName = file.path.split('/').last.replaceAll(AppConstants.DOT_M4A, '');
-  final controller = TextEditingController(text: oldName);
-  final newName = await showDialog<String>(
-    context: context,
-    builder: (context) => AlertDialog(
-      backgroundColor: AppColors.voice_recorder_recordings_list_page_dialog_background_color(isDark: isDark),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-      actionsPadding: EdgeInsets.all(AppSpacing.space_0),
-      contentPadding: EdgeInsets.all(AppSpacing.space_24),
-      title: Text(
-        AppStrings.voice_recorder_rename_file.translate(context),
-        textAlign: TextAlign.center
-      ),
-      titleTextStyle: AppTypography.recordingListDialogTitle(context),
-      content: TextField(
-        controller: controller,
-        autofocus: true,
-        decoration: InputDecoration(
-          hintText: AppStrings.voice_recorder_rename_file.translate(context),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          style: TextButton.styleFrom(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.space_4),
-            ),
-          ),
-          child: Text(
-            AppStrings.voice_recorder_discard.translate(context),
-            style: AppTypography.recordingListDiscardDialog(context)
-          ),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, controller.text.trim()),
-          style: TextButton.styleFrom(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.space_4),
-            ),
-          ),
-          child: Text(
-            AppStrings.voice_recorder_save.translate(context),
-            style: AppTypography.recordingsListRenameSaveText(context, isDark)
-          ),
-        ),
-      ],
-    ),
-  );
-  if (newName == null || newName.isEmpty || newName == oldName) return; 
-  final newPath = file.path.replaceFirst(
-    '$oldName${AppConstants.DOT_M4A}',
-    '$newName${AppConstants.DOT_M4A}'
-  );
-  await file.rename(newPath);
-  if (!context.mounted) return;
-  context.read<VoiceRecorderProvider>().init();
-}
-
-
-
-// ------------------------------------------------------------ 
-// ❌ Confirm Delete 
-// ------------------------------------------------------------ 
-Future<void> _confirmDelete(
-  BuildContext context,
-  File file,
-  bool isDark,
-  VoiceRecorderProvider vm
-) async {
-  final fileName = file.path.split('/').last.replaceAll(AppConstants.DOT_M4A, '');
-  final confirm = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      backgroundColor: AppColors.voice_recorder_recordings_list_page_dialog_background_color(isDark: isDark),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-      actionsPadding: EdgeInsets.all(AppSpacing.space_0),
-      contentPadding: EdgeInsets.all(AppSpacing.space_24),
-      title: Text(
-        AppStrings.voice_recorder_delete_recording.translate(context),
-        textAlign: TextAlign.center
-      ),
-      titleTextStyle: AppTypography.recordingListDialogTitle(context),
-      content: Text(
-        "$fileName ${AppStrings.recording_list_delete_content.translate(context)}",
-        textAlign: TextAlign.center
-      ),
-      contentTextStyle: AppTypography.recordingListDialogContent(context),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          style: TextButton.styleFrom(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.space_4),
-            ),
-          ),
-          child: Text(
-            AppStrings.voice_recorder_no.translate(context),
-            style: AppTypography.recordingListDiscardDialog(context)
-          ),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, true),
-          style: TextButton.styleFrom(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.space_4),
-            ),
-          ),
-          child: Text(
-            AppStrings.voice_recorder_yes_delete.translate(context),
-            style: AppTypography.voiceRecorderConfirmDelete(context, isDark)
-          ),
-        ),
-      ],
-    ),
-  );
-  if (confirm == true) {
-    await file.delete();
-    await vm.init();
   }
 }

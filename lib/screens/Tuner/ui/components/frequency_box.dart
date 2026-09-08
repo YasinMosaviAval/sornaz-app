@@ -16,7 +16,7 @@ class FrequencyBox extends StatefulWidget {
     super.key,
     required this.cents,
     required this.inRange,
-    this.pointsPerSecond = 400,
+    this.pointsPerSecond = 60,
     this.pointSize = 1.0,
     this.scale = 4.0,
   });
@@ -32,25 +32,20 @@ class _FrequencyBoxState extends State<FrequencyBox> {
 
   final ValueNotifier<int> _repaintTick = ValueNotifier(0);
 
-
   @override
   void initState() {
     super.initState();
     _points = [];
     _lastCents = widget.cents;
 
-    _timer = Timer.periodic(
-      Duration(milliseconds: (1000 ~/ widget.pointsPerSecond)),
-      (_) {
-        if (_points.length >= widget.pointsPerSecond) {
-          _points.removeAt(0);
-        }
-        _points.add(_lastCents);
+    _timer = Timer.periodic(const Duration(milliseconds: 16), (_) {
+      if (_points.length >= widget.pointsPerSecond) {
+        _points.removeAt(0);
+      }
+      _points.add(_lastCents);
 
-        _repaintTick.value++;
-      },
-    );
-
+      _repaintTick.value++;
+    });
   }
 
   @override
@@ -62,6 +57,7 @@ class _FrequencyBoxState extends State<FrequencyBox> {
   @override
   void dispose() {
     _timer?.cancel();
+    _repaintTick.dispose();
     super.dispose();
   }
 
@@ -77,7 +73,9 @@ class _FrequencyBoxState extends State<FrequencyBox> {
       child: Stack(
         children: [
           Container(
-            color: AppColors.tuner_frequency_box_background_color(isDark: isDark),
+            color: AppColors.tuner_frequency_box_background_color(
+              isDark: isDark,
+            ),
           ),
 
           Positioned(
@@ -87,8 +85,12 @@ class _FrequencyBoxState extends State<FrequencyBox> {
             child: Container(
               width: 50,
               color: widget.inRange
-                  ? AppColors.tuner_frequency_box_in_range_frequency_color(isDark: isDark)
-                  : AppColors.tuner_frequency_box_not_in_range_frequency_color(isDark: isDark),
+                  ? AppColors.tuner_frequency_box_in_range_frequency_color(
+                      isDark: isDark,
+                    )
+                  : AppColors.tuner_frequency_box_not_in_range_frequency_color(
+                      isDark: isDark,
+                    ),
             ),
           ),
 
@@ -111,7 +113,6 @@ class _FrequencyBoxState extends State<FrequencyBox> {
       ),
     );
   }
-
 }
 
 class _FrequencyPointsPainter extends CustomPainter {

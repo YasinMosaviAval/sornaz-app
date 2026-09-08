@@ -13,13 +13,41 @@ import 'package:sornaz/screens/Tuner/ui/components/frequency_box.dart';
 import 'package:sornaz/screens/Tuner/ui/components/frequency_info_row.dart';
 import 'package:sornaz/screens/Tuner/ui/components/piano_keyboard.dart';
 
-class TunerPage extends StatelessWidget {
+class TunerPage extends StatefulWidget {
   const TunerPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const _TunerView();
+  State<TunerPage> createState() => _TunerPageState();
+}
+
+class _TunerPageState extends State<TunerPage> with WidgetsBindingObserver {
+  late TunerProvider tuner;
+  @override
+  void initState() {
+    super.initState();
+    tuner = context.read<TunerProvider>();
+    WidgetsBinding.instance.addObserver(this);
+    tuner.start();
   }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      tuner.start();
+    } else {
+      tuner.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    tuner.stop();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => const _TunerView();
 }
 
 class _TunerView extends StatelessWidget {
@@ -29,7 +57,7 @@ class _TunerView extends StatelessWidget {
   Widget build(BuildContext context) {
     final appData = context.watch<AppData>();
     final isDark = appData.isDark;
-    
+
     final tuner = context.watch<TunerProvider>();
     final analyzed = tuner.analyzePitch(tuner.frequency);
     final inRange = analyzed.cents.abs() <= 20;
@@ -49,16 +77,23 @@ class _TunerView extends StatelessWidget {
       body: Column(
         children: [
           if (!tuner.supportsPitchDetection)
-            Padding(padding: const EdgeInsets.all(16), child: Text(socialText(context, 'تشخیص فرکانس میکروفون در این نسخهٔ ویندوز فعال نیست؛ می‌توانید از کیبورد برای پخش نت مرجع استفاده کنید.', 'Microphone pitch detection is not available in this Windows version. Use the keyboard to play reference notes.'), textAlign: TextAlign.center)),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                socialText(
+                  context,
+                  'تشخیص فرکانس میکروفون در این نسخهٔ ویندوز فعال نیست؛ می‌توانید از کیبورد برای پخش نت مرجع استفاده کنید.',
+                  'Microphone pitch detection is not available in this Windows version. Use the keyboard to play reference notes.',
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
           FrequencyInfoRow(
             note: analyzed.note,
             cents: analyzed.cents,
             noteFreq: analyzed.targetFreq,
           ),
-          FrequencyBox(
-            cents: analyzed.cents,
-            inRange: inRange,
-          ),
+          FrequencyBox(cents: analyzed.cents, inRange: inRange),
           AppSpacing.sizedBoxH16(),
           DetectedFrequency(frequency: tuner.frequency),
           const SizedBox(height: 16),
@@ -67,9 +102,7 @@ class _TunerView extends StatelessWidget {
             child: Expanded(
               child: Align(
                 alignment: Alignment.bottomCenter,
-                child: PianoKeyboard(
-                  a4: tuner.a4,
-                ),
+                child: PianoKeyboard(a4: tuner.a4),
               ),
             ),
           ),

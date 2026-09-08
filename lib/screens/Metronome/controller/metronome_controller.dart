@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/services.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
@@ -5,9 +7,9 @@ import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/screens/Metronome/classes/note_length.dart';
 
 class MetronomeController extends ChangeNotifier {
-  final AudioPlayer _accentPlayer = AudioPlayer();
-  final AudioPlayer _tickPlayer = AudioPlayer();
-  final AudioPlayer _subTickPlayer = AudioPlayer();
+  late final AudioPlayer _accentPlayer = AudioPlayer();
+  late final AudioPlayer _tickPlayer = AudioPlayer();
+  late final AudioPlayer _subTickPlayer = AudioPlayer();
 
   double accentVolume = 1.0;
   double tickVolume = 0.75;
@@ -23,6 +25,46 @@ class MetronomeController extends ChangeNotifier {
   int _subTickIndex = 0;
 
   Timer? _timer;
+  static const _native = MethodChannel('sornaz/metronome');
+  StreamSubscription? _nativeTicks;
+  bool _disposed = false;
+  int _generation = 0;
+  Map<String, Object> get _configuration => {
+    'bpm': bpm,
+    'beats': timeSignature,
+    'subdivisions': subdivisionCount,
+    'accent': accentVolume,
+    'tick': tickVolume,
+    'sub': subTickVolume,
+    'seconds': stopMode == StopMode.timer
+        ? (practiceDuration?.inSeconds ?? 0)
+        : 0,
+    'bars': stopMode == StopMode.bars ? targetBars : 0,
+  };
+  void _configureNative() {
+    if (Platform.isAndroid && isPlaying)
+      _native.invokeMethod<void>('configure', _configuration);
+  }
+
+  Future<void> _startNative() async {
+    final generation = ++_generation;
+    await init();
+    if (_disposed || generation != _generation) return;
+    await _native.invokeMethod<void>('start', _configuration);
+    if (_disposed || generation != _generation) return;
+    isPlaying = true;
+    remainingDuration = practiceDuration ?? Duration.zero;
+    _practiceTimer?.cancel();
+    if (stopMode == StopMode.timer) {
+      final clock = Stopwatch()..start();
+      _practiceTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        final left = (practiceDuration! - clock.elapsed).inSeconds;
+        remainingDuration = Duration(seconds: left < 0 ? 0 : left);
+        onPracticeTick?.call();
+      });
+    }
+    notifyListeners();
+  }
 
   VoidCallback? onBeat;
 
@@ -71,21 +113,66 @@ class MetronomeController extends ChangeNotifier {
   int currentBar = 0;
 
   Future<void> init() async {
+    if (Platform.isAndroid) {
+      _nativeTicks ??= const EventChannel('sornaz/metronome/events')
+          .receiveBroadcastStream()
+          .listen(
+            (event) {
+              if (_disposed) return;
+              if (event['finished'] == true) {
+                isPlaying = false;
+                _practiceTimer?.cancel();
+                remainingDuration = Duration.zero;
+                notifyListeners();
+                onPracticeFinished?.call();
+                onPracticeTick?.call();
+                return;
+              }
+              currentBeat = event['beat'] as int;
+              currentBar = event['bar'] as int;
+              isAccentBeat = event['accent'] == true;
+              onBeat?.call();
+            },
+            onError: (Object error) {
+              if (!_disposed) {
+                stop();
+                onPracticeFinished?.call();
+              }
+            },
+          );
+      return;
+    }
     await _tickPlayer.setAsset(AppConstants.TICK_WAV);
     await _accentPlayer.setAsset(AppConstants.ACCENT_WAV);
     await _subTickPlayer.setAsset(AppConstants.SUB_TICK_WAV);
-    
-    _subTickPlayer.setVolume(subTickVolume);
-    _tickPlayer.setVolume(tickVolume);
-    _accentPlayer.setVolume(accentVolume);
+
+    if (Platform.isAndroid) {
+      _configureNative();
+    } else {
+      _subTickPlayer.setVolume(subTickVolume);
+    }
+    if (Platform.isAndroid) {
+      _configureNative();
+    } else {
+      _tickPlayer.setVolume(tickVolume);
+    }
+    if (Platform.isAndroid) {
+      _configureNative();
+    } else {
+      _accentPlayer.setVolume(accentVolume);
+    }
   }
 
   void start() {
+    if (Platform.isAndroid) {
+      _startNative();
+      return;
+    }
     stop();
     isPlaying = true;
     currentBeat = 1;
     currentBar = 0;
-    
+
     _subTickIndex = 0;
 
     final baseIntervalMs = 60000 / bpm;
@@ -106,6 +193,8 @@ class MetronomeController extends ChangeNotifier {
   }
 
   void stop() {
+    _generation++;
+    if (Platform.isAndroid) _native.invokeMethod<void>('stop');
     _timer?.cancel();
     _practiceTimer?.cancel();
     _timer = null;
@@ -149,14 +238,8 @@ class MetronomeController extends ChangeNotifier {
     }
   }
 
-  void setPracticeTimer({
-    required int minutes,
-    required int seconds,
-  }) {
-    practiceDuration = Duration(
-      minutes: minutes,
-      seconds: seconds,
-    );
+  void setPracticeTimer({required int minutes, required int seconds}) {
+    practiceDuration = Duration(minutes: minutes, seconds: seconds);
     remainingDuration = practiceDuration!;
   }
 
@@ -180,29 +263,42 @@ class MetronomeController extends ChangeNotifier {
 
   void startTimerFor(int hours, int minutes) {
     final duration = Duration(hours: hours, minutes: minutes);
-    _timer?.cancel();
-    _timer = Timer(duration, stop);
+    _practiceTimer?.cancel();
+    _practiceTimer = Timer(duration, stop);
   }
 
   void setNoteLength(NoteLength note) {
     selectedNote = note;
-    if (isPlaying) start();
+    if (Platform.isAndroid) {
+      _configureNative();
+    } else if (isPlaying) {
+      start();
+    }
   }
 
   void pause() {
+    if (Platform.isAndroid) {
+      stop();
+      return;
+    }
     _timer?.cancel();
     _timer = null;
     isPlaying = false;
   }
 
   void setBpm(int value) {
-    bpm = value;
-    if (isPlaying) start();
+    bpm = value.clamp(30, 300);
+    if (Platform.isAndroid) {
+      _configureNative();
+    } else if (isPlaying) {
+      start();
+    }
   }
 
   void setTimeSignature(int value) {
     timeSignature = value;
     currentBeat = 0;
+    _configureNative();
   }
 
   void setTickVolume(double value) {
@@ -259,20 +355,22 @@ class MetronomeController extends ChangeNotifier {
   }
 
   @override
-  Future<void> dispose() async {
+  void dispose() {
+    _generation++;
+    _disposed = true;
     _tapResetTimer?.cancel();
-    stop();
-    await _tickPlayer.dispose();
-    await _accentPlayer.dispose();
-    await _subTickPlayer.dispose();
+    _timer?.cancel();
+    _practiceTimer?.cancel();
+    _nativeTicks?.cancel();
+    if (Platform.isAndroid) {
+      _native.invokeMethod<void>('stop');
+    } else {
+      _tickPlayer.dispose();
+      _accentPlayer.dispose();
+      _subTickPlayer.dispose();
+    }
     super.dispose();
   }
-
 }
 
-enum StopMode {
-  none,
-  timer,
-  bars,
-}
-
+enum StopMode { none, timer, bars }

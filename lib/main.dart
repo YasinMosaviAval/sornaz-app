@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:sornaz/screens/Players/services/music_audio_handler.dart';
 import 'package:flutter/material.dart';
@@ -39,6 +40,7 @@ void main() async {
       ),
     );
   }
+  final preferences = await SharedPreferences.getInstance();
   await Hive.initFlutter();
   Hive.registerAdapter(AudioFileHiveAdapter());
 
@@ -51,9 +53,13 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AppData()),
-        ChangeNotifierProvider(create: (_) => LocaleProvider()),
-        ChangeNotifierProvider(create: (_) => TunerProvider()..start()),
+        ChangeNotifierProvider(
+          create: (_) => AppData(preferences: preferences),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => LocaleProvider(preferences: preferences),
+        ),
+        ChangeNotifierProvider(create: (_) => TunerProvider()),
         ChangeNotifierProxyProvider<LocaleProvider, ArticlesProvider>(
           create: (_) => ArticlesProvider(),
           update: (_, locale, library) =>

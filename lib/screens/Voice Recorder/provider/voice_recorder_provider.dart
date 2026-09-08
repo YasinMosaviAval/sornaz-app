@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_functions.dart';
@@ -17,7 +16,12 @@ class VoiceRecorderProvider extends ChangeNotifier {
     this.fileService,
     this.recordingService,
     this.playbackService,
-  );
+  ) {
+    playbackService.onChanged = () {
+      isPlaying = playbackService.isPlaying;
+      _notify();
+    };
+  }
   bool isRecording = false,
       isPaused = false,
       isPlaying = false,
@@ -28,11 +32,24 @@ class VoiceRecorderProvider extends ChangeNotifier {
   String? currentFilePath;
   int seconds = 0;
   String timer = AppConstants.TIMER_00_00;
-  List<File> files = [];
+  List<SavedRecording> files = [];
   List<double> amplitudes = [];
+  int totalSamples = 0;
+  final Stopwatch _recordingClock = Stopwatch();
   Timer? _timer;
 
   Future<void> init() => _initialization ??= _initialize();
+  Future<void> refreshFiles() async {
+    await init();
+    files = await fileService.loadFiles();
+    _notify();
+  }
+
+  Future<void> playSaved(SavedRecording file) async {
+    if (isRecording) return;
+    await playbackService.play(file.uri);
+  }
+
   Future<void> _initialize() async {
     try {
       await fileService.init();
@@ -50,6 +67,7 @@ class VoiceRecorderProvider extends ChangeNotifier {
 
   void _onAmplitude(double value) {
     if (!isRecording || _disposed) return;
+    totalSamples++;
     amplitudes.add(value);
     if (amplitudes.length > 400) amplitudes.removeAt(0);
     _notify();
@@ -59,7 +77,8 @@ class VoiceRecorderProvider extends ChangeNotifier {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!isRecording || _disposed) return;
-      timer = formatSeconds(++seconds);
+      seconds = _recordingClock.elapsed.inSeconds;
+      timer = formatSeconds(seconds);
       _notify();
     });
   }
@@ -85,10 +104,16 @@ class VoiceRecorderProvider extends ChangeNotifier {
       }
       await init();
       if (_disposed) return;
+      await fileService.preparePublicStorage();
+      await playbackService.stop();
       final path = fileService.newPath();
       await recordingService.start(path: path, onAmplitude: _onAmplitude);
       currentFilePath = path;
       amplitudes.clear();
+      totalSamples = 0;
+      _recordingClock
+        ..reset()
+        ..start();
       seconds = 0;
       timer = AppConstants.TIMER_00_00;
       isRecording = true;
@@ -101,6 +126,7 @@ class VoiceRecorderProvider extends ChangeNotifier {
     if (!isRecording) return;
     await _run(() async {
       await recordingService.pause();
+      _recordingClock.stop();
       isRecording = false;
       isPaused = true;
       _timer?.cancel();
@@ -115,6 +141,7 @@ class VoiceRecorderProvider extends ChangeNotifier {
     await _run(() async {
       await playbackService.stop();
       await recordingService.resume();
+      _recordingClock.start();
       isRecording = true;
       isPaused = false;
       _startTimer();
@@ -125,11 +152,14 @@ class VoiceRecorderProvider extends ChangeNotifier {
     if (!isRecording && !isPaused) return;
     await _run(() async {
       await recordingService.stop();
+      _recordingClock.stop();
       _timer?.cancel();
       isRecording = false;
       isPaused = false;
       seconds = 0;
       timer = AppConstants.TIMER_00_00;
+      final savedPath = currentFilePath;
+      if (savedPath != null) await fileService.publish(savedPath);
       currentFilePath = null;
       files = await fileService.loadFiles();
     });

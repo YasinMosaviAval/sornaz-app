@@ -9,8 +9,12 @@ import io.flutter.plugin.common.MethodChannel
 import java.io.File
 
 class MainActivity : AudioServiceActivity() {
+    private var practiceMetronome: PracticeMetronome? = null
+    override fun onDestroy() { practiceMetronome?.stop(); super.onDestroy() }
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        practiceMetronome = PracticeMetronome(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
+        PublicRecordings(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "sornaz/app_share")
             .setMethodCallHandler { call, result ->
                 if (call.method == "shareNotation") {
