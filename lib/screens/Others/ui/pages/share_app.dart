@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sornaz/components/drawer_theme.dart';
@@ -29,8 +30,8 @@ class SocialLinkTile extends StatelessWidget {
     child: ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Icon(link.$3),
-      title: Text(link.$1, style: AppTypography.appDrawerItemTitle(context)),
-      subtitle: Text(
+      title: AppText(link.$1, style: AppTypography.appDrawerItemTitle(context)),
+      subtitle: AppText(
         link.$2.replaceFirst('mailto:', ''),
         textDirection: TextDirection.ltr,
         style: AppTypography.appDrawerApplicationEmail(context),
@@ -47,7 +48,7 @@ class SocialLinkTile extends StatelessWidget {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('برنامه‌ای برای باز کردن این پیوند پیدا نشد.'),
+              content: AppText('برنامه‌ای برای باز کردن این پیوند پیدا نشد.'),
             ),
           );
         }
@@ -73,7 +74,7 @@ class _ShareAppPageState extends State<ShareAppPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
+            content: AppText(
               'اشتراک‌گذاری فایل نصب در این دستگاه ممکن نشد. از لینک سایت استفاده کنید.',
             ),
           ),
@@ -87,12 +88,12 @@ class _ShareAppPageState extends State<ShareAppPage> {
   @override
   Widget build(BuildContext context) => DrawerThemeScope(
     child: Scaffold(
-      appBar: AppBar(title: const Text('اشتراک‌گذاری برنامه')),
+      appBar: AppBar(title: const AppText('اشتراک‌گذاری برنامه')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            const Text(
+            const AppText(
               'سرناز را به دوستان خود معرفی کنید و در شبکه‌های اجتماعی همراه ما باشید.',
             ),
             const SizedBox(height: 20),
@@ -109,7 +110,7 @@ class _ShareAppPageState extends State<ShareAppPage> {
                   : const Icon(Icons.share_outlined),
               label: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                child: Text(
+                child: AppText(
                   sharing ? 'آماده‌سازی فایل نصب…' : 'ارسال فایل نصبی برنامه',
                 ),
               ),

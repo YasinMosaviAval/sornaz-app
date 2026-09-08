@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'package:audio_service/audio_service.dart';
+import 'package:sornaz/screens/Players/services/music_audio_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:sornaz/classes/my_app.dart';
@@ -22,6 +25,20 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  if (Platform.isAndroid) {
+    musicAudioHandler = await AudioService.init<MusicAudioHandler>(
+      builder: MusicAudioHandler.new,
+      config: const AudioServiceConfig(
+        androidNotificationChannelId: 'com.example.sornaz.music',
+        androidNotificationChannelName: 'Sornaz music',
+        androidNotificationIcon: 'drawable/ic_music_notification',
+        androidNotificationOngoing: true,
+        androidStopForegroundOnPause: true,
+        rewindInterval: Duration(seconds: 10),
+        fastForwardInterval: Duration(seconds: 10),
+      ),
+    );
+  }
   await Hive.initFlutter();
   Hive.registerAdapter(AudioFileHiveAdapter());
 

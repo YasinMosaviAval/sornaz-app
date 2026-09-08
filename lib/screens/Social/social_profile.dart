@@ -1,3 +1,5 @@
+import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'social_api.dart';
@@ -80,11 +82,11 @@ class _ProfileBodyState extends State<ProfileBody> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Column(
           children: [
-            Text(
+            AppText(
               '${user![key]}',
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
-            Text(
+            AppText(
               label,
               style: TextStyle(
                 fontSize: 12,
@@ -139,7 +141,7 @@ class _ProfileBodyState extends State<ProfileBody> {
                             );
                             if (mounted) load();
                           },
-                          child: Text(
+                          child: AppText(
                             socialText(
                               context,
                               'ویرایش پروفایل',
@@ -152,7 +154,7 @@ class _ProfileBodyState extends State<ProfileBody> {
                           children: [
                             OutlinedButton(
                               onPressed: busy ? null : follow,
-                              child: Text(
+                              child: AppText(
                                 u['isFollowing'] == true
                                     ? 'دنبال می‌کنید'
                                     : 'دنبال کردن',
@@ -160,7 +162,7 @@ class _ProfileBodyState extends State<ProfileBody> {
                             ),
                             const SizedBox(width: 8),
                             IconButton.filledTonal(
-                              tooltip: 'پیام خصوصی',
+                              tooltip: 'پیام خصوصی'.translate(context),
                               onPressed: () => openDirect(
                                 context,
                                 widget.api,
@@ -180,14 +182,14 @@ class _ProfileBodyState extends State<ProfileBody> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                AppText(
                   '${u['name']}',
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                Text(
+                AppText(
                   '@${u['username']}',
                   style: TextStyle(color: Theme.of(context).hintColor),
                 ),
@@ -244,7 +246,7 @@ class _ProfileBodyState extends State<ProfileBody> {
           if ('${u['bio']}'.isNotEmpty)
             Padding(
               padding: const EdgeInsets.all(20),
-              child: Text('${u['bio']}'),
+              child: AppText('${u['bio']}'),
             ),
           if (u['links'] is Map)
             Padding(
@@ -271,7 +273,7 @@ class _ProfileBodyState extends State<ProfileBody> {
                         }
                       },
                       icon: const Icon(Icons.open_in_new, size: 16),
-                      label: Text(entry.key),
+                      label: AppText(entry.key),
                     ),
                 ],
               ),
@@ -284,7 +286,7 @@ class _ProfileBodyState extends State<ProfileBody> {
                 children: [
                   ActionChip(
                     avatar: const Icon(Icons.school_outlined, size: 18),
-                    label: const Text('مدیریت دوره‌ها'),
+                    label: const AppText('مدیریت دوره‌ها'),
                     onPressed: () => socialPush(
                       context,
                       CoursesPage(api: widget.api, mode: 'manage'),
@@ -292,7 +294,7 @@ class _ProfileBodyState extends State<ProfileBody> {
                   ),
                   ActionChip(
                     avatar: const Icon(Icons.bookmark_border, size: 18),
-                    label: const Text('ذخیره‌شده‌ها'),
+                    label: const AppText('ذخیره‌شده‌ها'),
                     onPressed: () =>
                         socialPush(context, SavedPostsPage(api: widget.api)),
                   ),
@@ -319,7 +321,7 @@ class _ProfileBodyState extends State<ProfileBody> {
                             ),
                           ),
                         ),
-                        child: Text(
+                        child: AppText(
                           i == 0 ? 'پست‌ها' : 'دوره‌ها',
                           textAlign: TextAlign.center,
                           style: TextStyle(
@@ -412,7 +414,7 @@ class _PeoplePageState extends State<PeoplePage> {
               controller: search,
               onSubmitted: (_) => load(),
               decoration: InputDecoration(
-                hintText: 'جست‌وجوی نام کاربری',
+                hintText: 'جست‌وجوی نام کاربری'.translate(context),
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   onPressed: load,
@@ -446,8 +448,8 @@ class _PeoplePageState extends State<PeoplePage> {
                             user: user,
                             size: 40,
                           ),
-                          title: Text('${user['name']}'),
-                          subtitle: Text('@${user['username']}'),
+                          title: AppText('${user['name']}'),
+                          subtitle: AppText('@${user['username']}'),
                           trailing: const Icon(Icons.chevron_right),
                           onTap: () async {
                             await socialPush(
@@ -568,7 +570,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     end: 0,
                     bottom: 0,
                     child: IconButton.filled(
-                      tooltip: 'تغییر تصویر پروفایل',
+                      tooltip: 'تغییر تصویر پروفایل'.translate(context),
                       onPressed: () => image('avatar'),
                       icon: const Icon(Icons.camera_alt_outlined),
                     ),
@@ -580,19 +582,23 @@ class _EditProfilePageState extends State<EditProfilePage> {
             TextFormField(
               controller: name,
               validator: (v) => v == null || v.trim().isEmpty
-                  ? 'نام نمایشی را وارد کنید.'
+                  ? 'نام نمایشی را وارد کنید.'.translate(context)
                   : null,
               maxLength: 180,
-              decoration: const InputDecoration(labelText: 'نام نمایشی'),
+              decoration: InputDecoration(
+                labelText: 'نام نمایشی'.translate(context),
+              ),
             ),
             TextField(
               controller: bio,
               maxLength: 3000,
               maxLines: 5,
-              decoration: const InputDecoration(labelText: 'درباره من'),
+              decoration: InputDecoration(
+                labelText: 'درباره من'.translate(context),
+              ),
             ),
             const SizedBox(height: 16),
-            const Text(
+            const AppText(
               'لینک‌های عمومی',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
@@ -616,7 +622,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     return uri == null ||
                             uri.scheme != 'https' ||
                             uri.host.isEmpty
-                        ? 'آدرس معتبر https وارد کنید.'
+                        ? 'آدرس معتبر https وارد کنید.'.translate(context)
                         : null;
                   },
                 ),
@@ -629,7 +635,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       ? Icons.check
                       : Icons.image_outlined,
                 ),
-                label: Text(
+                label: AppText(
                   key == 'avatar' ? 'انتخاب تصویر پروفایل' : 'انتخاب کاور',
                 ),
               ),
@@ -637,7 +643,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             if (busy) const LinearProgressIndicator(),
             FilledButton(
               onPressed: busy ? null : save,
-              child: const Text('ذخیره تغییرات'),
+              child: const AppText('ذخیره تغییرات'),
             ),
           ],
         ),

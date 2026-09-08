@@ -15,7 +15,10 @@ class AppLocalizations {
   AppLocalizations(this.locale);
 
   static AppLocalizations? of(BuildContext context) {
-    return AppLocalizations(Provider.of<LocaleProvider>(context).locale);
+    return AppLocalizations(
+      Provider.of<LocaleProvider?>(context, listen: false)?.locale ??
+          Localizations.localeOf(context),
+    );
   }
 
   String translate(String key) {

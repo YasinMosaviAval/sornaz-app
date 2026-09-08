@@ -1,3 +1,4 @@
+import 'package:sornaz/screens/Players/services/music_audio_handler.dart';
 import 'dart:async';
 import 'package:flutter/material.dart' hide RepeatMode;
 import 'package:metadata_god/metadata_god.dart';
@@ -32,6 +33,30 @@ class AudioPlayerProvider extends ChangeNotifier {
   Duration get position => _controller.position;
 
   int currentIndex = -1;
+  AudioFile? _playingAudio;
+  bool _mediaActive = false;
+  StreamSubscription<void>? _stateSubscription, _completeSubscription;
+  late final VoidCallback _libraryListener;
+  void _publishMedia() {
+    final audio = _playingAudio;
+    if (!_mediaActive || audio == null) return;
+    final metadata = audio.metadata;
+    musicAudioHandler?.publish(id: audio.file.path,
+      title: metadata?.title?.trim().isNotEmpty == true ? metadata!.title! : audio.fileName,
+      artist: metadata?.artist,
+      duration: duration, position: position, playing: isPlaying,
+      loading: isLoading, speed: playbackSpeed);
+  }
+  Future<void> stop() async {
+    _mediaActive = false;
+    await _controller.stop();
+    musicAudioHandler?.clear();
+    notifyListeners();
+  }
+  Future<void> skipPrevious() async {
+    final index = _queue.previous();
+    if (index != null) { await play(index); } else { await seek(Duration.zero); }
+  }
 
   List<Duration> history = [];
   Timer? undoTimer;
@@ -47,20 +72,24 @@ class AudioPlayerProvider extends ChangeNotifier {
   AudioMetadata? get currentMetadata => _currentMetadata;
 
   Future<void> loadCurrentMetadata() async {
-    final audio = currentAudio;
+    final audio = _playingAudio;
     if (audio == null) return;
 
     try {
       audio.metadata = await MetadataService.extract(audio.file.path);
+      if (!identical(audio, _playingAudio)) return;
       _currentMetadata = audio.metadata;
     } catch (e) {
       audio.metadata = null;
+      if (!identical(audio, _playingAudio)) return;
       _currentMetadata = null;
     }
+    _publishMedia();
     notifyListeners();
   }
 
   Future<void> play(int index) async {
+    if (index < 0 || index >= filteredFiles.length || isLoading) return;
     if (currentIndex != -1 && currentIndex != index) {
       _history.push(
         index: currentIndex,
@@ -76,14 +105,21 @@ class AudioPlayerProvider extends ChangeNotifier {
       notifyListeners();
 
       currentIndex = index;
+      _playingAudio = filteredFiles[index];
+      _currentMetadata = _playingAudio?.metadata;
+      _mediaActive = true;
       
       _queue.setQueue(filteredFiles.length);
       _queue.setCurrentIndex(index);
 
       await _controller.playFile(filteredFiles[index].file.path);
       loadCurrentMetadata();
+    } catch (_) {
+      await stop();
+      rethrow;
     } finally {
       isLoading = false;
+      _publishMedia();
       notifyListeners();
     }
   }
@@ -94,19 +130,33 @@ class AudioPlayerProvider extends ChangeNotifier {
     _queue = PlaybackQueueManager();
 
     isHiveLoading = true;
+    final handler = musicAudioHandler;
+    if (handler != null) {
+      handler.onPlay = resume;
+      handler.onPause = pause;
+      handler.onStop = stop;
+      handler.onSeek = seek;
+      handler.onNext = playNext;
+      handler.onPrevious = skipPrevious;
+      handler.onRewind = seekBackward10;
+      handler.onForward = seekForward10;
+    }
 
-    libraryManager.addListener(() {
+    _libraryListener = () {
+      allFiles = libraryManager.allFiles;
       filteredFiles = libraryManager.allFiles;
       _buildFolderTree();
       notifyListeners();
-    });
+    };
+    libraryManager.addListener(_libraryListener);
 
-    _controller.onComplete.listen((_) {
+    _completeSubscription = _controller.onComplete.listen((_) {
       final nextIndex = _queue.next();
-      if (nextIndex != null) play(nextIndex);
+      if (nextIndex != null) { play(nextIndex); } else { stop(); }
     });
 
-    _controller.onStateChanged.listen((_) {
+    _stateSubscription = _controller.onStateChanged.listen((_) {
+      _publishMedia();
       notifyListeners();
     });
   }
@@ -117,7 +167,12 @@ class AudioPlayerProvider extends ChangeNotifier {
   }
 
   Future<void> pause() async => await _controller.pause();
-  Future<void> resume() async => await _controller.resume();
+  Future<void> resume() async {
+    if (_playingAudio == null) return;
+    _mediaActive = true;
+    await _controller.resume();
+    _publishMedia();
+  }
   Future<void> seek(Duration duration) async => await _controller.seek(duration);
 
   Future<void> setSpeed(double value) async {
@@ -140,6 +195,10 @@ class AudioPlayerProvider extends ChangeNotifier {
     if (undo != null) {
       if (currentIndex != undo.index) {
         currentIndex = undo.index;
+        _playingAudio = filteredFiles[undo.index];
+        _mediaActive = true;
+        _queue.setCurrentIndex(undo.index);
+        unawaited(loadCurrentMetadata());
         await _controller.playFile(filteredFiles[undo.index].file.path);
         await Future.delayed(const Duration(milliseconds: 100));
         await _controller.seek(undo.position);
@@ -164,9 +223,9 @@ class AudioPlayerProvider extends ChangeNotifier {
     }
   }
 
-  void playNext() {
+  Future<void> playNext() async {
     final nextIndex = _queue.next();
-    if (nextIndex != null) play(nextIndex);
+    if (nextIndex != null) await play(nextIndex);
   }
 
   void toggleShuffle() {
@@ -324,6 +383,17 @@ class AudioPlayerProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    undoTimer?.cancel();
+    _stateSubscription?.cancel();
+    _completeSubscription?.cancel();
+    libraryManager.removeListener(_libraryListener);
+    final handler = musicAudioHandler;
+    if (handler != null) {
+      handler.onPlay = null; handler.onPause = null; handler.onStop = null;
+      handler.onSeek = null; handler.onNext = null; handler.onPrevious = null;
+      handler.onRewind = null; handler.onForward = null;
+      handler.clear();
+    }
     _controller.dispose();
     super.dispose();
   }

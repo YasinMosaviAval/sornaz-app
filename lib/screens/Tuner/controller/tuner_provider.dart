@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_pitch_detection/flutter_pitch_detection.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -51,8 +52,11 @@ class TunerProvider extends ChangeNotifier {
     AppConstants.B
   ];
 
+  bool get supportsPitchDetection => Platform.isAndroid || Platform.isIOS;
+
   Future<void> start() async {
     await notePlayer.init();
+    if (!supportsPitchDetection) return;
 
     final status = await Permission.microphone.request();
     if (!status.isGranted) return;
@@ -62,7 +66,7 @@ class TunerProvider extends ChangeNotifier {
   }
 
   void stop() {
-    _pitch.stopDetection();
+    if (supportsPitchDetection) _pitch.stopDetection();
   }
 
   void _onPitchDetected(dynamic result) {

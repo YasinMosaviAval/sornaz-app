@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
@@ -27,7 +28,7 @@ class AppDrawerItem extends StatelessWidget {
       minTileHeight: 44,
       leading: Icon(icon),
       iconColor: AppColors.app_drawer_item_icon_color(isDark: isDark),
-      title: Text(text, style: AppTypography.appDrawerItemTitle(context)),
+      title: AppText(text, style: AppTypography.appDrawerItemTitle(context)),
       trailing: message == ''
           ? SizedBox()
           : Container(
@@ -40,7 +41,7 @@ class AppDrawerItem extends StatelessWidget {
                 ),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Text(
+              child: AppText(
                 message,
                 style: AppTypography.appDrawerItemsubtitle(context),
               ),

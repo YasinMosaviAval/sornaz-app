@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_strings.dart';
@@ -22,9 +23,6 @@ class VoiceRecorderPage extends StatelessWidget {
     final appData = context.watch<AppData>();
     final isDark = appData.isDark;
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<VoiceRecorderProvider>().requestPermissions(context);
-    });
 
     return Consumer<VoiceRecorderProvider>(
       builder: (context, vm, _) {
@@ -150,7 +148,7 @@ class _RecorderSection extends StatelessWidget {
                     highlightElevation: 0,
                     shape: const CircleBorder(),
                     backgroundColor: AppColors.voice_recorder_stop_icon_background_color(isDark: isDark),
-                    onPressed: vm.stopRecording,
+                    onPressed: vm.isBusy ? null : () => _recordAction(context, vm.stopRecording),
                     child: Icon(
                       Icons.stop_rounded,
                       size: AppSpacing.space_36,
@@ -179,7 +177,7 @@ class _RecorderSection extends StatelessWidget {
                         ? AppColors.voice_recorder_record_button_inactive_background_color(isDark: isDark)
                         : AppColors.voice_recorder_record_button_active_background_color(isDark: isDark),
                       heroTag: AppConstants.MAIN_HERO_TAG,
-                      onPressed: vm.isRecording ? vm.pauseRecording : vm.resumeRecording,
+                      onPressed: vm.isBusy ? null : () => _recordAction(context, vm.isRecording ? vm.pauseRecording : vm.isPaused ? vm.resumeRecording : vm.startRecording),
                       child: vm.isRecording ? Icon(
                         Icons.pause_rounded,
                         size: AppSpacing.space_36,
@@ -212,5 +210,16 @@ class _RecorderSection extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+Future<void> _recordAction(BuildContext context, Future<void> Function() action) async {
+  try { await action(); } catch (error) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(
+      error is MicrophonePermissionDenied
+        ? socialText(context, 'برای ضبط صدا، اجازه دسترسی به میکروفون لازم است.', 'Microphone permission is required to record audio.')
+        : socialText(context, 'ضبط صدا انجام نشد. دوباره تلاش کنید.', 'Recording failed. Please try again.')
+    )));
   }
 }

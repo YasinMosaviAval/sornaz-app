@@ -5,6 +5,13 @@ class RecordingService {
   final AudioRecorder _recorder = AudioRecorder();
   StreamSubscription? _ampSub;
 
+  Future<bool> hasPermission() => _recorder.hasPermission();
+
+  Future<void> dispose() async {
+    await _ampSub?.cancel();
+    await _recorder.dispose();
+  }
+
   Future<void> start({
     required String path,
     required void Function(double) onAmplitude,
@@ -23,7 +30,7 @@ class RecordingService {
         .listen((amp) {
       final db = amp.current;
       final normalized = db < -60 ? 0.0 : (db + 60) / 60;
-      onAmplitude(normalized);
+      onAmplitude(normalized.clamp(0.0, 1.0));
     });
   }
 

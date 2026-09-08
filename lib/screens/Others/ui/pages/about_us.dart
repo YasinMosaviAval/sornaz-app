@@ -19,7 +19,7 @@ class AboutUsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final appData = Provider.of<AppData>(context);
     final bool isDark = appData.isDark;
-    final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
+    final localeProvider = Provider.of<LocaleProvider>(context);
     final bool isEnglish =
         localeProvider.locale.languageCode == AppConstants.LOCALIZATION_EN;
 
@@ -144,11 +144,18 @@ class AboutUsPage extends StatelessWidget {
                   // leadingIcon: Icons.phone_in_talk_outlined,
                   leadingIcon: Icons.phone_outlined,
                   children: [
-                    JustifiedText(
-                      text: AppStrings.about_us_contact_information_description
-                          .translate(context),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.space_24,
+                        vertical: AppSpacing.space_12,
+                      ),
+                      child: Column(
+                        children: [
+                          for (final link in appSocialLinks)
+                            SocialLinkTile(link: link),
+                        ],
+                      ),
                     ),
-                    SocialLinkTile(link: appSocialLinks[1]),
                   ],
                 ),
                 AppSpacing.sizedBoxH16(),

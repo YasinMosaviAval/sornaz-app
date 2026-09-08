@@ -1,3 +1,5 @@
+import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/components/app_text.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'social_api.dart';
@@ -59,7 +61,7 @@ class _DirectPageState extends State<DirectPage> {
     title: 'دایرکت',
     actions: [
       IconButton(
-        tooltip: 'پیام جدید',
+        tooltip: 'پیام جدید'.translate(context),
         onPressed: () => socialPush(context, PeoplePage(api: widget.api)),
         icon: const Icon(Icons.edit_square),
       ),
@@ -87,14 +89,14 @@ class _DirectPageState extends State<DirectPage> {
                         height: 50,
                       ),
                     ),
-                    title: Text('${c['title']}'),
-                    subtitle: Text(
+                    title: AppText('${c['title']}'),
+                    subtitle: AppText(
                       '${c['lastMessage']}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     trailing: number(c['unread']) > 0
-                        ? Badge(label: Text('${c['unread']}'))
+                        ? Badge(label: AppText('${c['unread']}'))
                         : null,
                     onTap: () async {
                       await socialPush(
@@ -224,9 +226,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       children: [
         if (error != null)
           MaterialBanner(
-            content: Text(error!),
+            content: AppText(error!),
             actions: [
-              TextButton(onPressed: load, child: const Text('تلاش دوباره')),
+              TextButton(onPressed: load, child: const AppText('تلاش دوباره')),
             ],
           ),
         Expanded(
@@ -261,18 +263,20 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (!mine)
-                              Text(
+                              AppText(
                                 '${m['sender']}',
                                 style: const TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                            Text('${m['body']}'),
+                            AppText('${m['body']}'),
                             if (m['file'] != null)
-                              const Text('📎 فایل پیوست (قابل مشاهده در سایت)'),
+                              const AppText(
+                                '📎 فایل پیوست (قابل مشاهده در سایت)',
+                              ),
                             const SizedBox(height: 4),
-                            Text(
+                            AppText(
                               '${m['createdAt']}',
                               style: const TextStyle(fontSize: 10),
                             ),
@@ -296,8 +300,8 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                     minLines: 1,
                     maxLines: 4,
                     maxLength: 10000,
-                    decoration: const InputDecoration(
-                      hintText: 'پیام خصوصی…',
+                    decoration: InputDecoration(
+                      hintText: 'پیام خصوصی…'.translate(context),
                       counterText: '',
                       border: OutlineInputBorder(),
                     ),
@@ -305,7 +309,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                 ),
                 IconButton.filled(
                   onPressed: sending ? null : send,
-                  tooltip: 'ارسال',
+                  tooltip: 'ارسال'.translate(context),
                   icon: sending
                       ? const SizedBox(
                           width: 20,
@@ -413,8 +417,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
                       user: object(n['actor']),
                       size: 40,
                     ),
-                    title: Text('${n['actor']['name']} ${n['body']}'),
-                    subtitle: Text('${n['created_at']}'),
+                    title: AppText('${n['actor']['name']} ${n['body']}'),
+                    subtitle: AppText('${n['created_at']}'),
                     trailing: n['read_at'] == null ? const Badge() : null,
                     onTap: () => open(n),
                   ),
@@ -505,7 +509,7 @@ class _StoryPageState extends State<StoryPage>
         reply.clear();
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('پاسخ ارسال شد.')));
+        ).showSnackBar(const SnackBar(content: AppText('پاسخ ارسال شد.')));
       }
     } catch (e) {
       if (mounted) socialError(context, e);
@@ -556,14 +560,14 @@ class _StoryPageState extends State<StoryPage>
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
+                child: AppText(
                   '${story['author']['name']}',
                   style: const TextStyle(color: Colors.white),
                 ),
               ),
               IconButton(
                 onPressed: () => Navigator.pop(context),
-                tooltip: 'بستن استوری',
+                tooltip: 'بستن استوری'.translate(context),
                 icon: const Icon(Icons.close, color: Colors.white),
               ),
             ],
@@ -604,13 +608,13 @@ class _StoryPageState extends State<StoryPage>
           if ('${story['body']}'.isNotEmpty)
             Padding(
               padding: const EdgeInsets.all(12),
-              child: Text(
+              child: AppText(
                 '${story['body']}',
                 style: const TextStyle(color: Colors.white),
               ),
             ),
           if (video)
-            TextButton(onPressed: next, child: const Text('استوری بعدی')),
+            TextButton(onPressed: next, child: const AppText('استوری بعدی')),
           if (story['author']['isMe'] != true)
             Padding(
               padding: const EdgeInsets.all(12),
@@ -624,8 +628,8 @@ class _StoryPageState extends State<StoryPage>
                         progress.stop();
                       },
                       style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
-                        hintText: 'پاسخ به استوری…',
+                      decoration: InputDecoration(
+                        hintText: 'پاسخ به استوری…'.translate(context),
                         hintStyle: TextStyle(color: Colors.white60),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(color: Colors.white54),
@@ -636,7 +640,7 @@ class _StoryPageState extends State<StoryPage>
                   ),
                   IconButton(
                     onPressed: sending ? null : sendReply,
-                    tooltip: 'ارسال پاسخ',
+                    tooltip: 'ارسال پاسخ'.translate(context),
                     icon: const Icon(Icons.send_outlined, color: Colors.white),
                   ),
                 ],

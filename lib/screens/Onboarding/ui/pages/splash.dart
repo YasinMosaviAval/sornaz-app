@@ -27,6 +27,8 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _continueToApp() async {
+    await context.read<AuthSession?>()?.restore();
+    if (!mounted) return;
     final preferences = await SharedPreferences.getInstance();
     final onboardingCompleted =
         preferences.getBool(OnboardingScreen.completedPreferenceKey) ?? false;
@@ -35,10 +37,10 @@ class _SplashScreenState extends State<SplashScreen> {
         context.read<AuthSession?>()?.isAuthenticated ?? false;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (context) => !onboardingCompleted
-            ? const StartupPreferencesScreen()
-            : authenticated
+        builder: (context) => authenticated
             ? const HomePage()
+            : !onboardingCompleted
+            ? const StartupPreferencesScreen()
             : const SignInScreen(),
       ),
     );

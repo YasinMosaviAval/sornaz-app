@@ -1,3 +1,4 @@
+import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/app_bar.dart';
@@ -47,6 +48,8 @@ class _TunerView extends StatelessWidget {
       backgroundColor: AppColors.tuner_page_background_color(isDark: isDark),
       body: Column(
         children: [
+          if (!tuner.supportsPitchDetection)
+            Padding(padding: const EdgeInsets.all(16), child: Text(socialText(context, 'تشخیص فرکانس میکروفون در این نسخهٔ ویندوز فعال نیست؛ می‌توانید از کیبورد برای پخش نت مرجع استفاده کنید.', 'Microphone pitch detection is not available in this Windows version. Use the keyboard to play reference notes.'), textAlign: TextAlign.center)),
           FrequencyInfoRow(
             note: analyzed.note,
             cents: analyzed.cents,

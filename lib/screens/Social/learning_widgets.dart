@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
 import 'social_api.dart';
 import 'social_widgets.dart';
@@ -13,7 +14,7 @@ class LearningHeading extends StatelessWidget {
     child: Row(
       children: [
         Expanded(
-          child: Text(
+          child: AppText(
             title,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
@@ -21,7 +22,7 @@ class LearningHeading extends StatelessWidget {
         if (onMore != null)
           TextButton(
             onPressed: onMore,
-            child: Text(socialText(context, 'مشاهده همه', 'View all')),
+            child: AppText(socialText(context, 'مشاهده همه', 'View all')),
           ),
       ],
     ),
@@ -71,14 +72,14 @@ class LearningCourseTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                AppText(
                   '${course['title']}',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 7),
-                Text(
+                AppText(
                   showProgress
                       ? '${number(course['completed'])} / ${number(course['lesson_count'])} ${socialText(context, 'درس', 'lessons')}'
                       : number(course['price']) == 0
@@ -97,7 +98,7 @@ class LearningCourseTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(5),
                   ),
                   const SizedBox(height: 4),
-                  Text(
+                  AppText(
                     '${number(course['progress'])}%',
                     style: const TextStyle(fontSize: 11),
                   ),

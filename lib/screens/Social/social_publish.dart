@@ -1,3 +1,5 @@
+import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'social_api.dart';
@@ -75,7 +77,7 @@ class _PublishPageState extends State<PublishPage> {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          Text(
+          AppText(
             widget.kind == 'story'
                 ? 'لحظه‌های موسیقایی شما، برای ۲۴ ساعت'
                 : 'اجرای تازه، تمرین امروز یا تجربه‌ات را منتشر کن.',
@@ -85,9 +87,9 @@ class _PublishPageState extends State<PublishPage> {
           OutlinedButton.icon(
             onPressed: busy ? null : pick,
             icon: const Icon(Icons.add_photo_alternate_outlined),
-            label: Text(filename ?? 'انتخاب تصویر یا ویدیو'),
+            label: AppText(filename ?? 'انتخاب تصویر یا ویدیو'),
           ),
-          const Text(
+          const AppText(
             'تصویر تا ۱۰ مگابایت · ویدیو تا ۱۰۰ مگابایت',
             style: TextStyle(fontSize: 12),
           ),
@@ -116,8 +118,8 @@ class _PublishPageState extends State<PublishPage> {
             enabled: !busy,
             maxLength: 10000,
             maxLines: 6,
-            decoration: const InputDecoration(
-              labelText: 'متن و توضیحات',
+            decoration: InputDecoration(
+              labelText: 'متن و توضیحات'.translate(context),
               alignLabelWithHint: true,
               border: OutlineInputBorder(),
             ),
@@ -127,12 +129,12 @@ class _PublishPageState extends State<PublishPage> {
             const LinearProgressIndicator(),
             const Padding(
               padding: EdgeInsets.all(12),
-              child: Text('در حال ارسال؛ صفحه را باز نگه دارید.'),
+              child: AppText('در حال ارسال؛ صفحه را باز نگه دارید.'),
             ),
           ],
           FilledButton(
             onPressed: busy ? null : publish,
-            child: const Text('انتشار'),
+            child: const AppText('انتشار'),
           ),
         ],
       ),

@@ -1,3 +1,5 @@
+import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/components/app_text.dart';
 import 'package:sornaz/components/drawer_theme.dart';
 import 'package:sornaz/components/settings_section_header.dart';
 import 'package:sornaz/components/justified_text.dart';
@@ -23,7 +25,7 @@ class SimpleInfoPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DrawerThemeScope(
     child: Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(title: AppText(title)),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(28),
@@ -35,7 +37,7 @@ class SimpleInfoPage extends StatelessWidget {
                 color: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(height: 24),
-              Text(
+              AppText(
                 body,
                 textAlign: TextAlign.center,
                 style: const TextStyle(height: 1.8),
@@ -67,7 +69,7 @@ class FaqPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DrawerThemeScope(
     child: Scaffold(
-      appBar: const SornazAppBar(title: 'پرسش‌های متداول'),
+      appBar: SornazAppBar(title: 'پرسش‌های متداول'.translate(context)),
       backgroundColor: AppColors.about_us_background_color(
         isDark: context.watch<AppData>().isDark,
       ),
@@ -77,10 +79,10 @@ class FaqPage extends StatelessWidget {
           children: [
             for (final item in items)
               SettingsSectionHeader(
-                title: item.$1,
+                title: item.$1.translate(context),
                 leadingIcon: Icons.help_outline,
                 initiallyExpanded: false,
-                children: [JustifiedText(text: item.$2)],
+                children: [JustifiedText(text: item.$2.translate(context))],
               ),
           ],
         ),
@@ -113,9 +115,9 @@ class _ContactUsPageState extends State<ContactUsPage> {
 
   Future<void> submit() async {
     if (message.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('متن پیام را وارد کنید.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: AppText('متن پیام را وارد کنید.')),
+      );
       return;
     }
     final user = context.read<AuthSession>().user;
@@ -150,14 +152,14 @@ class _ContactUsPageState extends State<ContactUsPage> {
       subject.clear();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('پیام شما ارسال شد. در اولین فرصت پاسخ می‌دهیم.'),
+          content: AppText('پیام شما ارسال شد. در اولین فرصت پاسخ می‌دهیم.'),
         ),
       );
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
+            content: AppText(
               'ارسال پیام انجام نشد؛ اتصال اینترنت را بررسی کنید و دوباره تلاش کنید.',
             ),
           ),
@@ -173,7 +175,7 @@ class _ContactUsPageState extends State<ContactUsPage> {
     final user = context.watch<AuthSession>().user;
     return DrawerThemeScope(
       child: Scaffold(
-        appBar: AppBar(title: const Text('تماس با ما')),
+        appBar: AppBar(title: const AppText('تماس با ما')),
         body: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) => SingleChildScrollView(
@@ -185,7 +187,7 @@ class _ContactUsPageState extends State<ContactUsPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text(
+                        AppText(
                           'ارتباط با ما — ارسال پیام جدید',
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
@@ -193,8 +195,10 @@ class _ContactUsPageState extends State<ContactUsPage> {
                         if (user == null) ...[
                           TextField(
                             controller: name,
-                            decoration: const InputDecoration(
-                              labelText: 'نام و نام خانوادگی',
+                            decoration: InputDecoration(
+                              labelText: 'نام و نام خانوادگی'.translate(
+                                context,
+                              ),
                               border: OutlineInputBorder(),
                             ),
                           ),
@@ -204,8 +208,10 @@ class _ContactUsPageState extends State<ContactUsPage> {
                           TextField(
                             controller: email,
                             keyboardType: TextInputType.emailAddress,
-                            decoration: const InputDecoration(
-                              labelText: 'ایمیل پاسخ (اختیاری)',
+                            decoration: InputDecoration(
+                              labelText: 'ایمیل پاسخ (اختیاری)'.translate(
+                                context,
+                              ),
                               border: OutlineInputBorder(),
                             ),
                           ),
@@ -213,8 +219,8 @@ class _ContactUsPageState extends State<ContactUsPage> {
                         ],
                         TextField(
                           controller: subject,
-                          decoration: const InputDecoration(
-                            labelText: 'موضوع',
+                          decoration: InputDecoration(
+                            labelText: 'موضوع'.translate(context),
                             border: OutlineInputBorder(),
                           ),
                         ),
@@ -228,8 +234,8 @@ class _ContactUsPageState extends State<ContactUsPage> {
                               expands: true,
                               maxLines: null,
                               textAlignVertical: TextAlignVertical.top,
-                              decoration: const InputDecoration(
-                                labelText: 'متن پیام *',
+                              decoration: InputDecoration(
+                                labelText: 'متن پیام *'.translate(context),
                                 alignLabelWithHint: true,
                                 border: OutlineInputBorder(),
                               ),
@@ -250,7 +256,7 @@ class _ContactUsPageState extends State<ContactUsPage> {
                                       strokeWidth: 2,
                                     ),
                                   )
-                                : const Text('ارسال پیام'),
+                                : const AppText('ارسال پیام'),
                           ),
                         ),
                       ],

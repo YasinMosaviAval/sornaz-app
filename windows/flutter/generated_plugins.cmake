@@ -4,7 +4,6 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_windows
-  flutter_sound
   metronome
   permission_handler_windows
   record_windows

@@ -1,3 +1,4 @@
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,6 +13,9 @@ import 'package:sornaz/screens/Social/social_courses.dart';
 Widget host(Widget child, {bool dark = false}) => ChangeNotifierProvider(
   create: (_) => AppData()..toggleDarkMode(dark),
   child: MaterialApp(
+    locale: const Locale('fa'),
+    supportedLocales: const [Locale('fa'), Locale('en')],
+    localizationsDelegates: const [GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
     home: Directionality(textDirection: TextDirection.rtl, child: child),
   ),
 );

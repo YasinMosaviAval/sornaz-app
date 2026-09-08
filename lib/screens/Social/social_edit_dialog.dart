@@ -1,3 +1,5 @@
+import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
 
 class SocialEditDialog extends StatefulWidget {
@@ -29,7 +31,7 @@ class _SocialEditDialogState extends State<SocialEditDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: Text(widget.title),
+    title: AppText(widget.title),
     content: SingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -45,7 +47,9 @@ class _SocialEditDialogState extends State<SocialEditDialog> {
                   : 100000,
               maxLines: i == 1 ? 6 : 1,
               obscureText: i == 2 || widget.passwordOnly,
-              decoration: InputDecoration(labelText: widget.labels[i]),
+              decoration: InputDecoration(
+                labelText: widget.labels[i].translate(context),
+              ),
             ),
         ],
       ),
@@ -53,7 +57,7 @@ class _SocialEditDialogState extends State<SocialEditDialog> {
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('انصراف'),
+        child: const AppText('انصراف'),
       ),
       FilledButton(
         onPressed: () {
@@ -64,7 +68,7 @@ class _SocialEditDialogState extends State<SocialEditDialog> {
             );
           }
         },
-        child: const Text('ثبت'),
+        child: const AppText('ثبت'),
       ),
     ],
   );

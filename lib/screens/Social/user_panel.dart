@@ -1,3 +1,5 @@
+import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
@@ -26,7 +28,7 @@ class UserPanelPage extends StatelessWidget {
             children: [
               const Icon(Icons.account_circle_outlined, size: 72),
               const SizedBox(height: 16),
-              Text(
+              AppText(
                 socialText(
                   context,
                   'به جمع اهالی موسیقی بپیوندید',
@@ -36,7 +38,7 @@ class UserPanelPage extends StatelessWidget {
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: () => socialPush(context, const SignInScreen()),
-                child: Text(
+                child: AppText(
                   socialText(context, 'ورود یا ثبت‌نام', 'Sign in or register'),
                 ),
               ),
@@ -142,7 +144,7 @@ class _PanelState extends State<_Panel> {
             ])
               ListTile(
                 leading: Icon(item.$2),
-                title: Text(item.$3),
+                title: AppText(item.$3),
                 onTap: () => Navigator.pop(context, item.$1),
               ),
           ],
@@ -167,31 +169,31 @@ class _PanelState extends State<_Panel> {
     title: socialText(context, 'دنیای موسیقی من', 'My music space'),
     actions: [
       IconButton(
-        tooltip: 'پست‌ها و استوری‌ها',
+        tooltip: 'پست‌ها و استوری‌ها'.translate(context),
         onPressed: () => setState(() => tab = tab == 0 ? 2 : 0),
         icon: Icon(
           tab == 0 ? Icons.person_outline : Icons.dynamic_feed_outlined,
         ),
       ),
       IconButton(
-        tooltip: 'جست‌وجوی کاربران',
+        tooltip: 'جست‌وجوی کاربران'.translate(context),
         onPressed: () => socialPush(context, PeoplePage(api: api)),
         icon: const Icon(Icons.search),
       ),
       IconButton(
-        tooltip: 'اعلان‌ها',
+        tooltip: 'اعلان‌ها'.translate(context),
         onPressed: () async {
           await socialPush(context, NotificationsPage(api: api));
           if (mounted) load();
         },
         icon: Badge(
           isLabelVisible: unread > 0,
-          label: Text('$unread'),
+          label: AppText('$unread'),
           child: const Icon(Icons.notifications_none),
         ),
       ),
       IconButton(
-        tooltip: 'دایرکت',
+        tooltip: 'دایرکت'.translate(context),
         onPressed: () => socialPush(context, DirectPage(api: api)),
         icon: const Icon(Icons.chat_bubble_outline),
       ),
@@ -232,7 +234,7 @@ class _PanelState extends State<_Panel> {
                                     child: Icon(Icons.add),
                                   ),
                                   SizedBox(height: 8),
-                                  Text(
+                                  AppText(
                                     'استوری من',
                                     style: TextStyle(fontSize: 11),
                                   ),
@@ -262,7 +264,7 @@ class _PanelState extends State<_Panel> {
                                       size: 52,
                                     ),
                                     const SizedBox(height: 6),
-                                    Text(
+                                    AppText(
                                       '${stories[i]['author']['name']}',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -291,7 +293,7 @@ class _PanelState extends State<_Panel> {
                         padding: const EdgeInsets.all(16),
                         child: TextButton(
                           onPressed: fetchingMore ? null : loadMore,
-                          child: Text(
+                          child: AppText(
                             fetchingMore ? 'در حال دریافت…' : 'نمایش بیشتر',
                           ),
                         ),
@@ -303,7 +305,7 @@ class _PanelState extends State<_Panel> {
     },
     floatingActionButton: FloatingActionButton(
       onPressed: create,
-      tooltip: 'ساخت محتوا',
+      tooltip: 'ساخت محتوا'.translate(context),
       child: const Icon(Icons.add),
     ),
     bottom: tab == 2
@@ -382,18 +384,18 @@ class _PostCardState extends State<PostCard> {
         children: [
           ListTile(
             leading: SocialAvatar(api: widget.api, user: author, size: 36),
-            title: Text(
+            title: AppText(
               '${author['name']}',
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
-            subtitle: Text('@${author['username']}'),
+            subtitle: AppText('@${author['username']}'),
             onTap: () => socialPush(
               context,
               ProfilePage(api: widget.api, userId: number(author['id'])),
             ),
             trailing: author['isMe'] == true
                 ? IconButton(
-                    tooltip: 'حذف پست',
+                    tooltip: 'حذف پست'.translate(context),
                     icon: const Icon(Icons.delete_outline),
                     onPressed: busy
                         ? null
@@ -401,17 +403,17 @@ class _PostCardState extends State<PostCard> {
                             final yes = await showDialog<bool>(
                               context: context,
                               builder: (context) => AlertDialog(
-                                title: const Text('این پست حذف شود؟'),
+                                title: const AppText('این پست حذف شود؟'),
                                 actions: [
                                   TextButton(
                                     onPressed: () =>
                                         Navigator.pop(context, false),
-                                    child: const Text('انصراف'),
+                                    child: const AppText('انصراف'),
                                   ),
                                   TextButton(
                                     onPressed: () =>
                                         Navigator.pop(context, true),
-                                    child: const Text('حذف'),
+                                    child: const AppText('حذف'),
                                   ),
                                 ],
                               ),
@@ -445,7 +447,7 @@ class _PostCardState extends State<PostCard> {
               children: [
                 IconButton(
                   onPressed: busy ? null : () => react('like'),
-                  tooltip: 'پسندیدن',
+                  tooltip: 'پسندیدن'.translate(context),
                   icon: Icon(
                     post['liked'] == true
                         ? Icons.favorite
@@ -455,11 +457,11 @@ class _PostCardState extends State<PostCard> {
                         : null,
                   ),
                 ),
-                Text('${post['likes']}'),
+                AppText('${post['likes']}'),
                 const Spacer(),
                 IconButton(
                   onPressed: busy ? null : () => react('save'),
-                  tooltip: 'ذخیره',
+                  tooltip: 'ذخیره'.translate(context),
                   icon: Icon(
                     post['saved'] == true
                         ? Icons.bookmark
@@ -472,7 +474,7 @@ class _PostCardState extends State<PostCard> {
           if ('${post['body']}'.isNotEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text('${post['body']}'),
+              child: AppText('${post['body']}'),
             ),
           const SizedBox(height: 12),
           const Divider(height: 1),

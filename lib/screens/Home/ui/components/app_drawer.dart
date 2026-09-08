@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_text.dart';
 import 'package:sornaz/components/app_logo.dart';
 import 'package:flutter/cupertino.dart' show CupertinoSwitch;
 import 'package:flutter/material.dart';
@@ -54,7 +55,7 @@ class AppDrawer extends StatelessWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
+                                    AppText(
                                       authUser?.fullName ??
                                           AppStrings.application_fullname
                                               .translate(context),
@@ -64,7 +65,7 @@ class AppDrawer extends StatelessWidget {
                                           ),
                                     ),
                                     const SizedBox(height: 4),
-                                    Text(
+                                    AppText(
                                       authUser?.contact ??
                                           AppStrings.application_email
                                               .translate(context),
@@ -103,14 +104,14 @@ class AppDrawer extends StatelessWidget {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        Text(
+                                        AppText(
                                           'حالت تاریک',
                                           style:
                                               AppTypography.appDrawerItemTitle(
                                                 context,
                                               ),
                                         ),
-                                        Text(
+                                        AppText(
                                           'نمایش برنامه با تم تاریک',
                                           style:
                                               AppTypography.appDrawerApplicationEmail(
@@ -137,7 +138,7 @@ class AppDrawer extends StatelessWidget {
                         ),
                         const Padding(
                           padding: EdgeInsets.fromLTRB(20, 16, 20, 4),
-                          child: Text('برنامه'),
+                          child: AppText('برنامه'),
                         ),
                         AppDrawerItem(
                           icon: Icons.info,
@@ -192,7 +193,7 @@ class AppDrawer extends StatelessWidget {
                         const Divider(),
                         const Padding(
                           padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
-                          child: Text(
+                          child: AppText(
                             'جامعه',
                             style: TextStyle(color: Colors.grey),
                           ),
@@ -231,13 +232,13 @@ class AppDrawer extends StatelessWidget {
                           children: [
                             const Padding(
                               padding: EdgeInsets.all(12),
-                              child: Text('حساب من'),
+                              child: AppText('حساب من'),
                             ),
                             ListTile(
                               textColor: isDark
                                   ? const Color(0xffbfa02a)
                                   : const Color(0xff3478ff),
-                              title: Text(
+                              title: AppText(
                                 authUser == null
                                     ? 'ورود یا ثبت‌نام'
                                     : 'ورود با حساب دیگر',
@@ -249,7 +250,7 @@ class AppDrawer extends StatelessWidget {
                             if (authUser != null)
                               ListTile(
                                 textColor: AppColors.error,
-                                title: const Text('خروج از حساب'),
+                                title: const AppText('خروج از حساب'),
                                 onTap: session.isChanging
                                     ? null
                                     : () async {
@@ -298,13 +299,13 @@ class AppDrawer extends StatelessWidget {
                   children: [
                     const Padding(
                       padding: EdgeInsets.all(20),
-                      child: Text('حساب‌های کاربری'),
+                      child: AppText('حساب‌های کاربری'),
                     ),
                     for (final account in session.accounts)
                       ListTile(
                         leading: const Icon(Icons.account_circle_outlined),
-                        title: Text(account.fullName),
-                        subtitle: Text(account.contact),
+                        title: AppText(account.fullName),
+                        subtitle: AppText(account.contact),
                         trailing: account.id == session.user?.id
                             ? const Icon(Icons.check)
                             : null,
@@ -312,7 +313,7 @@ class AppDrawer extends StatelessWidget {
                       ),
                     ListTile(
                       leading: const Icon(Icons.person_add_alt),
-                      title: const Text('افزودن حساب کاربری'),
+                      title: const AppText('افزودن حساب کاربری'),
                       onTap: () => Navigator.pop(context, -1),
                     ),
                   ],

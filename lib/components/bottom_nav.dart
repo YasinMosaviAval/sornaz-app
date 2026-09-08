@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/screens/Home/ui/pages/home.dart';
-import 'package:sornaz/screens/Home/ui/pages/music_tools.dart';
+import 'package:sornaz/screens/Notation/music_sheets_page.dart';
 import 'package:sornaz/screens/Articles/ui/pages/articles_page.dart';
 import 'package:sornaz/screens/Social/user_panel.dart';
 import 'package:sornaz/screens/Social/course_catalog.dart';
@@ -36,7 +36,7 @@ class BottomNavBarWidget extends StatelessWidget {
             MaterialPageRoute(
               builder: (_) => const [
                 HomePage(),
-                MusicToolsPage(),
+                MusicSheetsPage(),
                 CourseCatalogPage(),
                 ArticlesPage(),
                 UserPanelPage(),
@@ -50,8 +50,8 @@ class BottomNavBarWidget extends StatelessWidget {
             (
               Icons.music_note_outlined,
               Icons.music_note,
-              'ابزار موسیقی',
-              'Music tools',
+              'نت‌های موسیقی',
+              'Music Sheet',
             ),
             (Icons.menu_book_outlined, Icons.menu_book, 'دوره‌ها', 'Courses'),
             (Icons.article_outlined, Icons.article, 'مقاله‌ها', 'Articles'),

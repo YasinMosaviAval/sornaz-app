@@ -1,3 +1,7 @@
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
@@ -7,11 +11,13 @@ import 'package:video_player/video_player.dart';
 import 'social_api.dart';
 
 String socialText(BuildContext context, String fa, String en) =>
-    Localizations.localeOf(context).languageCode == 'fa' ? fa : en;
+    AppStrings.learningEn.containsKey(en)
+    ? en.translate(context)
+    : (Localizations.localeOf(context).languageCode == 'fa' ? fa : en);
 void socialError(BuildContext context, Object error) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
-      content: Text(
+      content: AppText(
         error is SocialException
             ? error.message
             : socialText(
@@ -51,6 +57,10 @@ class SocialScaffold extends StatelessWidget {
             seedColor: AppColors.primary_light,
             brightness: data.isDark ? Brightness.dark : Brightness.light,
           ).copyWith(
+            surface: data.isDark
+                ? const Color(0xff141414)
+                : const Color(0xfff6f6f6),
+            onSurface: data.isDark ? Colors.white : Colors.black,
             primary: data.isDark
                 ? const Color(0xffd3ae32)
                 : const Color(0xff0064fb),
@@ -61,7 +71,7 @@ class SocialScaffold extends StatelessWidget {
     return Theme(
       data: theme,
       child: Scaffold(
-        appBar: AppBar(title: Text(title), actions: actions),
+        appBar: AppBar(title: AppText(title), actions: actions),
         body: body,
         bottomNavigationBar: bottom,
         floatingActionButton: floatingActionButton,
@@ -159,11 +169,11 @@ class SocialEmpty extends StatelessWidget {
         children: [
           Icon(icon, size: 46, color: Theme.of(context).colorScheme.primary),
           const SizedBox(height: 16),
-          Text(text, textAlign: TextAlign.center),
+          AppText(text, textAlign: TextAlign.center),
           if (onRetry != null)
             TextButton(
               onPressed: onRetry,
-              child: Text(socialText(context, 'تلاش دوباره', 'Retry')),
+              child: AppText(socialText(context, 'تلاش دوباره', 'Retry')),
             ),
         ],
       ),
@@ -177,8 +187,11 @@ class SocialVideo extends StatefulWidget {
     required this.api,
     required this.path,
     this.localFile,
+    this.title = '',
+    this.subtitle = '',
   });
   final File? localFile;
+  final String title, subtitle;
   final SocialApi api;
   final String path;
   @override
@@ -223,38 +236,153 @@ class _SocialVideoState extends State<SocialVideo> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (failed) return const SocialEmpty('پخش ویدیو ممکن نشد.');
-    final c = controller;
-    if (c == null || !c.value.isInitialized)
-      return const SizedBox(
-        height: 180,
-        child: Center(child: CircularProgressIndicator()),
-      );
+  Future<void> note() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    final me = widget.api.token.isEmpty
+        ? <String, dynamic>{}
+        : object(await widget.api.get('/me'));
+    final key = 'video-note:${number(me['id'])}:' + widget.path;
+    final input = TextEditingController(text: prefs.getString(key) ?? '');
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (d) => AlertDialog(
+        title: AppText(socialText(d, 'یادداشت درس', 'Lesson note')),
+        content: TextField(controller: input, maxLines: 5, maxLength: 3000),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(d, true),
+            child: AppText(socialText(d, 'ذخیره', 'Save')),
+          ),
+        ],
+      ),
+    );
+    if (saved == true) await prefs.setString(key, input.text);
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    input.dispose();
+  }
+
+  String clock(Duration d) =>
+      '${d.inMinutes}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
+  Widget player(BuildContext context, {bool full = false}) {
+    final c = controller!;
     return ValueListenableBuilder<VideoPlayerValue>(
       valueListenable: c,
-      builder: (_, value, __) => Column(
+      builder: (context, v, _) => Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          AspectRatio(aspectRatio: value.aspectRatio, child: VideoPlayer(c)),
-          Row(
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              AspectRatio(aspectRatio: v.aspectRatio, child: VideoPlayer(c)),
+              PositionedDirectional(
+                top: 12,
+                start: 16,
+                end: 16,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppText(
+                      widget.title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                    AppText(
+                      widget.subtitle,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+              if (!v.isPlaying)
+                IconButton.filled(
+                  onPressed: c.play,
+                  iconSize: 42,
+                  icon: const Icon(Icons.play_arrow),
+                ),
+            ],
+          ),
+          VideoProgressIndicator(
+            c,
+            allowScrubbing: true,
+            colors: VideoProgressColors(
+              playedColor: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               IconButton(
-                tooltip: value.isPlaying ? 'توقف' : 'پخش',
-                onPressed: () => value.isPlaying ? c.pause() : c.play(),
-                icon: Icon(value.isPlaying ? Icons.pause : Icons.play_arrow),
-              ),
-              Expanded(child: VideoProgressIndicator(c, allowScrubbing: true)),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: Text(
-                  '${value.position.inMinutes}:${(value.position.inSeconds % 60).toString().padLeft(2, '0')}',
+                tooltip: socialText(
+                  context,
+                  v.isPlaying ? 'توقف' : 'پخش',
+                  v.isPlaying ? 'Pause' : 'Play',
                 ),
+                onPressed: () => v.isPlaying ? c.pause() : c.play(),
+                icon: Icon(v.isPlaying ? Icons.pause : Icons.play_arrow),
+              ),
+              AppText(
+                '${clock(v.position)} / ${clock(v.duration)}',
+                style: const TextStyle(fontSize: 11),
+              ),
+              IconButton(
+                onPressed: () => c.setVolume(v.volume == 0 ? 1 : 0),
+                icon: Icon(v.volume == 0 ? Icons.volume_off : Icons.volume_up),
+              ),
+              IconButton(
+                tooltip: socialText(context, 'یادداشت درس', 'Lesson note'),
+                onPressed: note,
+                icon: const Icon(Icons.note_add_outlined),
+              ),
+              PopupMenuButton<double>(
+                tooltip: socialText(context, 'سرعت پخش', 'Playback speed'),
+                initialValue: v.playbackSpeed,
+                onSelected: c.setPlaybackSpeed,
+                itemBuilder: (_) => [
+                  for (final speed in [.5, .75, 1.0, 1.25, 1.5, 2.0])
+                    PopupMenuItem(value: speed, child: AppText('${speed}x')),
+                ],
+                icon: const Icon(Icons.settings_outlined),
+              ),
+              IconButton(
+                onPressed: () => full
+                    ? Navigator.pop(context)
+                    : Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (ctx) => Scaffold(
+                            appBar: AppBar(),
+                            body: Center(child: player(ctx, full: true)),
+                          ),
+                        ),
+                      ),
+                icon: Icon(full ? Icons.fullscreen_exit : Icons.fullscreen),
               ),
             ],
           ),
         ],
       ),
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (failed)
+      return SocialEmpty(
+        socialText(context, 'پخش ویدیو ممکن نشد.', 'Unable to play video.'),
+        onRetry: () {
+          setState(() => failed = false);
+          controller?.dispose();
+          _load();
+        },
+      );
+    if (controller?.value.isInitialized != true)
+      return const SizedBox(
+        height: 180,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    return player(context);
   }
 }

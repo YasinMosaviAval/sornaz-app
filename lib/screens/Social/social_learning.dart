@@ -1,3 +1,5 @@
+import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
 import 'social_api.dart';
 import 'social_widgets.dart';
@@ -61,18 +63,18 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
             child: SocialAvatar(api: widget.api, user: profile, size: 104),
           ),
           const SizedBox(height: 14),
-          Text(
+          AppText(
             '${profile['name']}',
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
           ),
-          Text(
+          AppText(
             '@${profile['username']}',
             textAlign: TextAlign.center,
             style: TextStyle(color: Theme.of(context).hintColor),
           ),
           const SizedBox(height: 14),
-          Text(
+          AppText(
             '${profile['bio'] ?? ''}',
             textAlign: TextAlign.center,
             maxLines: 4,
@@ -85,7 +87,7 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
                 child: OutlinedButton(
                   onPressed: () =>
                       open(EditProfilePage(api: widget.api, profile: profile)),
-                  child: Text(
+                  child: AppText(
                     socialText(context, 'ویرایش پروفایل', 'Edit profile'),
                   ),
                 ),
@@ -96,7 +98,7 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
                   onPressed: () => open(
                     ProfilePage(api: widget.api, userId: number(profile['id'])),
                   ),
-                  child: Text(
+                  child: AppText(
                     socialText(context, 'پروفایل عمومی', 'Public profile'),
                   ),
                 ),
@@ -129,7 +131,7 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
               margin: const EdgeInsets.only(bottom: 12),
               child: ListTile(
                 leading: Icon(item.$1),
-                title: Text(socialText(context, item.$2, item.$3)),
+                title: AppText(socialText(context, item.$2, item.$3)),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => open(item.$4),
               ),
@@ -139,7 +141,7 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
             onMore: () => open(LearningProgressPage(api: widget.api)),
           ),
           if (active.isEmpty)
-            Text(
+            AppText(
               socialText(
                 context,
                 'برای شروع یادگیری یک دوره انتخاب کنید.',
@@ -159,7 +161,7 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
             socialText(context, 'دوره‌های تکمیل‌شده', 'Finished courses'),
           ),
           if (finished.isEmpty)
-            Text(
+            AppText(
               socialText(
                 context,
                 'با تکمیل درس‌ها، دوره‌ها اینجا نمایش داده می‌شوند.',
@@ -170,7 +172,7 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.check_circle, color: Color(0xff4f9771)),
-              title: Text('${course['title']}'),
+              title: AppText('${course['title']}'),
               onTap: () => open(
                 CourseDetailPage(api: widget.api, id: number(course['id'])),
               ),
@@ -224,11 +226,11 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
                                   : Theme.of(context).disabledColor,
                             ),
                             const SizedBox(height: 12),
-                            Text(
+                            AppText(
                               socialText(context, badge.$1, badge.$2),
                               textAlign: TextAlign.center,
                             ),
-                            Text(
+                            AppText(
                               badge.$3
                                   ? socialText(context, 'به دست آمد', 'Earned')
                                   : socialText(
@@ -251,7 +253,7 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
           OutlinedButton.icon(
             onPressed: () => open(CoursesPage(api: widget.api, mode: 'manage')),
             icon: const Icon(Icons.add),
-            label: Text(
+            label: AppText(
               socialText(
                 context,
                 'ساخت و مدیریت دوره',
@@ -414,7 +416,7 @@ class _SavedLibraryPageState extends State<SavedLibraryPage> {
                                     api: widget.api,
                                     course: row,
                                     trailing: IconButton(
-                                      tooltip: 'حذف نشان',
+                                      tooltip: 'حذف نشان'.translate(context),
                                       onPressed: busy
                                           ? null
                                           : () => remove(
@@ -432,10 +434,10 @@ class _SavedLibraryPageState extends State<SavedLibraryPage> {
                                       user: row,
                                       size: 48,
                                     ),
-                                    title: Text('${row['name']}'),
-                                    subtitle: Text('@${row['username']}'),
+                                    title: AppText('${row['name']}'),
+                                    subtitle: AppText('@${row['username']}'),
                                     trailing: IconButton(
-                                      tooltip: 'حذف نشان',
+                                      tooltip: 'حذف نشان'.translate(context),
                                       onPressed: busy
                                           ? null
                                           : () => remove(
@@ -464,7 +466,7 @@ class _SavedLibraryPageState extends State<SavedLibraryPage> {
                             SavedPostsPage(api: widget.api),
                           ),
                           icon: const Icon(Icons.grid_on),
-                          label: Text(
+                          label: AppText(
                             socialText(
                               context,
                               'نمایش پست‌های ذخیره‌شده',
@@ -532,7 +534,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
     title: socialText(context, 'تنظیمات اعلان', 'Notifications'),
     actions: [
       IconButton(
-        tooltip: 'اعلان‌های دریافتی',
+        tooltip: 'اعلان‌های دریافتی'.translate(context),
         onPressed: () =>
             socialPush(context, NotificationsPage(api: widget.api)),
         icon: const Icon(Icons.inbox_outlined),
@@ -549,10 +551,10 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
               Card(
                 elevation: 0,
                 child: SwitchListTile(
-                  title: Text(
+                  title: AppText(
                     socialText(context, 'پیام خصوصی', 'Direct messages'),
                   ),
-                  subtitle: Text(
+                  subtitle: AppText(
                     socialText(
                       context,
                       'اعلان دریافت پیام جدید',
@@ -569,7 +571,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
               Card(
                 elevation: 0,
                 child: SwitchListTile(
-                  title: Text(
+                  title: AppText(
                     socialText(context, 'دنبال‌کننده جدید', 'New followers'),
                   ),
                   value: settings!['follow'] == true,
@@ -579,10 +581,10 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
               LearningHeading(socialText(context, 'فعالیت‌ها', 'Activity')),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: Text(
+                title: AppText(
                   socialText(context, 'پسندیدن پست‌ها', 'Post likes'),
                 ),
-                subtitle: Text(
+                subtitle: AppText(
                   socialText(
                     context,
                     'وقتی کسی پست شما را می‌پسندد',
@@ -593,7 +595,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                 onChanged: busy ? null : (v) => change('like', v),
               ),
               const Divider(),
-              Text(
+              AppText(
                 socialText(
                   context,
                   'این تنظیمات برای اعلان‌های داخل اپ است.',

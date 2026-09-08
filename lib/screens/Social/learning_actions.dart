@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'social_api.dart';
@@ -99,7 +100,7 @@ class _DownloadCourseButtonState extends State<DownloadCourseButton> {
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
+            content: AppText(
               'دانلود کامل شد؛ فایل‌ها در بخش دانلودهای پروفایل هستند.',
             ),
           ),
@@ -118,7 +119,7 @@ class _DownloadCourseButtonState extends State<DownloadCourseButton> {
       OutlinedButton.icon(
         onPressed: progress == null ? download : null,
         icon: const Icon(Icons.download_outlined),
-        label: Text(
+        label: AppText(
           progress == null
               ? socialText(context, 'دانلود دوره', 'Download course')
               : '${(progress! * 100).round()}%',
@@ -192,12 +193,12 @@ class _LessonProgressControlState extends State<LessonProgressControl> {
   Widget build(BuildContext context) => error != null
       ? TextButton(
           onPressed: load,
-          child: const Text('تلاش دوباره برای دریافت پیشرفت'),
+          child: const AppText('تلاش دوباره برای دریافت پیشرفت'),
         )
       : FilledButton.icon(
           onPressed: busy ? null : change,
           icon: Icon(done ? Icons.check_circle : Icons.check_circle_outline),
-          label: Text(
+          label: AppText(
             done
                 ? socialText(context, 'تکمیل شد؛ لغو علامت', 'Completed · undo')
                 : socialText(

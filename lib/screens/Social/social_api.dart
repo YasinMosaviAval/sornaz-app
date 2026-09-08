@@ -19,6 +19,7 @@ class SocialException implements Exception {
 class SocialApi {
   SocialApi(this.token, {http.Client? client})
     : _client = client ?? http.Client();
+  static String locale = 'fa';
   final String token;
   final http.Client _client;
   static const base = String.fromEnvironment(
@@ -26,8 +27,9 @@ class SocialApi {
     defaultValue: 'https://sornaz.com/api/sornaz/v1',
   );
   Map<String, String> get headers => {
-    if(token.isNotEmpty)'Authorization': 'Bearer $token',
+    if (token.isNotEmpty) 'Authorization': 'Bearer $token',
     'Accept': 'application/json',
+    'Accept-Language': locale,
   };
   Uri uri(String path) =>
       Uri.parse('${base.replaceFirst(RegExp(r'/$'), '')}/social$path');

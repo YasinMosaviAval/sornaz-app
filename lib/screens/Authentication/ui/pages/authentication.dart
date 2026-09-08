@@ -79,7 +79,6 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     final en = context.watch<LocaleProvider>().locale.languageCode == 'en';
     return _AuthPage(
-      title: AppStrings.sign_in_title.translate(context),
       children: [
         const _Header(),
         const SizedBox(height: 18),
@@ -285,7 +284,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     final en = context.watch<LocaleProvider>().locale.languageCode == 'en';
     return _AuthPage(
-      title: AppStrings.sign_up_title.translate(context),
       children: [
         const _Header(),
         const SizedBox(height: 18),
@@ -397,8 +395,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
 
 class _AuthPage extends StatelessWidget {
-  const _AuthPage({required this.title, required this.children});
-  final String title;
+  const _AuthPage({required this.children});
   final List<Widget> children;
   @override
   Widget build(BuildContext context) {
@@ -416,10 +413,6 @@ class _AuthPage extends StatelessWidget {
           backgroundColor: Colors.transparent,
           foregroundColor: dark ? Colors.white : Colors.black,
           titleSpacing: 0,
-          title: Text(
-            title,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400),
-          ),
         ),
         body: SafeArea(
           top: false,

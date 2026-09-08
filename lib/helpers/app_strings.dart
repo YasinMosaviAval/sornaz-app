@@ -3,6 +3,1068 @@
 import 'package:sornaz/helpers/app_images.dart';
 
 class AppStrings {
+  // Shared labels for learning, profiles and drawer pages.
+  static const learningEn = <String, String>{
+    'Music Sheet': 'Music Sheet',
+    'Music Sheets': 'Music Sheets',
+    'Notation': 'Notation',
+    'This article is unavailable in this language. Check your connection.':
+        'This article is unavailable in this language. Check your connection.',
+    'Could not load comments.': 'Could not load comments.',
+    'Comments may contain up to 3,000 characters.':
+        'Comments may contain up to 3,000 characters.',
+    'Guest User': 'Guest User',
+    'Your comment is awaiting approval.': 'Your comment is awaiting approval.',
+    'Could not submit comment. Try again.':
+        'Could not submit comment. Try again.',
+    'This article is unavailable in the selected language.':
+        'This article is unavailable in the selected language.',
+    'Cancel': 'Cancel',
+    'Read article': 'Read article',
+    'Could not open article.': 'Could not open article.',
+    'Could not open link.': 'Could not open link.',
+    'Insert link': 'Insert link',
+    'Insert': 'Insert',
+    'Enter a valid link.': 'Enter a valid link.',
+    'Unapproved': 'Unapproved',
+    'Reply': 'Reply',
+    'Retry': 'Retry',
+    'Published: ': 'Published: ',
+    'Updated: ': 'Updated: ',
+    'views': 'views',
+    'Rate this article': 'Rate this article',
+    'User comments': 'User comments',
+    'No comments have been posted for this article yet.':
+        'No comments have been posted for this article yet.',
+    'Load more comments': 'Load more comments',
+    'Submit a new comment': 'Submit a new comment',
+    'Reply to ': 'Reply to ',
+    'Cancel reply': 'Cancel reply',
+    'Full name': 'Full name',
+    'Email': 'Email',
+    'Your comment': 'Your comment',
+    'Submitting…': 'Submitting…',
+    'Submit comment': 'Submit comment',
+    'Related articles': 'Related articles',
+    'با ایجاد حساب یا استفاده از خدمات سرناز، این قوانین و تغییرات بعدی آن را می‌پذیرید.':
+        'با ایجاد حساب یا استفاده از خدمات سرناز، این قوانین و تغییرات بعدی آن را می‌پذیرید.',
+    'اطلاعات ثبت‌نام باید صحیح باشد و مسئولیت حفظ امنیت رمز عبور و فعالیت‌های حساب بر عهده کاربر است.':
+        'اطلاعات ثبت‌نام باید صحیح باشد و مسئولیت حفظ امنیت رمز عبور و فعالیت‌های حساب بر عهده کاربر است.',
+    'محتوای دوره‌ها، مقالات و فایل‌های آموزشی صرفاً برای استفاده شخصی هنرجو است و انتشار، فروش یا کپی‌برداری بدون مجوز کتبی ممنوع است.':
+        'محتوای دوره‌ها، مقالات و فایل‌های آموزشی صرفاً برای استفاده شخصی هنرجو است و انتشار، فروش یا کپی‌برداری بدون مجوز کتبی ممنوع است.',
+    'شهریه دوره‌ها طبق تعرفه‌های اعلام‌شده دریافت می‌شود. شرایط استرداد وجه مطابق آیین‌نامه مالی آموزشگاه خواهد بود.':
+        'شهریه دوره‌ها طبق تعرفه‌های اعلام‌شده دریافت می‌شود. شرایط استرداد وجه مطابق آیین‌نامه مالی آموزشگاه خواهد بود.',
+    'اطلاعات شخصی کاربران محرمانه نگهداری می‌شود و جز در موارد قانونی یا با رضایت کاربر در اختیار شخص ثالث قرار نمی‌گیرد.':
+        'Personal information is kept confidential and is only shared with third parties with your consent or when required by law.',
+    'هرگونه محتوای توهین‌آمیز، اسپم یا نقض حقوق دیگران در پیام‌ها، نظرات و پروفایل ممنوع است و می‌تواند به تعلیق حساب منجر شود.':
+        'هرگونه محتوای توهین‌آمیز، اسپم یا نقض حقوق دیگران در پیام‌ها، نظرات و پروفایل ممنوع است و می‌تواند به تعلیق حساب منجر شود.',
+    'آموزشگاه می‌تواند این قوانین را به‌روزرسانی کند. ادامه استفاده از خدمات پس از اعلام تغییرات به منزله پذیرش نسخه جدید است.':
+        'آموزشگاه می‌تواند این قوانین را به‌روزرسانی کند. ادامه استفاده از خدمات پس از اعلام تغییرات به منزله پذیرش نسخه جدید است.',
+    'Menu': 'Menu',
+    'Search course, topic, mentor…': 'Search course, topic, mentor…',
+    'Course filters': 'Course filters',
+    'New blog': 'New blog',
+    'Could not load articles.': 'Could not load articles.',
+    'No articles found.': 'No articles found.',
+    'New courses': 'New courses',
+    'Could not load courses.': 'Could not load courses.',
+    'No matching courses.': 'No matching courses.',
+    'Updated courses': 'Updated courses',
+    'lessons': 'lessons',
+    'Start learning': 'Start learning',
+    'Instructors & authors': 'Instructors & authors',
+    'Music tools': 'Music tools',
+    'https://sornaz.com/': 'https://sornaz.com/',
+    'https://t.me/sornaz_music_application':
+        'https://t.me/sornaz_music_application',
+    'https://www.youtube.com/@sornaz.academy/':
+        'https://www.youtube.com/@sornaz.academy/',
+    'https://www.instagram.com/sornaz.ac':
+        'https://www.instagram.com/sornaz.ac',
+    'mailto:sornaz.ac@gmail.com': 'mailto:sornaz.ac@gmail.com',
+    'از صفحه ثبت‌نام، مشخصات خود را وارد کنید و کد تأیید ۶ رقمی را ثبت کنید.':
+        'Enter your details on the registration page and submit the six-digit verification code.',
+    'بله، در صفحه ورود یا ثبت‌نام گزینه ادامه بدون ورود را انتخاب کنید.':
+        'Yes. Select Continue as guest on the sign-in or registration page.',
+    'از منوی برنامه وارد صفحه تماس با ما شوید و پیام خود را ارسال کنید.':
+        'Open Contact us from the app menu and send your message.',
+    'Free': 'Free',
+    'IRT': 'IRT',
+    'View course': 'View course',
+    'Filter': 'Filter',
+    'Clear': 'Clear',
+    'Rating': 'Rating',
+    '& up': '& up',
+    'Video duration': 'Video duration',
+    'Hours': 'Hours',
+    'Categories': 'Categories',
+    'Set filters': 'Set filters',
+    'Filters': 'Filters',
+    'No results in these filters & keyword':
+        'No results in these filters & keyword',
+    'Try another filter or keyword.': 'Try another filter or keyword.',
+    'Courses': 'Courses',
+    'What is your review?': 'What is your review?',
+    'Do you recommend this course?': 'Do you recommend this course?',
+    'YES': 'YES',
+    'NO': 'NO',
+    'Leave your review for this course': 'Leave your review for this course',
+    'Successfully submitted': 'Successfully submitted',
+    'Thank you for the valuable feedback.':
+        'Thank you for the valuable feedback.',
+    'Close': 'Close',
+    'Submit review': 'Submit review',
+    'Report an issue': 'Report an issue',
+    'Send': 'Send',
+    'Report submitted.': 'Report submitted.',
+    'Course link copied.': 'Course link copied.',
+    'students': 'students',
+    'Review': 'Review',
+    'About': 'About',
+    'Q&A': 'Q&A',
+    'Like': 'Like',
+    'Dislike': 'Dislike',
+    'Share': 'Share',
+    'Related courses': 'Related courses',
+    'reviews': 'reviews',
+    'Resources & downloadable files': 'Resources & downloadable files',
+    'Enroll to access course resources.': 'Enroll to access course resources.',
+    'Summary': 'Summary',
+    'sections': 'sections',
+    'lectures': 'lectures',
+    'hours': 'hours',
+    'Description': 'Description',
+    'Schedule learning time': 'Schedule learning time',
+    'Choose a time to study this course.':
+        'Choose a time to study this course.',
+    'Get started': 'Get started',
+    'Course instructor': 'Course instructor',
+    'View profile': 'View profile',
+    'Reviews': 'Reviews',
+    'Write a review': 'Write a review',
+    'No reviews yet.': 'No reviews yet.',
+    'Ask the first question.': 'Ask the first question.',
+    'Replying to a question': 'Replying to a question',
+    'Ask something…': 'Ask something…',
+    'Connecting…': 'Connecting…',
+    'Enroll': 'Enroll',
+    'English title': 'English title',
+    'English description': 'English description',
+    'Persian category': 'Persian category',
+    'English category': 'English category',
+    'Total video duration (seconds)': 'Total video duration (seconds)',
+    'Original price (IRT)': 'Original price (IRT)',
+    'Teaching language': 'Teaching language',
+    'Course level': 'Course level',
+    'Summary and prerequisites': 'Summary and prerequisites',
+    'English summary': 'English summary',
+    'Public preview video ID': 'Public preview video ID',
+    'Add resource': 'Add resource',
+    'Title': 'Title',
+    'Add': 'Add',
+    'Course details': 'Course details',
+    'Upload preview video': 'Upload preview video',
+    'Upload the preview separately from private lesson files.':
+        'Upload the preview separately from private lesson files.',
+    'Upload learning file': 'Upload learning file',
+    'Save changes': 'Save changes',
+    'Remove': 'Remove',
+    'Download course': 'Download course',
+    'Completed · undo': 'Completed · undo',
+    'Mark lesson complete': 'Mark lesson complete',
+    'View all': 'View all',
+    'Course': 'Course',
+    'Downloads': 'Downloads',
+    'Download from a purchased course. Internet is needed to verify access when opening saved files.':
+        'Download from a purchased course. Internet is needed to verify access when opening saved files.',
+    'Edit profile': 'Edit profile',
+    'Public profile': 'Public profile',
+    'Learning progress': 'Learning progress',
+    'Choose a course to start learning.': 'Choose a course to start learning.',
+    'Finished courses': 'Finished courses',
+    'Completed courses will appear here.':
+        'Completed courses will appear here.',
+    'Achievements': 'Achievements',
+    'First lesson': 'First lesson',
+    'Ten lessons': 'Ten lessons',
+    'First course': 'First course',
+    'Three courses': 'Three courses',
+    'Earned': 'Earned',
+    'Not earned yet': 'Not earned yet',
+    'Create and manage courses': 'Create and manage courses',
+    'Saved': 'Saved',
+    'Authors': 'Authors',
+    'Posts': 'Posts',
+    'Nothing saved yet.': 'Nothing saved yet.',
+    'View saved posts': 'View saved posts',
+    'Notifications': 'Notifications',
+    'Account': 'Account',
+    'Direct messages': 'Direct messages',
+    'Notify me about new messages': 'Notify me about new messages',
+    'Following': 'Following',
+    'New followers': 'New followers',
+    'Activity': 'Activity',
+    'Post likes': 'Post likes',
+    'When someone likes your post': 'When someone likes your post',
+    'These settings apply to in-app notifications.':
+        'These settings apply to in-app notifications.',
+    'User profile': 'User profile',
+    'Connection failed. Please try again.':
+        'Connection failed. Please try again.',
+    'Lesson note': 'Lesson note',
+    'Save': 'Save',
+    'Playback speed': 'Playback speed',
+    'Unable to play video.': 'Unable to play video.',
+    'Your space': 'Your space',
+    'Join the music community': 'Join the music community',
+    'Sign in or register': 'Sign in or register',
+    'My music space': 'My music space',
+    'Feed': 'Feed',
+    'Profile': 'Profile',
+    'حذف از ذخیره‌شده‌ها': 'Remove bookmark',
+    'ذخیره': 'Save',
+    'دانلود کامل شد؛ فایل‌ها در بخش دانلودهای پروفایل هستند.':
+        'Download complete. Files are available in Profile downloads.',
+    'دانلود دوره': 'Download course',
+    'تلاش دوباره برای دریافت پیشرفت': 'Retry loading progress',
+    'تکمیل شد؛ لغو علامت': 'Completed · undo',
+    'این درس را تکمیل کردم': 'Mark lesson complete',
+    'دایرکت': 'Direct messages',
+    'پیام جدید': 'New message',
+    'برای شروع گفتگو، کاربری را از صفحه جست‌وجو انتخاب کنید.':
+        'Choose a user from search to start a conversation.',
+    '📎 فایل پیوست (قابل مشاهده در سایت)': 'Attachment (view on the website)',
+    'پیام خصوصی…': 'Private message…',
+    'ارسال': 'Send',
+    'پست': 'Post',
+    'اعلان‌ها': 'Notifications',
+    'هنوز اعلانی ندارید.': 'No notifications yet.',
+    'پاسخ ارسال شد.': 'Reply sent.',
+    'بستن استوری': 'Close story',
+    'استوری بعدی': 'Next story',
+    'پاسخ به استوری…': 'Reply to story…',
+    'ارسال پاسخ': 'Send reply',
+    'آدرس رسانه معتبر نیست.': 'Invalid media address.',
+    'سرویس پاسخ معتبر نداد. دوباره تلاش کنید.':
+        'Invalid server response. Please try again.',
+    'عملیات انجام نشد.': 'The operation failed.',
+    'فایل انتخاب‌شده در دسترس نیست.': 'The selected file is unavailable.',
+    'مدیریت دوره‌ها': 'Manage courses',
+    'خریدهای من': 'My purchases',
+    'دوره‌های آموزشی': 'Courses',
+    'فروشگاه': 'Catalog',
+    'دوره‌های من': 'My courses',
+    'ساخت دوره جدید': 'Create a course',
+    'هنوز دوره‌ای در این بخش نیست.': 'No courses in this section yet.',
+    'منتشرشده': 'Published',
+    'پیش‌نویس': 'Draft',
+    'ویرایش دوره': 'Edit course',
+    'رمز اختصاصی درس': 'Lesson password',
+    'رمز درس': 'Password',
+    'آدرس درگاه معتبر نیست.': 'Invalid payment gateway address.',
+    'درگاه باز نشد.': 'Could not open the payment gateway.',
+    'دوره آموزشی': 'Course',
+    'دریافت رایگان دوره': 'Enroll for free',
+    'دسترسی به همه درس‌ها فعال است': 'Access to all lessons is active',
+    'سرفصل‌ها': 'Curriculum',
+    'عنوان و قیمت صحیح وارد کنید.': 'Enter a valid title and price.',
+    'دوره برای فروش منتشر شد.': 'Course published for sale.',
+    'پیش‌نویس ذخیره شد.': 'Draft saved.',
+    'ابتدا عنوان دوره را وارد کنید.': 'Enter a course title first.',
+    'فصل جدید': 'New chapter',
+    'عنوان فصل': 'Chapter title',
+    'افزودن درس': 'Add lesson',
+    'ویرایش درس': 'Edit lesson',
+    'عنوان درس': 'Lesson title',
+    'متن و توضیحات': 'Text and description',
+    'رمز اختصاصی (خالی = بدون تغییر)': 'Password (leave blank to keep current)',
+    'این بخش حذف شود؟': 'Delete this section?',
+    'حذف': 'Delete',
+    'تغییرات ذخیره نشده‌اند': 'Unsaved changes',
+    'بدون ذخیره خارج می‌شوید؟': 'Leave without saving?',
+    'ادامه ویرایش': 'Keep editing',
+    'خروج': 'Leave',
+    'استودیوی ساخت دوره': 'Course studio',
+    'عنوان دوره': 'Course title',
+    'معرفی دوره و پیش‌نیازها': 'Course description and prerequisites',
+    'قیمت به تومان (صفر = رایگان)': 'Price in IRT (0 = free)',
+    'انتخاب تصویر جلد': 'Choose cover image',
+    'فصل‌ها و درس‌ها': 'Chapters and lessons',
+    'افزودن فصل': 'Add chapter',
+    'در حال ذخیره یا آپلود…': 'Saving or uploading…',
+    'تغییرات ذخیره نشده': 'Unsaved changes',
+    'اطلاعات ذخیره شده': 'Changes saved',
+    'ذخیره پیش‌نویس': 'Save draft',
+    'انتشار برای فروش': 'Publish for sale',
+    'بالاتر': 'Move up',
+    'پایین‌تر': 'Move down',
+    'حذف فصل': 'Delete chapter',
+    'حذف درس': 'Delete lesson',
+    'آپلود تصویر / ویدیو': 'Upload image / video',
+    'ابتدا دوره را تهیه کنید.': 'Enroll in the course first.',
+    'ابتدا رمز درس‌های قفل‌شده را در صفحه دوره وارد کنید.':
+        'Unlock password-protected lessons on the course page first.',
+    'حجم این دوره برای دانلود یکجا بیشتر از یک گیگابایت است.':
+        'This course exceeds the 1 GB bulk download limit.',
+    'دسترسی به فایل تأیید نشد.': 'File access could not be verified.',
+    'اندازه فایل معتبر نیست.': 'Invalid file size.',
+    'دانلود کامل نشد؛ دوباره تلاش کنید.':
+        'Download incomplete. Please try again.',
+    'دسترسی به دوره تأیید نشد.': 'Course access could not be verified.',
+    'این فایل دانلود نشده؛ دوره را دوباره دانلود کنید.':
+        'This file is missing. Download the course again.',
+    'فایل قابل نمایش نیست.': 'This file cannot be displayed.',
+    'دانلودها': 'Downloads',
+    'برای دانلود، وارد صفحه دوره خریداری‌شده شوید. هنگام باز کردن فایل، اتصال اینترنت برای تأیید دسترسی لازم است.':
+        'Download from a purchased course. Internet is needed to verify access when opening saved files.',
+    'هنوز دوره‌ای دانلود نشده است.': 'No downloaded courses yet.',
+    'حذف دانلود': 'Remove download',
+    'حذف فایل‌های دانلودشده؟': 'Delete downloaded files?',
+    'ثبت': 'Submit',
+    'ویرایش پروفایل': 'Edit profile',
+    'پروفایل عمومی': 'Public profile',
+    'ذخیره‌شده‌ها': 'Saved',
+    'تنظیمات اعلان': 'Notifications',
+    'پیشرفت یادگیری': 'Learning progress',
+    'برای شروع یادگیری یک دوره انتخاب کنید.':
+        'Choose a course to start learning.',
+    'دوره‌های تکمیل‌شده': 'Finished courses',
+    'با تکمیل درس‌ها، دوره‌ها اینجا نمایش داده می‌شوند.':
+        'Completed courses will appear here.',
+    'دستاوردها': 'Achievements',
+    'اولین درس': 'First lesson',
+    'ده درس': 'Ten lessons',
+    'اولین دوره': 'First course',
+    'سه دوره': 'Three courses',
+    'به دست آمد': 'Earned',
+    'هنوز تکمیل نشده': 'Not earned yet',
+    'ساخت و مدیریت دوره': 'Create and manage courses',
+    'هنوز دوره‌ای تهیه نکرده‌اید.': 'You have not enrolled in any courses yet.',
+    'نویسندگان': 'Authors',
+    'پست‌ها': 'Feed',
+    'هنوز چیزی ذخیره نکرده‌اید.': 'Nothing saved yet.',
+    'حذف نشان': 'Remove bookmark',
+    'نمایش پست‌های ذخیره‌شده': 'View saved posts',
+    'اعلان‌های دریافتی': 'Incoming notifications',
+    'حساب کاربری': 'Account',
+    'پیام خصوصی': 'Direct messages',
+    'اعلان دریافت پیام جدید': 'Notify me about new messages',
+    'دنبال‌کنندگان': 'Following',
+    'دنبال‌کننده جدید': 'New followers',
+    'فعالیت‌ها': 'Activity',
+    'پسندیدن پست‌ها': 'Post likes',
+    'وقتی کسی پست شما را می‌پسندد': 'When someone likes your post',
+    'این تنظیمات برای اعلان‌های داخل اپ است.':
+        'These settings apply to in-app notifications.',
+    'پروفایل کاربر': 'User profile',
+    'دنبال می‌کنید': 'Following',
+    'دنبال کردن': 'Follow',
+    'دنبال‌شونده‌ها': 'Following',
+    'لینک باز نشد.': 'Could not open the link.',
+    'هنوز پستی منتشر نشده است.': 'No posts published yet.',
+    'کشف کاربران': 'Discover people',
+    'جست‌وجوی نام کاربری': 'Search username',
+    'کاربری پیدا نشد.': 'No users found.',
+    'تغییر تصویر پروفایل': 'Change profile picture',
+    'نام نمایشی را وارد کنید.': 'Enter a display name.',
+    'نام نمایشی': 'Display name',
+    'درباره من': 'About me',
+    'لینک‌های عمومی': 'Public links',
+    'آدرس معتبر https وارد کنید.': 'Enter a valid HTTPS address.',
+    'انتخاب تصویر پروفایل': 'Choose profile picture',
+    'انتخاب کاور': 'Choose cover',
+    'ذخیره تغییرات': 'Save changes',
+    'پست‌های ذخیره‌شده': 'Saved posts',
+    'هنوز پستی ذخیره نکرده‌اید.': 'No saved posts yet.',
+    'برای استوری تصویر یا ویدیو انتخاب کنید.':
+        'Choose an image or video for your story.',
+    'استوری جدید': 'New story',
+    'پست جدید': 'New post',
+    'لحظه‌های موسیقایی شما، برای ۲۴ ساعت': 'Your musical moments, for 24 hours',
+    'اجرای تازه، تمرین امروز یا تجربه‌ات را منتشر کن.':
+        'Share a performance, today\'s practice or your experience.',
+    'انتخاب تصویر یا ویدیو': 'Choose image or video',
+    'تصویر تا ۱۰ مگابایت · ویدیو تا ۱۰۰ مگابایت':
+        'Images up to 10 MB · Videos up to 100 MB',
+    'در حال ارسال؛ صفحه را باز نگه دارید.': 'Uploading; keep this page open.',
+    'انتشار': 'Publish',
+    'پخش ویدیو ممکن نشد.': 'Unable to play video.',
+    'توقف': 'Pause',
+    'پخش': 'Play',
+    'پنل کاربری': 'Your space',
+    'به جمع اهالی موسیقی بپیوندید': 'Join the music community',
+    'ورود یا ثبت‌نام': 'Sign in or register',
+    'دوره جدید': 'New course',
+    'دنیای موسیقی من': 'My music space',
+    'پست‌ها و استوری‌ها': 'Posts and stories',
+    'جست‌وجوی کاربران': 'Search people',
+    'استوری من': 'My story',
+    'هنوز پستی منتشر نشده؛ اولین اجرای خود را به اشتراک بگذارید.':
+        'No posts yet. Share your first performance.',
+    'در حال دریافت…': 'Loading…',
+    'نمایش بیشتر': 'Load more',
+    'ساخت محتوا': 'Create content',
+    'پروفایل': 'Profile',
+    'حذف پست': 'Delete post',
+    'این پست حذف شود؟': 'Delete this post?',
+    'حالت تاریک': 'Dark mode',
+    'نمایش برنامه با تم تاریک': 'Use the dark appearance',
+    'برنامه': 'App',
+    'نشان‌شده‌ها': 'Bookmarks',
+    'محتواهایی که نشان می‌کنید در این بخش نمایش داده می‌شوند.':
+        'Your bookmarked content appears here.',
+    'اشتراک‌گذاری برنامه': 'Share app',
+    'پرسش‌های متداول': 'FAQ',
+    'دستاوردها و روند پیشرفت آموزشی شما در این بخش نمایش داده می‌شود.':
+        'Your achievements and learning progress appear here.',
+    'حریم خصوصی': 'Privacy policy',
+    'جامعه': 'Community',
+    'تماس با ما': 'Contact us',
+    'عضویت': 'Membership',
+    'جزئیات عضویت و خدمات حساب شما پس از فعال شدن طرح‌های عضویت اینجا قرار می‌گیرد.':
+        'Membership details and account services will appear here when membership plans become available.',
+    'حساب من': 'My account',
+    'ورود با حساب دیگر': 'Sign in with another account',
+    'خروج از حساب': 'Sign out',
+    'حساب‌های کاربری': 'Accounts',
+    'افزودن حساب کاربری': 'Add account',
+    'چطور در سرناز ثبت‌نام کنم؟': 'How do I register with Sornaz?',
+    'آیا بدون حساب کاربری می‌توانم از برنامه استفاده کنم؟':
+        'Can I use the app without an account?',
+    'چطور با پشتیبانی تماس بگیرم؟': 'How do I contact support?',
+    'متن پیام را وارد کنید.': 'Enter your message.',
+    'پیام شما ارسال شد. در اولین فرصت پاسخ می‌دهیم.':
+        'Your message was sent. We will reply as soon as possible.',
+    'ارسال پیام انجام نشد؛ اتصال اینترنت را بررسی کنید و دوباره تلاش کنید.':
+        'Message not sent. Check your connection and try again.',
+    'ارتباط با ما — ارسال پیام جدید': 'Contact us — New message',
+    'نام و نام خانوادگی': 'Full name',
+    'ایمیل پاسخ (اختیاری)': 'Reply email (optional)',
+    'موضوع': 'Subject',
+    'متن پیام *': 'Message *',
+    'ارسال پیام': 'Send message',
+    'سایت سرناز': 'Sornaz website',
+    'کانال تلگرام': 'Telegram channel',
+    'کانال یوتیوب': 'YouTube channel',
+    'صفحه اینستاگرام': 'Instagram page',
+    'ایمیل': 'Email',
+    'برنامه‌ای برای باز کردن این پیوند پیدا نشد.':
+        'No app was found to open this link.',
+    'اشتراک‌گذاری فایل نصب در این دستگاه ممکن نشد. از لینک سایت استفاده کنید.':
+        'Could not share the installer on this device. Use the website link.',
+    'سرناز را به دوستان خود معرفی کنید و در شبکه‌های اجتماعی همراه ما باشید.':
+        'Introduce Sornaz to your friends and follow us on social media.',
+    'آماده‌سازی فایل نصب…': 'Preparing installer…',
+    'ارسال فایل نصبی برنامه': 'Share app installer',
+    'درس': 'lessons',
+    'رایگان': 'Free',
+    'تومان': 'IRT',
+    'مشاهده دوره': 'View course',
+    'فیلتر': 'Filter',
+    'پاک کردن': 'Clear',
+    'امتیاز': 'Rating',
+    'و بالاتر': '& up',
+    'مدت ویدیو': 'Video duration',
+    'ساعت': 'hours',
+    'دسته‌بندی‌ها': 'Categories',
+    'اعمال فیلترها': 'Set filters',
+    'جست‌وجوی دوره، موضوع، مدرس…': 'Search course, topic, mentor…',
+    'فیلترها': 'Filters',
+    'نتیجه‌ای برای فیلتر و جست‌وجو پیدا نشد':
+        'No results in these filters & keyword',
+    'فیلترها یا عبارت جست‌وجو را تغییر دهید.': 'Try another filter or keyword.',
+    'دوره‌ها': 'Courses',
+    'نظر شما چیست؟': 'What is your review?',
+    'این دوره را پیشنهاد می‌کنید؟': 'Do you recommend this course?',
+    'بله': 'YES',
+    'خیر': 'NO',
+    'نظر خود درباره این دوره را بنویسید': 'Leave your review for this course',
+    'با موفقیت ثبت شد': 'Successfully submitted',
+    'از بازخورد ارزشمند شما سپاسگزاریم.':
+        'Thank you for the valuable feedback.',
+    'بستن': 'Close',
+    'ثبت نظر': 'Write a review',
+    'گزارش مشکل': 'Report an issue',
+    'انصراف': 'Cancel',
+    'گزارش ثبت شد.': 'Report submitted.',
+    'لینک دوره کپی شد.': 'Course link copied.',
+    'هنرجو': 'students',
+    'درس‌ها': 'Courses',
+    'منابع': 'Review',
+    'درباره': 'About',
+    'پرسش‌وپاسخ': 'Q&A',
+    'پسندیدن': 'Like',
+    'نپسندیدن': 'Dislike',
+    'اشتراک‌گذاری': 'Share',
+    'دوره‌های مرتبط': 'Related courses',
+    'نظر': 'reviews',
+    'منابع و فایل‌های قابل دانلود': 'Resources & downloadable files',
+    'برای مشاهده منابع ابتدا دوره را تهیه کنید.':
+        'Enroll to access course resources.',
+    'خلاصه': 'Summary',
+    'فصل': 'sections',
+    'توضیحات': 'Description',
+    'زمان یادگیری را برنامه‌ریزی کنید': 'Schedule learning time',
+    'برای یادگیری این دوره زمان مشخصی انتخاب کنید.':
+        'Choose a time to study this course.',
+    'شروع کنید': 'Get started',
+    'مدرس دوره': 'Course instructor',
+    'مشاهده پروفایل': 'View profile',
+    'نظرات': 'Reviews',
+    'هنوز نظری ثبت نشده است.': 'No reviews yet.',
+    'اولین پرسش را مطرح کنید.': 'Ask the first question.',
+    'در حال پاسخ به پرسش': 'Replying to a question',
+    'پرسشی مطرح کنید…': 'Ask something…',
+    'در حال اتصال…': 'Connecting…',
+    'ثبت‌نام در دوره': 'Enroll',
+    'مشاهده همه': 'View all',
+    'ارتباط برقرار نشد. دوباره تلاش کنید.':
+        'Connection failed. Please try again.',
+    'تلاش دوباره': 'Retry',
+    'منو': 'Menu',
+    'فیلتر دوره‌ها': 'Course filters',
+    'تازه‌های وبلاگ': 'New blog',
+    'مقاله‌ها دریافت نشدند.': 'Could not load articles.',
+    'مقاله‌ای پیدا نشد.': 'No articles found.',
+    'دوره‌های جدید': 'New courses',
+    'دوره‌ها دریافت نشدند.': 'Could not load courses.',
+    'دوره‌ای با این مشخصات پیدا نشد.': 'No matching courses.',
+    'دوره‌های به‌روزشده': 'Updated courses',
+    'برای شروع یادگیری': 'Start learning',
+    'مدرسان و نویسندگان': 'Instructors & authors',
+  };
+  static const learningFa = <String, String>{
+    'Music Sheet': 'نت‌های موسیقی',
+    'Music Sheets': 'نت‌های موسیقی',
+    'Notation': 'نت‌نویسی',
+    'This article is unavailable in this language. Check your connection.':
+        'مقاله در این زبان در دسترس نیست؛ اتصال اینترنت را بررسی کنید.',
+    'Could not load comments.': 'دریافت نظرات ممکن نشد.',
+    'Comments may contain up to 3,000 characters.':
+        'حداکثر طول نظر ۳۰۰۰ نویسه است.',
+    'Guest User': 'کاربر مهمان',
+    'Your comment is awaiting approval.':
+        'نظر شما ثبت شد و در انتظار تأیید است.',
+    'Could not submit comment. Try again.':
+        'ارسال نظر ممکن نشد؛ دوباره تلاش کنید.',
+    'This article is unavailable in the selected language.':
+        'این مقاله در زبان انتخاب‌شده در دسترس نیست.',
+    'Cancel': 'انصراف',
+    'Read article': 'مطالعه مقاله',
+    'Could not open article.': 'باز کردن مقاله ممکن نشد.',
+    'Could not open link.': 'باز کردن لینک ممکن نشد.',
+    'Insert link': 'افزودن لینک',
+    'Insert': 'افزودن',
+    'Enter a valid link.': 'لینک معتبر وارد کنید.',
+    'Unapproved': 'تأیید نشده',
+    'Reply': 'پاسخ',
+    'Retry': 'تلاش دوباره',
+    'Published: ': 'تاریخ انتشار: ',
+    'Updated: ': 'به‌روزرسانی: ',
+    'views': 'بازدید',
+    'Rate this article': 'امتیاز به این مقاله',
+    'User comments': 'نظرات کاربران',
+    'No comments have been posted for this article yet.':
+        'هنوز نظری برای این مقاله ثبت نشده است.',
+    'Load more comments': 'نمایش نظرات بیشتر',
+    'Submit a new comment': 'ارسال نظر جدید',
+    'Reply to ': 'پاسخ به ',
+    'Cancel reply': 'لغو پاسخ',
+    'Full name': 'نام و نام خانوادگی',
+    'Email': 'ایمیل',
+    'Your comment': 'نظر شما',
+    'Submitting…': 'در حال ارسال…',
+    'Submit comment': 'ارسال نظر',
+    'Related articles': 'مقاله‌های مرتبط',
+    'با ایجاد حساب یا استفاده از خدمات سرناز، این قوانین و تغییرات بعدی آن را می‌پذیرید.':
+        '۱. پذیرش قوانین',
+    'اطلاعات ثبت‌نام باید صحیح باشد و مسئولیت حفظ امنیت رمز عبور و فعالیت‌های حساب بر عهده کاربر است.':
+        '۲. حساب کاربری',
+    'محتوای دوره‌ها، مقالات و فایل‌های آموزشی صرفاً برای استفاده شخصی هنرجو است و انتشار، فروش یا کپی‌برداری بدون مجوز کتبی ممنوع است.':
+        '۳. محتوای آموزشی',
+    'شهریه دوره‌ها طبق تعرفه‌های اعلام‌شده دریافت می‌شود. شرایط استرداد وجه مطابق آیین‌نامه مالی آموزشگاه خواهد بود.':
+        '۴. پرداخت و انصراف',
+    'اطلاعات شخصی کاربران محرمانه نگهداری می‌شود و جز در موارد قانونی یا با رضایت کاربر در اختیار شخص ثالث قرار نمی‌گیرد.':
+        'اطلاعات شخصی کاربران محرمانه نگهداری می‌شود و جز در موارد قانونی یا با رضایت کاربر در اختیار شخص ثالث قرار نمی‌گیرد.',
+    'هرگونه محتوای توهین‌آمیز، اسپم یا نقض حقوق دیگران در پیام‌ها، نظرات و پروفایل ممنوع است و می‌تواند به تعلیق حساب منجر شود.':
+        '۶. رفتار کاربران',
+    'آموزشگاه می‌تواند این قوانین را به‌روزرسانی کند. ادامه استفاده از خدمات پس از اعلام تغییرات به منزله پذیرش نسخه جدید است.':
+        '۷. تغییرات قوانین',
+    'Menu': 'منو',
+    'Search course, topic, mentor…': 'جست‌وجوی دوره، موضوع، مدرس…',
+    'Course filters': 'فیلتر دوره‌ها',
+    'New blog': 'تازه‌های وبلاگ',
+    'Could not load articles.': 'مقاله‌ها دریافت نشدند.',
+    'No articles found.': 'مقاله‌ای پیدا نشد.',
+    'New courses': 'دوره‌های جدید',
+    'Could not load courses.': 'دوره‌ها دریافت نشدند.',
+    'No matching courses.': 'دوره‌ای با این مشخصات پیدا نشد.',
+    'Updated courses': 'دوره‌های به‌روزشده',
+    'lessons': 'درس',
+    'Start learning': 'برای شروع یادگیری',
+    'Instructors & authors': 'مدرسان و نویسندگان',
+    'Music tools': 'ابزار موسیقی',
+    'https://sornaz.com/': 'سایت سرناز',
+    'https://t.me/sornaz_music_application': 'کانال تلگرام',
+    'https://www.youtube.com/@sornaz.academy/': 'کانال یوتیوب',
+    'https://www.instagram.com/sornaz.ac': 'صفحه اینستاگرام',
+    'mailto:sornaz.ac@gmail.com': 'ایمیل',
+    'از صفحه ثبت‌نام، مشخصات خود را وارد کنید و کد تأیید ۶ رقمی را ثبت کنید.':
+        'از صفحه ثبت‌نام، مشخصات خود را وارد کنید و کد تأیید ۶ رقمی را ثبت کنید.',
+    'بله، در صفحه ورود یا ثبت‌نام گزینه ادامه بدون ورود را انتخاب کنید.':
+        'بله، در صفحه ورود یا ثبت‌نام گزینه ادامه بدون ورود را انتخاب کنید.',
+    'از منوی برنامه وارد صفحه تماس با ما شوید و پیام خود را ارسال کنید.':
+        'از منوی برنامه وارد صفحه تماس با ما شوید و پیام خود را ارسال کنید.',
+    'Free': 'رایگان',
+    'IRT': 'تومان',
+    'View course': 'مشاهده دوره',
+    'Filter': 'فیلتر',
+    'Clear': 'پاک کردن',
+    'Rating': 'امتیاز',
+    '& up': 'و بالاتر',
+    'Video duration': 'مدت ویدیو',
+    'Hours': 'ساعت',
+    'Categories': 'دسته‌بندی‌ها',
+    'Set filters': 'اعمال فیلترها',
+    'Filters': 'فیلترها',
+    'No results in these filters & keyword':
+        'نتیجه‌ای برای فیلتر و جست‌وجو پیدا نشد',
+    'Try another filter or keyword.': 'فیلترها یا عبارت جست‌وجو را تغییر دهید.',
+    'Courses': 'دوره‌ها',
+    'What is your review?': 'نظر شما چیست؟',
+    'Do you recommend this course?': 'این دوره را پیشنهاد می‌کنید؟',
+    'YES': 'بله',
+    'NO': 'خیر',
+    'Leave your review for this course': 'نظر خود درباره این دوره را بنویسید',
+    'Successfully submitted': 'با موفقیت ثبت شد',
+    'Thank you for the valuable feedback.':
+        'از بازخورد ارزشمند شما سپاسگزاریم.',
+    'Close': 'بستن',
+    'Submit review': 'ثبت نظر',
+    'Report an issue': 'گزارش مشکل',
+    'Send': 'ارسال',
+    'Report submitted.': 'گزارش ثبت شد.',
+    'Course link copied.': 'لینک دوره کپی شد.',
+    'students': 'هنرجو',
+    'Review': 'منابع',
+    'About': 'درباره',
+    'Q&A': 'پرسش‌وپاسخ',
+    'Like': 'پسندیدن',
+    'Dislike': 'نپسندیدن',
+    'Share': 'اشتراک‌گذاری',
+    'Related courses': 'دوره‌های مرتبط',
+    'reviews': 'نظر',
+    'Resources & downloadable files': 'منابع و فایل‌های قابل دانلود',
+    'Enroll to access course resources.':
+        'برای مشاهده منابع ابتدا دوره را تهیه کنید.',
+    'Summary': 'خلاصه',
+    'sections': 'فصل',
+    'lectures': 'درس',
+    'hours': 'ساعت',
+    'Description': 'توضیحات',
+    'Schedule learning time': 'زمان یادگیری را برنامه‌ریزی کنید',
+    'Choose a time to study this course.':
+        'برای یادگیری این دوره زمان مشخصی انتخاب کنید.',
+    'Get started': 'شروع کنید',
+    'Course instructor': 'مدرس دوره',
+    'View profile': 'مشاهده پروفایل',
+    'Reviews': 'نظرات',
+    'Write a review': 'ثبت نظر',
+    'No reviews yet.': 'هنوز نظری ثبت نشده است.',
+    'Ask the first question.': 'اولین پرسش را مطرح کنید.',
+    'Replying to a question': 'در حال پاسخ به پرسش',
+    'Ask something…': 'پرسشی مطرح کنید…',
+    'Connecting…': 'در حال اتصال…',
+    'Enroll': 'ثبت‌نام در دوره',
+    'English title': 'عنوان انگلیسی',
+    'English description': 'توضیحات انگلیسی',
+    'Persian category': 'دسته‌بندی فارسی',
+    'English category': 'دسته‌بندی انگلیسی',
+    'Total video duration (seconds)': 'مدت کل ویدیوها (ثانیه)',
+    'Original price (IRT)': 'قیمت قبل از تخفیف (تومان)',
+    'Teaching language': 'زبان آموزش',
+    'Course level': 'سطح دوره',
+    'Summary and prerequisites': 'خلاصه و پیش‌نیازها',
+    'English summary': 'خلاصه انگلیسی',
+    'Public preview video ID': 'شناسه ویدیوی معرفی عمومی',
+    'Add resource': 'افزودن منبع',
+    'Title': 'عنوان',
+    'Add': 'افزودن',
+    'Course details': 'جزئیات تکمیلی دوره',
+    'Upload preview video': 'آپلود ویدیوی معرفی',
+    'Upload the preview separately from private lesson files.':
+        'ویدیوی معرفی باید جدا از فایل‌های خصوصی درس‌ها آپلود شود.',
+    'Upload learning file': 'آپلود فایل آموزشی',
+    'Save changes': 'ذخیره تغییرات',
+    'Remove': 'حذف',
+    'Download course': 'دانلود دوره',
+    'Completed · undo': 'تکمیل شد؛ لغو علامت',
+    'Mark lesson complete': 'این درس را تکمیل کردم',
+    'View all': 'مشاهده همه',
+    'Course': 'دوره آموزشی',
+    'Downloads': 'دانلودها',
+    'Download from a purchased course. Internet is needed to verify access when opening saved files.':
+        'برای دانلود، وارد صفحه دوره خریداری‌شده شوید. هنگام باز کردن فایل، اتصال اینترنت برای تأیید دسترسی لازم است.',
+    'Edit profile': 'ویرایش پروفایل',
+    'Public profile': 'پروفایل عمومی',
+    'Learning progress': 'پیشرفت یادگیری',
+    'Choose a course to start learning.':
+        'برای شروع یادگیری یک دوره انتخاب کنید.',
+    'Finished courses': 'دوره‌های تکمیل‌شده',
+    'Completed courses will appear here.':
+        'با تکمیل درس‌ها، دوره‌ها اینجا نمایش داده می‌شوند.',
+    'Achievements': 'دستاوردها',
+    'First lesson': 'اولین درس',
+    'Ten lessons': 'ده درس',
+    'First course': 'اولین دوره',
+    'Three courses': 'سه دوره',
+    'Earned': 'به دست آمد',
+    'Not earned yet': 'هنوز تکمیل نشده',
+    'Create and manage courses': 'ساخت و مدیریت دوره',
+    'Saved': 'ذخیره‌شده‌ها',
+    'Authors': 'نویسندگان',
+    'Posts': 'پست‌ها',
+    'Nothing saved yet.': 'هنوز چیزی ذخیره نکرده‌اید.',
+    'View saved posts': 'نمایش پست‌های ذخیره‌شده',
+    'Notifications': 'تنظیمات اعلان',
+    'Account': 'حساب کاربری',
+    'Direct messages': 'پیام خصوصی',
+    'Notify me about new messages': 'اعلان دریافت پیام جدید',
+    'Following': 'دنبال‌کنندگان',
+    'New followers': 'دنبال‌کننده جدید',
+    'Activity': 'فعالیت‌ها',
+    'Post likes': 'پسندیدن پست‌ها',
+    'When someone likes your post': 'وقتی کسی پست شما را می‌پسندد',
+    'These settings apply to in-app notifications.':
+        'این تنظیمات برای اعلان‌های داخل اپ است.',
+    'User profile': 'پروفایل کاربر',
+    'Connection failed. Please try again.':
+        'ارتباط برقرار نشد. دوباره تلاش کنید.',
+    'Lesson note': 'یادداشت درس',
+    'Save': 'ذخیره',
+    'Playback speed': 'سرعت پخش',
+    'Unable to play video.': 'پخش ویدیو ممکن نشد.',
+    'Your space': 'پنل کاربری',
+    'Join the music community': 'به جمع اهالی موسیقی بپیوندید',
+    'Sign in or register': 'ورود یا ثبت‌نام',
+    'My music space': 'دنیای موسیقی من',
+    'Feed': 'پست‌ها',
+    'Profile': 'پروفایل',
+    'حذف از ذخیره‌شده‌ها': 'حذف از ذخیره‌شده‌ها',
+    'ذخیره': 'ذخیره',
+    'دانلود کامل شد؛ فایل‌ها در بخش دانلودهای پروفایل هستند.':
+        'دانلود کامل شد؛ فایل‌ها در بخش دانلودهای پروفایل هستند.',
+    'دانلود دوره': 'دانلود دوره',
+    'تلاش دوباره برای دریافت پیشرفت': 'تلاش دوباره برای دریافت پیشرفت',
+    'تکمیل شد؛ لغو علامت': 'تکمیل شد؛ لغو علامت',
+    'این درس را تکمیل کردم': 'این درس را تکمیل کردم',
+    'دایرکت': 'دایرکت',
+    'پیام جدید': 'پیام جدید',
+    'برای شروع گفتگو، کاربری را از صفحه جست‌وجو انتخاب کنید.':
+        'برای شروع گفتگو، کاربری را از صفحه جست‌وجو انتخاب کنید.',
+    '📎 فایل پیوست (قابل مشاهده در سایت)':
+        '📎 فایل پیوست (قابل مشاهده در سایت)',
+    'پیام خصوصی…': 'پیام خصوصی…',
+    'ارسال': 'ارسال',
+    'پست': 'پست',
+    'اعلان‌ها': 'اعلان‌ها',
+    'هنوز اعلانی ندارید.': 'هنوز اعلانی ندارید.',
+    'پاسخ ارسال شد.': 'پاسخ ارسال شد.',
+    'بستن استوری': 'بستن استوری',
+    'استوری بعدی': 'استوری بعدی',
+    'پاسخ به استوری…': 'پاسخ به استوری…',
+    'ارسال پاسخ': 'ارسال پاسخ',
+    'آدرس رسانه معتبر نیست.': 'آدرس رسانه معتبر نیست.',
+    'سرویس پاسخ معتبر نداد. دوباره تلاش کنید.':
+        'سرویس پاسخ معتبر نداد. دوباره تلاش کنید.',
+    'عملیات انجام نشد.': 'عملیات انجام نشد.',
+    'فایل انتخاب‌شده در دسترس نیست.': 'فایل انتخاب‌شده در دسترس نیست.',
+    'مدیریت دوره‌ها': 'مدیریت دوره‌ها',
+    'خریدهای من': 'خریدهای من',
+    'دوره‌های آموزشی': 'دوره‌های آموزشی',
+    'فروشگاه': 'فروشگاه',
+    'دوره‌های من': 'دوره‌های من',
+    'ساخت دوره جدید': 'ساخت دوره جدید',
+    'هنوز دوره‌ای در این بخش نیست.': 'هنوز دوره‌ای در این بخش نیست.',
+    'منتشرشده': 'منتشرشده',
+    'پیش‌نویس': 'پیش‌نویس',
+    'ویرایش دوره': 'ویرایش دوره',
+    'رمز اختصاصی درس': 'رمز اختصاصی درس',
+    'رمز درس': 'رمز درس',
+    'آدرس درگاه معتبر نیست.': 'آدرس درگاه معتبر نیست.',
+    'درگاه باز نشد.': 'درگاه باز نشد.',
+    'دوره آموزشی': 'دوره آموزشی',
+    'دریافت رایگان دوره': 'دریافت رایگان دوره',
+    'دسترسی به همه درس‌ها فعال است': 'دسترسی به همه درس‌ها فعال است',
+    'سرفصل‌ها': 'سرفصل‌ها',
+    'عنوان و قیمت صحیح وارد کنید.': 'عنوان و قیمت صحیح وارد کنید.',
+    'دوره برای فروش منتشر شد.': 'دوره برای فروش منتشر شد.',
+    'پیش‌نویس ذخیره شد.': 'پیش‌نویس ذخیره شد.',
+    'ابتدا عنوان دوره را وارد کنید.': 'ابتدا عنوان دوره را وارد کنید.',
+    'فصل جدید': 'فصل جدید',
+    'عنوان فصل': 'عنوان فصل',
+    'افزودن درس': 'افزودن درس',
+    'ویرایش درس': 'ویرایش درس',
+    'عنوان درس': 'عنوان درس',
+    'متن و توضیحات': 'متن و توضیحات',
+    'رمز اختصاصی (خالی = بدون تغییر)': 'رمز اختصاصی (خالی = بدون تغییر)',
+    'این بخش حذف شود؟': 'این بخش حذف شود؟',
+    'حذف': 'حذف',
+    'تغییرات ذخیره نشده‌اند': 'تغییرات ذخیره نشده‌اند',
+    'بدون ذخیره خارج می‌شوید؟': 'بدون ذخیره خارج می‌شوید؟',
+    'ادامه ویرایش': 'ادامه ویرایش',
+    'خروج': 'خروج',
+    'استودیوی ساخت دوره': 'استودیوی ساخت دوره',
+    'عنوان دوره': 'عنوان دوره',
+    'معرفی دوره و پیش‌نیازها': 'معرفی دوره و پیش‌نیازها',
+    'قیمت به تومان (صفر = رایگان)': 'قیمت به تومان (صفر = رایگان)',
+    'انتخاب تصویر جلد': 'انتخاب تصویر جلد',
+    'فصل‌ها و درس‌ها': 'فصل‌ها و درس‌ها',
+    'افزودن فصل': 'افزودن فصل',
+    'در حال ذخیره یا آپلود…': 'در حال ذخیره یا آپلود…',
+    'تغییرات ذخیره نشده': 'تغییرات ذخیره نشده',
+    'اطلاعات ذخیره شده': 'اطلاعات ذخیره شده',
+    'ذخیره پیش‌نویس': 'ذخیره پیش‌نویس',
+    'انتشار برای فروش': 'انتشار برای فروش',
+    'بالاتر': 'بالاتر',
+    'پایین‌تر': 'پایین‌تر',
+    'حذف فصل': 'حذف فصل',
+    'حذف درس': 'حذف درس',
+    'آپلود تصویر / ویدیو': 'آپلود تصویر / ویدیو',
+    'ابتدا دوره را تهیه کنید.': 'ابتدا دوره را تهیه کنید.',
+    'ابتدا رمز درس‌های قفل‌شده را در صفحه دوره وارد کنید.':
+        'ابتدا رمز درس‌های قفل‌شده را در صفحه دوره وارد کنید.',
+    'حجم این دوره برای دانلود یکجا بیشتر از یک گیگابایت است.':
+        'حجم این دوره برای دانلود یکجا بیشتر از یک گیگابایت است.',
+    'دسترسی به فایل تأیید نشد.': 'دسترسی به فایل تأیید نشد.',
+    'اندازه فایل معتبر نیست.': 'اندازه فایل معتبر نیست.',
+    'دانلود کامل نشد؛ دوباره تلاش کنید.': 'دانلود کامل نشد؛ دوباره تلاش کنید.',
+    'دسترسی به دوره تأیید نشد.': 'دسترسی به دوره تأیید نشد.',
+    'این فایل دانلود نشده؛ دوره را دوباره دانلود کنید.':
+        'این فایل دانلود نشده؛ دوره را دوباره دانلود کنید.',
+    'فایل قابل نمایش نیست.': 'فایل قابل نمایش نیست.',
+    'دانلودها': 'دانلودها',
+    'برای دانلود، وارد صفحه دوره خریداری‌شده شوید. هنگام باز کردن فایل، اتصال اینترنت برای تأیید دسترسی لازم است.':
+        'برای دانلود، وارد صفحه دوره خریداری‌شده شوید. هنگام باز کردن فایل، اتصال اینترنت برای تأیید دسترسی لازم است.',
+    'هنوز دوره‌ای دانلود نشده است.': 'هنوز دوره‌ای دانلود نشده است.',
+    'حذف دانلود': 'حذف دانلود',
+    'حذف فایل‌های دانلودشده؟': 'حذف فایل‌های دانلودشده؟',
+    'ثبت': 'ثبت',
+    'ویرایش پروفایل': 'ویرایش پروفایل',
+    'پروفایل عمومی': 'پروفایل عمومی',
+    'ذخیره‌شده‌ها': 'ذخیره‌شده‌ها',
+    'تنظیمات اعلان': 'تنظیمات اعلان',
+    'پیشرفت یادگیری': 'پیشرفت یادگیری',
+    'برای شروع یادگیری یک دوره انتخاب کنید.':
+        'برای شروع یادگیری یک دوره انتخاب کنید.',
+    'دوره‌های تکمیل‌شده': 'دوره‌های تکمیل‌شده',
+    'با تکمیل درس‌ها، دوره‌ها اینجا نمایش داده می‌شوند.':
+        'با تکمیل درس‌ها، دوره‌ها اینجا نمایش داده می‌شوند.',
+    'دستاوردها': 'دستاوردها',
+    'اولین درس': 'اولین درس',
+    'ده درس': 'ده درس',
+    'اولین دوره': 'اولین دوره',
+    'سه دوره': 'سه دوره',
+    'به دست آمد': 'به دست آمد',
+    'هنوز تکمیل نشده': 'هنوز تکمیل نشده',
+    'ساخت و مدیریت دوره': 'ساخت و مدیریت دوره',
+    'هنوز دوره‌ای تهیه نکرده‌اید.': 'هنوز دوره‌ای تهیه نکرده‌اید.',
+    'نویسندگان': 'نویسندگان',
+    'پست‌ها': 'پست‌ها',
+    'هنوز چیزی ذخیره نکرده‌اید.': 'هنوز چیزی ذخیره نکرده‌اید.',
+    'حذف نشان': 'حذف نشان',
+    'نمایش پست‌های ذخیره‌شده': 'نمایش پست‌های ذخیره‌شده',
+    'اعلان‌های دریافتی': 'اعلان‌های دریافتی',
+    'حساب کاربری': 'حساب کاربری',
+    'پیام خصوصی': 'پیام خصوصی',
+    'اعلان دریافت پیام جدید': 'اعلان دریافت پیام جدید',
+    'دنبال‌کنندگان': 'دنبال‌کنندگان',
+    'دنبال‌کننده جدید': 'دنبال‌کننده جدید',
+    'فعالیت‌ها': 'فعالیت‌ها',
+    'پسندیدن پست‌ها': 'پسندیدن پست‌ها',
+    'وقتی کسی پست شما را می‌پسندد': 'وقتی کسی پست شما را می‌پسندد',
+    'این تنظیمات برای اعلان‌های داخل اپ است.':
+        'این تنظیمات برای اعلان‌های داخل اپ است.',
+    'پروفایل کاربر': 'پروفایل کاربر',
+    'دنبال می‌کنید': 'دنبال می‌کنید',
+    'دنبال کردن': 'دنبال کردن',
+    'دنبال‌شونده‌ها': 'دنبال‌شونده‌ها',
+    'لینک باز نشد.': 'لینک باز نشد.',
+    'هنوز پستی منتشر نشده است.': 'هنوز پستی منتشر نشده است.',
+    'کشف کاربران': 'کشف کاربران',
+    'جست‌وجوی نام کاربری': 'جست‌وجوی نام کاربری',
+    'کاربری پیدا نشد.': 'کاربری پیدا نشد.',
+    'تغییر تصویر پروفایل': 'تغییر تصویر پروفایل',
+    'نام نمایشی را وارد کنید.': 'نام نمایشی را وارد کنید.',
+    'نام نمایشی': 'نام نمایشی',
+    'درباره من': 'درباره من',
+    'لینک‌های عمومی': 'لینک‌های عمومی',
+    'آدرس معتبر https وارد کنید.': 'آدرس معتبر https وارد کنید.',
+    'انتخاب تصویر پروفایل': 'انتخاب تصویر پروفایل',
+    'انتخاب کاور': 'انتخاب کاور',
+    'ذخیره تغییرات': 'ذخیره تغییرات',
+    'پست‌های ذخیره‌شده': 'پست‌های ذخیره‌شده',
+    'هنوز پستی ذخیره نکرده‌اید.': 'هنوز پستی ذخیره نکرده‌اید.',
+    'برای استوری تصویر یا ویدیو انتخاب کنید.':
+        'برای استوری تصویر یا ویدیو انتخاب کنید.',
+    'استوری جدید': 'استوری جدید',
+    'پست جدید': 'پست جدید',
+    'لحظه‌های موسیقایی شما، برای ۲۴ ساعت':
+        'لحظه‌های موسیقایی شما، برای ۲۴ ساعت',
+    'اجرای تازه، تمرین امروز یا تجربه‌ات را منتشر کن.':
+        'اجرای تازه، تمرین امروز یا تجربه‌ات را منتشر کن.',
+    'انتخاب تصویر یا ویدیو': 'انتخاب تصویر یا ویدیو',
+    'تصویر تا ۱۰ مگابایت · ویدیو تا ۱۰۰ مگابایت':
+        'تصویر تا ۱۰ مگابایت · ویدیو تا ۱۰۰ مگابایت',
+    'در حال ارسال؛ صفحه را باز نگه دارید.':
+        'در حال ارسال؛ صفحه را باز نگه دارید.',
+    'انتشار': 'انتشار',
+    'پخش ویدیو ممکن نشد.': 'پخش ویدیو ممکن نشد.',
+    'توقف': 'توقف',
+    'پخش': 'پخش',
+    'پنل کاربری': 'پنل کاربری',
+    'به جمع اهالی موسیقی بپیوندید': 'به جمع اهالی موسیقی بپیوندید',
+    'ورود یا ثبت‌نام': 'ورود یا ثبت‌نام',
+    'دوره جدید': 'دوره جدید',
+    'دنیای موسیقی من': 'دنیای موسیقی من',
+    'پست‌ها و استوری‌ها': 'پست‌ها و استوری‌ها',
+    'جست‌وجوی کاربران': 'جست‌وجوی کاربران',
+    'استوری من': 'استوری من',
+    'هنوز پستی منتشر نشده؛ اولین اجرای خود را به اشتراک بگذارید.':
+        'هنوز پستی منتشر نشده؛ اولین اجرای خود را به اشتراک بگذارید.',
+    'در حال دریافت…': 'در حال دریافت…',
+    'نمایش بیشتر': 'نمایش بیشتر',
+    'ساخت محتوا': 'ساخت محتوا',
+    'پروفایل': 'پروفایل',
+    'حذف پست': 'حذف پست',
+    'این پست حذف شود؟': 'این پست حذف شود؟',
+    'حالت تاریک': 'حالت تاریک',
+    'نمایش برنامه با تم تاریک': 'نمایش برنامه با تم تاریک',
+    'برنامه': 'برنامه',
+    'نشان‌شده‌ها': 'نشان‌شده‌ها',
+    'محتواهایی که نشان می‌کنید در این بخش نمایش داده می‌شوند.':
+        'محتواهایی که نشان می‌کنید در این بخش نمایش داده می‌شوند.',
+    'اشتراک‌گذاری برنامه': 'اشتراک‌گذاری برنامه',
+    'پرسش‌های متداول': 'پرسش‌های متداول',
+    'دستاوردها و روند پیشرفت آموزشی شما در این بخش نمایش داده می‌شود.':
+        'دستاوردها و روند پیشرفت آموزشی شما در این بخش نمایش داده می‌شود.',
+    'حریم خصوصی': 'حریم خصوصی',
+    'جامعه': 'جامعه',
+    'تماس با ما': 'تماس با ما',
+    'عضویت': 'عضویت',
+    'جزئیات عضویت و خدمات حساب شما پس از فعال شدن طرح‌های عضویت اینجا قرار می‌گیرد.':
+        'جزئیات عضویت و خدمات حساب شما پس از فعال شدن طرح‌های عضویت اینجا قرار می‌گیرد.',
+    'حساب من': 'حساب من',
+    'ورود با حساب دیگر': 'ورود با حساب دیگر',
+    'خروج از حساب': 'خروج از حساب',
+    'حساب‌های کاربری': 'حساب‌های کاربری',
+    'افزودن حساب کاربری': 'افزودن حساب کاربری',
+    'چطور در سرناز ثبت‌نام کنم؟': 'چطور در سرناز ثبت‌نام کنم؟',
+    'آیا بدون حساب کاربری می‌توانم از برنامه استفاده کنم؟':
+        'آیا بدون حساب کاربری می‌توانم از برنامه استفاده کنم؟',
+    'چطور با پشتیبانی تماس بگیرم؟': 'چطور با پشتیبانی تماس بگیرم؟',
+    'متن پیام را وارد کنید.': 'متن پیام را وارد کنید.',
+    'پیام شما ارسال شد. در اولین فرصت پاسخ می‌دهیم.':
+        'پیام شما ارسال شد. در اولین فرصت پاسخ می‌دهیم.',
+    'ارسال پیام انجام نشد؛ اتصال اینترنت را بررسی کنید و دوباره تلاش کنید.':
+        'ارسال پیام انجام نشد؛ اتصال اینترنت را بررسی کنید و دوباره تلاش کنید.',
+    'ارتباط با ما — ارسال پیام جدید': 'ارتباط با ما — ارسال پیام جدید',
+    'نام و نام خانوادگی': 'نام و نام خانوادگی',
+    'ایمیل پاسخ (اختیاری)': 'ایمیل پاسخ (اختیاری)',
+    'موضوع': 'موضوع',
+    'متن پیام *': 'متن پیام *',
+    'ارسال پیام': 'ارسال پیام',
+    'سایت سرناز': 'سایت سرناز',
+    'کانال تلگرام': 'کانال تلگرام',
+    'کانال یوتیوب': 'کانال یوتیوب',
+    'صفحه اینستاگرام': 'صفحه اینستاگرام',
+    'ایمیل': 'ایمیل',
+    'برنامه‌ای برای باز کردن این پیوند پیدا نشد.':
+        'برنامه‌ای برای باز کردن این پیوند پیدا نشد.',
+    'اشتراک‌گذاری فایل نصب در این دستگاه ممکن نشد. از لینک سایت استفاده کنید.':
+        'اشتراک‌گذاری فایل نصب در این دستگاه ممکن نشد. از لینک سایت استفاده کنید.',
+    'سرناز را به دوستان خود معرفی کنید و در شبکه‌های اجتماعی همراه ما باشید.':
+        'سرناز را به دوستان خود معرفی کنید و در شبکه‌های اجتماعی همراه ما باشید.',
+    'آماده‌سازی فایل نصب…': 'آماده‌سازی فایل نصب…',
+    'ارسال فایل نصبی برنامه': 'ارسال فایل نصبی برنامه',
+    'درس': 'درس',
+    'رایگان': 'رایگان',
+    'تومان': 'تومان',
+    'مشاهده دوره': 'مشاهده دوره',
+    'فیلتر': 'فیلتر',
+    'پاک کردن': 'پاک کردن',
+    'امتیاز': 'امتیاز',
+    'و بالاتر': 'و بالاتر',
+    'مدت ویدیو': 'مدت ویدیو',
+    'ساعت': 'ساعت',
+    'دسته‌بندی‌ها': 'دسته‌بندی‌ها',
+    'اعمال فیلترها': 'اعمال فیلترها',
+    'جست‌وجوی دوره، موضوع، مدرس…': 'جست‌وجوی دوره، موضوع، مدرس…',
+    'فیلترها': 'فیلترها',
+    'نتیجه‌ای برای فیلتر و جست‌وجو پیدا نشد':
+        'نتیجه‌ای برای فیلتر و جست‌وجو پیدا نشد',
+    'فیلترها یا عبارت جست‌وجو را تغییر دهید.':
+        'فیلترها یا عبارت جست‌وجو را تغییر دهید.',
+    'دوره‌ها': 'دوره‌ها',
+    'نظر شما چیست؟': 'نظر شما چیست؟',
+    'این دوره را پیشنهاد می‌کنید؟': 'این دوره را پیشنهاد می‌کنید؟',
+    'بله': 'بله',
+    'خیر': 'خیر',
+    'نظر خود درباره این دوره را بنویسید': 'نظر خود درباره این دوره را بنویسید',
+    'با موفقیت ثبت شد': 'با موفقیت ثبت شد',
+    'از بازخورد ارزشمند شما سپاسگزاریم.': 'از بازخورد ارزشمند شما سپاسگزاریم.',
+    'بستن': 'بستن',
+    'ثبت نظر': 'ثبت نظر',
+    'گزارش مشکل': 'گزارش مشکل',
+    'انصراف': 'انصراف',
+    'گزارش ثبت شد.': 'گزارش ثبت شد.',
+    'لینک دوره کپی شد.': 'لینک دوره کپی شد.',
+    'هنرجو': 'هنرجو',
+    'درس‌ها': 'درس‌ها',
+    'منابع': 'منابع',
+    'درباره': 'درباره',
+    'پرسش‌وپاسخ': 'پرسش‌وپاسخ',
+    'پسندیدن': 'پسندیدن',
+    'نپسندیدن': 'نپسندیدن',
+    'اشتراک‌گذاری': 'اشتراک‌گذاری',
+    'دوره‌های مرتبط': 'دوره‌های مرتبط',
+    'نظر': 'نظر',
+    'منابع و فایل‌های قابل دانلود': 'منابع و فایل‌های قابل دانلود',
+    'برای مشاهده منابع ابتدا دوره را تهیه کنید.':
+        'برای مشاهده منابع ابتدا دوره را تهیه کنید.',
+    'خلاصه': 'خلاصه',
+    'فصل': 'فصل',
+    'توضیحات': 'توضیحات',
+    'زمان یادگیری را برنامه‌ریزی کنید': 'زمان یادگیری را برنامه‌ریزی کنید',
+    'برای یادگیری این دوره زمان مشخصی انتخاب کنید.':
+        'برای یادگیری این دوره زمان مشخصی انتخاب کنید.',
+    'شروع کنید': 'شروع کنید',
+    'مدرس دوره': 'مدرس دوره',
+    'مشاهده پروفایل': 'مشاهده پروفایل',
+    'نظرات': 'نظرات',
+    'هنوز نظری ثبت نشده است.': 'هنوز نظری ثبت نشده است.',
+    'اولین پرسش را مطرح کنید.': 'اولین پرسش را مطرح کنید.',
+    'در حال پاسخ به پرسش': 'در حال پاسخ به پرسش',
+    'پرسشی مطرح کنید…': 'پرسشی مطرح کنید…',
+    'در حال اتصال…': 'در حال اتصال…',
+    'ثبت‌نام در دوره': 'ثبت‌نام در دوره',
+    'مشاهده همه': 'مشاهده همه',
+    'ارتباط برقرار نشد. دوباره تلاش کنید.':
+        'ارتباط برقرار نشد. دوباره تلاش کنید.',
+    'تلاش دوباره': 'تلاش دوباره',
+    'منو': 'منو',
+    'فیلتر دوره‌ها': 'فیلتر دوره‌ها',
+    'تازه‌های وبلاگ': 'تازه‌های وبلاگ',
+    'مقاله‌ها دریافت نشدند.': 'مقاله‌ها دریافت نشدند.',
+    'مقاله‌ای پیدا نشد.': 'مقاله‌ای پیدا نشد.',
+    'دوره‌های جدید': 'دوره‌های جدید',
+    'دوره‌ها دریافت نشدند.': 'دوره‌ها دریافت نشدند.',
+    'دوره‌ای با این مشخصات پیدا نشد.': 'دوره‌ای با این مشخصات پیدا نشد.',
+    'دوره‌های به‌روزشده': 'دوره‌های به‌روزشده',
+    'برای شروع یادگیری': 'برای شروع یادگیری',
+    'مدرسان و نویسندگان': 'مدرسان و نویسندگان',
+  };
+
   static const font_iran_sans = 'font_iran_sans,';
   static const font_iran_yekan = 'font_iran_yekan,';
   static const font_kalameh = 'font_kalameh,';
@@ -78,7 +1140,8 @@ class AppStrings {
   static const use_wifi_description = 'use wifi description';
   static const auto_download = 'auto download';
   static const auto_download_description = 'auto download description';
-  static const two_times_press_back_button_for_exit_application = 'two times press back button for exit application';
+  static const two_times_press_back_button_for_exit_application =
+      'two times press back button for exit application';
   static const home_searchbar_hint = 'homeSearchbarHint';
   static const new_courses_title = 'newCoursesTitle';
   static const last_blog_title = 'lastBlogTitle';
@@ -147,24 +1210,34 @@ class AppStrings {
   static const about_us_our_team_title = 'aboutUsOurTeamTitle';
   static const about_us_key_features_title = 'aboutUsKeyFeaturesTitle';
   static const about_us_our_commitment_title = 'aboutUsOurCommitmentTitle';
-  static const about_us_contact_information_title = 'aboutUsContactInformationTitle';
+  static const about_us_contact_information_title =
+      'aboutUsContactInformationTitle';
   static const about_us_page_description = 'aboutUsPageDescription';
-  static const about_us_our_mission_description = 'aboutUsOurMissionDescription';
+  static const about_us_our_mission_description =
+      'aboutUsOurMissionDescription';
   static const about_us_our_vision_description = 'aboutUsOurVisionDescription';
   static const about_us_our_values_description = 'aboutUsOurValuesDescription';
   static const about_us_our_story_description = 'aboutUsOurStoryDescription';
   static const about_us_our_team_description = 'aboutUsOurTeamDescription';
-  static const about_us_key_features_description = 'aboutUsKeyFeaturesDescription';
-  static const about_us_our_commitment_description = 'aboutUsOurCommitmentDescription';
-  static const about_us_contact_information_description = 'aboutUsContactInformationDescription';
+  static const about_us_key_features_description =
+      'aboutUsKeyFeaturesDescription';
+  static const about_us_our_commitment_description =
+      'aboutUsOurCommitmentDescription';
+  static const about_us_contact_information_description =
+      'aboutUsContactInformationDescription';
   static const audio_list_preparing_folders = 'audioListPreparingFolders';
   static const music_player_scanning_files = 'musicPlayerScanningFiles';
   static const music_player_scanned_files = 'musicPlayerScannedFiles';
-  static const song_information_no_song_playing = 'songInformationNoSongPlaying';
-  static const audio_player_provider_changed_filename = 'audioPlayerProviderChangedFilename';
-  static const audio_player_provider_remove_from_list = 'audioPlayerProviderRemoveFromList';
-  static const audio_player_provider_delete_from_memory = 'audioPlayerProviderDeleteFromMemory';
-  static const folder_list_view_preparing_folders = 'folderListViewPreparingFolders';
+  static const song_information_no_song_playing =
+      'songInformationNoSongPlaying';
+  static const audio_player_provider_changed_filename =
+      'audioPlayerProviderChangedFilename';
+  static const audio_player_provider_remove_from_list =
+      'audioPlayerProviderRemoveFromList';
+  static const audio_player_provider_delete_from_memory =
+      'audioPlayerProviderDeleteFromMemory';
+  static const folder_list_view_preparing_folders =
+      'folderListViewPreparingFolders';
   static const folder_list_view_song = 'folderListViewSong';
   static const audio_controls_1x_speed = 'audioControls1xSpeed';
   static const file_action_change_filename = "fileActionChangeFilename";
@@ -173,15 +1246,23 @@ class AppStrings {
   static const file_action_discard = "fileActionDiscard";
   static const file_action_save = "fileActionSave";
   static const file_action_changed_filename = "fileActionChangedFilename";
-  static const file_action_error_in_changed_filename = "fileActionErrorInChangedFilename";
+  static const file_action_error_in_changed_filename =
+      "fileActionErrorInChangedFilename";
   static const file_action_remove_file = "fileActionRemoveFile";
-  static const file_action_remove_file_from_list_or_memory = "fileActionRemoveFileFromListOrMemory";
-  static const file_action_remove_file_from_list = "fileActionRemoveFileFromList";
-  static const file_action_removed_file_from_list = "fileActionRemovedFileFromList";
-  static const file_action_error_in_removed_file_from_list = "fileActionErrorInRemovedFileFromList";
-  static const file_action_delete_file_from_memory = "fileActionDeleteFileFromMemory";
-  static const file_action_deleted_file_from_memory = "fileActionDeletedFileFromMemory";
-  static const file_action_error_in_deleted_file_from_memory = "fileActionErrorInDeletedFileFromMemory";
+  static const file_action_remove_file_from_list_or_memory =
+      "fileActionRemoveFileFromListOrMemory";
+  static const file_action_remove_file_from_list =
+      "fileActionRemoveFileFromList";
+  static const file_action_removed_file_from_list =
+      "fileActionRemovedFileFromList";
+  static const file_action_error_in_removed_file_from_list =
+      "fileActionErrorInRemovedFileFromList";
+  static const file_action_delete_file_from_memory =
+      "fileActionDeleteFileFromMemory";
+  static const file_action_deleted_file_from_memory =
+      "fileActionDeletedFileFromMemory";
+  static const file_action_error_in_deleted_file_from_memory =
+      "fileActionErrorInDeletedFileFromMemory";
   static const waveform_widget_zoom_label = "waveformWidgetZoomLabel";
   static const song_information_title = 'songInformationTitle';
   static const song_information_artists = 'songInformationArtists';
@@ -190,36 +1271,51 @@ class AppStrings {
   static const song_information_year = 'songInformationYear';
   static const song_information_duration = 'songInformationDuration';
   static const song_information_bitrate = 'songInformationBitrate';
-  static const record_details_record_information = 'recordDetailsRecordInformation';
+  static const record_details_record_information =
+      'recordDetailsRecordInformation';
   static const delete_button_widget_delete = 'deleteButtonWidgetDelete';
-  static const delete_button_widget_confirm_delete = 'deleteButtonWidgetConfirmDelete';
-  static const delete_button_widget_delete_question_before_filename_part = 'deleteButtonWidgetDeleteQuestionBeforeFilenamePart';
-  static const delete_button_widget_delete_question_after_filename_part = 'deleteButtonWidgetDeleteQuestionAfterFilenamePart';
-  static const delete_button_widget_discard_button = 'deleteButtonWidgetDiscardButton';
-  static const delete_button_widget_confirm_delete_button = 'deleteButtonWidgetConfirmDeleteButton';
+  static const delete_button_widget_confirm_delete =
+      'deleteButtonWidgetConfirmDelete';
+  static const delete_button_widget_delete_question_before_filename_part =
+      'deleteButtonWidgetDeleteQuestionBeforeFilenamePart';
+  static const delete_button_widget_delete_question_after_filename_part =
+      'deleteButtonWidgetDeleteQuestionAfterFilenamePart';
+  static const delete_button_widget_discard_button =
+      'deleteButtonWidgetDiscardButton';
+  static const delete_button_widget_confirm_delete_button =
+      'deleteButtonWidgetConfirmDeleteButton';
   static const rename_button_widget_rename = 'renameButtonWidgetRename';
-  static const rename_button_widget_new_filename = 'renameButtonWidgetNewFilename';
+  static const rename_button_widget_new_filename =
+      'renameButtonWidgetNewFilename';
   static const rename_button_widget_discard = 'renameButtonWidgetDiscard';
   static const rename_button_widget_save = 'renameButtonWidgetSave';
 
-  static const voice_recorder_microphone_and_storage_access_permissions = 'voice_recorder_microphone_and_storage_access_permissions';
+  static const voice_recorder_microphone_and_storage_access_permissions =
+      'voice_recorder_microphone_and_storage_access_permissions';
   static const voice_recorder_file_deleted = 'voiceRecorderFileDeleted';
   static const voice_recorder_file_restored = 'voiceRecorderFileRestored';
   static const voice_recorder_label_restore = 'voiceRecorderLabelRestore';
   static const voice_recorder_delete_recording = 'voiceRecorderDeleteRecording';
-  static const voice_recorder_confirm_delete_before_filename = 'voiceRecorderConfirmDeleteBeforeFilename';
-  static const voice_recorder_confirm_delete_after_filename = 'voiceRecorderConfirmDeleteAfterFilename';
+  static const voice_recorder_confirm_delete_before_filename =
+      'voiceRecorderConfirmDeleteBeforeFilename';
+  static const voice_recorder_confirm_delete_after_filename =
+      'voiceRecorderConfirmDeleteAfterFilename';
   static const voice_recorder_no = 'voiceRecorderNo';
   static const voice_recorder_yes_delete = 'voiceRecorderYesDelete';
-  static const voice_recorder_delete_message_before_filename = 'voiceRecorderDeleteMessageBeforeFilename';
-  static const voice_recorder_delete_message_after_filename = 'voiceRecorderDeleteMessageAfterFilename';
+  static const voice_recorder_delete_message_before_filename =
+      'voiceRecorderDeleteMessageBeforeFilename';
+  static const voice_recorder_delete_message_after_filename =
+      'voiceRecorderDeleteMessageAfterFilename';
   static const voice_recorder_rename_file = 'voiceRecorderRenameFile';
   static const voice_recorder_new_filename = 'voiceRecorderNewFilename';
   static const voice_recorder_discard = 'voiceRecorderDiscard';
   static const voice_recorder_save = 'voiceRecorderSave';
-  static const voice_recorder_filename_changed_before_filename = 'voiceRecorderFilenameChangedBeforeFilename';
-  static const voice_recorder_filename_changed_after_filename = 'voiceRecorderFilenameChangedAfterFilename';
-  static const voice_recorder_error_in_renaming = 'voiceRecorderErrorInRenaming';
+  static const voice_recorder_filename_changed_before_filename =
+      'voiceRecorderFilenameChangedBeforeFilename';
+  static const voice_recorder_filename_changed_after_filename =
+      'voiceRecorderFilenameChangedAfterFilename';
+  static const voice_recorder_error_in_renaming =
+      'voiceRecorderErrorInRenaming';
 
   static const tuner_settings_title = 'tunerSettingsTitle';
   static const metronome_settings_title = 'metronomeSettingsTitle';
@@ -234,7 +1330,6 @@ class AppStrings {
   static const enable_bars_stopwatch_title = 'enableBarsStopwatchTitle';
   static const enable_bars_stopwatch_subtitle = 'enableBarsStopwatchSubitle';
 
-
   static const frequency = 'frequency';
   static const note_stretch = 'noteStretch';
   static const starting_octave = 'startingOctave';
@@ -242,16 +1337,19 @@ class AppStrings {
   static const highlight_a4_key = 'highlightA4Key';
   static const enable_a4_key_highlight = 'enableA4KeyHighlight';
   static const frequencies_on_white_keys = 'frequenciesOnWhiteKeys';
-  static const enable_frequency_display_on_white_keys = 'enableFrequencyDisplayOnWhiteKeys';
+  static const enable_frequency_display_on_white_keys =
+      'enableFrequencyDisplayOnWhiteKeys';
   static const frequencies_on_black_keys = 'frequenciesOnBlackKeys';
-  static const enable_frequency_display_on_black_keys = 'enableFrequencyDisplayOnBlackKeys';
+  static const enable_frequency_display_on_black_keys =
+      'enableFrequencyDisplayOnBlackKeys';
   static const quarter_tones = 'quarterTones';
   static const enable_iranian_quarter_tones = 'enableIranianQuarterTones';
 
   static const update = 'update';
 
   static const need_permission = 'needPermission';
-  static const need_permission_for_scanning_audio_files = 'needPermissionForScanningAudioFiles';
+  static const need_permission_for_scanning_audio_files =
+      'needPermissionForScanningAudioFiles';
   static const later = 'later';
   static const go_to_settings = 'goToSettings';
 
@@ -262,8 +1360,10 @@ class AppStrings {
   static const memory = 'memory';
 
   static const show_all_folders = 'showAllFolders';
-  static const show_folders_contains_audio_files = 'showFoldersContainsAudioFiles';
-  static const no_folder_or_audio_file_found_in_this_path = 'noFolderOrAudioFileFoundInThisPath';
+  static const show_folders_contains_audio_files =
+      'showFoldersContainsAudioFiles';
+  static const no_folder_or_audio_file_found_in_this_path =
+      'noFolderOrAudioFileFoundInThisPath';
 
   static const coming_soon = 'comingSoon';
   static const timer = 'Timer';
@@ -271,37 +1371,45 @@ class AppStrings {
   static const minute = 'minute';
   static const second = 'second';
 
-
   static const delete_confirm_dialog_title = 'deleteConfirmDialogTitle';
-  static const delete_confirm_dialog_content_before_filename = 'deleteConfirmDialogContentBeforeFilename';
-  static const delete_confirm_dialog_content_after_filename = 'deleteConfirmDialogContentAfterFilename';
-  static const delete_confirm_dialog_cancel_button = 'deleteConfirmDialogCancelButton';
-  static const delete_confirm_dialog_delete_button = 'deleteConfirmDialogDeleteButton';
+  static const delete_confirm_dialog_content_before_filename =
+      'deleteConfirmDialogContentBeforeFilename';
+  static const delete_confirm_dialog_content_after_filename =
+      'deleteConfirmDialogContentAfterFilename';
+  static const delete_confirm_dialog_cancel_button =
+      'deleteConfirmDialogCancelButton';
+  static const delete_confirm_dialog_delete_button =
+      'deleteConfirmDialogDeleteButton';
 
-  static const voice_recorder_recording_icon_button_tooltip = 'voiceRecorderRecordingIconButtonTooltip';
-  static const voice_recorder_bookmark_text_button = 'voiceRecorderBookmarkTextButton';
+  static const voice_recorder_recording_icon_button_tooltip =
+      'voiceRecorderRecordingIconButtonTooltip';
+  static const voice_recorder_bookmark_text_button =
+      'voiceRecorderBookmarkTextButton';
 
   static const recording_list_title = 'recordingListTitle';
   static const recording_list_search_hint = 'recordingListSearchHint';
-  static const recording_list_multi_item_selected = 'recordingListMultiItemSelected';
+  static const recording_list_multi_item_selected =
+      'recordingListMultiItemSelected';
   static const recording_list_share = 'recordingListShare';
   static const recording_list_favorite = 'recordingListFavorite';
   static const recording_list_rename = 'recordingListRename';
   static const recording_list_delete = 'recordingListDelete';
-  static const recording_list_multi_item_delete_content = 'recordingListMultiItemDeleteContent';
+  static const recording_list_multi_item_delete_content =
+      'recordingListMultiItemDeleteContent';
   static const recording_list_delete_content = 'recordingListDeleteContent';
 
   static const audio_library_manager_preparing = 'audioLibraryManagerPreparing';
-  static const audio_library_manager_fininshed_loading_from_memory = 'audioLibraryManagerFininshedLoadingFromMemory';
-  static const audio_library_manager_calculating_audio_files = 'audioLibraryManagerCalculatingAudioFiles';
-  static const audio_library_manager_error_in_loading = 'audioLibraryManagerErrorInLoading';
+  static const audio_library_manager_fininshed_loading_from_memory =
+      'audioLibraryManagerFininshedLoadingFromMemory';
+  static const audio_library_manager_calculating_audio_files =
+      'audioLibraryManagerCalculatingAudioFiles';
+  static const audio_library_manager_error_in_loading =
+      'audioLibraryManagerErrorInLoading';
   static const audio_file_loader_calculating = 'audioFileLoaderCalculating';
-  static const audio_library_manager_fininshed_calculating = 'audioLibraryManagerFininshedCalculating';
-
+  static const audio_library_manager_fininshed_calculating =
+      'audioLibraryManagerFininshedCalculating';
 
   static const utton = '';
-
-
 
   static List<Map<String, dynamic>> getOnboardingPages(String lang) {
     final isEn = lang == 'en';
@@ -339,7 +1447,6 @@ class AppStrings {
       },
     ];
   }
-
 
   static const allKeys = [
     select_font_title,
@@ -472,7 +1579,7 @@ class AppStrings {
     volume,
     language_mode,
     language_mode_description,
-    
+
     record_date_title,
     filename_title,
 
@@ -624,10 +1731,10 @@ class AppStrings {
     audio_library_manager_error_in_loading,
     audio_file_loader_calculating,
     audio_library_manager_fininshed_calculating,
-
   ];
 
   static const en = {
+    ...learningEn,
     select_font_title: 'Select Font',
     select_font_description: 'Select your Favorite Font',
     font_iran_sans: 'Iran SansX',
@@ -664,11 +1771,14 @@ class AppStrings {
     article_detail_page_title: 'Article Detail Page',
 
     onboarding_title_0: 'Theory and practice complete each other.',
-    onboarding_subtitle_0: 'Real progress comes from blending musical knowledge - consistent practice.',
+    onboarding_subtitle_0:
+        'Real progress comes from blending musical knowledge - consistent practice.',
     onboarding_title_1: 'Lasting learning takes time.',
-    onboarding_subtitle_1: 'Musical progress requires patience, regular training, and structured learning.',
+    onboarding_subtitle_1:
+        'Musical progress requires patience, regular training, and structured learning.',
     onboarding_title_2: 'Music begins with the basics.',
-    onboarding_subtitle_2: 'True learning starts with understanding the foundations and core principles of music.',
+    onboarding_subtitle_2:
+        'True learning starts with understanding the foundations and core principles of music.',
 
     dont_have_an_account: 'Don\'t have an account? Sign up',
     sign_in_with_google: 'Sign In with Google',
@@ -676,7 +1786,8 @@ class AppStrings {
     remember_me: 'Remember me',
     password: 'Password',
     email: 'Email',
-    sign_in_description: 'Sign into your account - access all of your courses now.',
+    sign_in_description:
+        'Sign into your account - access all of your courses now.',
     sent_otp_via_email: 'OTP code has been sent via your email',
     sent_otp_via_phone_number: 'OTP code has been sent via your phone number',
     phone_number: 'Phone Number',
@@ -708,7 +1819,8 @@ class AppStrings {
     auto_download: 'Auto-download',
     auto_download_description: 'Courses will automatically save to your device',
 
-    two_times_press_back_button_for_exit_application: 'Press again BACK Button for Exit Application',
+    two_times_press_back_button_for_exit_application:
+        'Press again BACK Button for Exit Application',
 
     home_searchbar_hint: 'Search Blogs',
     new_courses_title: 'New Courses',
@@ -762,7 +1874,8 @@ class AppStrings {
     font_weight: 'Font Weight',
     font_weight_description: 'Set Font Weight',
 
-    grant_audio_permission: 'Please grant permission to access audio files in the app settings.',
+    grant_audio_permission:
+        'Please grant permission to access audio files in the app settings.',
     error_loading_files: 'Error loading files',
 
     set_base_frequency: 'Set Base Frequency (A4) : ',
@@ -783,7 +1896,7 @@ class AppStrings {
 
     language_mode: 'Language',
     language_mode_description: 'Switch to Persian',
-    
+
     record_date_title: 'Record Date :',
     filename_title: 'Filename :',
 
@@ -841,7 +1954,6 @@ https://www.youtube.com/@sornaz.academy
 
 🌐 Website: https://sornaz.com""",
 
-
     audio_list_preparing_folders: "Preparing Folders ...",
     music_player_scanning_files: "Scanning Files ...",
     music_player_scanned_files: "Scanned Files ...",
@@ -858,9 +1970,11 @@ https://www.youtube.com/@sornaz.academy
     file_action_discard: "Discard",
     file_action_save: "Save",
     file_action_changed_filename: "File name changed",
-    file_action_error_in_changed_filename: "Error renaming file (a file with the same name may already exist)",
+    file_action_error_in_changed_filename:
+        "Error renaming file (a file with the same name may already exist)",
     file_action_remove_file: "Remove file",
-    file_action_remove_file_from_list_or_memory: "Remove from the list only, or delete permanently from storage?",
+    file_action_remove_file_from_list_or_memory:
+        "Remove from the list only, or delete permanently from storage?",
     file_action_remove_file_from_list: "Remove from list",
     file_action_removed_file_from_list: "Removed from list",
     file_action_error_in_removed_file_from_list: "Error removing from list",
@@ -876,22 +1990,25 @@ https://www.youtube.com/@sornaz.academy
     song_information_duration: 'Duration',
     song_information_bitrate: 'Bitrate',
     record_details_record_information: "Record Information",
-    delete_button_widget_delete : "Delete",
-    delete_button_widget_confirm_delete : "Confirm Delete",
-    delete_button_widget_delete_question_before_filename_part : "Are you Sure for Delete «",
-    delete_button_widget_delete_question_after_filename_part : "»?",
-    delete_button_widget_discard_button : "Discard",
-    delete_button_widget_confirm_delete_button : "Yes, Delete Files",
-    rename_button_widget_rename : "Rename",
-    rename_button_widget_new_filename : "New Filename",
-    rename_button_widget_discard : "Discard",
-    rename_button_widget_save : "Save",
-    voice_recorder_microphone_and_storage_access_permissions: "Microphone and storage access permissions are required.",
+    delete_button_widget_delete: "Delete",
+    delete_button_widget_confirm_delete: "Confirm Delete",
+    delete_button_widget_delete_question_before_filename_part:
+        "Are you Sure for Delete «",
+    delete_button_widget_delete_question_after_filename_part: "»?",
+    delete_button_widget_discard_button: "Discard",
+    delete_button_widget_confirm_delete_button: "Yes, Delete Files",
+    rename_button_widget_rename: "Rename",
+    rename_button_widget_new_filename: "New Filename",
+    rename_button_widget_discard: "Discard",
+    rename_button_widget_save: "Save",
+    voice_recorder_microphone_and_storage_access_permissions:
+        "Microphone and storage access permissions are required.",
     voice_recorder_file_deleted: "File deleted",
     voice_recorder_file_restored: "File restored",
     voice_recorder_label_restore: "Restore",
     voice_recorder_delete_recording: "Delete recording",
-    voice_recorder_confirm_delete_before_filename: "Are you sure you want to delete the file “",
+    voice_recorder_confirm_delete_before_filename:
+        "Are you sure you want to delete the file “",
     voice_recorder_confirm_delete_after_filename: "”?",
     voice_recorder_no: "No",
     voice_recorder_yes_delete: "Yes, delete",
@@ -930,28 +2047,31 @@ https://www.youtube.com/@sornaz.academy
     highlight_a4_key: "Highlight A4 Key",
     enable_a4_key_highlight: "Enable A4 key highlight",
     frequencies_on_white_keys: "Frequencies on White Keys",
-    enable_frequency_display_on_white_keys: "Enable frequency display on white keys",
+    enable_frequency_display_on_white_keys:
+        "Enable frequency display on white keys",
     frequencies_on_black_keys: "Frequencies on Black Keys",
-    enable_frequency_display_on_black_keys: "Enable frequency display on black keys",
+    enable_frequency_display_on_black_keys:
+        "Enable frequency display on black keys",
     quarter_tones: "Quarter Tones",
     enable_iranian_quarter_tones: "Enable Persian/Iranian quarter tones",
     update: "Update",
 
-
     need_permission: "Need Permission",
-    need_permission_for_scanning_audio_files: "Need Permission for Scanning Audio Files from your Device Memory. Please Active Permission from AppSettings",
+    need_permission_for_scanning_audio_files:
+        "Need Permission for Scanning Audio Files from your Device Memory. Please Active Permission from AppSettings",
     later: "Later",
     go_to_settings: "Go to Settings",
 
     bass: 'Bass',
     mid: 'Mid',
     treble: 'Treble',
-    
+
     memory: 'Memory',
 
     show_all_folders: "Show All Folders",
     show_folders_contains_audio_files: "Show Folders Contains Audio Files",
-    no_folder_or_audio_file_found_in_this_path: "No Folder or Audio File Found in this Path",
+    no_folder_or_audio_file_found_in_this_path:
+        "No Folder or Audio File Found in this Path",
 
     delete_confirm_dialog_title: 'Delete recording',
     delete_confirm_dialog_content_before_filename: 'Delete',
@@ -959,7 +2079,6 @@ https://www.youtube.com/@sornaz.academy
     delete_confirm_dialog_cancel_button: 'Cancel',
     delete_confirm_dialog_delete_button: 'Delete',
 
-    
     voice_recorder_recording_icon_button_tooltip: "Recordings",
     voice_recorder_bookmark_text_button: "BOOKMARK",
 
@@ -975,7 +2094,8 @@ https://www.youtube.com/@sornaz.academy
     recording_list_delete_content: 'Delete?',
 
     audio_library_manager_preparing: 'Preparing...',
-    audio_library_manager_fininshed_loading_from_memory: 'Fininshed Loading from Memory',
+    audio_library_manager_fininshed_loading_from_memory:
+        'Fininshed Loading from Memory',
     audio_library_manager_calculating_audio_files: 'Calculating Audio Files...',
     audio_library_manager_error_in_loading: 'Error in Loading',
     audio_file_loader_calculating: 'Calculating...',
@@ -987,11 +2107,10 @@ https://www.youtube.com/@sornaz.academy
     // ======================================================
     // ======================================================
     // ======================================================
-
-
   };
 
   static const fa = {
+    ...learningFa,
     select_font_title: 'انتخاب فونت',
     select_font_description: 'فونت دلخواه خود را انتخاب کنید',
     font_iran_sans: 'ایران سنس',
@@ -1028,11 +2147,14 @@ https://www.youtube.com/@sornaz.academy
     article_detail_page_title: 'جزئیات مقاله',
 
     onboarding_title_0: 'تئوری و تمرین یکدیگر را تکمیل می‌کنند.',
-    onboarding_subtitle_0: 'پیشرفت واقعی از ترکیب دانش موسیقی و تمرین مستمر حاصل می‌شود.',
+    onboarding_subtitle_0:
+        'پیشرفت واقعی از ترکیب دانش موسیقی و تمرین مستمر حاصل می‌شود.',
     onboarding_title_1: 'یادگیری پایدار زمان می‌برد.',
-    onboarding_subtitle_1: 'پیشرفت موسیقی نیازمند صبر، تمرین منظم و یادگیری ساختاریافته است.',
+    onboarding_subtitle_1:
+        'پیشرفت موسیقی نیازمند صبر، تمرین منظم و یادگیری ساختاریافته است.',
     onboarding_title_2: 'موسیقی با اصول پایه آغاز می‌شود.',
-    onboarding_subtitle_2: 'یادگیری واقعی با درک اصول و پایه‌های موسیقی شروع می‌شود.',
+    onboarding_subtitle_2:
+        'یادگیری واقعی با درک اصول و پایه‌های موسیقی شروع می‌شود.',
 
     dont_have_an_account: 'آیا اکانت ندارید؟ ثبت نام',
     sign_in_with_google: 'ثبت نام با گوگل',
@@ -1040,7 +2162,8 @@ https://www.youtube.com/@sornaz.academy
     remember_me: 'برای من یادآوری کن',
     password: 'رمز عبور',
     email: 'ایمیل',
-    sign_in_description: 'وارد حساب کاربری خود شوید تا به تمامی درس ها دسترسی پیدا کنید.',
+    sign_in_description:
+        'وارد حساب کاربری خود شوید تا به تمامی درس ها دسترسی پیدا کنید.',
     sent_otp_via_email: 'کد تأیید از طریق ایمیل برای شما ارسال شد.',
     sent_otp_via_phone_number: 'کد تأیید از طریق شماره تلفن برای شما ارسال شد.',
     phone_number: 'شماره تلفن',
@@ -1061,14 +2184,18 @@ https://www.youtube.com/@sornaz.academy
     push_notifications: 'اعلان‌ها',
     push_notifications_subtitle: 'دریافت اعلان‌های هشدار اپلیکیشن',
     new_course_alerts: 'اعلان دوره‌های جدید',
-    new_course_alerts_description: 'زمان بارگذاری دوره توسط اساتید را مطلع شوید',
+    new_course_alerts_description:
+        'زمان بارگذاری دوره توسط اساتید را مطلع شوید',
     dataTitle: 'داده‌ها',
     use_wifi: 'استفاده از وای‌فای',
-    use_wifi_description: 'اپلیکیشن وای‌فای را نسبت به دیتای موبایل ترجیح می‌دهد',
+    use_wifi_description:
+        'اپلیکیشن وای‌فای را نسبت به دیتای موبایل ترجیح می‌دهد',
     auto_download: 'دانلود خودکار',
-    auto_download_description: 'دوره‌ها به‌صورت خودکار روی دستگاه شما ذخیره می‌شوند',
+    auto_download_description:
+        'دوره‌ها به‌صورت خودکار روی دستگاه شما ذخیره می‌شوند',
 
-    two_times_press_back_button_for_exit_application: 'برای خروج دوباره دکمه برگشت را بزنید',
+    two_times_press_back_button_for_exit_application:
+        'برای خروج دوباره دکمه برگشت را بزنید',
     home_searchbar_hint: 'جستجوی بلاگ‌ها',
 
     new_courses_title: 'دوره‌های جدید',
@@ -1130,7 +2257,7 @@ https://www.youtube.com/@sornaz.academy
     volume: 'حجم صدا',
     language_mode: 'زبان',
     language_mode_description: 'تغییر به زبان انگلیسی',
-    
+
     record_date_title: "تاریخ ضبط :",
     filename_title: "نام فایل :",
 
@@ -1201,9 +2328,11 @@ https://www.youtube.com/@sornaz.academy
     file_action_discard: "انصراف",
     file_action_save: "ذخیره",
     file_action_changed_filename: "نام فایل تغییر کرد",
-    file_action_error_in_changed_filename: "خطا در تغییر نام (ممکن است فایل مشابه وجود داشته باشد)",
+    file_action_error_in_changed_filename:
+        "خطا در تغییر نام (ممکن است فایل مشابه وجود داشته باشد)",
     file_action_remove_file: "حذف فایل",
-    file_action_remove_file_from_list_or_memory: "حذف فقط از لیست یا حذف کامل از حافظه؟",
+    file_action_remove_file_from_list_or_memory:
+        "حذف فقط از لیست یا حذف کامل از حافظه؟",
     file_action_remove_file_from_list: "حذف از لیست",
     file_action_removed_file_from_list: "از لیست حذف شد",
     file_action_error_in_removed_file_from_list: "خطا در حذف از لیست",
@@ -1219,17 +2348,19 @@ https://www.youtube.com/@sornaz.academy
     song_information_duration: 'مدت',
     song_information_bitrate: 'بیت ریت',
     record_details_record_information: "جزئیات ضبط",
-    delete_button_widget_delete : "حذف",
-    delete_button_widget_confirm_delete : "تأیید حذف",
-    delete_button_widget_delete_question_before_filename_part : "آیا از حذف فایل «",
-    delete_button_widget_delete_question_after_filename_part : "» مطمئن هستی؟",
-    delete_button_widget_discard_button : "خیر",
-    delete_button_widget_confirm_delete_button : "بله، حذف شود",
-    rename_button_widget_rename : "تغییر نام",
-    rename_button_widget_new_filename : "نام جدید",
-    rename_button_widget_discard : "انصراف",
-    rename_button_widget_save : "ذخیره",
-    voice_recorder_microphone_and_storage_access_permissions: "اجازه دسترسی به میکروفون و حافظه لازم است",
+    delete_button_widget_delete: "حذف",
+    delete_button_widget_confirm_delete: "تأیید حذف",
+    delete_button_widget_delete_question_before_filename_part:
+        "آیا از حذف فایل «",
+    delete_button_widget_delete_question_after_filename_part: "» مطمئن هستی؟",
+    delete_button_widget_discard_button: "خیر",
+    delete_button_widget_confirm_delete_button: "بله، حذف شود",
+    rename_button_widget_rename: "تغییر نام",
+    rename_button_widget_new_filename: "نام جدید",
+    rename_button_widget_discard: "انصراف",
+    rename_button_widget_save: "ذخیره",
+    voice_recorder_microphone_and_storage_access_permissions:
+        "اجازه دسترسی به میکروفون و حافظه لازم است",
     voice_recorder_file_deleted: "فایل حذف شد",
     voice_recorder_file_restored: "فایل برگردانده شد",
     voice_recorder_label_restore: "برگرداندن",
@@ -1273,14 +2404,18 @@ https://www.youtube.com/@sornaz.academy
     highlight_a4_key: "هایلایت کلید A4",
     enable_a4_key_highlight: "برای هایلایت کلید A4 روشن کنید",
     frequencies_on_white_keys: "فرکانس کلیدهای سفید",
-    enable_frequency_display_on_white_keys: "برای نمایش فرکانس روی کلیدهای سفید روشن کنید",
+    enable_frequency_display_on_white_keys:
+        "برای نمایش فرکانس روی کلیدهای سفید روشن کنید",
     frequencies_on_black_keys: "فرکانس کلیدهای سیاه",
-    enable_frequency_display_on_black_keys: "برای نمایش فرکانس روی کلیدهای سیاه روشن کنید",
+    enable_frequency_display_on_black_keys:
+        "برای نمایش فرکانس روی کلیدهای سیاه روشن کنید",
     quarter_tones: "ربع پرده‌ها",
-    enable_iranian_quarter_tones: "برای نمایش ربع پرده‌های موسیقی ایرانی روشن کنید",
+    enable_iranian_quarter_tones:
+        "برای نمایش ربع پرده‌های موسیقی ایرانی روشن کنید",
     update: "آپدیت",
     need_permission: "دسترسی لازم است",
-    need_permission_for_scanning_audio_files: "برای اسکن فایل‌های موسیقی، دسترسی به حافظه دستگاه لازم است. لطفاً در تنظیمات برنامه مجوز را فعال کنید.",
+    need_permission_for_scanning_audio_files:
+        "برای اسکن فایل‌های موسیقی، دسترسی به حافظه دستگاه لازم است. لطفاً در تنظیمات برنامه مجوز را فعال کنید.",
     later: "بعداً",
     go_to_settings: "رفتن به تنظیمات",
     // ======================================================
@@ -1295,7 +2430,8 @@ https://www.youtube.com/@sornaz.academy
     memory: 'حافظه',
     show_all_folders: "نمایش همه فولدرها",
     show_folders_contains_audio_files: "فقط فولدرهای دارای آهنگ",
-    no_folder_or_audio_file_found_in_this_path: "هیچ فولدر یا آهنگی در این مسیر یافت نشد",
+    no_folder_or_audio_file_found_in_this_path:
+        "هیچ فولدر یا آهنگی در این مسیر یافت نشد",
     delete_confirm_dialog_title: 'حذف فایل ضبط شده',
     delete_confirm_dialog_content_before_filename: 'آیا فایل',
     delete_confirm_dialog_content_after_filename: 'حذف شود؟',
@@ -1313,12 +2449,11 @@ https://www.youtube.com/@sornaz.academy
     recording_list_multi_item_delete_content: 'فایل حذف شود؟',
     recording_list_delete_content: 'حذف شود؟',
     audio_library_manager_preparing: 'در حال آماده‌سازی...',
-    audio_library_manager_fininshed_loading_from_memory: 'بارگذاری از حافظه تکمیل شد',
+    audio_library_manager_fininshed_loading_from_memory:
+        'بارگذاری از حافظه تکمیل شد',
     audio_library_manager_calculating_audio_files: 'در حال شمارش فایل‌ها...',
     audio_library_manager_error_in_loading: 'خطا در بارگذاری',
     audio_file_loader_calculating: 'در حال شمارش...',
     audio_library_manager_fininshed_calculating: 'شمارش تمام شد',
-
-
   };
 }

@@ -15,7 +15,10 @@ class AuthSession extends ChangeNotifier {
   List<AuthUser> get accounts =>
       List.unmodifiable(_accounts.values.map((a) => a.user));
 
-  Future<void> restore() async {
+  Future<void>? _restoring;
+  Future<void> restore() => _restoring ??= _restore();
+
+  Future<void> _restore() async {
     final prefs = await SharedPreferences.getInstance();
     _accounts.clear();
     try {

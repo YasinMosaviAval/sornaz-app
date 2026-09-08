@@ -3,6 +3,7 @@ import 'package:audioplayers/audioplayers.dart';
 
 class AudioPlayerController {
   final AudioPlayer _player = AudioPlayer();
+  final List<StreamSubscription> _subscriptions = [];
   
   Duration duration = Duration.zero;
   Duration position = Duration.zero;
@@ -20,24 +21,24 @@ class AudioPlayerController {
   }
 
   void _initListeners() {
-    _player.onPlayerStateChanged.listen((state) {
+    _subscriptions.add(_player.onPlayerStateChanged.listen((state) {
       isPlaying = state == PlayerState.playing;
       _stateChanged.add(null);
-    });
+    }));
 
-    _player.onDurationChanged.listen((d) {
+    _subscriptions.add(_player.onDurationChanged.listen((d) {
       duration = d;
       _stateChanged.add(null);
-    });
+    }));
 
-    _player.onPositionChanged.listen((p) {
+    _subscriptions.add(_player.onPositionChanged.listen((p) {
       position = p;
       _stateChanged.add(null);
-    });
+    }));
 
-    _player.onPlayerComplete.listen((_) {
+    _subscriptions.add(_player.onPlayerComplete.listen((_) {
       _completeChanged.add(null);
-    });
+    }));
 
     _player.setReleaseMode(ReleaseMode.stop);
   }
@@ -48,6 +49,8 @@ class AudioPlayerController {
 
   Future<void> playFile(String path) async {
     await _player.stop();
+    duration = Duration.zero;
+    position = Duration.zero;
     await _player.setSource(DeviceFileSource(path));
     await _player.resume();
   }
@@ -62,7 +65,12 @@ class AudioPlayerController {
     _stateChanged.add(null);
   }
 
-  Future<void> seek(Duration newPosition) async => await _player.seek(newPosition);
+  Future<void> seek(Duration newPosition) async {
+    final safePosition = Duration(milliseconds: newPosition.inMilliseconds.clamp(0, duration.inMilliseconds));
+    await _player.seek(safePosition);
+    position = safePosition;
+    _stateChanged.add(null);
+  }
 
   Future<void> setSpeed(double speed) async {
     playbackSpeed = speed;
@@ -78,6 +86,7 @@ class AudioPlayerController {
   }
 
   void dispose() {
+    for (final subscription in _subscriptions) { subscription.cancel(); }
     _stateChanged.close();
     _completeChanged.close();
     _player.dispose();

@@ -1,3 +1,9 @@
+import 'package:sornaz/components/bottom_nav.dart';
+import 'course_metadata_editor.dart';
+import 'package:sornaz/helpers/app_translations.dart';
+import 'package:sornaz/components/app_text.dart';
+import 'course_browse.dart';
+import 'course_experience.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -8,9 +14,15 @@ import 'social_edit_dialog.dart';
 import 'learning_actions.dart';
 
 class CoursesPage extends StatelessWidget {
-  const CoursesPage({super.key, required this.api, this.mode = 'catalog'});
+  const CoursesPage({
+    super.key,
+    required this.api,
+    this.mode = 'catalog',
+    this.initialQuery = '',
+  });
   final SocialApi api;
   final String mode;
+  final String initialQuery;
   @override
   Widget build(BuildContext context) => SocialScaffold(
     title: mode == 'manage'
@@ -18,7 +30,7 @@ class CoursesPage extends StatelessWidget {
         : mode == 'library'
         ? 'خریدهای من'
         : 'دوره‌های آموزشی',
-    body: CoursesBody(api: api, initialMode: mode),
+    body: CoursesBody(api: api, initialMode: mode, initialQuery: initialQuery),
   );
 }
 
@@ -29,11 +41,13 @@ class CoursesBody extends StatefulWidget {
     this.owner,
     this.embedded = false,
     this.initialMode = 'catalog',
+    this.initialQuery = '',
   });
   final SocialApi api;
   final int? owner;
   final bool embedded;
   final String initialMode;
+  final String initialQuery;
   @override
   State<CoursesBody> createState() => _CoursesBodyState();
 }
@@ -67,6 +81,18 @@ class _CoursesBodyState extends State<CoursesBody> {
 
   @override
   Widget build(BuildContext context) {
+    if (mode == 'catalog' && items != null)
+      return CourseBrowse(
+        initialQuery: widget.initialQuery,
+        api: widget.api,
+        items: items!,
+        refresh: load,
+        embedded: widget.embedded,
+        open: (row) => socialPush(
+          context,
+          CourseDetailPage(api: widget.api, id: number(row['id'])),
+        ),
+      );
     final children = <Widget>[
       if (widget.owner == null)
         Padding(
@@ -80,7 +106,7 @@ class _CoursesBodyState extends State<CoursesBody> {
                 ('manage', 'دوره‌های من'),
               ])
                 ChoiceChip(
-                  label: Text(m.$2),
+                  label: AppText(m.$2),
                   selected: mode == m.$1,
                   onSelected: (_) {
                     setState(() {
@@ -102,7 +128,7 @@ class _CoursesBodyState extends State<CoursesBody> {
               if (mounted) load();
             },
             icon: const Icon(Icons.add),
-            label: const Text('ساخت دوره جدید'),
+            label: const AppText('ساخت دوره جدید'),
           ),
         ),
       if (error != null)
@@ -147,13 +173,13 @@ class _CoursesBodyState extends State<CoursesBody> {
                       children: [
                         if (mode == 'manage')
                           Chip(
-                            label: Text(
+                            label: AppText(
                               c['status'] == 'published'
                                   ? 'منتشرشده'
                                   : 'پیش‌نویس',
                             ),
                           ),
-                        Text(
+                        AppText(
                           '${c['title']}',
                           style: const TextStyle(
                             fontSize: 18,
@@ -161,7 +187,7 @@ class _CoursesBodyState extends State<CoursesBody> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
+                        AppText(
                           '${c['description']}',
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -170,7 +196,7 @@ class _CoursesBodyState extends State<CoursesBody> {
                         Row(
                           children: [
                             Expanded(
-                              child: Text(
+                              child: AppText(
                                 number(c['price']) == 0
                                     ? 'رایگان'
                                     : '${c['price']} تومان',
@@ -180,7 +206,7 @@ class _CoursesBodyState extends State<CoursesBody> {
                                 ),
                               ),
                             ),
-                            Text(
+                            AppText(
                               mode == 'manage' ? 'ویرایش دوره' : 'مشاهده دوره',
                             ),
                             const Icon(Icons.chevron_right),
@@ -310,7 +336,8 @@ class _CourseDetailPageState extends State<CourseDetailPage>
 
   @override
   Widget build(BuildContext context) => SocialScaffold(
-    title: '${course?['title'] ?? 'دوره آموزشی'}',
+    title: socialText(context, 'دوره آموزشی', 'Course'),
+    bottom: const BottomNavBarWidget(selectedIndex: 2),
     actions: [BookmarkButton(api: widget.api, kind: 'course', id: widget.id)],
     body: error != null
         ? SocialEmpty(error!, onRetry: load)
@@ -318,84 +345,13 @@ class _CourseDetailPageState extends State<CourseDetailPage>
         ? const Center(child: CircularProgressIndicator())
         : RefreshIndicator(
             onRefresh: load,
-            child: ListView(
-              children: [
-                if (course!['access'] == true)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: DownloadCourseButton(
-                      api: widget.api,
-                      courseId: widget.id,
-                    ),
-                  ),
-                SocialImage(
-                  api: widget.api,
-                  path: course!['cover_id'] == null
-                      ? null
-                      : widget.api.courseMedia(course!['cover_id']),
-                  height: 210,
-                  width: double.infinity,
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${course!['title']}',
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text('${course!['description']}'),
-                      const SizedBox(height: 20),
-                      if (course!['access'] != true)
-                        FilledButton(
-                          onPressed: buying ? null : buy,
-                          child: Text(
-                            buying
-                                ? 'در حال اتصال…'
-                                : number(course!['price']) == 0
-                                ? 'دریافت رایگان دوره'
-                                : 'خرید دوره · ${course!['price']} تومان',
-                          ),
-                        )
-                      else
-                        const Chip(
-                          label: Text('دسترسی به همه درس‌ها فعال است'),
-                        ),
-                      const SizedBox(height: 24),
-                      const Text(
-                        'سرفصل‌ها',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      for (final chapter in objects(course!['curriculum']))
-                        ExpansionTile(
-                          title: Text('${chapter['title']}'),
-                          children: [
-                            for (final lesson in objects(chapter['lessons']))
-                              ListTile(
-                                leading: Icon(
-                                  course!['access'] == true
-                                      ? Icons.play_circle_outline
-                                      : Icons.lock_outline,
-                                ),
-                                title: Text('${lesson['title']}'),
-                                onTap: course!['access'] == true
-                                    ? () => openLesson(lesson)
-                                    : null,
-                              ),
-                          ],
-                        ),
-                    ],
-                  ),
-                ),
-              ],
+            child: CourseExperience(
+              api: widget.api,
+              course: course!,
+              refresh: load,
+              openLesson: openLesson,
+              buy: buy,
+              buying: buying,
             ),
           ),
   );
@@ -419,7 +375,7 @@ class LessonPage extends StatelessWidget {
     body: ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        if ('${lesson['text']}'.isNotEmpty) Text('${lesson['text']}'),
+        if ('${lesson['text']}'.isNotEmpty) AppText('${lesson['text']}'),
         const SizedBox(height: 20),
         for (final id in lesson['media'] as List) ...[
           if (files.any(
@@ -427,7 +383,11 @@ class LessonPage extends StatelessWidget {
                 number(f['id']) == number(id) &&
                 '${f['mime']}'.startsWith('video/'),
           ))
-            SocialVideo(api: api, path: api.courseMedia(id))
+            SocialVideo(
+              api: api,
+              path: api.courseMedia(id),
+              title: '${lesson['title']}',
+            )
           else
             SocialImage(
               api: api,
@@ -539,7 +499,7 @@ class _CourseEditorPageState extends State<CourseEditorPage> {
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
+            content: AppText(
               status == 'published'
                   ? 'دوره برای فروش منتشر شد.'
                   : 'پیش‌نویس ذخیره شد.',
@@ -665,15 +625,15 @@ class _CourseEditorPageState extends State<CourseEditorPage> {
     final yes = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('این بخش حذف شود؟'),
+        title: const AppText('این بخش حذف شود؟'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('انصراف'),
+            child: const AppText('انصراف'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('حذف'),
+            child: const AppText('حذف'),
           ),
         ],
       ),
@@ -693,16 +653,16 @@ class _CourseEditorPageState extends State<CourseEditorPage> {
       final leave = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('تغییرات ذخیره نشده‌اند'),
-          content: const Text('بدون ذخیره خارج می‌شوید؟'),
+          title: const AppText('تغییرات ذخیره نشده‌اند'),
+          content: const AppText('بدون ذخیره خارج می‌شوید؟'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('ادامه ویرایش'),
+              child: const AppText('ادامه ویرایش'),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('خروج'),
+              child: const AppText('خروج'),
             ),
           ],
         ),
@@ -725,24 +685,46 @@ class _CourseEditorPageState extends State<CourseEditorPage> {
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
+                  if (number(course['id']) > 0)
+                    OutlinedButton.icon(
+                      onPressed: () => socialPush(
+                        context,
+                        CourseMetadataEditor(
+                          api: widget.api,
+                          id: number(course['id']),
+                        ),
+                      ),
+                      icon: const Icon(Icons.tune),
+                      label: AppText(
+                        socialText(
+                          context,
+                          'جزئیات تکمیلی دوره',
+                          'Course details',
+                        ),
+                      ),
+                    ),
                   TextField(
                     controller: title,
                     maxLength: 180,
-                    decoration: const InputDecoration(labelText: 'عنوان دوره'),
+                    decoration: InputDecoration(
+                      labelText: 'عنوان دوره'.translate(context),
+                    ),
                   ),
                   TextField(
                     controller: description,
                     maxLength: 20000,
                     maxLines: 4,
-                    decoration: const InputDecoration(
-                      labelText: 'معرفی دوره و پیش‌نیازها',
+                    decoration: InputDecoration(
+                      labelText: 'معرفی دوره و پیش‌نیازها'.translate(context),
                     ),
                   ),
                   TextField(
                     controller: price,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'قیمت به تومان (صفر = رایگان)',
+                    decoration: InputDecoration(
+                      labelText: 'قیمت به تومان (صفر = رایگان)'.translate(
+                        context,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -756,10 +738,10 @@ class _CourseEditorPageState extends State<CourseEditorPage> {
                   OutlinedButton.icon(
                     onPressed: () => upload(),
                     icon: const Icon(Icons.image_outlined),
-                    label: const Text('انتخاب تصویر جلد'),
+                    label: const AppText('انتخاب تصویر جلد'),
                   ),
                   const Divider(height: 32),
-                  const Text(
+                  const AppText(
                     'فصل‌ها و درس‌ها',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                   ),
@@ -772,24 +754,24 @@ class _CourseEditorPageState extends State<CourseEditorPage> {
                   OutlinedButton.icon(
                     onPressed: addChapter,
                     icon: const Icon(Icons.add),
-                    label: const Text('افزودن فصل'),
+                    label: const AppText('افزودن فصل'),
                   ),
                   const SizedBox(height: 24),
                   if (busy) ...[
                     const LinearProgressIndicator(),
-                    const Text('در حال ذخیره یا آپلود…'),
+                    const AppText('در حال ذخیره یا آپلود…'),
                   ],
-                  Text(
+                  AppText(
                     dirty ? 'تغییرات ذخیره نشده' : 'اطلاعات ذخیره شده',
                     style: const TextStyle(fontSize: 12),
                   ),
                   OutlinedButton(
                     onPressed: busy ? null : () => save('draft'),
-                    child: const Text('ذخیره پیش‌نویس'),
+                    child: const AppText('ذخیره پیش‌نویس'),
                   ),
                   FilledButton(
                     onPressed: busy ? null : () => save('published'),
-                    child: const Text('انتشار برای فروش'),
+                    child: const AppText('انتشار برای فروش'),
                   ),
                 ],
               ),
@@ -803,25 +785,25 @@ class _CourseEditorPageState extends State<CourseEditorPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          AppText(
             '${ci + 1}. ${chapter['title']}',
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           Row(
             children: [
               IconButton(
-                tooltip: 'بالاتر',
+                tooltip: 'بالاتر'.translate(context),
                 onPressed: () => move(course['curriculum'], ci, -1),
                 icon: const Icon(Icons.arrow_upward),
               ),
               IconButton(
-                tooltip: 'پایین‌تر',
+                tooltip: 'پایین‌تر'.translate(context),
                 onPressed: () => move(course['curriculum'], ci, 1),
                 icon: const Icon(Icons.arrow_downward),
               ),
               const Spacer(),
               IconButton(
-                tooltip: 'حذف فصل',
+                tooltip: 'حذف فصل'.translate(context),
                 onPressed: () => remove(course['curriculum'], ci),
                 icon: const Icon(Icons.delete_outline),
               ),
@@ -832,7 +814,7 @@ class _CourseEditorPageState extends State<CourseEditorPage> {
           TextButton.icon(
             onPressed: () => editLesson(chapter),
             icon: const Icon(Icons.add),
-            label: const Text('افزودن درس'),
+            label: const AppText('افزودن درس'),
           ),
         ],
       ),
@@ -850,8 +832,8 @@ class _CourseEditorPageState extends State<CourseEditorPage> {
       children: [
         ListTile(
           contentPadding: EdgeInsets.zero,
-          title: Text('${lesson['title']}'),
-          subtitle: Text(
+          title: AppText('${lesson['title']}'),
+          subtitle: AppText(
             '${lesson['text']}',
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -861,30 +843,30 @@ class _CourseEditorPageState extends State<CourseEditorPage> {
         Wrap(
           children: [
             IconButton(
-              tooltip: 'بالاتر',
+              tooltip: 'بالاتر'.translate(context),
               onPressed: () => move(chapter['lessons'], li, -1),
               icon: const Icon(Icons.arrow_upward),
             ),
             IconButton(
-              tooltip: 'پایین‌تر',
+              tooltip: 'پایین‌تر'.translate(context),
               onPressed: () => move(chapter['lessons'], li, 1),
               icon: const Icon(Icons.arrow_downward),
             ),
             IconButton(
-              tooltip: 'حذف درس',
+              tooltip: 'حذف درس'.translate(context),
               onPressed: () => remove(chapter['lessons'], li),
               icon: const Icon(Icons.delete_outline),
             ),
             TextButton.icon(
               onPressed: () => upload(lesson: lesson),
               icon: const Icon(Icons.attach_file),
-              label: const Text('آپلود تصویر / ویدیو'),
+              label: const AppText('آپلود تصویر / ویدیو'),
             ),
           ],
         ),
         for (final id in List.of(lesson['media']))
           InputChip(
-            label: Text('فایل $id'),
+            label: AppText('فایل $id'),
             onDeleted: () {
               setState(() {
                 (lesson['media'] as List).remove(id);
