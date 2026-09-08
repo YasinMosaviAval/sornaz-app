@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'registration_feedback.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
@@ -11,15 +12,11 @@ import 'package:sornaz/screens/Home/ui/pages/home.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 import 'package:sornaz/screens/Authentication/services/auth_api_service.dart';
 
-
-
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
   @override
   State<SignInScreen> createState() => _SignInScreenState();
 }
-
-
 
 class _SignInScreenState extends State<SignInScreen> {
   bool remember = false;
@@ -109,7 +106,10 @@ class _SignInScreenState extends State<SignInScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        Row(
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 8,
+          runSpacing: 4,
           children: [
             SizedBox(
               width: 24,
@@ -124,7 +124,6 @@ class _SignInScreenState extends State<SignInScreen> {
               AppStrings.remember_me.translate(context),
               style: _muted(context),
             ),
-            const Spacer(),
             TextButton(
               onPressed: () {},
               child: Text(AppStrings.forgot_password.translate(context)),
@@ -166,19 +165,17 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 }
 
-
-
 class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+  const SignUpScreen({super.key, this.api});
+  final AuthApiService? api;
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-
-
 class _SignUpScreenState extends State<SignUpScreen> {
   bool hidden = true;
   bool confirmHidden = true;
+  bool phoneMethod = false;
   bool terms = false;
   bool loading = false;
   String? error;
@@ -187,7 +184,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final contact = TextEditingController();
   final password = TextEditingController();
   final confirmation = TextEditingController();
-  final api = AuthApiService();
+  late final api = widget.api ?? AuthApiService();
 
   @override
   void dispose() {
@@ -201,37 +198,55 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Map<String, String> get form {
     final value = contact.text.trim();
-    final phone = !value.contains('@');
+    final phone = phoneMethod;
     return {
       'register_method': phone ? 'phone' : 'email',
       'email': phone ? '' : value,
-      'phone': phone ? value : '',
+      'phone': phone ? normalizeRegistrationPhone(value) : '',
       'username': username.text.trim(),
       'full_name': fullName.text.trim(),
       'password': password.text,
       'password2': confirmation.text,
       'terms': terms ? '1' : '',
-      'locale':
-          WidgetsBinding.instance.platformDispatcher.locale.languageCode == 'en'
-          ? 'en'
-          : 'fa',
+      'locale': context.read<LocaleProvider>().locale.languageCode,
     };
   }
 
   Future<void> register() async {
-    if (fullName.text.trim().isEmpty ||
-        username.text.trim().isEmpty ||
+    if (username.text.trim().isEmpty ||
         contact.text.trim().isEmpty ||
         password.text.isEmpty) {
-      setState(() => error = 'لطفاً تمام فیلدها را تکمیل کنید.');
+      setState(() => error = 'auth.required'.translate(context));
+      return;
+    }
+    final input = contact.text.trim();
+    final validContact = phoneMethod
+        ? RegExp(r'^09[0-9]{9}$').hasMatch(normalizeRegistrationPhone(input))
+        : RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(input);
+    if (!validContact) {
+      setState(
+        () =>
+            error = (phoneMethod ? 'auth.invalid_phone' : 'auth.invalid_email')
+                .translate(context),
+      );
+      return;
+    }
+    if (!validRegistrationUsername(username.text)) {
+      setState(() => error = 'auth.username_invalid'.translate(context));
+      return;
+    }
+    if (password.text.length < 8 ||
+        registrationPasswordCriteria(password.text).where((v) => v).length <
+            3) {
+      setState(() => error = 'auth.weak_password'.translate(context));
       return;
     }
     if (password.text != confirmation.text) {
-      setState(() => error = 'رمز عبور و تکرار آن یکسان نیست.');
+      setState(() => error = 'auth.password_mismatch'.translate(context));
       return;
     }
     if (!terms) {
-      setState(() => error = 'پذیرش قوانین الزامی است.');
+      setState(() => error = 'auth.terms_required'.translate(context));
       return;
     }
     setState(() {
@@ -239,11 +254,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
       error = null;
     });
     try {
-      await api.sendRegistrationOtp(form);
+      final submittedForm = form;
+      await api.sendRegistrationOtp(submittedForm);
       if (!mounted) return;
-      final otp = await _askForOtp();
+      final otp = await _askForOtp(submittedForm[submittedForm['register_method']]!);
       if (otp == null || !mounted) return;
-      final result = await api.register(form, otp);
+      final result = await api.register(submittedForm, otp);
       if (!mounted) return;
       await context.read<AuthSession>().save(result);
       if (!mounted) return;
@@ -264,11 +280,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  Future<String?> _askForOtp() async {
+  Future<String?> _askForOtp(String destination) async {
     return showDialog<String>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => _OtpDialog(destination: contact.text.trim()),
+      builder: (_) => _OtpDialog(destination: destination),
     );
   }
 
@@ -284,13 +300,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     final en = context.watch<LocaleProvider>().locale.languageCode == 'en';
     return _AuthPage(
+      showBack: false,
       children: [
         const _Header(),
         const SizedBox(height: 18),
         Text(
-          en
-              ? 'Access thousands of free courses today.'
-              : 'امروز به هزاران دوره رایگان دسترسی پیدا کنید.',
+          'auth.register_intro'.translate(context),
           textAlign: TextAlign.center,
           style: _muted(context).copyWith(fontSize: 16),
         ),
@@ -301,11 +316,43 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ),
         const SizedBox(height: 12),
         _Field(label: en ? 'Username' : 'نام کاربری', controller: username),
+        UsernameFeedback(controller: username),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 12,
+          runSpacing: 8,
+          children: [
+            for (final phone in [false, true])
+              ChoiceChip(
+                label: Text(
+                  (phone ? 'auth.phone_method' : 'auth.email_method').translate(
+                    context,
+                  ),
+                ),
+                avatar: Icon(
+                  phone ? Icons.phone_android : Icons.email_outlined,
+                  size: 18,
+                ),
+                selected: phoneMethod == phone,
+                onSelected: loading
+                    ? null
+                    : (_) => setState(() {
+                        phoneMethod = phone;
+                        contact.clear();
+                        error = null;
+                      }),
+              ),
+          ],
+        ),
         const SizedBox(height: 12),
         _Field(
-          label: en ? 'Email or mobile' : 'ایمیل یا شماره موبایل',
+          label: phoneMethod
+              ? 'auth.phone_label'.translate(context)
+              : AppStrings.email.translate(context),
           controller: contact,
-          keyboardType: TextInputType.emailAddress,
+          keyboardType: phoneMethod
+              ? TextInputType.phone
+              : TextInputType.emailAddress,
         ),
         const SizedBox(height: 12),
         _Field(
@@ -321,6 +368,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
           ),
         ),
+        PasswordStrengthFeedback(controller: password),
         const SizedBox(height: 12),
         _Field(
           label: en ? 'Confirm Password' : 'تکرار رمز عبور',
@@ -349,16 +397,30 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: InkWell(
-                onTap: _showTerms,
-                child: Text(
-                  en
-                      ? 'I accept the terms and conditions.'
-                      : 'قوانین و شرایط استفاده را می‌پذیرم.',
-                  style: _muted(
-                    context,
-                  ).copyWith(decoration: TextDecoration.underline),
-                ),
+              child: Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 4,
+                children: [
+                  if (en)
+                    Text(
+                      'auth.terms_accept'.translate(context),
+                      style: _muted(context),
+                    ),
+                  InkWell(
+                    onTap: _showTerms,
+                    child: Text(
+                      'auth.terms_link'.translate(context),
+                      style: _muted(
+                        context,
+                      ).copyWith(color: Theme.of(context).colorScheme.primary),
+                    ),
+                  ),
+                  if (!en)
+                    Text(
+                      'auth.terms_accept'.translate(context),
+                      style: _muted(context),
+                    ),
+                ],
               ),
             ),
           ],
@@ -392,10 +454,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 }
 
-
-
 class _AuthPage extends StatelessWidget {
-  const _AuthPage({required this.children});
+  const _AuthPage({required this.children, this.showBack = true});
+  final bool showBack;
   final List<Widget> children;
   @override
   Widget build(BuildContext context) {
@@ -408,6 +469,7 @@ class _AuthPage extends StatelessWidget {
             ? AppColors.background_dark
             : AppColors.background_light,
         appBar: AppBar(
+          automaticallyImplyLeading: showBack,
           elevation: 0,
           scrolledUnderElevation: 0,
           backgroundColor: Colors.transparent,
@@ -426,8 +488,6 @@ class _AuthPage extends StatelessWidget {
   }
 }
 
-
-
 class _Header extends StatelessWidget {
   const _Header();
   @override
@@ -438,10 +498,11 @@ class _Header extends StatelessWidget {
         ClipOval(child: const AppLogo(size: 120, withBackground: true)),
         const SizedBox(height: 18),
         Text(
-          'Sornaz',
+          'auth.account_title'.translate(context),
+          textAlign: TextAlign.center,
           style: TextStyle(
             color: color,
-            fontSize: 36,
+            fontSize: 28,
             height: 1,
             fontWeight: FontWeight.w700,
           ),
@@ -450,8 +511,6 @@ class _Header extends StatelessWidget {
     );
   }
 }
-
-
 
 class _Field extends StatelessWidget {
   const _Field({
@@ -509,8 +568,6 @@ class _Field extends StatelessWidget {
   }
 }
 
-
-
 class _MainButton extends StatelessWidget {
   const _MainButton({
     required this.label,
@@ -547,8 +604,6 @@ class _MainButton extends StatelessWidget {
   }
 }
 
-
-
 void _continueAsGuest(BuildContext context) {
   Navigator.of(context).pushAndRemoveUntil(
     MaterialPageRoute(builder: (_) => const HomePage()),
@@ -556,16 +611,12 @@ void _continueAsGuest(BuildContext context) {
   );
 }
 
-
-
 class _OtpDialog extends StatefulWidget {
   const _OtpDialog({required this.destination});
   final String destination;
   @override
   State<_OtpDialog> createState() => _OtpDialogState();
 }
-
-
 
 class _OtpDialogState extends State<_OtpDialog> {
   final controllers = List.generate(6, (_) => TextEditingController());
@@ -583,11 +634,11 @@ class _OtpDialogState extends State<_OtpDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('کد تأیید'),
+    title: Text('auth.otp_title'.translate(context)),
     content: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('کد ۶ رقمی ارسال‌شده به ${widget.destination} را وارد کنید.'),
+        Text('${"auth.otp_prompt".translate(context)} ${widget.destination}'),
         const SizedBox(height: 18),
         Directionality(
           textDirection: TextDirection.ltr,
@@ -630,20 +681,18 @@ class _OtpDialogState extends State<_OtpDialog> {
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('انصراف'),
+        child: Text('auth.cancel'.translate(context)),
       ),
       FilledButton(
         onPressed: () {
           final code = controllers.map((item) => item.text).join();
           if (RegExp(r'^\d{6}$').hasMatch(code)) Navigator.pop(context, code);
         },
-        child: const Text('تأیید و ثبت‌نام'),
+        child: Text('auth.verify'.translate(context)),
       ),
     ],
   );
 }
-
-
 
 class _TermsDialog extends StatelessWidget {
   const _TermsDialog();
@@ -712,8 +761,6 @@ class _TermsDialog extends StatelessWidget {
   );
 }
 
-
-
 class _Prompt extends StatelessWidget {
   const _Prompt({
     required this.prefix,
@@ -749,8 +796,6 @@ class _Prompt extends StatelessWidget {
     );
   }
 }
-
-
 
 TextStyle _muted(BuildContext context) {
   final dark = context.watch<AppData>().isDark;
