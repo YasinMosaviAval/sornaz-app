@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_pitch_detection/flutter_pitch_detection.dart';
+import '../audio/pitch_input.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/screens/Tuner/audio/note_player.dart';
@@ -13,8 +13,10 @@ class TunerProvider extends ChangeNotifier {
   bool _polling = false;
   bool _running = false;
   bool _disposed = false;
-  Future<void>? _starting;
-  final FlutterPitchDetection _pitch = FlutterPitchDetection();
+  Future<void> _transition = Future.value();
+  bool _requested = false;
+  String? detectionError;
+  final PitchInput _pitch = PitchInput();
 
   double frequency = 0.0;
   double a4 = 440.0;
@@ -60,49 +62,79 @@ class TunerProvider extends ChangeNotifier {
 
   bool get supportsPitchDetection => Platform.isAndroid || Platform.isIOS;
 
-  Future<void> start() =>
-      _starting ??= _start().whenComplete(() => _starting = null);
-
-  Future<void> _start() async {
-    if (_running || _disposed) return;
-    await notePlayer.init();
-    if (!supportsPitchDetection) return;
-
-    final status = await Permission.microphone.request();
-    if (!status.isGranted) return;
-
-    if (_disposed) return;
-
-    await _pitch.startDetection(
-      sampleRate: 44100,
-      bufferSize: 4096,
-      overlap: 3072,
-    );
-    await _pitch.setMinPrecision(0.7);
-    _running = true;
-    // Request only the frequency; the plugin's event stream copies a full
-    // second of raw audio on every callback, which stalls Flutter rendering.
-    _pitchTimer = Timer.periodic(const Duration(milliseconds: 40), (_) async {
-      if (_polling || !_running || _disposed) return;
-      _polling = true;
-      try {
-        final value = await _pitch.getFrequency();
-        if (_running && !_disposed)
-          _onPitchDetected({AppConstants.FREQUENCY: value});
-      } catch (_) {
-        // A stopped microphone can race with the last pending frequency read.
-      } finally {
-        _polling = false;
-      }
-    });
+  Future<void> start() {
+    _requested = true;
+    return _reconcile();
   }
 
-  Future<void> stop() async {
-    await _starting;
-    if (_running && supportsPitchDetection) await _pitch.stopDetection();
-    _running = false;
-    _pitchTimer?.cancel();
-    _pitchTimer = null;
+  Future<void> stop() {
+    _requested = false;
+    return _reconcile();
+  }
+
+  Future<void> _reconcile() {
+    _transition = _transition
+        .then((_) async {
+          if (_disposed || !_requested) {
+            _pitchTimer?.cancel();
+            _pitchTimer = null;
+            if (_running) await _pitch.stop();
+            _running = false;
+            return;
+          }
+          if (_running || !supportsPitchDetection) return;
+          detectionError = null;
+          final permission = await Permission.microphone.request();
+          if (_disposed || !_requested) return;
+          if (!permission.isGranted) {
+            detectionError = 'permission';
+            notifyListeners();
+            return;
+          }
+          // No call to the broken plugin precision setter after startup.
+          await _pitch.start();
+          _running = true;
+          if (_disposed || !_requested) {
+            await _pitch.stop();
+            _running = false;
+            return;
+          }
+          notifyListeners();
+          var failures = 0;
+          _pitchTimer = Timer.periodic(const Duration(milliseconds: 40), (
+            _,
+          ) async {
+            if (_polling || !_running || _disposed) return;
+            _polling = true;
+            try {
+              final value = await _pitch.read();
+              failures = 0;
+              if (_running && !_disposed && _requested) {
+                _onPitchDetected({AppConstants.FREQUENCY: value});
+              }
+            } catch (_) {
+              if (++failures >= 5 && !_disposed && _requested) {
+                detectionError = 'input';
+                notifyListeners();
+                unawaited(stop());
+              }
+            } finally {
+              _polling = false;
+            }
+          });
+        })
+        .catchError((Object error) async {
+          _pitchTimer?.cancel();
+          try {
+            await _pitch.stop();
+          } catch (_) {}
+          _running = false;
+          if (!_disposed) {
+            detectionError = 'input';
+            notifyListeners();
+          }
+        });
+    return _transition;
   }
 
   @override

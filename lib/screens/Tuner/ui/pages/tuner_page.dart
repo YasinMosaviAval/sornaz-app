@@ -34,7 +34,8 @@ class _TunerPageState extends State<TunerPage> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       tuner.start();
-    } else {
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
       tuner.stop();
     }
   }
@@ -86,6 +87,29 @@ class _TunerView extends StatelessWidget {
                   'Microphone pitch detection is not available in this Windows version. Use the keyboard to play reference notes.',
                 ),
                 textAlign: TextAlign.center,
+              ),
+            ),
+          if (tuner.detectionError != null)
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                children: [
+                  Text(
+                    socialText(
+                      context,
+                      tuner.detectionError == 'permission'
+                          ? 'برای تشخیص فرکانس، دسترسی به میکروفون را فعال کنید.'
+                          : 'دریافت صدای میکروفون متوقف شد. دوباره تلاش کنید.',
+                      tuner.detectionError == 'permission'
+                          ? 'Allow microphone access to detect pitch.'
+                          : 'Microphone input stopped. Please try again.',
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: tuner.start,
+                    child: Text(socialText(context, 'تلاش مجدد', 'Retry')),
+                  ),
+                ],
               ),
             ),
           FrequencyInfoRow(

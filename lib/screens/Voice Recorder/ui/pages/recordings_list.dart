@@ -1,3 +1,4 @@
+import '../components/recording_bookmarks_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -322,6 +323,28 @@ class _RecordedFilesPageState extends State<RecordedFilesPage> {
                                     ],
                                   ),
                                 ),
+                              if (active)
+                                TextButton.icon(
+                                  onPressed: () =>
+                                      _run(() => vm.addPlaybackBookmark(file)),
+                                  icon: const Icon(Icons.bookmark_add_outlined),
+                                  label: Text(
+                                    socialText(
+                                      context,
+                                      'افزودن نشانک',
+                                      'Add bookmark',
+                                    ),
+                                  ),
+                                ),
+                              RecordingBookmarksView(
+                                key: ValueKey(file.uri),
+                                uri: file.uri,
+                                store: vm.fileService.bookmarks,
+                                revision: vm.bookmarkRevision,
+                                onSelect: (time) => vm.seekBookmark(file, time),
+                                onDelete: (time) =>
+                                    vm.removeBookmark(file.uri, time),
+                              ),
                             ],
                           ),
                         );

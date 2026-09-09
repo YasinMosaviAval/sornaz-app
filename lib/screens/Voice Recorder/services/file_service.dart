@@ -1,3 +1,4 @@
+import 'recording_bookmarks.dart';
 import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -16,6 +17,7 @@ class SavedRecording {
 }
 
 class FileService {
+  final bookmarks = RecordingBookmarks();
   static const channel = MethodChannel('sornaz/recordings');
   late Directory _dir;
   int? _sdk;
@@ -38,7 +40,9 @@ class FileService {
 
   Future<void> publish(String path) async {
     if (!Platform.isAndroid) return;
-    await channel.invokeMethod<String>('save', {'path': path});
+    final uri = await channel.invokeMethod<String>('save', {'path': path});
+    if (uri == null) throw StateError('Missing public recording URI');
+    await bookmarks.move(path, uri);
     // Delete staging only after MediaStore has committed the complete file.
     await File(path).delete();
   }
@@ -98,6 +102,7 @@ class FileService {
     } else {
       await File(item.uri).delete();
     }
+    await bookmarks.delete(item.uri);
   }
 
   Future<void> rename(SavedRecording item, String name) async {
@@ -111,7 +116,10 @@ class FileService {
         'name': name,
       });
     } else {
-      await File(item.uri).rename('${File(item.uri).parent.path}/$name.m4a');
+      final renamed = await File(
+        item.uri,
+      ).rename('${File(item.uri).parent.path}/$name.m4a');
+      await bookmarks.move(item.uri, renamed.path);
     }
   }
 

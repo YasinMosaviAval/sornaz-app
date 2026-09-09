@@ -35,6 +35,7 @@ class VoiceRecorderProvider extends ChangeNotifier {
   List<SavedRecording> files = [];
   List<double> amplitudes = [];
   int totalSamples = 0;
+  int bookmarkRevision = 0;
   final Stopwatch _recordingClock = Stopwatch();
   Timer? _timer;
 
@@ -45,8 +46,40 @@ class VoiceRecorderProvider extends ChangeNotifier {
     _notify();
   }
 
+  Future<void> addRecordingBookmark() async {
+    final path = currentFilePath;
+    if (path == null || (!isRecording && !isPaused) || isBusy) return;
+    await fileService.bookmarks.add(path, _recordingClock.elapsedMilliseconds);
+    bookmarkRevision++;
+    _notify();
+  }
+
+  Future<void> addPlaybackBookmark(SavedRecording file) async {
+    if (playbackService.currentPath != file.uri) return;
+    await fileService.bookmarks.add(
+      file.uri,
+      playbackService.position.inMilliseconds,
+    );
+    bookmarkRevision++;
+    _notify();
+  }
+
+  Future<void> removeBookmark(String uri, int milliseconds) async {
+    await fileService.bookmarks.remove(uri, milliseconds);
+    bookmarkRevision++;
+    _notify();
+  }
+
+  Future<void> seekBookmark(SavedRecording file, int milliseconds) async {
+    if (isRecording || isPaused) return;
+    if (playbackService.currentPath != file.uri) {
+      await playbackService.play(file.uri);
+    }
+    await playbackService.seek(Duration(milliseconds: milliseconds));
+  }
+
   Future<void> playSaved(SavedRecording file) async {
-    if (isRecording) return;
+    if (isRecording || isPaused) return;
     await playbackService.play(file.uri);
   }
 

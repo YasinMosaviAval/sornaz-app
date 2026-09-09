@@ -1,3 +1,4 @@
+import '../components/recording_bookmarks_view.dart';
 import 'package:flutter/material.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'package:provider/provider.dart';
@@ -120,7 +121,9 @@ class _RecorderSection extends StatelessWidget {
                 AppSpacing.sizedBoxH4(),
                 if (vm.isRecording || vm.isPaused)
                   TextButton(
-                    onPressed: null,
+                    onPressed: vm.isBusy
+                        ? null
+                        : () => _recordAction(context, vm.addRecordingBookmark),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -142,6 +145,15 @@ class _RecorderSection extends StatelessWidget {
                         ),
                       ],
                     ),
+                  ),
+                if (vm.currentFilePath != null &&
+                    (vm.isRecording || vm.isPaused))
+                  RecordingBookmarksView(
+                    uri: vm.currentFilePath!,
+                    store: vm.fileService.bookmarks,
+                    revision: vm.bookmarkRevision,
+                    onDelete: (time) =>
+                        vm.removeBookmark(vm.currentFilePath!, time),
                   ),
               ],
             ),
