@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/user_facing_error.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
@@ -107,7 +108,7 @@ class _PanelState extends State<_Panel> {
     } catch (e) {
       if (mounted)
         setState(() {
-          error = e.toString();
+          error = userFacingError(e);
           loading = false;
         });
     }

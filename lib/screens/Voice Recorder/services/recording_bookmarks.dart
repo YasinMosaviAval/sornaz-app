@@ -43,18 +43,59 @@ class RecordingBookmarks {
 
   Future<void> add(String uri, int milliseconds) => _change((all) {
     final times = _times(all[uri]);
-    if (milliseconds >= 0 && !times.contains(milliseconds))
+    if (milliseconds >= 0 &&
+        times.every((t) => (t - milliseconds).abs() >= 1000))
       times.add(milliseconds);
     times.sort();
     all[uri] = times;
   });
-  Future<void> remove(String uri, int milliseconds) => _change((all) {
-    all[uri] = _times(all[uri])..remove(milliseconds);
-  });
-  Future<void> delete(String uri) => _change((all) => all.remove(uri));
-  Future<void> move(String from, String to) => _change((all) {
-    if (from == to || !all.containsKey(from)) return;
-    all[to] = {..._times(all[to]), ..._times(all[from])}.toList()..sort();
-    all.remove(from);
-  });
+  Future<void> remove(String uri, int milliseconds) async {
+    await _change((all) {
+      all[uri] = _times(all[uri])..remove(milliseconds);
+    });
+    await (await SharedPreferences.getInstance()).remove(
+      'bookmark-name:$uri:$milliseconds',
+    );
+  }
+
+  Future<String> name(String uri, int time) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('bookmark-name:$uri:$time') ?? '';
+  }
+
+  Future<void> rename(String uri, int time, String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('bookmark-name:$uri:$time', name.trim());
+  }
+
+  Future<void> delete(String uri) async {
+    await _change((all) => all.remove(uri));
+    final prefs = await SharedPreferences.getInstance();
+    for (final key
+        in prefs
+            .getKeys()
+            .where((k) => k.startsWith('bookmark-name:$uri:'))
+            .toList()) {
+      await prefs.remove(key);
+    }
+  }
+
+  Future<void> move(String from, String to) async {
+    if (from == to) return;
+    await _change((all) {
+      if (from == to || !all.containsKey(from)) return;
+      all[to] = {..._times(all[to]), ..._times(all[from])}.toList()..sort();
+      all.remove(from);
+    });
+    final prefs = await SharedPreferences.getInstance();
+    final prefix = 'bookmark-name:$from:';
+    for (final key
+        in prefs.getKeys().where((k) => k.startsWith(prefix)).toList()) {
+      await prefs.setString(
+        'bookmark-name:$to:${key.substring(prefix.length)}',
+        prefs.getString(key) ?? '',
+      );
+      await prefs.remove(key);
+    }
+  }
 }

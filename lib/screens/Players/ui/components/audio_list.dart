@@ -20,14 +20,6 @@ class AudioList extends StatelessWidget {
     return Consumer3<AudioPlayerProvider, FolderNavigatorProvider, AudioLibraryManager>(
       builder: (context, audio, folder, library, _) {
         if (library.isScanning) return Center(child: CircularProgressIndicator());
-        if (audio.filteredFiles.isEmpty && !audio.isHiveLoading) {
-          return Center(
-            child: Text(
-              AppStrings.audio_file_not_found.translate(context),
-              style: AppTypography.musicPlayerAudioFileNotFound(context),
-            ),
-          );
-        }
         if (audio.folderMode) {
           if (folder.rootDir == null) {
             return Center(

@@ -1,5 +1,7 @@
 # sornaz
 
+Chrome preview and APK build commands: [Local builds](documentation/local-builds.md).
+
 A new Flutter project.
 
 ## Getting Started

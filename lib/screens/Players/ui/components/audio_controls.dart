@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart' hide RepeatMode;
+import 'package:sornaz/components/ab_repeat.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_typography.dart';
@@ -42,7 +43,7 @@ class AudioControls extends StatelessWidget {
               color: AppColors.music_player_audio_controls_main_icon_color(isDark: isDark),
               onPressed: provider.isPlaying
                   ? provider.pause
-                  : () => provider.play(provider.currentIndex),
+                  : provider.resume,
             ),
             IconButton(
               icon: Icon(provider.isUndoMode ? Icons.undo : Icons.skip_previous),
@@ -63,7 +64,7 @@ class AudioControls extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
-            spacing: AppSpacing.space_16,
+            spacing: 0,
             children: [
               IconButton(
                 icon: Icon(
@@ -73,6 +74,7 @@ class AudioControls extends StatelessWidget {
                 iconSize: AppSpacing.space_24,
                 onPressed: () => provider.toggleFolderMode(),
               ),
+              AbRepeatButton(repeat: provider.abRepeat, onPressed: provider.currentAudio == null ? null : provider.cycleAbRepeat),
               IconButton(
                 icon: Icon(
                   Icons.shuffle,

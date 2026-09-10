@@ -1,3 +1,6 @@
+import 'lesson_media.dart';
+import 'package:sornaz/helpers/user_facing_error.dart';
+import 'package:sornaz/screens/Social/cache_observer.dart';
 import 'package:sornaz/components/bottom_nav.dart';
 import 'course_metadata_editor.dart';
 import 'package:sornaz/helpers/app_translations.dart';
@@ -52,7 +55,7 @@ class CoursesBody extends StatefulWidget {
   State<CoursesBody> createState() => _CoursesBodyState();
 }
 
-class _CoursesBodyState extends State<CoursesBody> {
+class _CoursesBodyState extends State<CoursesBody> with CourseCacheObserver<CoursesBody> {
   List<Json>? items;
   String? error;
   late String mode = widget.initialMode;
@@ -75,7 +78,7 @@ class _CoursesBodyState extends State<CoursesBody> {
           error = null;
         });
     } catch (e) {
-      if (mounted) setState(() => error = e.toString());
+      if (mounted) setState(() => error = userFacingError(e));
     }
   }
 
@@ -241,7 +244,7 @@ class CourseDetailPage extends StatefulWidget {
 }
 
 class _CourseDetailPageState extends State<CourseDetailPage>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, CourseCacheObserver<CourseDetailPage> {
   Json? course;
   String? error;
   bool buying = false;
@@ -272,7 +275,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
           error = null;
         });
     } catch (e) {
-      if (mounted) setState(() => error = e.toString());
+      if (mounted) setState(() => error = userFacingError(e));
     }
   }
 
@@ -378,23 +381,7 @@ class LessonPage extends StatelessWidget {
         if ('${lesson['text']}'.isNotEmpty) AppText('${lesson['text']}'),
         const SizedBox(height: 20),
         for (final id in lesson['media'] as List) ...[
-          if (files.any(
-            (f) =>
-                number(f['id']) == number(id) &&
-                '${f['mime']}'.startsWith('video/'),
-          ))
-            SocialVideo(
-              api: api,
-              path: api.courseMedia(id),
-              title: '${lesson['title']}',
-            )
-          else
-            SocialImage(
-              api: api,
-              path: api.courseMedia(id),
-              width: double.infinity,
-              fit: BoxFit.contain,
-            ),
+          LessonMedia(api: api, courseId: courseId, id: number(id), mime: files.where((f) => number(f['id']) == number(id)).firstOrNull?['mime']?.toString() ?? '', title: lesson['title'].toString()),
           const SizedBox(height: 20),
         ],
         if (courseId != null)
@@ -462,7 +449,7 @@ class _CourseEditorPageState extends State<CourseEditorPage> {
       price.text = '${result['price']}';
       setState(() => dirty = false);
     } catch (e) {
-      if (mounted) setState(() => error = e.toString());
+      if (mounted) setState(() => error = userFacingError(e));
     } finally {
       if (mounted) setState(() => loading = false);
     }

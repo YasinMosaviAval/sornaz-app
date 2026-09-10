@@ -3,6 +3,8 @@ import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'course_cache.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
@@ -61,9 +63,7 @@ class SocialScaffold extends StatelessWidget {
                 ? const Color(0xff141414)
                 : const Color(0xfff6f6f6),
             onSurface: data.isDark ? Colors.white : Colors.black,
-            primary: data.isDark
-                ? const Color(0xffd3ae32)
-                : const Color(0xff0064fb),
+            primary: data.accent,
           ),
       fontFamily: data.fontFamily,
       scaffoldBackgroundColor: data.isDark ? Colors.black : Colors.white,
@@ -106,13 +106,14 @@ class SocialImage extends StatelessWidget {
       ),
     );
     if (path == null || path!.isEmpty) return fallback;
-    return Image.network(
-      api.media(path!),
-      headers: api.headers,
+    return CachedNetworkImage(
+      imageUrl: api.media(path!),
+      cacheKey: '${CourseCache.account(api.token)}:${api.media(path!)}',
+      httpHeaders: api.headers,
       width: width,
       height: height,
       fit: fit,
-      errorBuilder: (_, __, ___) => fallback,
+      errorWidget: (_, __, ___) => fallback,
     );
   }
 }

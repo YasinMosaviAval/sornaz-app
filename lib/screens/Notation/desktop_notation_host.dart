@@ -10,7 +10,6 @@ import 'package:sornaz/components/bottom_nav.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/screens/Authentication/ui/pages/authentication.dart';
-import 'package:sornaz/screens/Home/ui/pages/music_tools.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'notation_api.dart';
 
@@ -140,7 +139,6 @@ class _DesktopNotationHostState extends State<DesktopNotationHost> {
         const SizedBox(height: 24),
         FilledButton.icon(onPressed: _opening ? null : _open, icon: const Icon(Icons.open_in_browser), label: Text(socialText(context, 'باز کردن نت‌نویسی', 'Open notation'))),
         const SizedBox(height: 12),
-        TextButton(onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const MusicToolsPage())), child: Text(socialText(context, 'ابزار موسیقی', 'Music tools'))),
       ]),
     ))),
   );

@@ -1,5 +1,6 @@
 import 'package:sornaz/components/app_logo.dart';
 import 'package:flutter/material.dart';
+import 'package:sornaz/components/color_palette_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
@@ -33,7 +34,10 @@ class StartupPreferencesScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 32),
                 Card(
-                  child: Column(
+                  child: ListTileTheme(
+                    data: ListTileThemeData(titleTextStyle: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface),
+                    subtitleTextStyle: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                    child: Column(
                     children: [
                       ListTile(
                         leading: const Icon(Icons.language),
@@ -60,8 +64,9 @@ class StartupPreferencesScreen extends StatelessWidget {
                           onChanged: app.toggleDarkMode,
                         ),
                       ),
+                      const ColorPalettePicker(),
                     ],
-                  ),
+                  )),
                 ),
                 const Spacer(),
                 SizedBox(
@@ -69,8 +74,12 @@ class StartupPreferencesScreen extends StatelessWidget {
                   height: 50,
                   child: FilledButton(
                     onPressed: () => Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder: (_) => const OnboardingScreen(),
+                      PageRouteBuilder(
+                        pageBuilder: (_, _, _) => const OnboardingScreen(),
+                        transitionDuration: const Duration(milliseconds: 320),
+                        transitionsBuilder: (_, animation, _, child) => SlideTransition(
+                          position: Tween(begin: Offset(english ? 1 : -1, 0), end: Offset.zero).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)), child: child,
+                        ),
                       ),
                     ),
                     child: Text(english ? 'Continue' : 'ادامه'),

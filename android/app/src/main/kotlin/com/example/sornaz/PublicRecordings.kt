@@ -10,6 +10,7 @@ import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
+import android.provider.DocumentsContract
 import android.net.Uri
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
@@ -30,13 +31,36 @@ class PublicRecordings(private val context: Context, messenger: BinaryMessenger)
                     val value: Any? = when (call.method) {
                         "save" -> save(call.argument<String>("path") ?: "")
                         "list" -> list()
+                        "overwrite" -> {
+                            val uri = owned(call.argument<String>("uri") ?: "")
+                            val replacement = File(call.argument<String>("path") ?: "").canonicalFile
+                            require(replacement.path.startsWith(File(context.applicationInfo.dataDir).canonicalPath + File.separator) && replacement.parentFile?.name == "Recordings")
+                            AudioSplice.replace(context, uri, replacement, call.argument<Number>("at")!!.toLong())
+                            null
+                        }
+                        "materialize" -> {
+                            val uri = owned(call.argument<String>("uri") ?: "")
+                            val target = File(context.cacheDir, "recording-edit-${System.nanoTime()}.m4a")
+                            resolver.openInputStream(uri)!!.use { input -> target.outputStream().use { input.copyTo(it) } }
+                            target.absolutePath
+                        }
                         "rename" -> {
                             val uri = owned(call.argument<String>("uri") ?: "")
                             val name = call.argument<String>("name") ?: ""
                             require(name.matches(Regex("[^/\\\\\u0000]{1,100}")))
-                            resolver.update(uri, ContentValues().apply { put(MediaStore.Audio.Media.DISPLAY_NAME, name.removeSuffix(".m4a") + ".m4a") }, null, null)
+                            val renamed = "Sornaz_" + name.removePrefix("Sornaz_").removeSuffix(".m4a") + ".m4a"
+                            if (DocumentsContract.isDocumentUri(context, uri)) {
+                                DocumentsContract.renameDocument(resolver, uri, renamed)?.toString()
+                            } else {
+                                resolver.update(uri, ContentValues().apply { put(MediaStore.Audio.Media.DISPLAY_NAME, renamed) }, null, null)
+                                uri.toString()
+                            }
                         }
-                        "delete" -> resolver.delete(owned(call.argument<String>("uri") ?: ""), null, null)
+                        "delete" -> {
+                            val uri = owned(call.argument<String>("uri") ?: "")
+                            if (DocumentsContract.isDocumentUri(context, uri)) DocumentsContract.deleteDocument(resolver, uri)
+                            else resolver.delete(uri, null, null)
+                        }
                         "share" -> {
                             val uri = owned(call.argument<String>("uri") ?: "")
                             val intent = Intent(Intent.ACTION_SEND).apply {
@@ -68,11 +92,21 @@ class PublicRecordings(private val context: Context, messenger: BinaryMessenger)
                 results.add(mapOf("uri" to ContentUris.withAppendedId(collection, cursor.getLong(0)).toString(), "name" to cursor.getString(1), "modified" to cursor.getLong(2) * 1000))
             }
         }
+        results.addAll(RecordingWorkspace.list(context))
         return results
     }
     private fun save(path: String): String {
         val source = File(path).canonicalFile
         require(source.isFile && source.extension == "m4a" && source.parentFile?.name == "Recordings" && source.path.startsWith(File(context.applicationInfo.dataDir).canonicalPath + File.separator))
+        val treeValue = context.getSharedPreferences("recording_workspace", 0).getString("tree", null)
+        if (treeValue != null) {
+            val tree = Uri.parse(treeValue)
+            val parent = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree))
+            val target = DocumentsContract.createDocument(resolver, parent, "audio/mp4", "Sornaz_${source.name}") ?: error("Could not create recording")
+            try { resolver.openOutputStream(target, "w")!!.use { output -> source.inputStream().use { it.copyTo(output) } } }
+            catch (e: Exception) { DocumentsContract.deleteDocument(resolver, target); throw e }
+            return target.toString()
+        }
         val values = ContentValues().apply {
             put(MediaStore.Audio.Media.DISPLAY_NAME, "Sornaz_${source.name}")
             put(MediaStore.Audio.Media.MIME_TYPE, "audio/mp4")

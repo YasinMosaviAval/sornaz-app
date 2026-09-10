@@ -1,35 +1,36 @@
 // ignore_for_file: constant_identifier_names, non_constant_identifier_names
 
 import 'package:flutter/material.dart';
+import 'color_palette.dart';
 
 class AppColors {
-  static const Color primary_light = Color.fromARGB(255, 0, 100, 251);
-  static Color primary_light100 = primary_light.withAlpha(25);
-  static Color primary_light200 = primary_light.withAlpha(50);
-  static Color primary_light300 = primary_light.withAlpha(75);
-  static Color primary_light400 = primary_light.withAlpha(100);
-  static Color primary_light500 = primary_light.withAlpha(125);
-  static Color primary_light600 = primary_light.withAlpha(150);
-  static Color primary_light700 = primary_light.withAlpha(175);
-  static Color primary_light800 = primary_light.withAlpha(200);
-  static Color primary_light900 = primary_light.withAlpha(225);
-  
+  static Color get primary_light => ColorPalette.current.light;
+  static Color get primary_light100 => primary_light.withAlpha(25);
+  static Color get primary_light200 => primary_light.withAlpha(50);
+  static Color get primary_light300 => primary_light.withAlpha(75);
+  static Color get primary_light400 => primary_light.withAlpha(100);
+  static Color get primary_light500 => primary_light.withAlpha(125);
+  static Color get primary_light600 => primary_light.withAlpha(150);
+  static Color get primary_light700 => primary_light.withAlpha(175);
+  static Color get primary_light800 => primary_light.withAlpha(200);
+  static Color get primary_light900 => primary_light.withAlpha(225);
+
 
   static const Color secondary_light = Color.fromARGB(255, 193, 158, 50);
-  static Color secondary_light100 = secondary_light.withAlpha(25);
-  static Color secondary_light200 = secondary_light.withAlpha(50);
-  static Color secondary_light300 = secondary_light.withAlpha(75);
-  static Color secondary_light400 = secondary_light.withAlpha(100);
-  static Color secondary_light500 = secondary_light.withAlpha(125);
-  static Color secondary_light600 = secondary_light.withAlpha(150);
-  static Color secondary_light700 = secondary_light.withAlpha(175);
-  static Color secondary_light800 = secondary_light.withAlpha(200);
-  static Color secondary_light900 = secondary_light.withAlpha(225);
+  static Color get secondary_light100 => secondary_light.withAlpha(25);
+  static Color get secondary_light200 => secondary_light.withAlpha(50);
+  static Color get secondary_light300 => secondary_light.withAlpha(75);
+  static Color get secondary_light400 => secondary_light.withAlpha(100);
+  static Color get secondary_light500 => secondary_light.withAlpha(125);
+  static Color get secondary_light600 => secondary_light.withAlpha(150);
+  static Color get secondary_light700 => secondary_light.withAlpha(175);
+  static Color get secondary_light800 => secondary_light.withAlpha(200);
+  static Color get secondary_light900 => secondary_light.withAlpha(225);
 
 
   static const Color background_light = Color.fromARGB(255, 255, 255, 255);
   static const Color button_text_primary_light = Color.fromARGB(255, 255, 255, 255);
-  
+
   static const Color surface_light = Color.fromARGB(255, 241, 241, 241);
   static const Color shadow_light = Color.fromARGB(30, 241, 241, 241);
 
@@ -55,7 +56,7 @@ class AppColors {
   // static const Color hovered_light = Color.fromARGB(15, 31, 31, 31);
   // static const Color border_light = Color.fromARGB(30, 31, 31, 31);
 
-  static const Color primary_dark = Color.fromARGB(255, 193, 158, 50);
+  static Color get primary_dark => ColorPalette.current.dark;
   static const Color secondary_dark = Color.fromARGB(255, 0, 100, 251);
   static const Color background_dark = Color.fromARGB(255, 0, 0, 0);
   static const Color surface_dark = Color.fromARGB(255, 31, 31, 31);

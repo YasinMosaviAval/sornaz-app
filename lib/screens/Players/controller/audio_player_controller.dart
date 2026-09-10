@@ -9,6 +9,7 @@ class AudioPlayerController {
   Duration position = Duration.zero;
   double playbackSpeed = 1.0;
   bool isPlaying = false;
+  String? _path;
 
   final StreamController<void> _stateChanged = StreamController.broadcast();
   final StreamController<void> _completeChanged = StreamController.broadcast(); // جدید: برای complete
@@ -27,7 +28,7 @@ class AudioPlayerController {
     }));
 
     _subscriptions.add(_player.onDurationChanged.listen((d) {
-      duration = d;
+      if (d > Duration.zero) duration = d;
       _stateChanged.add(null);
     }));
 
@@ -49,15 +50,27 @@ class AudioPlayerController {
 
   Future<void> playFile(String path) async {
     await _player.stop();
-    duration = Duration.zero;
+    if (_path != path) duration = Duration.zero;
+    _path = path;
     position = Duration.zero;
     await _player.setSource(DeviceFileSource(path));
+    final loaded = await _player.getDuration();
+    if (loaded != null && loaded > Duration.zero) duration = loaded;
+    await _player.seek(Duration.zero);
     await _player.resume();
+    _stateChanged.add(null);
   }
 
   Future<void> pause() async => await _player.pause();
 
-  Future<void> resume() async => await _player.resume();
+  Future<void> resume() async {
+    if (_path == null) return;
+    if (duration > Duration.zero && position >= duration) await seek(Duration.zero);
+    await _player.resume();
+    final loaded = await _player.getDuration();
+    if (loaded != null && loaded > Duration.zero) duration = loaded;
+    _stateChanged.add(null);
+  }
 
   Future<void> stop() async {
     await _player.stop();

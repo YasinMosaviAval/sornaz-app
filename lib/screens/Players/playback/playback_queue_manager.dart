@@ -25,7 +25,7 @@ class PlaybackQueueManager {
       return _order[pos + 1];
     }
 
-    if (repeatMode == RepeatMode.all) {
+    if (repeatMode == RepeatMode.all && _order.isNotEmpty) {
       return _order.first;
     }
 
@@ -54,12 +54,12 @@ class PlaybackQueueManager {
     if (isShuffle) {
       _order.shuffle();
       if (current != -1 && _order.contains(current)) {
-        _currentIndex = _order.indexOf(current);
+        _currentIndex = current;
       } else {
         _currentIndex = queueLength > 0 ? 0 : -1;
       }
     } else {
-      _currentIndex = current.clamp(-1, queueLength - 1);
+      _currentIndex = queueLength == 0 ? -1 : current.clamp(-1, queueLength - 1);
     }
   }
 

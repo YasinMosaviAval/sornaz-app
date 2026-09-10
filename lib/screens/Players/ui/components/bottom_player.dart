@@ -16,7 +16,7 @@ class BottomPlayerWidget extends StatelessWidget {
     final isDark = appData.isDark;
     final provider = context.watch<AudioPlayerProvider>();
 
-    if (provider.currentIndex == -1) return const SizedBox.shrink();
+    if (provider.currentAudio == null) return const SizedBox.shrink();
 
     return Container(
       decoration: BoxDecoration(color: AppColors.music_player_bottom_player_background_color(isDark: isDark)),

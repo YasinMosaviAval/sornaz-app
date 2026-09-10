@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:sornaz/screens/Players/metadata/metadata_service.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:sornaz/screens/Players/cache/audio_cache_factory.dart';
 import 'package:sornaz/screens/Players/scan/audio_file.dart';
@@ -42,6 +44,7 @@ class AudioLibraryManager extends ChangeNotifier {
         currentPath = 'بارگذاری از حافظه تکمیل شد';
         // currentPath = AppStrings.audio_library_manager_fininshed_loading_from_memory.translate(context);
         notifyListeners();
+        await hydrateDurations();
         return;
       }
 
@@ -68,6 +71,7 @@ class AudioLibraryManager extends ChangeNotifier {
           progress = 1.0;
           await cache.saveFiles(files);
           notifyListeners();
+          await hydrateDurations();
         }
       );
     } catch (e) {
@@ -81,6 +85,25 @@ class AudioLibraryManager extends ChangeNotifier {
   }
 
   List<AudioFile> filter(String query) => allFiles.where((audio) => audio.fileName.toLowerCase().contains(query.toLowerCase())).toList();
+
+  Future<void> hydrateDurations() async {
+    final probe = AudioPlayer();
+    try {
+      for (final file in allFiles.where((f) => f.duration == Duration.zero)) {
+        try {
+          try { file.metadata = await MetadataService.extract(file.file.path); } catch (_) { /* Fall back to the audio decoder. */ }
+          final value = file.metadata?.duration;
+          if (value != null && value > Duration.zero) file.duration = value;
+          if (file.duration == Duration.zero) {
+            await probe.setSource(DeviceFileSource(file.file.path));
+            file.duration = await probe.getDuration() ?? Duration.zero;
+          }
+          notifyListeners();
+        } catch (_) { /* Unreadable files remain available for retry. */ }
+      }
+      await (await AudioCacheFactory.getCache()).saveFiles(allFiles);
+    } finally { await probe.dispose(); }
+  }
 
   Future<void> clearCache() async {
     final cache = await AudioCacheFactory.getCache();

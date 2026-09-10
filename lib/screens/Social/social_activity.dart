@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/user_facing_error.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'dart:async';
@@ -52,7 +53,7 @@ class _DirectPageState extends State<DirectPage> {
           error = null;
         });
     } catch (e) {
-      if (mounted) setState(() => error = e.toString());
+      if (mounted) setState(() => error = userFacingError(e));
     }
   }
 
@@ -193,7 +194,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     } catch (e) {
       if (mounted)
         setState(() {
-          error = e.toString();
+          error = userFacingError(e);
           loading = false;
         });
     } finally {
@@ -352,7 +353,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           error = null;
         });
     } catch (e) {
-      if (mounted) setState(() => error = e.toString());
+      if (mounted) setState(() => error = userFacingError(e));
     }
   }
 

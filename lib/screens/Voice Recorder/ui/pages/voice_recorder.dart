@@ -1,4 +1,5 @@
-import '../components/recording_bookmarks_view.dart';
+import 'package:flutter/foundation.dart';
+import 'package:sornaz/components/ab_repeat.dart';
 import 'package:flutter/material.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'package:provider/provider.dart';
@@ -115,46 +116,25 @@ class _RecorderSection extends StatelessWidget {
                 BasicWaveformWidget(
                   amplitudes: vm.amplitudes,
                   totalSamples: vm.totalSamples,
+                  bookmarks: vm.recordingBookmarks,
+                  elapsedMilliseconds: vm.recordingMilliseconds,
                   isRecording: vm.isRecording,
                   isPaused: vm.isPaused,
                 ),
                 AppSpacing.sizedBoxH4(),
                 if (vm.isRecording || vm.isPaused)
-                  TextButton(
-                    onPressed: vm.isBusy
-                        ? null
-                        : () => _recordAction(context, vm.addRecordingBookmark),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppStrings.voice_recorder_bookmark_text_button
-                              .translate(context),
-                          style: AppTypography.voiceRecorderBookmarkTextButton(
-                            context,
-                            isDark,
-                          ),
-                        ),
-                        AppSpacing.sizedBoxW4(),
-                        Icon(
-                          Icons.bookmark_rounded,
-                          size: AppSpacing.space_16,
-                          color: AppColors.voice_recorder_bookmark_icon_color(
-                            isDark: isDark,
-                          ),
-                        ),
-                      ],
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    TextButton.icon(
+                      onPressed: vm.canBookmarkRecording ? () => _recordAction(context, vm.addRecordingBookmark) : null,
+                      icon: const Icon(Icons.bookmark_add_outlined),
+                      label: const Text('نشانه‌گذاری'),
                     ),
-                  ),
-                if (vm.currentFilePath != null &&
-                    (vm.isRecording || vm.isPaused))
-                  RecordingBookmarksView(
-                    uri: vm.currentFilePath!,
-                    store: vm.fileService.bookmarks,
-                    revision: vm.bookmarkRevision,
-                    onDelete: (time) =>
-                        vm.removeBookmark(vm.currentFilePath!, time),
-                  ),
+                    if (vm.isPaused) AbRepeatButton(repeat: vm.playbackService.abRepeat, onPressed: vm.playbackService.cycleAbRepeat),
+                    Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: Badge(
+                      isLabelVisible: vm.recordingBookmarks.isNotEmpty,
+                      label: Text(vm.recordingBookmarks.length.toString()), child: const Icon(Icons.bookmark_border),
+                    )),
+                  ]),
               ],
             ),
 
@@ -164,6 +144,7 @@ class _RecorderSection extends StatelessWidget {
                 if (vm.isRecording || vm.isPaused)
                   FloatingActionButton(
                     heroTag: AppConstants.STOP_HERO_TAG,
+                    tooltip: socialText(context, 'پایان ضبط', 'Stop recording'),
                     elevation: 0,
                     hoverElevation: 0,
                     highlightElevation: 0,
@@ -212,6 +193,7 @@ class _RecorderSection extends StatelessWidget {
                               isDark: isDark,
                             ),
                       heroTag: AppConstants.MAIN_HERO_TAG,
+                      tooltip: vm.isRecording ? socialText(context, 'مکث ضبط', 'Pause recording') : vm.isPaused ? socialText(context, 'ادامه ضبط', 'Resume recording') : socialText(context, 'شروع ضبط', 'Start recording'),
                       onPressed: vm.isBusy
                           ? null
                           : () => _recordAction(
@@ -246,7 +228,7 @@ class _RecorderSection extends StatelessWidget {
                         AppColors.voice_recorder_play_icon_background_color(
                           isDark: isDark,
                         ),
-                    onPressed: vm.isPaused ? vm.playCurrent : null,
+                    onPressed: vm.isPaused && !kIsWeb ? vm.playCurrent : null,
                     child: Icon(
                       vm.isPlaying
                           ? Icons.pause_rounded

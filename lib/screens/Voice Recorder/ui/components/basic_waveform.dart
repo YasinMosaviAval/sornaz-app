@@ -10,6 +10,8 @@ class BasicWaveformWidget extends StatelessWidget {
     super.key,
     required List<double> amplitudes,
     required this.totalSamples,
+    this.bookmarks = const [],
+    this.elapsedMilliseconds = 0,
     required bool isRecording,
     required bool isPaused,
   }) : _amplitudes = amplitudes,
@@ -17,6 +19,8 @@ class BasicWaveformWidget extends StatelessWidget {
        _isPaused = isPaused;
 
   final int totalSamples;
+  final List<int> bookmarks;
+  final int elapsedMilliseconds;
   final List<double> _amplitudes;
   final bool _isRecording;
   final bool _isPaused;
@@ -42,6 +46,8 @@ class BasicWaveformWidget extends StatelessWidget {
                 context,
                 isDark,
                 totalSamples: totalSamples,
+                bookmarks: bookmarks,
+                elapsedMilliseconds: elapsedMilliseconds,
               ),
               size: Size.infinite,
             ),

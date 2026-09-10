@@ -1,5 +1,6 @@
+import 'package:flutter/foundation.dart';
+import 'package:sornaz/helpers/app_platform.dart';
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import '../audio/pitch_input.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -60,7 +61,7 @@ class TunerProvider extends ChangeNotifier {
     AppConstants.B,
   ];
 
-  bool get supportsPitchDetection => Platform.isAndroid || Platform.isIOS;
+  bool get supportsPitchDetection => kIsWeb || AppPlatform.isAndroid || AppPlatform.isIOS;
 
   Future<void> start() {
     _requested = true;
@@ -84,9 +85,9 @@ class TunerProvider extends ChangeNotifier {
           }
           if (_running || !supportsPitchDetection) return;
           detectionError = null;
-          final permission = await Permission.microphone.request();
+          final granted = kIsWeb || (await Permission.microphone.request()).isGranted;
           if (_disposed || !_requested) return;
-          if (!permission.isGranted) {
+          if (!granted) {
             detectionError = 'permission';
             notifyListeners();
             return;

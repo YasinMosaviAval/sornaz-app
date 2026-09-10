@@ -1,3 +1,4 @@
+import 'package:sornaz/screens/Social/social_api.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:sornaz/components/drawer_theme.dart';
@@ -125,7 +126,7 @@ class _ContactUsPageState extends State<ContactUsPage> {
     try {
       final response = await http
           .post(
-            Uri.parse('https://sornaz.com/api/sornaz/v1/contact'),
+            Uri.parse('${SocialApi.base}/contact'),
             headers: {'Accept': 'application/json'},
             body: {
               'name': name.text.trim().isNotEmpty

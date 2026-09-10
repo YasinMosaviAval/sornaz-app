@@ -1,3 +1,6 @@
+import 'package:flutter/foundation.dart';
+import 'browser_notation_host.dart';
+import 'package:sornaz/helpers/app_platform.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -11,7 +14,6 @@ import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 import 'package:sornaz/screens/Authentication/ui/pages/authentication.dart';
-import 'package:sornaz/screens/Home/ui/pages/music_tools.dart';
 import 'package:sornaz/screens/Social/social_api.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'notation_api.dart';
@@ -22,7 +24,8 @@ class MusicSheetsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final session = context.watch<AuthSession>();
-    if (Platform.isWindows) {
+    if (kIsWeb) return BrowserNotationHost(key: ValueKey(session.token), token: session.token ?? '', userId: session.user?.id ?? 0);
+    if (AppPlatform.isWindows) {
       return DesktopNotationHost(key: ValueKey(session.token), token: session.token ?? "", userId: session.user?.id ?? 0);
     }
     // A fresh host on account changes keeps private data out of the next account.
@@ -213,28 +216,13 @@ class _NotationHostState extends State<_NotationHost> with WidgetsBindingObserve
         }
       },
       child: Scaffold(
+        appBar: AppBar(title: Text(socialText(context, 'نت‌های موسیقی', 'Music sheets')), leading: BackButton(onPressed: () { if (_route != 'list') { _controller.runJavaScript('window.Notation.back();'); } else { Navigator.maybePop(context); } })),
         backgroundColor: _route == 'editor' || !dark
             ? Colors.white
             : Colors.black,
         body: SafeArea(
           child: Column(
             children: [
-              if (_route == 'list')
-                Align(
-                  alignment: AlignmentDirectional.centerEnd,
-                  child: TextButton.icon(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (_) => const MusicToolsPage(),
-                      ),
-                    ),
-                    icon: const Icon(Icons.tune),
-                    label: Text(
-                      socialText(context, 'ابزار موسیقی', 'Music tools'),
-                    ),
-                  ),
-                ),
               Expanded(
                 child: _failed
                     ? Center(

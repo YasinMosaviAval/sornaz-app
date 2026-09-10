@@ -1,4 +1,7 @@
-﻿import 'dart:async';
+import 'package:sornaz/helpers/browser_bridge.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:async';
+import 'package:sornaz/components/ab_repeat.dart';
 import 'dart:io';
 import 'package:just_audio/just_audio.dart';
 
@@ -9,6 +12,9 @@ class PlaybackService {
   bool isPlaying = false;
   Duration position = Duration.zero, duration = Duration.zero;
   void Function()? onChanged;
+  final abRepeat = AbRepeat();
+  bool _seeking = false;
+  void cycleAbRepeat() { abRepeat.cycle(position); onChanged?.call(); }
   PlaybackService() {
     _subscriptions.add(_player.playerStateStream.listen((state) {
       isPlaying = state.playing && state.processingState != ProcessingState.completed;
@@ -16,6 +22,10 @@ class PlaybackService {
     }));
     _subscriptions.add(_player.positionStream.listen((p) {
       position = p;
+      if (!_seeking && abRepeat.shouldLoop(p)) {
+        _seeking = true;
+        _player.seek(abRepeat.start!).whenComplete(() => _seeking = false);
+      }
       onChanged?.call();
     }));
     _subscriptions.add(_player.durationStream.listen((d) {
@@ -29,13 +39,15 @@ class PlaybackService {
       return;
     }
     if (currentPath != path) {
+      abRepeat.clear();
       await _player.stop();
       currentPath = null;
       position = Duration.zero;
       duration = Duration.zero;
       // ExoPlayer's content data source opens MediaStore URIs through Android.
+      final source = kIsWeb ? await browserCall('recordingsUrl', {'id': path}) as String : path;
       await _player.setAudioSource(AudioSource.uri(
-        path.startsWith('content://') ? Uri.parse(path) : Uri.file(path),
+        (kIsWeb || path.startsWith('content://')) ? Uri.parse(source) : Uri.file(path),
       ));
       currentPath = path;
     }

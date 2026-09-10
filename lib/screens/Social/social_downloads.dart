@@ -1,3 +1,8 @@
+import 'protected_media.dart';
+import 'protected_media_view.dart';
+import 'course_cache.dart';
+import 'package:sornaz/helpers/user_facing_error.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -21,6 +26,7 @@ class LessonDownloads {
   }
 
   Future<List<Json>> list() async {
+    if (kIsWeb) return [];
     final dir = await directory();
     final result = <Json>[];
     await for (final file in dir.list()) {
@@ -40,6 +46,10 @@ class LessonDownloads {
     ValueChanged<double> onProgress,
     http.Client client,
   ) async {
+    if (kIsWeb)
+      throw const SocialException(
+        'Offline course packages require the Android app. Individual resources can be downloaded in the browser.',
+      );
     final course = object(await api.get('/courses/$courseId'));
     if (course['access'] != true)
       throw const SocialException('ابتدا دوره را تهیه کنید.');
@@ -50,7 +60,10 @@ class LessonDownloads {
       throw const SocialException(
         'ابتدا رمز درس‌های قفل‌شده را در صفحه دوره وارد کنید.',
       );
-    final ids = lessons.expand((l) => (l['media'] as List).map(number)).toSet();
+    final ids = {
+      ...lessons.expand((l) => (l['media'] as List).map(number)),
+      ...objects(course['resources'] ?? []).map((r) => number(r['media_id'])),
+    };
     final files = objects(
       course['files'],
     ).where((f) => ids.contains(number(f['id']))).toList();
@@ -63,13 +76,7 @@ class LessonDownloads {
     int received = 0;
     for (final f in files) {
       final id = number(f['id']);
-      final target = File('${dir.path}/$courseId-$id.media');
-      if (await target.exists() &&
-          await target.length() == number(f['bytes'])) {
-        received += number(f['bytes']);
-        onProgress(bytes == 0 ? 1 : received / bytes);
-        continue;
-      }
+      final target = File('${dir.path}/$courseId-$id.sornaz');
       final part = File('${target.path}.part');
       try {
         final request = http.Request('GET', Uri.parse(api.courseMedia(id)))
@@ -80,26 +87,24 @@ class LessonDownloads {
             .timeout(const Duration(seconds: 40));
         if (response.statusCode != 200)
           throw const SocialException('دسترسی به فایل تأیید نشد.');
-        final sink = part.openWrite();
         int fileBytes = 0;
-        try {
-          await for (final chunk in response.stream.timeout(
-            const Duration(seconds: 45),
-          )) {
+        final stream = response.stream.timeout(const Duration(seconds: 45)).map(
+          (chunk) {
             fileBytes += chunk.length;
             if (fileBytes > number(f['bytes']))
               throw const SocialException('اندازه فایل معتبر نیست.');
-            sink.add(chunk);
             received += chunk.length;
             onProgress(bytes == 0 ? 1 : received / bytes);
-          }
-        } finally {
-          await sink.close();
-        }
-        if (fileBytes != number(f['bytes']))
+            return chunk;
+          },
+        );
+        await ProtectedMedia(
+          CourseCache.account(api.token),
+        ).save(target, stream);
+        if (fileBytes != number(f['bytes'])) {
+          await target.delete();
           throw const SocialException('دانلود کامل نشد؛ دوباره تلاش کنید.');
-        if (await target.exists()) await target.delete();
-        await part.rename(target.path);
+        }
       } catch (_) {
         if (await part.exists()) await part.delete();
         rethrow;
@@ -127,7 +132,7 @@ class LessonDownloads {
       final name = item.uri.pathSegments.last;
       if (item is File &&
           (name == '$id.json' ||
-              RegExp('^$id-[0-9]+\\.media(\\.part)?\$').hasMatch(name)))
+              RegExp('^$id-[0-9]+\\.sornaz(\\.part)?\$').hasMatch(name)))
         await item.delete();
     }
   }
@@ -158,7 +163,7 @@ class _DownloadsPageState extends State<DownloadsPage> {
           error = null;
         });
     } catch (e) {
-      if (mounted) setState(() => error = '$e');
+      if (mounted) setState(() => error = userFacingError(e));
     }
   }
 
@@ -201,7 +206,7 @@ class _DownloadsPageState extends State<DownloadsPage> {
                                     Builder(
                                       builder: (context) {
                                         final file = File(
-                                          '${dir.path}/${number(row['id'])}-${number(mid)}.media',
+                                          '${dir.path}/${number(row['id'])}-${number(mid)}.sornaz',
                                         );
                                         final f = objects(course['files'])
                                             .where(
@@ -217,22 +222,11 @@ class _DownloadsPageState extends State<DownloadsPage> {
                                           padding: const EdgeInsets.only(
                                             bottom: 16,
                                           ),
-                                          child:
-                                              '${f.first['mime']}'.startsWith(
-                                                'video/',
-                                              )
-                                              ? SocialVideo(
-                                                  api: widget.api,
-                                                  path: '',
-                                                  localFile: file,
-                                                )
-                                              : Image.file(
-                                                  file,
-                                                  errorBuilder: (_, __, ___) =>
-                                                      const SocialEmpty(
-                                                        'فایل قابل نمایش نیست.',
-                                                      ),
-                                                ),
+                                          child: ProtectedMediaView(
+                                            api: widget.api,
+                                            file: file,
+                                            mime: '${f.first['mime']}',
+                                          ),
                                         );
                                       },
                                     ),

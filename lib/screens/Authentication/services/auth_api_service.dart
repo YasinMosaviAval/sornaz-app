@@ -1,4 +1,6 @@
+import 'package:sornaz/helpers/http_client_factory.dart';
 import 'dart:convert';
+import 'package:sornaz/helpers/user_facing_error.dart';
 import 'package:http/http.dart' as http;
 import 'package:sornaz/screens/Authentication/models/auth_user.dart';
 
@@ -9,14 +11,15 @@ class AuthResult {
 }
 
 class AuthApiException implements Exception {
-  const AuthApiException(this.message);
-  final String message;
+  const AuthApiException(this._message);
+  final String _message;
+  String get message => userFacingError(_message);
   @override
   String toString() => message;
 }
 
 class AuthApiService {
-  AuthApiService({http.Client? client}) : _client = client ?? http.Client();
+  AuthApiService({http.Client? client}) : _client = client ?? createHttpClient();
   static const _baseUrl = String.fromEnvironment(
     'Sornaz_API_BASE_URL',
     defaultValue: 'https://sornaz.com/api/sornaz/v1',

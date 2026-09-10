@@ -30,12 +30,25 @@ class VoiceRecorderProvider extends ChangeNotifier {
   bool _disposed = false;
   Future<void>? _initialization;
   String? currentFilePath;
+  SavedRecording? overwriteTarget;
+  int overwriteAt = 0;
+  Future<void> startOverwrite(SavedRecording file) async {
+    overwriteTarget = file;
+    overwriteAt = playbackService.position.inMilliseconds;
+    try { await startRecording(); } catch (_) { overwriteTarget = null; rethrow; }
+  }
   int seconds = 0;
   String timer = AppConstants.TIMER_00_00;
   List<SavedRecording> files = [];
   List<double> amplitudes = [];
   int totalSamples = 0;
   int bookmarkRevision = 0;
+  List<int> recordingBookmarks = [], playbackBookmarks = [];
+  bool _bookmarkBusy = false;
+  int get recordingMilliseconds => _recordingClock.elapsedMilliseconds;
+  int get bookmarkPosition => isPaused && playbackService.currentPath == currentFilePath ? playbackService.position.inMilliseconds : recordingMilliseconds;
+  bool get canBookmarkRecording => !_bookmarkBusy && !isBusy && (isRecording || isPaused) && recordingBookmarks.every((t) => (t - bookmarkPosition).abs() >= 1000);
+  bool get canBookmarkPlayback => !_bookmarkBusy && playbackBookmarks.every((t) => (t - playbackService.position.inMilliseconds).abs() >= 1000);
   final Stopwatch _recordingClock = Stopwatch();
   Timer? _timer;
 
@@ -48,24 +61,34 @@ class VoiceRecorderProvider extends ChangeNotifier {
 
   Future<void> addRecordingBookmark() async {
     final path = currentFilePath;
-    if (path == null || (!isRecording && !isPaused) || isBusy) return;
-    await fileService.bookmarks.add(path, _recordingClock.elapsedMilliseconds);
+    if (path == null || !canBookmarkRecording) return;
+    _bookmarkBusy = true;
+    try {
+    await fileService.bookmarks.add(path, bookmarkPosition);
+    recordingBookmarks = await fileService.bookmarks.load(path);
     bookmarkRevision++;
+    } finally { _bookmarkBusy = false; }
     _notify();
   }
 
   Future<void> addPlaybackBookmark(SavedRecording file) async {
-    if (playbackService.currentPath != file.uri) return;
+    if (playbackService.currentPath != file.uri || !canBookmarkPlayback) return;
+    _bookmarkBusy = true;
+    try {
     await fileService.bookmarks.add(
       file.uri,
       playbackService.position.inMilliseconds,
     );
     bookmarkRevision++;
+    playbackBookmarks = await fileService.bookmarks.load(file.uri);
+    } finally { _bookmarkBusy = false; }
     _notify();
   }
 
   Future<void> removeBookmark(String uri, int milliseconds) async {
     await fileService.bookmarks.remove(uri, milliseconds);
+    if (uri == playbackService.currentPath) playbackBookmarks = await fileService.bookmarks.load(uri);
+    if (uri == currentFilePath) recordingBookmarks = await fileService.bookmarks.load(uri);
     bookmarkRevision++;
     _notify();
   }
@@ -80,6 +103,7 @@ class VoiceRecorderProvider extends ChangeNotifier {
 
   Future<void> playSaved(SavedRecording file) async {
     if (isRecording || isPaused) return;
+    playbackBookmarks = await fileService.bookmarks.load(file.uri);
     await playbackService.play(file.uri);
   }
 
@@ -143,6 +167,7 @@ class VoiceRecorderProvider extends ChangeNotifier {
       await recordingService.start(path: path, onAmplitude: _onAmplitude);
       currentFilePath = path;
       amplitudes.clear();
+      recordingBookmarks = [];
       totalSamples = 0;
       _recordingClock
         ..reset()
@@ -184,7 +209,7 @@ class VoiceRecorderProvider extends ChangeNotifier {
   Future<void> stopRecording() async {
     if (!isRecording && !isPaused) return;
     await _run(() async {
-      await recordingService.stop();
+      final outputUri = await recordingService.stop();
       _recordingClock.stop();
       _timer?.cancel();
       isRecording = false;
@@ -192,8 +217,16 @@ class VoiceRecorderProvider extends ChangeNotifier {
       seconds = 0;
       timer = AppConstants.TIMER_00_00;
       final savedPath = currentFilePath;
-      if (savedPath != null) await fileService.publish(savedPath);
+      if (savedPath != null) {
+        if (overwriteTarget != null) {
+          await fileService.overwrite(overwriteTarget!, savedPath, overwriteAt);
+          overwriteTarget = null;
+        } else { await fileService.publish(savedPath, sourceUri: outputUri); }
+      }
       currentFilePath = null;
+      amplitudes.clear();
+      totalSamples = 0;
+      recordingBookmarks = [];
       files = await fileService.loadFiles();
     });
   }

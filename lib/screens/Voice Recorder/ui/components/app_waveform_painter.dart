@@ -5,6 +5,8 @@ import 'package:sornaz/helpers/app_typography.dart';
 
 class WaveformPainter extends CustomPainter {
   final int totalSamples;
+  final List<int> bookmarks;
+  final int elapsedMilliseconds;
   final List<double> amplitudes;
   final bool isActive;
   final bool isDark;
@@ -18,6 +20,8 @@ class WaveformPainter extends CustomPainter {
     this.isDark, {
     this.samplesPerSecond = 10,
     required this.totalSamples,
+    this.bookmarks = const [],
+    this.elapsedMilliseconds = 0,
   });
 
   @override
@@ -100,6 +104,11 @@ class WaveformPainter extends CustomPainter {
     }
 
     // رسم WAVEFORM
+    final markerPaint = Paint()..color = isDark ? AppColors.primary_dark : AppColors.primary_light..strokeWidth = 1.2;
+    for (final time in bookmarks) {
+      final x = centerX - (elapsedMilliseconds - time) / 1000 * samplesPerSecond * barWidth;
+      if (x >= 0 && x <= size.width) canvas.drawLine(Offset(x, 0), Offset(x, size.height), markerPaint);
+    }
     for (int i = 0; i < visible.length; i++) {
       final a = visible[i].clamp(-1.0, 1.0);
       final h = a.abs() * (size.height * 0.4);

@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'package:sornaz/helpers/app_platform.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:sornaz/screens/Players/services/music_audio_handler.dart';
@@ -26,7 +27,7 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (Platform.isAndroid) {
+  if (AppPlatform.isAndroid) {
     musicAudioHandler = await AudioService.init<MusicAudioHandler>(
       builder: MusicAudioHandler.new,
       config: const AudioServiceConfig(
@@ -44,11 +45,12 @@ void main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(AudioFileHiveAdapter());
 
-  final cache = await AudioCacheFactory.getCache();
-  final cachedFiles = await cache.loadCachedFiles();
   final libraryManager = AudioLibraryManager();
-
-  if (cachedFiles.isNotEmpty) libraryManager.allFiles = cachedFiles;
+  if (!kIsWeb) {
+    final cache = await AudioCacheFactory.getCache();
+    final cachedFiles = await cache.loadCachedFiles();
+    if (cachedFiles.isNotEmpty) libraryManager.allFiles = cachedFiles;
+  }
 
   runApp(
     MultiProvider(

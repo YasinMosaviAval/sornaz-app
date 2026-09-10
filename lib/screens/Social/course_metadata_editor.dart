@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/user_facing_error.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -56,7 +57,7 @@ class _CourseMetadataEditorState extends State<CourseMetadataEditor> {
     } catch (e) {
       if (mounted)
         setState(() {
-          error = '$e';
+          error = userFacingError(e);
           loading = false;
         });
     }

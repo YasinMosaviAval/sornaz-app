@@ -144,9 +144,6 @@ class _FrequencyPointsPainter extends CustomPainter {
       ..strokeWidth = 0.6
       ..style = PaintingStyle.stroke;
 
-    final paintPoint = Paint()
-      ..color = AppColors.tuner_frequency_box_point_color(isDark: isDark)
-      ..style = PaintingStyle.fill;
 
     final dy = height / (pointsPerSecond - 1);
 
@@ -156,7 +153,7 @@ class _FrequencyPointsPainter extends CustomPainter {
       final y = height - (i * dy);
       final x = width / 2 + (points[i] * scale);
 
-      canvas.drawCircle(Offset(x, y), pointSize, paintPoint);
+
 
       if (i == 0) {
         path.moveTo(x, y);

@@ -11,9 +11,7 @@ class DrawerThemeScope extends StatelessWidget {
     final theme = ThemeData(
       brightness: data.isDark ? Brightness.dark : Brightness.light,
       fontFamily: data.fontFamily,
-      colorSchemeSeed: data.isDark
-          ? const Color(0xffbfa02a)
-          : const Color(0xff3478ff),
+      colorSchemeSeed: data.accent,
     );
     return Theme(
       data: theme.copyWith(

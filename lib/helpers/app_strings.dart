@@ -5,7 +5,8 @@ import 'package:sornaz/helpers/app_images.dart';
 class AppStrings {
   // Shared labels for learning, profiles and drawer pages.
   static const learningEn = <String, String>{
-    'auth.account_title': 'Sign in to your account',
+    'auth.sign_in_title': 'Sign in to your account',
+    'auth.register_title': 'Create an account',
     'auth.register_intro': 'Enter your details to sign up',
     'auth.email_method': 'Sign up with email',
     'auth.phone_method': 'Sign up with mobile',
@@ -568,7 +569,8 @@ class AppStrings {
     'مدرسان و نویسندگان': 'Instructors & authors',
   };
   static const learningFa = <String, String>{
-    'auth.account_title': 'ورود به حساب کاربری',
+    'auth.sign_in_title': 'ورود به حساب کاربری',
+    'auth.register_title': 'ایجاد حساب کاربری',
     'auth.register_intro': 'برای عضویت اطلاعات خود را وارد کنید',
     'auth.email_method': 'ثبت‌نام با ایمیل',
     'auth.phone_method': 'ثبت‌نام با موبایل',
@@ -2224,6 +2226,7 @@ https://www.youtube.com/@sornaz.academy
 
     dont_have_an_account: 'آیا اکانت ندارید؟ ثبت نام',
     sign_in_with_google: 'ثبت نام با گوگل',
+    // forgot_password: 'فراموشی رمز عبور',
     forgot_password: 'رمز عبور خود را فراموش کرده اید؟',
     remember_me: 'مرا به خاطر بسپار',
     password: 'رمز عبور',

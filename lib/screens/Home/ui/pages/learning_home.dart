@@ -1,4 +1,7 @@
+import 'package:sornaz/helpers/user_facing_error.dart';
+import 'package:sornaz/screens/Social/cache_observer.dart';
 import 'package:sornaz/components/app_text.dart';
+import 'package:sornaz/screens/Social/community_page.dart';
 import 'package:sornaz/screens/Social/course_browse.dart';
 import 'package:sornaz/components/app_logo.dart';
 import 'package:flutter/material.dart';
@@ -46,7 +49,7 @@ class HomeContent extends StatefulWidget {
   State<HomeContent> createState() => _HomeContentState();
 }
 
-class _HomeContentState extends State<HomeContent> {
+class _HomeContentState extends State<HomeContent> with CourseCacheObserver<HomeContent> {
   late final api = widget.api ?? SocialApi(widget.token);
   List<Json> courses = [], authors = [], articles = [];
   bool loading = true;
@@ -87,7 +90,7 @@ class _HomeContentState extends State<HomeContent> {
           error = null;
         });
     } catch (e) {
-      if (mounted) setState(() => error = '$e');
+      if (mounted) setState(() => error = userFacingError(e));
     }
   }
 
@@ -104,7 +107,7 @@ class _HomeContentState extends State<HomeContent> {
           articleError = null;
         });
     } catch (e) {
-      if (mounted) setState(() => articleError = '$e');
+      if (mounted) setState(() => articleError = userFacingError(e));
     }
   }
 
@@ -150,7 +153,7 @@ class _HomeContentState extends State<HomeContent> {
   Widget build(BuildContext context) {
     final app = context.watch<AppData>();
     final dark = app.isDark;
-    final accent = dark ? const Color(0xffd3ae32) : const Color(0xff0064fb);
+    final accent = app.accent;
     final theme = ThemeData(
       useMaterial3: true,
       brightness: dark ? Brightness.dark : Brightness.light,
@@ -180,6 +183,7 @@ class _HomeContentState extends State<HomeContent> {
     final sorted = [...filtered]
       ..sort((a, b) => '${b['updated_at']}'.compareTo('${a['updated_at']}'));
     final updated = sorted.take(10).toList();
+    final newest = ([...filtered]..sort((a,b) => '${b['created_at']}'.compareTo('${a['created_at']}'))).take(10).toList();
     final library = context.watch<ArticlesProvider?>();
     final articleRows =
         (widget.articleLoader == null && library != null
@@ -202,31 +206,9 @@ class _HomeContentState extends State<HomeContent> {
           appBar: AppBar(
             backgroundColor: theme.scaffoldBackgroundColor,
             automaticallyImplyLeading: false,
-            title: Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: AppLogo(size: 40, withBackground: false),
-            ),
-            actions: [
-              Builder(
-                builder: (c) => IconButton(
-                  tooltip: socialText(c, 'منو', 'Menu'),
-                  onPressed: () => Scaffold.of(c).openDrawer(),
-                  icon: const Icon(Icons.menu),
-                ),
-              ),
-              const SizedBox(width: 12),
-            ],
-          ),
-          drawer: const AppDrawer(),
-          bottomNavigationBar: const BottomNavBarWidget(selectedIndex: 0),
-          body: RefreshIndicator(
-            onRefresh: load,
-            child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
-              children:
-                  [
-                        TextField(
+            leading: const Padding(padding: EdgeInsets.all(8), child: AppLogo(size: 40, withBackground: false)),
+            titleSpacing: 0,
+            title: TextField(
                           key: const ValueKey('home-search'),
                           controller: search,
                           onChanged: (v) => setState(() => query = v.trim()),
@@ -259,6 +241,26 @@ class _HomeContentState extends State<HomeContent> {
                             ),
                           ),
                         ),
+            actions: [
+              Builder(
+                builder: (c) => IconButton(
+                  tooltip: socialText(c, 'منو', 'Menu'),
+                  onPressed: () => Scaffold.of(c).openDrawer(),
+                  icon: const Icon(Icons.menu),
+                ),
+              ),
+              const SizedBox(width: 12),
+            ],
+          ),
+          drawer: const AppDrawer(),
+          bottomNavigationBar: const BottomNavBarWidget(selectedIndex: 0),
+          body: RefreshIndicator(
+            onRefresh: load,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
+              children:
+                  [
                         if (loading)
                           const Padding(
                             padding: EdgeInsets.only(top: 12),
@@ -366,7 +368,7 @@ class _HomeContentState extends State<HomeContent> {
                               },
                             ),
                           ),
-                        LearningHeading(
+                        if (filtered.isNotEmpty) LearningHeading(
                           socialText(context, 'دوره‌های جدید', 'New courses'),
                         ),
                         if (error != null)
@@ -378,14 +380,6 @@ class _HomeContentState extends State<HomeContent> {
                             ),
                             onRetry: loadCourses,
                           )
-                        else if (filtered.isEmpty && !loading)
-                          AppText(
-                            socialText(
-                              context,
-                              'دوره‌ای با این مشخصات پیدا نشد.',
-                              'No matching courses.',
-                            ),
-                          )
                         else if (filtered.isNotEmpty)
                           SizedBox(
                             height: 370,
@@ -394,20 +388,20 @@ class _HomeContentState extends State<HomeContent> {
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 24,
                               ),
-                              itemCount: updated.length,
+                              itemCount: newest.length,
                               separatorBuilder: (_, __) =>
                                   const SizedBox(width: 16),
                               itemBuilder: (context, i) => SizedBox(
                                 width: 270,
                                 child: CourseCard(
                                   api: api,
-                                  course: updated[i],
-                                  onTap: () => openCourse(updated[i]),
+                                  course: newest[i],
+                                  onTap: () => openCourse(newest[i]),
                                 ),
                               ),
                             ),
                           ),
-                        LearningHeading(
+                        if (updated.isNotEmpty) LearningHeading(
                           socialText(
                             context,
                             'دوره‌های به‌روزشده',
@@ -496,43 +490,10 @@ class _HomeContentState extends State<HomeContent> {
                         LearningHeading(
                           socialText(
                             context,
-                            'برای شروع یادگیری',
-                            'Start learning',
+                            'جامعه سرناز',
+                            'Sornaz community',
                           ),
-                        ),
-                        for (final c in filtered.take(3))
-                          ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: Container(
-                              width: 48,
-                              height: 48,
-                              decoration: BoxDecoration(
-                                color: dark
-                                    ? const Color(0xff003c1b)
-                                    : const Color(0xff609e79),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Icon(
-                                Icons.music_note_outlined,
-                                color: Colors.white,
-                              ),
-                            ),
-                            title: AppText(
-                              '${c['title']}',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            subtitle: AppText(
-                              '${number(c['lesson_count'])} ${socialText(context, 'درس', 'lessons')}',
-                            ),
-                            onTap: () => openCourse(c),
-                          ),
-                        LearningHeading(
-                          socialText(
-                            context,
-                            'مدرسان و نویسندگان',
-                            'Instructors & authors',
-                          ),
+                          onMore: () => socialPush(context, CommunityPage(api: api)),
                         ),
                         SizedBox(
                           height: 108,

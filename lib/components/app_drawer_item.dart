@@ -48,7 +48,6 @@ class AppDrawerItem extends StatelessWidget {
             ),
       onTap: () {
         final navigator = Navigator.of(context);
-        navigator.pop();
         navigator.push(MaterialPageRoute(builder: (_) => link));
       },
     );

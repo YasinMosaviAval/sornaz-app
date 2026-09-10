@@ -1,115 +1,75 @@
 import 'package:flutter/material.dart';
-import 'package:sornaz/helpers/app_spacing.dart';
 
 class MarqueeText extends StatefulWidget {
-  final String text;
-  final TextStyle textStyle;
-  final double speed;
-  final double gap;
-
   const MarqueeText({
     super.key,
     required this.text,
     required this.textStyle,
     this.speed = 60,
-    this.gap = AppSpacing.space_50,
+    this.gap = 50,
   });
-
+  final String text;
+  final TextStyle textStyle;
+  final double speed, gap;
   @override
   State<MarqueeText> createState() => _MarqueeTextState();
 }
 
 class _MarqueeTextState extends State<MarqueeText>
     with SingleTickerProviderStateMixin {
-  late ScrollController _scrollController;
-  late AnimationController _animationController;
-  double _textWidth = AppSpacing.space_0;
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController = ScrollController();
-    _animationController =
-        AnimationController(vsync: this, duration: const Duration(seconds: 10))
-          ..addListener(() {
-            if (_scrollController.hasClients) {
-              final maxScroll = _scrollController.position.maxScrollExtent;
-              final position = _scrollController.offset;
-              final newOffset = position + (widget.speed / 60);
-
-              if (maxScroll > 0 && newOffset >= maxScroll) {
-                _scrollController.jumpTo(0);
-              } else {
-                _scrollController.jumpTo(newOffset);
-              }
-            }
-          });
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _startAnimationIfNeeded();
-      }
-    });
-  }
-
-  void _startAnimationIfNeeded() {
-    if (!mounted) return;
-    final renderBox = context.findRenderObject() as RenderBox?;
-    final containerWidth = renderBox?.size.width ?? 0;
-
-    final textPainter = TextPainter(
-      text: TextSpan(text: widget.text, style: widget.textStyle),
-      textDirection: TextDirection.ltr,
-    )..layout();
-
-    _textWidth = textPainter.width;
-
-    if (_textWidth > containerWidth - widget.gap) {
-      _animationController.repeat();
-    }
-  }
-
-  @override
-  void didUpdateWidget(MarqueeText oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.text != widget.text ||
-        oldWidget.textStyle != widget.textStyle) {
-      _scrollController.jumpTo(0);
-      _startAnimationIfNeeded();
-    }
-  }
-
+  late final AnimationController animation = AnimationController(vsync: this);
+  double cycle = 0;
   @override
   void dispose() {
-    _animationController.dispose();
+    animation.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SizedBox(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            controller: _scrollController,
-            physics: const NeverScrollableScrollPhysics(),
-            child: Row(
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final painter = TextPainter(
+        text: TextSpan(text: widget.text, style: widget.textStyle),
+        textDirection: TextDirection.ltr,
+        textScaler: MediaQuery.textScalerOf(context),
+      )..layout();
+      final width = painter.width, height = painter.height;
+      painter.dispose();
+      if (width <= constraints.maxWidth) {
+        animation.stop();
+        return Text(widget.text, style: widget.textStyle, maxLines: 1);
+      }
+      final distance = width + widget.gap;
+      if (cycle != distance || !animation.isAnimating) {
+        cycle = distance;
+        animation.duration = Duration(
+          milliseconds: (distance / widget.speed * 1000).round(),
+        );
+        animation.repeat();
+      }
+      return ClipRect(
+        child: SizedBox(
+          height: height,
+          child: AnimatedBuilder(
+            animation: animation,
+            builder: (_, _) => Stack(
               children: [
-                Text(
-                  widget.text,
-                  textDirection: TextDirection.ltr,
-                  style: widget.textStyle,
-                ),
-                SizedBox(width: widget.gap),
-                if (_textWidth > constraints.maxWidth) ...{
-                  Text(widget.text, style: widget.textStyle),
-                },
+                for (var i = 0; i < 2; i++)
+                  Positioned(
+                    left: i * distance - animation.value * distance,
+                    width: width,
+                    child: Text(
+                      widget.text,
+                      style: widget.textStyle,
+                      textDirection: TextDirection.ltr,
+                      maxLines: 1,
+                    ),
+                  ),
               ],
             ),
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
 }

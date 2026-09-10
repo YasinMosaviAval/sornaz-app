@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/screens/Home/ui/pages/home.dart';
 import 'package:sornaz/screens/Notation/music_sheets_page.dart';
-import 'package:sornaz/screens/Articles/ui/pages/articles_page.dart';
+import 'package:sornaz/screens/Home/ui/pages/music_tools.dart';
 import 'package:sornaz/screens/Social/user_panel.dart';
 import 'package:sornaz/screens/Social/course_catalog.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
@@ -23,9 +23,7 @@ class BottomNavBarWidget extends StatelessWidget {
         backgroundColor: data.isDark
             ? const Color(0xff202020)
             : const Color(0xfff1f1f1),
-        selectedItemColor: data.isDark
-            ? const Color(0xffd3ae32)
-            : const Color(0xff0064fb),
+        selectedItemColor: data.accent,
         unselectedItemColor: data.isDark ? Colors.white60 : Colors.black54,
         selectedFontSize: 10,
         unselectedFontSize: 10,
@@ -38,7 +36,7 @@ class BottomNavBarWidget extends StatelessWidget {
                 HomePage(),
                 MusicSheetsPage(),
                 CourseCatalogPage(),
-                ArticlesPage(),
+                MusicToolsPage(),
                 UserPanelPage(),
               ][index],
             ),
@@ -54,7 +52,7 @@ class BottomNavBarWidget extends StatelessWidget {
               'Music Sheet',
             ),
             (Icons.menu_book_outlined, Icons.menu_book, 'دوره‌ها', 'Courses'),
-            (Icons.article_outlined, Icons.article, 'مقاله‌ها', 'Articles'),
+            (Icons.tune, Icons.tune, 'ابزار موسیقی', 'Music tools'),
             (Icons.person_outline, Icons.person, 'پروفایل', 'Profile'),
           ])
             BottomNavigationBarItem(

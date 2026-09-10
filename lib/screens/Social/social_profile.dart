@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/user_facing_error.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
@@ -55,7 +56,7 @@ class _ProfileBodyState extends State<ProfileBody> {
           error = null;
         });
     } catch (e) {
-      if (mounted) setState(() => error = e.toString());
+      if (mounted) setState(() => error = userFacingError(e));
     }
   }
 
@@ -394,7 +395,7 @@ class _PeoplePageState extends State<PeoplePage> {
           error = null;
         });
     } catch (e) {
-      if (mounted && version == requestId) setState(() => error = e.toString());
+      if (mounted && version == requestId) setState(() => error = userFacingError(e));
     }
   }
 
@@ -669,7 +670,7 @@ class _SavedPostsPageState extends State<SavedPostsPage> {
       builder: (context, snapshot) {
         if (snapshot.hasError)
           return SocialEmpty(
-            '${snapshot.error}',
+            userFacingError(snapshot.error ?? ''),
             onRetry: () =>
                 setState(() => data = widget.api.get('/posts?saved=1')),
           );

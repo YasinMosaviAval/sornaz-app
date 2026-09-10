@@ -1,5 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sornaz/screens/Social/protected_media.dart';
+import 'package:sornaz/screens/Social/course_cache.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -11,6 +16,11 @@ class TestDownloads extends LessonDownloads{
   @override Future<Directory> directory() async=>root;
 }
 void main(){
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUp(() {
+    SharedPreferences.setMockInitialValues({}); CourseCache.checked.clear(); FlutterSecureStorage.setMockInitialValues({});
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(const MethodChannel('plugins.flutter.io/path_provider'), (_) async => Directory.systemTemp.path);
+  });
   for(final mode in ['success','locked','redirect','truncated']){
     test('download $mode preserves access and file integrity',() async{
       final root=await Directory.systemTemp.createTemp('sornaz-download-test-');
@@ -21,7 +31,9 @@ void main(){
       try{
         if(mode=='success'){
           await downloads.download(1,(_){},client);
-          expect(await File('${root.path}/1-3.media').readAsString(),'1234');
+          final encrypted = File('${root.path}/1-3.sornaz');
+          final clear = await ProtectedMedia(CourseCache.account(api.token)).open(encrypted);
+          expect(await clear.readAsString(),'1234'); await ProtectedMedia.close(clear);
           expect(await File('${root.path}/1.json').exists(),isTrue);
           await downloads.remove({'id':1});expect(await root.list().isEmpty,isTrue);
         }else{

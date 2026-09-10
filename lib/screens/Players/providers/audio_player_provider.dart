@@ -1,7 +1,9 @@
 import 'package:sornaz/screens/Players/services/music_audio_handler.dart';
 import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sornaz/screens/Players/cache/audio_cache_factory.dart';
+import 'package:sornaz/components/ab_repeat.dart';
 import 'package:flutter/material.dart' hide RepeatMode;
-import 'package:metadata_god/metadata_god.dart';
 import 'package:sornaz/main.dart';
 import 'package:sornaz/screens/Players/controller/audio_player_controller.dart';
 import 'package:sornaz/screens/Players/library/audio_library_manager.dart';
@@ -13,7 +15,6 @@ import 'package:sornaz/screens/Players/playback/playback_undo.dart';
 import 'package:sornaz/screens/Players/scan/audio_file.dart';
 
 class AudioPlayerProvider extends ChangeNotifier {
-  
   late final AudioPlayerController _controller;
   late final PlaybackHistoryManager _history;
   late final PlaybackQueueManager _queue;
@@ -26,7 +27,14 @@ class AudioPlayerProvider extends ChangeNotifier {
   bool isHiveLoading = true;
   bool isUndoMode = false;
   bool folderMode = false;
+  String searchQuery = '';
   bool showRemaining = false;
+  final abRepeat = AbRepeat();
+  bool _loopSeeking = false;
+  void cycleAbRepeat() {
+    abRepeat.cycle(position);
+    notifyListeners();
+  }
 
   bool get isPlaying => _controller.isPlaying;
   Duration get duration => _controller.duration;
@@ -41,21 +49,34 @@ class AudioPlayerProvider extends ChangeNotifier {
     final audio = _playingAudio;
     if (!_mediaActive || audio == null) return;
     final metadata = audio.metadata;
-    musicAudioHandler?.publish(id: audio.file.path,
-      title: metadata?.title?.trim().isNotEmpty == true ? metadata!.title! : audio.fileName,
+    musicAudioHandler?.publish(
+      id: audio.file.path,
+      title: metadata?.title?.trim().isNotEmpty == true
+          ? metadata!.title!
+          : audio.fileName,
       artist: metadata?.artist,
-      duration: duration, position: position, playing: isPlaying,
-      loading: isLoading, speed: playbackSpeed);
+      duration: duration,
+      position: position,
+      playing: isPlaying,
+      loading: isLoading,
+      speed: playbackSpeed,
+    );
   }
+
   Future<void> stop() async {
     _mediaActive = false;
     await _controller.stop();
     musicAudioHandler?.clear();
     notifyListeners();
   }
+
   Future<void> skipPrevious() async {
     final index = _queue.previous();
-    if (index != null) { await play(index); } else { await seek(Duration.zero); }
+    if (index != null) {
+      await play(index);
+    } else {
+      await seek(Duration.zero);
+    }
   }
 
   List<Duration> history = [];
@@ -66,8 +87,19 @@ class AudioPlayerProvider extends ChangeNotifier {
   RepeatMode get repeatMode => _queue.repeatMode;
 
   double playbackSpeed = 1.0;
-  final List<double> speedOptions = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 3.0, 4.0];
-  
+  final List<double> speedOptions = [
+    0.25,
+    0.5,
+    0.75,
+    1.0,
+    1.25,
+    1.5,
+    1.75,
+    2.0,
+    3.0,
+    4.0,
+  ];
+
   AudioMetadata? _currentMetadata;
   AudioMetadata? get currentMetadata => _currentMetadata;
 
@@ -91,10 +123,7 @@ class AudioPlayerProvider extends ChangeNotifier {
   Future<void> play(int index) async {
     if (index < 0 || index >= filteredFiles.length || isLoading) return;
     if (currentIndex != -1 && currentIndex != index) {
-      _history.push(
-        index: currentIndex,
-        position: position,
-      );
+      _history.push(index: currentIndex, position: position);
       isUndoMode = true;
       _restartUndoTimer();
       notifyListeners();
@@ -105,11 +134,12 @@ class AudioPlayerProvider extends ChangeNotifier {
       notifyListeners();
 
       currentIndex = index;
+      if (_playingAudio?.file.path != filteredFiles[index].file.path)
+        abRepeat.clear();
       _playingAudio = filteredFiles[index];
       _currentMetadata = _playingAudio?.metadata;
       _mediaActive = true;
-      
-      _queue.setQueue(filteredFiles.length);
+
       _queue.setCurrentIndex(index);
 
       await _controller.playFile(filteredFiles[index].file.path);
@@ -143,19 +173,45 @@ class AudioPlayerProvider extends ChangeNotifier {
     }
 
     _libraryListener = () {
+      final replaced = !identical(allFiles, libraryManager.allFiles);
       allFiles = libraryManager.allFiles;
-      filteredFiles = libraryManager.allFiles;
+      if (replaced) {
+        filteredFiles = allFiles
+            .where((f) => f.fileName.toLowerCase().contains(searchQuery))
+            .toList();
+        currentIndex = filteredFiles.indexWhere(
+          (f) => f.file.path == _playingAudio?.file.path,
+        );
+        _queue.setQueue(filteredFiles.length);
+        _queue.setCurrentIndex(currentIndex);
+      }
       _buildFolderTree();
       notifyListeners();
     };
     libraryManager.addListener(_libraryListener);
 
     _completeSubscription = _controller.onComplete.listen((_) {
+      if (abRepeat.active) {
+        seek(abRepeat.start!).then((_) => resume());
+        return;
+      }
       final nextIndex = _queue.next();
-      if (nextIndex != null) { play(nextIndex); } else { stop(); }
+      if (nextIndex != null) {
+        play(nextIndex);
+      } else {
+        stop();
+      }
     });
 
     _stateSubscription = _controller.onStateChanged.listen((_) {
+      if (duration > Duration.zero && _playingAudio != null)
+        _playingAudio!.duration = duration;
+      if (!_loopSeeking && abRepeat.shouldLoop(position)) {
+        _loopSeeking = true;
+        _controller
+            .seek(abRepeat.start!)
+            .whenComplete(() => _loopSeeking = false);
+      }
       _publishMedia();
       notifyListeners();
     });
@@ -173,7 +229,9 @@ class AudioPlayerProvider extends ChangeNotifier {
     await _controller.resume();
     _publishMedia();
   }
-  Future<void> seek(Duration duration) async => await _controller.seek(duration);
+
+  Future<void> seek(Duration duration) async =>
+      await _controller.seek(duration);
 
   Future<void> setSpeed(double value) async {
     playbackSpeed = value;
@@ -268,8 +326,7 @@ class AudioPlayerProvider extends ChangeNotifier {
   }
 
   AudioFile? get currentAudio {
-    if (currentIndex < 0 || currentIndex >= filteredFiles.length) return null;
-    return filteredFiles[currentIndex];
+    return _playingAudio;
   }
 
   Future<void> playFromFolder(List<AudioFile> files, int index) async {
@@ -295,10 +352,7 @@ class AudioPlayerProvider extends ChangeNotifier {
 
   void startSliding() {
     // if (history.isEmpty || history.last != position) history.add(position);
-    _history.push(
-      index: currentIndex,
-      position: position,
-    );
+    _history.push(index: currentIndex, position: position);
     isUndoMode = true;
     _restartUndoTimer();
     notifyListeners();
@@ -324,7 +378,16 @@ class AudioPlayerProvider extends ChangeNotifier {
   }
 
   void filter(String query) {
-    filteredFiles = allFiles.where((audio) => audio.fileName.toLowerCase().contains(query.toLowerCase())).toList();
+    searchQuery = query.toLowerCase();
+    filteredFiles = allFiles
+        .where(
+          (audio) => audio.fileName.toLowerCase().contains(query.toLowerCase()),
+        )
+        .toList();
+    currentIndex = filteredFiles.indexWhere(
+      (f) => f.file.path == _playingAudio?.file.path,
+    );
+    _queue.setCurrentIndex(currentIndex);
     _queue.rebuildOrder(queueLength: filteredFiles.length);
     if (currentIndex >= filteredFiles.length) {
       currentIndex = filteredFiles.isEmpty ? -1 : 0;
@@ -333,11 +396,29 @@ class AudioPlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> renameFile(AudioFile file, String newName, String message) async {
+  Future<bool> renameFile(
+    AudioFile file,
+    String newName,
+    String message,
+  ) async {
+    if (newName.isEmpty ||
+        newName.contains(RegExp(r'[/\\\x00]')) ||
+        newName == '.' ||
+        newName == '..')
+      throw const FormatException('Invalid filename');
     final dir = file.file.parent.path;
     final newPath = "$dir/$newName";
+    final oldPath = file.file.path;
     final newFile = await file.file.rename(newPath);
     file.file = newFile;
+    file.fileName = newName;
+    final prefs = await SharedPreferences.getInstance();
+    final favorites = prefs.getStringList('music.favorites') ?? [];
+    await prefs.setStringList(
+      'music.favorites',
+      favorites.map((p) => p == oldPath ? newFile.path : p).toList(),
+    );
+    await (await AudioCacheFactory.getCache()).saveFiles(allFiles);
     notifyListeners();
     _showSnackBar(message);
     return true;
@@ -352,9 +433,26 @@ class AudioPlayerProvider extends ChangeNotifier {
   }
 
   Future<bool> deleteFromDevice(AudioFile file, String message) async {
+    if (identical(currentAudio, file)) {
+      await stop();
+      _playingAudio = null;
+    }
     await file.file.delete();
     allFiles.remove(file);
     filteredFiles.remove(file);
+    _queue.setQueue(filteredFiles.length);
+    currentIndex = currentAudio == null
+        ? -1
+        : filteredFiles.indexOf(currentAudio!);
+    _queue.setCurrentIndex(currentIndex);
+    await (await AudioCacheFactory.getCache()).saveFiles(allFiles);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      'music.favorites',
+      (prefs.getStringList('music.favorites') ?? [])
+          .where((p) => p != file.file.path)
+          .toList(),
+    );
     notifyListeners();
     _showSnackBar(message);
     return true;
@@ -368,18 +466,8 @@ class AudioPlayerProvider extends ChangeNotifier {
     );
   }
 
-  Future<AudioMetadata> extractMetadata(String path) async {
-    final meta = await MetadataGod.readMetadata(file: path);
-    return AudioMetadata(
-      title: meta.title,
-      artist: meta.artist,
-      album: meta.album,
-      genre: meta.genre,
-      year: meta.year,
-      duration: meta.duration,
-      artwork: meta.picture?.data,
-    );
-  }
+  Future<AudioMetadata> extractMetadata(String path) =>
+      MetadataService.extract(path);
 
   @override
   void dispose() {
@@ -389,15 +477,17 @@ class AudioPlayerProvider extends ChangeNotifier {
     libraryManager.removeListener(_libraryListener);
     final handler = musicAudioHandler;
     if (handler != null) {
-      handler.onPlay = null; handler.onPause = null; handler.onStop = null;
-      handler.onSeek = null; handler.onNext = null; handler.onPrevious = null;
-      handler.onRewind = null; handler.onForward = null;
+      handler.onPlay = null;
+      handler.onPause = null;
+      handler.onStop = null;
+      handler.onSeek = null;
+      handler.onNext = null;
+      handler.onPrevious = null;
+      handler.onRewind = null;
+      handler.onForward = null;
       handler.clear();
     }
     _controller.dispose();
     super.dispose();
   }
-
 }
-
-

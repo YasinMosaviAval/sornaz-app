@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sornaz/screens/Social/course_cache.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -7,6 +9,8 @@ import 'package:sornaz/screens/Social/social_api.dart';
 http.Response jsonResponse(String body, int status) =>
     http.Response.bytes(utf8.encode(body), status);
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUp(() { SharedPreferences.setMockInitialValues({}); CourseCache.checked.clear(); });
   test('decodes the real PHP envelope and authenticates requests', () async {
     final api = SocialApi(
       'test-token',

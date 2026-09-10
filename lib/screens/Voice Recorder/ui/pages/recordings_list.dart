@@ -1,4 +1,6 @@
-import '../components/recording_bookmarks_view.dart';
+import 'package:sornaz/components/expanding_search_bar.dart';
+import 'recorder_settings.dart';
+import 'recording_playback.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -123,26 +125,12 @@ class _RecordedFilesPageState extends State<RecordedFilesPage> {
         .toList();
     final player = vm.playbackService;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(socialText(context, 'صداهای ضبط‌شده', 'Recordings')),
+      appBar: ExpandingSearchBar(
+        title: Row(children: [const BackButton(), Expanded(child: Text(socialText(context, 'صداهای ضبط‌شده', 'Recordings'), style: const TextStyle(fontSize: 13)))]),
+        onChanged: (value) => setState(() => query = value.toLowerCase()),
+        onSettings: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RecorderSettingsPage())),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              onChanged: (value) => setState(() => query = value.toLowerCase()),
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search),
-                hintText: socialText(
-                  context,
-                  'جستجوی فایل',
-                  'Search recordings',
-                ),
-              ),
-            ),
-          ),
-          const Text('Music / Sornaz', textDirection: TextDirection.ltr),
+      body: Column(children: [
           Expanded(
             child: RefreshIndicator(
               onRefresh: vm.refreshFiles,
@@ -169,9 +157,12 @@ class _RecordedFilesPageState extends State<RecordedFilesPage> {
                         final file = files[index];
                         final active = player.currentPath == file.uri;
                         return Card(
+                          margin: EdgeInsets.zero,
+                          shape: RoundedRectangleBorder(side: BorderSide(width: .4, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: .12))),
                           child: Column(
                             children: [
                               ListTile(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                                 selected: selected.contains(file.uri),
                                 onLongPress: () =>
                                     setState(() => selected.add(file.uri)),
@@ -207,6 +198,7 @@ class _RecordedFilesPageState extends State<RecordedFilesPage> {
                                 ),
                                 trailing: PopupMenuButton<String>(
                                   onSelected: (action) async {
+                                    if (action == 'wave') await Navigator.push(context, MaterialPageRoute(builder: (_) => RecordingPlaybackPage(file: file)));
                                     if (action == 'delete')
                                       await _delete([file]);
                                     if (action == 'rename') await _rename(file);
@@ -229,6 +221,7 @@ class _RecordedFilesPageState extends State<RecordedFilesPage> {
                                     }
                                   },
                                   itemBuilder: (_) => [
+                                    const PopupMenuItem(value: 'wave', child: Text('پخش با نمایش موج صدا')),
                                     PopupMenuItem(
                                       value: 'rename',
                                       child: Text(
@@ -325,8 +318,8 @@ class _RecordedFilesPageState extends State<RecordedFilesPage> {
                                 ),
                               if (active)
                                 TextButton.icon(
-                                  onPressed: () =>
-                                      _run(() => vm.addPlaybackBookmark(file)),
+                                  onPressed: vm.canBookmarkPlayback ? () =>
+                                      _run(() => vm.addPlaybackBookmark(file)) : null,
                                   icon: const Icon(Icons.bookmark_add_outlined),
                                   label: Text(
                                     socialText(
@@ -336,15 +329,7 @@ class _RecordedFilesPageState extends State<RecordedFilesPage> {
                                     ),
                                   ),
                                 ),
-                              RecordingBookmarksView(
-                                key: ValueKey(file.uri),
-                                uri: file.uri,
-                                store: vm.fileService.bookmarks,
-                                revision: vm.bookmarkRevision,
-                                onSelect: (time) => vm.seekBookmark(file, time),
-                                onDelete: (time) =>
-                                    vm.removeBookmark(file.uri, time),
-                              ),
+
                             ],
                           ),
                         );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sornaz/components/ab_repeat.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
@@ -36,10 +37,10 @@ class AudioSlider extends StatelessWidget {
         Directionality(
           textDirection: TextDirection.ltr,
           child: Expanded(
-            child: Slider(
-              activeColor: AppColors.music_player_audio_slider_active_color(isDark: isDark),
+            child: AbTrack(repeat: provider.abRepeat, duration: provider.duration, child: Slider(
+              activeColor: Theme.of(context).colorScheme.primary,
               inactiveColor: AppColors.music_player_audio_slider_inactive_color(isDark: isDark),
-              value: currentPosition.clamp(0.0, totalDuration),
+              value: provider.duration == Duration.zero ? 0 : currentPosition.clamp(0.0, totalDuration),
               max: totalDuration,
               onChangeStart: (_) => [provider.startSliding()],
               onChanged: (v) => {},
@@ -48,7 +49,7 @@ class AudioSlider extends StatelessWidget {
                 // تایمر رو دوباره شروع کن تا ۱۰ ثانیه فرصت داشته باشه
                 provider.restartUndoTimer(),  // اگر private بود، یک متد عمومی بساز
               },
-            ),
+            )),
           ),
         ),
         TextButton(

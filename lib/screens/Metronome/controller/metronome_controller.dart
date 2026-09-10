@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:sornaz/helpers/app_platform.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
@@ -42,7 +42,7 @@ class MetronomeController extends ChangeNotifier {
     'bars': stopMode == StopMode.bars ? targetBars : 0,
   };
   void _configureNative() {
-    if (Platform.isAndroid && isPlaying)
+    if (AppPlatform.isAndroid && isPlaying)
       _native.invokeMethod<void>('configure', _configuration);
   }
 
@@ -113,7 +113,7 @@ class MetronomeController extends ChangeNotifier {
   int currentBar = 0;
 
   Future<void> init() async {
-    if (Platform.isAndroid) {
+    if (AppPlatform.isAndroid) {
       _nativeTicks ??= const EventChannel('sornaz/metronome/events')
           .receiveBroadcastStream()
           .listen(
@@ -146,17 +146,17 @@ class MetronomeController extends ChangeNotifier {
     await _accentPlayer.setAsset(AppConstants.ACCENT_WAV);
     await _subTickPlayer.setAsset(AppConstants.SUB_TICK_WAV);
 
-    if (Platform.isAndroid) {
+    if (AppPlatform.isAndroid) {
       _configureNative();
     } else {
       _subTickPlayer.setVolume(subTickVolume);
     }
-    if (Platform.isAndroid) {
+    if (AppPlatform.isAndroid) {
       _configureNative();
     } else {
       _tickPlayer.setVolume(tickVolume);
     }
-    if (Platform.isAndroid) {
+    if (AppPlatform.isAndroid) {
       _configureNative();
     } else {
       _accentPlayer.setVolume(accentVolume);
@@ -164,7 +164,7 @@ class MetronomeController extends ChangeNotifier {
   }
 
   void start() {
-    if (Platform.isAndroid) {
+    if (AppPlatform.isAndroid) {
       _startNative();
       return;
     }
@@ -194,7 +194,7 @@ class MetronomeController extends ChangeNotifier {
 
   void stop() {
     _generation++;
-    if (Platform.isAndroid) _native.invokeMethod<void>('stop');
+    if (AppPlatform.isAndroid) _native.invokeMethod<void>('stop');
     _timer?.cancel();
     _practiceTimer?.cancel();
     _timer = null;
@@ -269,7 +269,7 @@ class MetronomeController extends ChangeNotifier {
 
   void setNoteLength(NoteLength note) {
     selectedNote = note;
-    if (Platform.isAndroid) {
+    if (AppPlatform.isAndroid) {
       _configureNative();
     } else if (isPlaying) {
       start();
@@ -277,7 +277,7 @@ class MetronomeController extends ChangeNotifier {
   }
 
   void pause() {
-    if (Platform.isAndroid) {
+    if (AppPlatform.isAndroid) {
       stop();
       return;
     }
@@ -288,7 +288,7 @@ class MetronomeController extends ChangeNotifier {
 
   void setBpm(int value) {
     bpm = value.clamp(30, 300);
-    if (Platform.isAndroid) {
+    if (AppPlatform.isAndroid) {
       _configureNative();
     } else if (isPlaying) {
       start();
@@ -362,7 +362,7 @@ class MetronomeController extends ChangeNotifier {
     _timer?.cancel();
     _practiceTimer?.cancel();
     _nativeTicks?.cancel();
-    if (Platform.isAndroid) {
+    if (AppPlatform.isAndroid) {
       _native.invokeMethod<void>('stop');
     } else {
       _tickPlayer.dispose();

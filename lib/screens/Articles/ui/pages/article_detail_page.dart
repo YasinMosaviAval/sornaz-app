@@ -239,7 +239,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
   Future<void> _link(String raw) async {
     if (_openingLink || raw.startsWith('#')) return;
     final uri = Uri.parse('https://sornaz.com/').resolve(raw);
-    final internal = uri.host == 'sornaz.com' || uri.host == 'www.sornaz.com';
+    final internal = uri.host == 'sornaz.com' || uri.host == 'www.sornaz.com' || uri.host == Uri.parse(ArticleApiService.baseUrl).host;
     if (internal) {
       int? target = int.tryParse(
         uri.queryParameters['id'] ??

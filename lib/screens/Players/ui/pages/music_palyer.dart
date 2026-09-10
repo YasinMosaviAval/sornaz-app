@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'browser_music_player.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -34,6 +36,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
   }
 
   Future<void> _requestPermissionsAndScan() async {
+    if (kIsWeb) return;
     var storageStatus = await Permission.storage.request();
 
     if (storageStatus.isDenied) {
@@ -129,6 +132,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (kIsWeb) return const BrowserMusicPlayer();
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);

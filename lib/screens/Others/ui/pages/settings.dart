@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sornaz/components/color_palette_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/app_bar.dart';
 import 'package:sornaz/components/language_switch_tile.dart';
@@ -46,6 +47,7 @@ class SettingsPage extends StatelessWidget {
                       onChanged: appData.toggleDarkMode,
                     ),
                     LanguageSwitchTile(),
+                    const ColorPalettePicker(),
                   ],
                 ),
                 SettingsSectionHeader(

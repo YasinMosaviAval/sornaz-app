@@ -1,69 +1,134 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sornaz/helpers/app_strings.dart';
-import 'package:sornaz/helpers/app_translations.dart';
-import 'package:sornaz/helpers/app_typography.dart';
-import 'package:sornaz/screens/Players/providers/audio_player_provider.dart';
-import 'package:sornaz/screens/Players/ui/components/file_actions.dart';
-import 'package:sornaz/screens/Players/ui/components/audio_item.dart';
-import 'package:sornaz/screens/Players/ui/components/bottom_player.dart';
-import 'package:sornaz/helpers/app_colors.dart';
-import 'package:sornaz/helpers/app_data.dart';
-import 'package:sornaz/screens/Players/ui/components/search_bar.dart';
+import '../../providers/audio_player_provider.dart';
+import '../../providers/folder_navigator_provider.dart';
+import 'audio_item.dart';
+import 'audio_selection.dart';
+import 'bottom_player.dart';
+import 'search_bar.dart';
 
-class FlatListView extends StatelessWidget {
+class FlatListView extends StatefulWidget {
+  const FlatListView({super.key, this.scrollController, this.folders = false});
   final ScrollController? scrollController;
+  final bool folders;
+  @override
+  State<FlatListView> createState() => _FlatListViewState();
+}
 
-  const FlatListView({super.key, this.scrollController});
+class _FlatListViewState extends State<FlatListView> {
+  late final controller = widget.scrollController ?? ScrollController();
+  final selected = <String>{};
+  String? lastPlaying;
+  @override
+  void dispose() {
+    if (widget.scrollController == null) controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final appData = Provider.of<AppData>(context);
-    final isDark = appData.isDark;
-    
-    return Consumer<AudioPlayerProvider>(
-      builder: (context, provider, _) {
-        if (provider.filteredFiles.isEmpty && !provider.isHiveLoading) {
-          return Center(
-            child: Text(
-              AppStrings.audio_file_not_found.translate(context),
-              style: AppTypography.musicPlayerAudioFileNotFound(context),
-            ),
+    final player = context.watch<AudioPlayerProvider>();
+    final nav = context.watch<FolderNavigatorProvider>();
+    final files = widget.folders
+        ? nav.audioFiles
+              .where(
+                (f) => f.fileName.toLowerCase().contains(player.searchQuery),
+              )
+              .map(
+                (f) =>
+                    player.allFiles
+                        .where((known) => known.file.path == f.file.path)
+                        .firstOrNull ??
+                    f,
+              )
+              .toList()
+        : player.filteredFiles;
+    final folders = widget.folders ? nav.subFolders : <dynamic>[];
+    final path = player.currentAudio?.file.path;
+    if (path != lastPlaying) {
+      lastPlaying = path;
+      final at = files.indexWhere((f) => f.file.path == path);
+      if (at >= 0)
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted || !controller.hasClients) return;
+          final target =
+              ((at + folders.length) * 80 -
+                      (controller.position.viewportDimension - 80) / 2)
+                  .clamp(0.0, controller.position.maxScrollExtent);
+          controller.animateTo(
+            target,
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeInOutCubic,
           );
-        }
-        return Column(
-          children: [
-            const SearchBarWidget(),
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.music_player_flat_list_view_decoration_color(isDark: isDark),
-                ),
-                child: ListView.builder(
-                  controller: scrollController,
-                  padding: EdgeInsets.all(0),
-                  itemCount: provider.filteredFiles.length,
-                  itemBuilder: (context, index) {
-                    final audio = provider.filteredFiles[index];
-                    return GestureDetector(
-                      onTap: () => provider.play(index),
-                      key: ValueKey(audio.file.path),
-                      onLongPress: () => showFileOptions(context, audio),
-                      child: AudioItem(
-                        audio: provider.filteredFiles[index],
-                        isPlaying: provider.currentIndex == index,
-                        index: index,
-                      ),
-                    );
-                  },
-                ),
+        });
+    }
+    return Column(
+      children: [
+        const SearchBarWidget(),
+        if (selected.isNotEmpty)
+          Row(
+            children: [
+              IconButton(
+                onPressed: () => setState(selected.clear),
+                icon: const Icon(Icons.close),
               ),
-            ),
-            BottomPlayerWidget(),
-          ],
-        );
-      }
+              Text('${selected.length}'),
+              const Spacer(),
+              IconButton(
+                onPressed: () => setState(
+                  () => selected.addAll(files.map((f) => f.file.path)),
+                ),
+                icon: const Icon(Icons.select_all),
+              ),
+              AudioActionsMenu(
+                files: files
+                    .where((f) => selected.contains(f.file.path))
+                    .toList(),
+                after: () {
+                  if (mounted) setState(selected.clear);
+                },
+              ),
+            ],
+          ),
+        Expanded(
+          child: ListView.builder(
+            controller: controller,
+            padding: EdgeInsets.zero,
+            itemExtent: 80,
+            itemCount: folders.length + files.length,
+            itemBuilder: (context, i) {
+              if (i < folders.length)
+                return ListTile(
+                  leading: const Icon(Icons.folder_outlined),
+                  title: Text(folders[i].path.split('/').last),
+                  onTap: () => nav.enterRealFolder(folders[i]),
+                );
+              final at = i - folders.length, file = files[at];
+              return AudioItem(
+                audio: file,
+                index: at,
+                isPlaying: player.currentAudio?.file.path == file.file.path,
+                selected: selected.contains(file.file.path),
+                onLongPress: () => setState(() => selected.add(file.file.path)),
+                onTap: () {
+                  if (selected.isNotEmpty) {
+                    setState(
+                      () => selected.contains(file.file.path)
+                          ? selected.remove(file.file.path)
+                          : selected.add(file.file.path),
+                    );
+                  } else if (player.currentAudio?.file.path == file.file.path) {
+                    player.isPlaying ? player.pause() : player.resume();
+                  } else {
+                    player.playFromFolder(files, at);
+                  }
+                },
+              );
+            },
+          ),
+        ),
+        const BottomPlayerWidget(),
+      ],
     );
   }
 }

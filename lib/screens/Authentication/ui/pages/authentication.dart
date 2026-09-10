@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'registration_feedback.dart';
+import '../../services/saved_credentials.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
@@ -26,6 +27,76 @@ class _SignInScreenState extends State<SignInScreen> {
   final identifier = TextEditingController();
   final password = TextEditingController();
   final api = AuthApiService();
+  final credentials = SavedCredentials();
+  bool choosingCredential = false;
+
+  Future<void> chooseCredential() async {
+    if (choosingCredential || loading) return;
+    choosingCredential = true;
+    try {
+      final entries = await credentials.available(
+        context.read<AuthSession>().accounts.map((e) => e.id).toSet(),
+      );
+      if (!mounted || entries.isEmpty) return;
+      final en = context.read<LocaleProvider>().locale.languageCode == 'en';
+      final selected = await showModalBottomSheet<SavedCredential>(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) => SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.key, size: 40),
+                const SizedBox(height: 16),
+                Text(
+                  en
+                      ? 'Use saved password?'
+                      : 'از رمز عبور ذخیره‌شده استفاده شود؟',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 12),
+                Text(SavedCredentials.site),
+                const SizedBox(height: 20),
+                for (final entry in entries)
+                  Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.account_circle_outlined),
+                      title: Text(
+                        entry.identifier,
+                        textDirection: TextDirection.ltr,
+                      ),
+                      subtitle: const Text(
+                        '••••••••',
+                        semanticsLabel: 'رمز عبور ذخیره‌شده',
+                      ),
+                      onTap: () => Navigator.pop(context, entry),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      );
+      if (!mounted || selected == null) return;
+      setState(() {
+        identifier.text = selected.identifier;
+        password.text = selected.password;
+        remember = true;
+      });
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('خواندن اطلاعات ورود ذخیره‌شده ممکن نشد.'),
+          ),
+        );
+      }
+    } finally {
+      choosingCredential = false;
+    }
+  }
 
   @override
   void dispose() {
@@ -53,6 +124,23 @@ class _SignInScreenState extends State<SignInScreen> {
         remember: remember,
       );
       if (!mounted) return;
+      try {
+        await credentials.update(
+          SavedCredential(
+            result.user.id,
+            identifier.text.trim(),
+            password.text,
+          ),
+          remember: remember,
+        );
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('ذخیره اطلاعات ورود ممکن نشد.')),
+          );
+        }
+      }
+      if (!mounted) return;
       await context.read<AuthSession>().save(result);
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
@@ -76,81 +164,111 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     final en = context.watch<LocaleProvider>().locale.languageCode == 'en';
     return _AuthPage(
+      spacedSections: true,
       children: [
-        const _Header(),
-        const SizedBox(height: 18),
-        Text(
-          AppStrings.sign_in_description.translate(context),
-          textAlign: TextAlign.center,
-          style: _muted(context).copyWith(fontSize: 16, height: 1.35),
-        ),
-        const SizedBox(height: 34),
-        _Field(
-          label: en
-              ? 'Username, email or mobile'
-              : 'نام کاربری، ایمیل یا موبایل',
-          controller: identifier,
-        ),
-        const SizedBox(height: 16),
-        _Field(
-          label: AppStrings.password.translate(context),
-          controller: password,
-          obscure: hidden,
-          suffix: IconButton(
-            onPressed: () => setState(() => hidden = !hidden),
-            icon: Icon(
-              hidden
-                  ? Icons.visibility_outlined
-                  : Icons.visibility_off_outlined,
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 8,
-          runSpacing: 4,
+        Column(
           children: [
-            SizedBox(
-              width: 24,
-              height: 24,
-              child: Checkbox(
-                value: remember,
-                onChanged: (v) => setState(() => remember = v ?? false),
-              ),
-            ),
-            const SizedBox(width: 8),
+            _Header(title: AppStrings.sign_in_title.translate(context)),
+            const SizedBox(height: 18),
             Text(
-              AppStrings.remember_me.translate(context),
-              style: _muted(context),
-            ),
-            TextButton(
-              onPressed: () {},
-              child: Text(AppStrings.forgot_password.translate(context)),
+              AppStrings.sign_in_description.translate(context),
+              textAlign: TextAlign.center,
+              style: _muted(context).copyWith(fontSize: 16, height: 1.35),
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        if (error != null) ...[
-          Text(
-            error!,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.error, fontSize: 13),
-          ),
-          const SizedBox(height: 10),
-        ],
-        _MainButton(
-          label: AppStrings.sign_in_title.translate(context),
-          onPressed: loading ? null : login,
-          loading: loading,
-        ),
-        const SizedBox(height: 12),
-        _Prompt(
-          prefix: en ? "Don’t have an account?" : 'حساب کاربری ندارید؟',
-          action: AppStrings.sign_up_title.translate(context),
-          onTap: () => Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => const SignUpScreen())),
+        Column(
+          children: [
+            _Field(
+              label: en
+                  ? 'Username, email or mobile'
+                  : 'نام کاربری، ایمیل یا موبایل',
+              controller: identifier,
+              onTap: chooseCredential,
+            ),
+            const SizedBox(height: 16),
+            _Field(
+              label: AppStrings.password.translate(context),
+              controller: password,
+              obscure: hidden,
+              suffix: IconButton(
+                onPressed: () => setState(() => hidden = !hidden),
+                icon: Icon(
+                  hidden
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: InkWell(
+                    onTap: () => setState(() => remember = !remember),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: Checkbox(
+                            value: remember,
+                            onChanged: (v) =>
+                                setState(() => remember = v ?? false),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            AppStrings.remember_me.translate(context),
+                            style: _muted(context).copyWith(fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Flexible(
+                  child: Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: TextButton(
+                      style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                      onPressed: () {},
+                      child: Text(
+                        AppStrings.forgot_password.translate(context),
+                        style: const TextStyle(fontSize: 12),
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (error != null) ...[
+              Text(
+                error!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.error, fontSize: 13),
+              ),
+              const SizedBox(height: 10),
+            ],
+            _MainButton(
+              label: AppStrings.sign_in_title.translate(context),
+              onPressed: loading ? null : login,
+              loading: loading,
+            ),
+            const SizedBox(height: 12),
+            _Prompt(
+              prefix: en ? "Don’t have an account?" : 'حساب کاربری ندارید؟',
+              action: AppStrings.sign_up_title.translate(context),
+              onTap: () => Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const SignUpScreen())),
+            ),
+          ],
         ),
         TextButton(
           onPressed: () => _continueAsGuest(context),
@@ -303,7 +421,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final en = context.watch<LocaleProvider>().locale.languageCode == 'en';
     return _AuthPage(
       children: [
-        const _Header(),
+        _Header(title: 'auth.register_title'.translate(context)),
         const SizedBox(height: 18),
         Text(
           'auth.register_intro'.translate(context),
@@ -325,6 +443,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           children: [
             for (final phone in [false, true])
               ChoiceChip(
+                showCheckmark: false,
                 label: Text(
                   (phone ? 'auth.phone_method' : 'auth.email_method').translate(
                     context,
@@ -456,8 +575,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
 }
 
 class _AuthPage extends StatelessWidget {
-  const _AuthPage({required this.children});
+  const _AuthPage({required this.children, this.spacedSections = false});
   final List<Widget> children;
+  final bool spacedSections;
   @override
   Widget build(BuildContext context) {
     final dark = context.watch<AppData>().isDark;
@@ -469,9 +589,23 @@ class _AuthPage extends StatelessWidget {
             ? AppColors.background_dark
             : AppColors.background_light,
         body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 22, 20, 24),
-            child: Column(children: children),
+          child: LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 22, 20, 24),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: spacedSections
+                      ? (constraints.maxHeight - 46).clamp(0.0, double.infinity)
+                      : 0,
+                ),
+                child: Column(
+                  mainAxisAlignment: spacedSections
+                      ? MainAxisAlignment.spaceBetween
+                      : MainAxisAlignment.start,
+                  children: children,
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -480,7 +614,8 @@ class _AuthPage extends StatelessWidget {
 }
 
 class _Header extends StatelessWidget {
-  const _Header();
+  const _Header({required this.title});
+  final String title;
   @override
   Widget build(BuildContext context) {
     final color = context.watch<AppData>().isDark ? Colors.white : Colors.black;
@@ -489,7 +624,7 @@ class _Header extends StatelessWidget {
         ClipOval(child: const AppLogo(size: 120, withBackground: true)),
         const SizedBox(height: 18),
         Text(
-          'auth.account_title'.translate(context),
+          title,
           textAlign: TextAlign.center,
           style: TextStyle(
             color: color,
@@ -510,12 +645,14 @@ class _Field extends StatelessWidget {
     this.obscure = false,
     this.suffix,
     this.keyboardType,
+    this.onTap,
   });
   final String label;
   final TextEditingController? controller;
   final bool obscure;
   final Widget? suffix;
   final TextInputType? keyboardType;
+  final VoidCallback? onTap;
   @override
   Widget build(BuildContext context) {
     final dark = context.watch<AppData>().isDark;
@@ -531,6 +668,7 @@ class _Field extends StatelessWidget {
         SizedBox(
           height: 48,
           child: TextField(
+            onTap: onTap,
             controller: controller,
             keyboardType: keyboardType,
             obscureText: obscure,

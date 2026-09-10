@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'package:record/record.dart';
 
@@ -17,8 +18,8 @@ class RecordingService {
     required void Function(double) onAmplitude,
   }) async {
     await _recorder.start(
-      const RecordConfig(
-        encoder: AudioEncoder.aacLc,
+      RecordConfig(
+        encoder: kIsWeb ? AudioEncoder.opus : AudioEncoder.aacLc,
         sampleRate: 44100,
         bitRate: 128000,
       ),
@@ -42,9 +43,9 @@ class RecordingService {
     await _recorder.resume();
   }
 
-  Future<void> stop() async {
+  Future<String?> stop() async {
     await _ampSub?.cancel();
     _ampSub = null;
-    await _recorder.stop();
+    return await _recorder.stop();
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'audio_selection.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/screens/Players/providers/audio_player_provider.dart';
 import 'package:sornaz/screens/Players/scan/audio_file.dart';
@@ -15,6 +16,8 @@ class AudioItem extends StatelessWidget {
   final bool isPlaying;
   final int index;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
+  final bool selected;
 
   const AudioItem({
     super.key, 
@@ -22,6 +25,8 @@ class AudioItem extends StatelessWidget {
     required this.isPlaying,
     required this.index,
     this.onTap,
+    this.onLongPress,
+    this.selected = false,
   });
 
   @override
@@ -29,25 +34,27 @@ class AudioItem extends StatelessWidget {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
     final provider = context.read<AudioPlayerProvider>();
-    final file = provider.filteredFiles[index];
+    final file = audio;
 
     return Container(
       key: ValueKey(file.file.path),
       decoration: BoxDecoration(
         border: Border.all(
-          width: 0.8,
-          color: AppColors.music_player_audio_item_border_color(isDark: isDark),
+          width: 0.4,
+          color: (isDark ? Colors.white : Colors.black).withValues(alpha: .12),
         ),
         color: isPlaying
             ? AppColors.music_player_audio_item_playing_background_color(isDark: isDark)
             : AppColors.music_player_audio_item_not_playing_background_color(isDark: isDark),
       ),
       child: GestureDetector(
-        onLongPress: () => showFileOptions(context, audio),
+        onLongPress: onLongPress ?? () => showFileOptions(context, audio),
         // onLongPress: () => _showFileOptions(context, file, index),
         child: ListTile(
+          selected: selected,
+          trailing: selected ? const Icon(Icons.check_circle) : AudioActionsMenu(files: [audio]),
           contentPadding: EdgeInsets.symmetric(
-            horizontal: AppSpacing.space_24,
+            horizontal: AppSpacing.space_12,
             vertical: AppSpacing.space_2,
           ),
           leading: Icon(

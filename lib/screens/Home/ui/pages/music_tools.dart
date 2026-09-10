@@ -11,7 +11,7 @@ class MusicToolsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SocialScaffold(
     title: socialText(context, 'ابزار موسیقی', 'Music tools'),
-    bottom: const BottomNavBarWidget(selectedIndex: 1),
+    bottom: const BottomNavBarWidget(selectedIndex: 3),
     body: ListView(
       padding: const EdgeInsets.all(24),
       children: [

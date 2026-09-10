@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'package:sornaz/helpers/user_facing_error.dart';
 import 'package:http/http.dart' as http;
 
 class ArticleApiException implements Exception {
-  const ArticleApiException(this.message, this.status);
-  final String message;
+  const ArticleApiException(this._message, this.status);
+  final String _message;
+  String get message => userFacingError(_message);
   final int status;
   @override
   String toString() => message;

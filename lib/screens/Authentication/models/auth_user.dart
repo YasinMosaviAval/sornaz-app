@@ -5,12 +5,14 @@ class AuthUser {
     required this.fullName,
     this.email,
     this.phone,
+    this.avatar,
   });
   final int id;
   final String username;
   final String fullName;
   final String? email;
   final String? phone;
+  final String? avatar;
   String get contact => (email?.isNotEmpty ?? false) ? email! : (phone ?? '');
   factory AuthUser.fromJson(Map<String, dynamic> json) => AuthUser(
     id: (json['id'] as num).toInt(),
@@ -19,6 +21,7 @@ class AuthUser {
         json['full_name']?.toString() ?? json['username']?.toString() ?? '',
     email: json['email']?.toString(),
     phone: json['phone']?.toString(),
+    avatar: (json['avatar_url'] ?? json['avatar'])?.toString(),
   );
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -26,5 +29,6 @@ class AuthUser {
     'full_name': fullName,
     'email': email,
     'phone': phone,
+    'avatar': avatar,
   };
 }

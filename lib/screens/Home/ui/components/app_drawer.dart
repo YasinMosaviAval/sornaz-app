@@ -124,9 +124,7 @@ class AppDrawer extends StatelessWidget {
                                   Transform.scale(
                                     scale: 0.8,
                                     child: CupertinoSwitch(
-                                      activeTrackColor: isDark
-                                          ? const Color(0xffbfa02a)
-                                          : const Color(0xff3478ff),
+                                      activeTrackColor: appData.accent,
                                       value: isDark,
                                       onChanged: appData.toggleDarkMode,
                                     ),
@@ -230,14 +228,8 @@ class AppDrawer extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const Padding(
-                              padding: EdgeInsets.all(12),
-                              child: AppText('حساب من'),
-                            ),
                             ListTile(
-                              textColor: isDark
-                                  ? const Color(0xffbfa02a)
-                                  : const Color(0xff3478ff),
+                              textColor: appData.accent,
                               title: AppText(
                                 authUser == null
                                     ? 'ورود یا ثبت‌نام'
@@ -303,7 +295,29 @@ class AppDrawer extends StatelessWidget {
                     ),
                     for (final account in session.accounts)
                       ListTile(
-                        leading: const Icon(Icons.account_circle_outlined),
+                        leading: ClipOval(
+                          child: account.avatar?.isNotEmpty == true
+                              ? Image.network(
+                                  Uri.parse(
+                                    const String.fromEnvironment(
+                                      'Sornaz_API_BASE_URL',
+                                      defaultValue:
+                                          'https://sornaz.com/api/sornaz/v1',
+                                    ),
+                                  ).resolve(account.avatar!).toString(),
+                                  width: 40,
+                                  height: 40,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, _, _) => const Icon(
+                                    Icons.account_circle_outlined,
+                                    size: 40,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.account_circle_outlined,
+                                  size: 40,
+                                ),
+                        ),
                         title: AppText(account.fullName),
                         subtitle: AppText(account.contact),
                         trailing: account.id == session.user?.id
@@ -326,7 +340,6 @@ class AppDrawer extends StatelessWidget {
     );
     if (selection == null || !context.mounted) return;
     if (selection == -1) {
-      navigator.pop();
       navigator.push(MaterialPageRoute(builder: (_) => const SignInScreen()));
     } else {
       await session.switchTo(selection);

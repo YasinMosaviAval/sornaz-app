@@ -1,5 +1,7 @@
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sornaz/screens/Social/course_cache.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -22,6 +24,7 @@ Widget host(Widget child, {bool dark = false}) => ChangeNotifierProvider(
 http.Response jsonResponse(String body, int status) =>
     http.Response.bytes(utf8.encode(body), status);
 void main() {
+  setUp(() { SharedPreferences.setMockInitialValues({}); CourseCache.checked.clear(); });
   for (final width in [320.0, 375.0, 430.0]) {
     testWidgets('profile follows successfully without overflow at $width', (
       tester,

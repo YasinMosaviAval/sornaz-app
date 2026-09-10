@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/user_facing_error.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +35,7 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
           error = null;
         });
     } catch (e) {
-      if (mounted) setState(() => error = '$e');
+      if (mounted) setState(() => error = userFacingError(e));
     }
   }
 
@@ -354,7 +355,7 @@ class _SavedLibraryPageState extends State<SavedLibraryPage> {
           error = null;
         });
     } catch (e) {
-      if (mounted) setState(() => error = '$e');
+      if (mounted) setState(() => error = userFacingError(e));
     }
   }
 
@@ -511,7 +512,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
           error = null;
         });
     } catch (e) {
-      if (mounted) setState(() => error = '$e');
+      if (mounted) setState(() => error = userFacingError(e));
     }
   }
 

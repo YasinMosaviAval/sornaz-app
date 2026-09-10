@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/user_facing_error.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -168,7 +169,7 @@ class _LessonProgressControlState extends State<LessonProgressControl> {
           error = null;
         });
     } catch (e) {
-      if (mounted) setState(() => error = '$e');
+      if (mounted) setState(() => error = userFacingError(e));
     } finally {
       if (mounted) setState(() => busy = false);
     }
