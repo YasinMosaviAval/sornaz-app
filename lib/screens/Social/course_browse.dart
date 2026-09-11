@@ -15,8 +15,12 @@ class CourseCard extends StatelessWidget {
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) {
-    final rating = course['rating'] as Map? ?? {};
-    final old = number((course['details'] as Map?)?['original_price']);
+    final rating = course['rating'] is Map ? course['rating'] as Map : const {};
+    final old = number(
+      (course['details'] is Map
+          ? course['details'] as Map
+          : const {})['original_price'],
+    );
     return Card(
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
@@ -71,7 +75,7 @@ class CourseCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   AppText(
-                    '${(course['author'] as Map?)?['name'] ?? ''}',
+                    '${(course['author'] is Map ? course['author'] as Map : const {})['name'] ?? ''}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -167,11 +171,13 @@ class CourseBrowse extends StatefulWidget {
   final bool embedded;
   final String initialQuery;
   @override
-  State<CourseBrowse> createState() => _CourseBrowseState();
+  State<CourseBrowse> createState() => CourseBrowseState();
 }
 
-class _CourseBrowseState extends State<CourseBrowse> {
+class CourseBrowseState extends State<CourseBrowse> {
   late String query = widget.initialQuery;
+  bool free = true, paid = true;
+  void search(String value) => setState(() => query = value.trim());
   double? rating;
   Set<int> durations = {};
   Set<String> categories = {};
@@ -301,38 +307,48 @@ class _CourseBrowseState extends State<CourseBrowse> {
     final rows = widget.items
         .where(
           (c) =>
-              '${c['title']} ${c['description']} ${(c['author'] as Map?)?['name']}'
+              '${c['title']} ${c['description']} ${(c['author'] is Map ? c['author'] as Map : const {})['name']}'
                   .toLowerCase()
                   .contains(query.toLowerCase()) &&
               (rating == null ||
-                  (double.tryParse('${(c['rating'] as Map?)?['average']}') ??
+                  (double.tryParse(
+                            '${(c['rating'] is Map ? c['rating'] as Map : const {})['average']}',
+                          ) ??
                           0) >=
                       rating!) &&
               (categories.isEmpty || categories.contains(c['category'])) &&
-              (durations.isEmpty || durations.any((i) => duration(c, i))),
+              (durations.isEmpty || durations.any((i) => duration(c, i))) &&
+              (number(c['price']) == 0 ? free : paid),
         )
         .toList();
     final children = <Widget>[
-      TextFormField(
-        initialValue: query,
-        onChanged: (v) => setState(() => query = v.trim()),
-        decoration: InputDecoration(
-          hintText: socialText(
-            context,
-            'جست‌وجوی دوره، موضوع، مدرس…',
-            'Search course, topic, mentor…',
+      Row(
+        children: [
+          Expanded(
+            child: CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              value: free,
+              onChanged: (v) => setState(() => free = v ?? false),
+              title: Text(
+                socialText(context, 'دوره‌های رایگان', 'Free courses'),
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
           ),
-          prefixIcon: const Icon(Icons.search),
-          suffixIcon: IconButton(
-            onPressed: filters,
-            icon: const Icon(Icons.tune),
+          Expanded(
+            child: CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              value: paid,
+              onChanged: (v) => setState(() => paid = v ?? false),
+              title: Text(
+                socialText(context, 'دوره‌های غیررایگان', 'Paid courses'),
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
           ),
-          filled: true,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide.none,
-          ),
-        ),
+        ],
       ),
       const SizedBox(height: 12),
       if (rating != null || durations.isNotEmpty || categories.isNotEmpty) ...[

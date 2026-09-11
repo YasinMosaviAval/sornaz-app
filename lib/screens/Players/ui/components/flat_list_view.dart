@@ -29,18 +29,13 @@ class _FlatListViewState extends State<FlatListView> {
   Widget build(BuildContext context) {
     final player = context.watch<AudioPlayerProvider>();
     final nav = context.watch<FolderNavigatorProvider>();
+    final knownFiles = {for (final f in player.allFiles) f.file.path: f};
     final files = widget.folders
         ? nav.audioFiles
               .where(
                 (f) => f.fileName.toLowerCase().contains(player.searchQuery),
               )
-              .map(
-                (f) =>
-                    player.allFiles
-                        .where((known) => known.file.path == f.file.path)
-                        .firstOrNull ??
-                    f,
-              )
+              .map((f) => knownFiles[f.file.path] ?? f)
               .toList()
         : player.filteredFiles;
     final folders = widget.folders ? nav.subFolders : <dynamic>[];
@@ -52,8 +47,8 @@ class _FlatListViewState extends State<FlatListView> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted || !controller.hasClients) return;
           final target =
-              ((at + folders.length) * 80 -
-                      (controller.position.viewportDimension - 80) / 2)
+              ((at + folders.length) * 64 -
+                      (controller.position.viewportDimension - 64) / 2)
                   .clamp(0.0, controller.position.maxScrollExtent);
           controller.animateTo(
             target,
@@ -65,6 +60,17 @@ class _FlatListViewState extends State<FlatListView> {
     return Column(
       children: [
         const SearchBarWidget(),
+        if (widget.folders && nav.isLoading) const LinearProgressIndicator(),
+        if (widget.folders &&
+            !nav.isLoading &&
+            (nav.error != null || nav.rootDir == null))
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              nav.error ??
+                  'پوشه‌ای در دسترس نیست. دسترسی به حافظه را بررسی کنید.',
+            ),
+          ),
         if (selected.isNotEmpty)
           Row(
             children: [
@@ -94,7 +100,7 @@ class _FlatListViewState extends State<FlatListView> {
           child: ListView.builder(
             controller: controller,
             padding: EdgeInsets.zero,
-            itemExtent: 80,
+            itemExtent: 64,
             itemCount: folders.length + files.length,
             itemBuilder: (context, i) {
               if (i < folders.length)

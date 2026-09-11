@@ -18,6 +18,11 @@ class SavedRecording {
 }
 
 class FileService {
+  Future<void> spliceDraft(String original, String segment, int at) =>
+      const MethodChannel('sornaz/recordings').invokeMethod<void>(
+        'spliceDraft',
+        {'original': original, 'segment': segment, 'at': at},
+      );
   final bookmarks = RecordingBookmarks();
   static const channel = MethodChannel('sornaz/recordings');
   late Directory _dir;
@@ -136,13 +141,24 @@ class FileService {
       ? (await channel.invokeMethod<String>('materialize', {'uri': item.uri}))!
       : item.uri;
   Future<void> overwrite(SavedRecording item, String path, int at) async {
-    await channel.invokeMethod<void>('overwrite', {'uri': item.uri, 'path': path, 'at': at});
+    await channel.invokeMethod<void>('overwrite', {
+      'uri': item.uri,
+      'path': path,
+      'at': at,
+    });
     await File(path).delete();
   }
+
   Future<String> location() async => AppPlatform.isAndroid
-      ? (await const MethodChannel('sornaz/recording_workspace').invokeMethod<String>('location')) ?? 'Music/Sornaz'
+      ? (await const MethodChannel(
+              'sornaz/recording_workspace',
+            ).invokeMethod<String>('location')) ??
+            'Music/Sornaz'
       : _dir.path;
   Future<void> chooseLocation() async {
-    if (AppPlatform.isAndroid) await const MethodChannel('sornaz/recording_workspace').invokeMethod<String>('choose');
+    if (AppPlatform.isAndroid)
+      await const MethodChannel(
+        'sornaz/recording_workspace',
+      ).invokeMethod<String>('choose');
   }
 }

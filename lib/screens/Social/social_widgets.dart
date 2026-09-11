@@ -41,9 +41,13 @@ class SocialScaffold extends StatelessWidget {
     required this.title,
     required this.body,
     this.actions,
+    this.appBar,
+    this.drawer,
     this.bottom,
     this.floatingActionButton,
   });
+  final PreferredSizeWidget? appBar;
+  final Widget? drawer;
   final String title;
   final Widget body;
   final List<Widget>? actions;
@@ -71,7 +75,8 @@ class SocialScaffold extends StatelessWidget {
     return Theme(
       data: theme,
       child: Scaffold(
-        appBar: AppBar(title: AppText(title), actions: actions),
+        appBar: appBar ?? AppBar(title: AppText(title), actions: actions),
+        drawer: drawer,
         body: body,
         bottomNavigationBar: bottom,
         floatingActionButton: floatingActionButton,

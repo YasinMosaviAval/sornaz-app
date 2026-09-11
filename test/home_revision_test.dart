@@ -43,6 +43,9 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('home-search')), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('open-home-search')));
+    await tester.pumpAndSettle();
     expect(
       find.descendant(
         of: find.byType(AppBar),

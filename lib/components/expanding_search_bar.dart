@@ -73,6 +73,7 @@ class _ExpandingSearchBarState extends State<ExpandingSearchBar> {
                         onChanged: widget.onChanged,
                         decoration: InputDecoration(
                           hintText: widget.hint,
+                          filled: false,
                           border: InputBorder.none,
                           prefixIcon: const Icon(Icons.search),
                           suffixIcon: IconButton(
@@ -96,7 +97,7 @@ class _ExpandingSearchBarState extends State<ExpandingSearchBar> {
             if (!open) ...widget.actions,
             if (!open)
               IconButton(
-                icon: const Icon(Icons.settings_outlined),
+                icon: const Icon(Icons.settings),
                 onPressed: widget.onSettings,
               ),
           ],

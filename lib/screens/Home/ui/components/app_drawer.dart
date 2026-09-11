@@ -1,3 +1,4 @@
+import 'package:sornaz/screens/Social/user_panel.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:sornaz/components/app_logo.dart';
 import 'package:flutter/cupertino.dart' show CupertinoSwitch;
@@ -195,6 +196,11 @@ class AppDrawer extends StatelessWidget {
                             'جامعه',
                             style: TextStyle(color: Colors.grey),
                           ),
+                        ),
+                        AppDrawerItem(
+                          icon: Icons.manage_accounts_outlined,
+                          text: 'حساب کاربری',
+                          link: const UserPanelPage(initialTab: 2),
                         ),
                         AppDrawerItem(
                           icon: Icons.rate_review_outlined,

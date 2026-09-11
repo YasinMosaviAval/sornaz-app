@@ -1,5 +1,5 @@
+import '../components/seekable_waveform.dart';
 import 'package:flutter/foundation.dart';
-import 'package:sornaz/components/ab_repeat.dart';
 import 'package:flutter/material.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'package:provider/provider.dart';
@@ -7,7 +7,7 @@ import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/screens/Voice%20Recorder/ui/components/basic_waveform.dart';
-import 'package:sornaz/components/bottom_nav.dart';
+
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_navigation.dart';
@@ -70,7 +70,6 @@ class VoiceRecorderPage extends StatelessWidget {
           body: Column(
             children: [_RecorderSection(vm: vm, isDark: isDark)],
           ),
-          bottomNavigationBar: const BottomNavBarWidget(),
         );
       },
     );
@@ -113,28 +112,52 @@ class _RecorderSection extends StatelessWidget {
                     ],
                   ),
                 ),
-                BasicWaveformWidget(
-                  amplitudes: vm.amplitudes,
-                  totalSamples: vm.totalSamples,
-                  bookmarks: vm.recordingBookmarks,
-                  elapsedMilliseconds: vm.recordingMilliseconds,
-                  isRecording: vm.isRecording,
-                  isPaused: vm.isPaused,
-                ),
+                if (vm.isPaused)
+                  SizedBox(
+                    height: 250,
+                    child: SeekableWaveform(
+                      samples: vm.amplitudes,
+                      duration: vm.recordingMilliseconds,
+                      position: vm.playbackService.position.inMilliseconds,
+                      markers: vm.recordingBookmarks,
+                      onSeek: (at) =>
+                          vm.playbackService.seek(Duration(milliseconds: at)),
+                    ),
+                  )
+                else
+                  BasicWaveformWidget(
+                    amplitudes: vm.amplitudes,
+                    totalSamples: vm.totalSamples,
+                    bookmarks: vm.recordingBookmarks,
+                    elapsedMilliseconds: vm.recordingMilliseconds,
+                    isRecording: vm.isRecording,
+                    isPaused: vm.isPaused,
+                  ),
                 AppSpacing.sizedBoxH4(),
                 if (vm.isRecording || vm.isPaused)
-                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    TextButton.icon(
-                      onPressed: vm.canBookmarkRecording ? () => _recordAction(context, vm.addRecordingBookmark) : null,
-                      icon: const Icon(Icons.bookmark_add_outlined),
-                      label: const Text('نشانه‌گذاری'),
-                    ),
-                    if (vm.isPaused) AbRepeatButton(repeat: vm.playbackService.abRepeat, onPressed: vm.playbackService.cycleAbRepeat),
-                    Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: Badge(
-                      isLabelVisible: vm.recordingBookmarks.isNotEmpty,
-                      label: Text(vm.recordingBookmarks.length.toString()), child: const Icon(Icons.bookmark_border),
-                    )),
-                  ]),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton.icon(
+                        onPressed: vm.canBookmarkRecording
+                            ? () => _recordAction(
+                                context,
+                                vm.addRecordingBookmark,
+                              )
+                            : null,
+                        icon: const Icon(Icons.bookmark_add_outlined),
+                        label: const Text('نشانه‌گذاری'),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Badge(
+                          isLabelVisible: vm.recordingBookmarks.isNotEmpty,
+                          label: Text(vm.recordingBookmarks.length.toString()),
+                          child: const Icon(Icons.bookmark_border),
+                        ),
+                      ),
+                    ],
+                  ),
               ],
             ),
 
@@ -193,7 +216,11 @@ class _RecorderSection extends StatelessWidget {
                               isDark: isDark,
                             ),
                       heroTag: AppConstants.MAIN_HERO_TAG,
-                      tooltip: vm.isRecording ? socialText(context, 'مکث ضبط', 'Pause recording') : vm.isPaused ? socialText(context, 'ادامه ضبط', 'Resume recording') : socialText(context, 'شروع ضبط', 'Start recording'),
+                      tooltip: vm.isRecording
+                          ? socialText(context, 'مکث ضبط', 'Pause recording')
+                          : vm.isPaused
+                          ? socialText(context, 'ادامه ضبط', 'Resume recording')
+                          : socialText(context, 'شروع ضبط', 'Start recording'),
                       onPressed: vm.isBusy
                           ? null
                           : () => _recordAction(

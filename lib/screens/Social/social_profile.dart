@@ -395,7 +395,8 @@ class _PeoplePageState extends State<PeoplePage> {
           error = null;
         });
     } catch (e) {
-      if (mounted && version == requestId) setState(() => error = userFacingError(e));
+      if (mounted && version == requestId)
+        setState(() => error = userFacingError(e));
     }
   }
 
@@ -482,12 +483,17 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
-  late final name = TextEditingController(text: '${widget.profile['name']}');
-  late final bio = TextEditingController(text: '${widget.profile['bio']}');
+  late final name = TextEditingController(
+    text: '${widget.profile['name'] ?? ''}',
+  );
+  late final bio = TextEditingController(
+    text: '${widget.profile['bio'] ?? ''}',
+  );
   late final links = {
     for (final key in ['website', 'instagram', 'youtube'])
       key: TextEditingController(
-        text: '${(widget.profile['links'] as Map?)?[key] ?? ''}',
+        text:
+            '${(widget.profile['links'] is Map ? widget.profile['links'] as Map : const {})[key] ?? ''}',
       ),
   };
   final previews = <String, String>{};

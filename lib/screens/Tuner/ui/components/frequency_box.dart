@@ -141,9 +141,8 @@ class _FrequencyPointsPainter extends CustomPainter {
 
     final paintLine = Paint()
       ..color = AppColors.tuner_frequency_box_line_color(isDark: isDark)
-      ..strokeWidth = 0.6
+      ..strokeWidth = 1.2
       ..style = PaintingStyle.stroke;
-
 
     final dy = height / (pointsPerSecond - 1);
 
@@ -152,8 +151,6 @@ class _FrequencyPointsPainter extends CustomPainter {
     for (int i = 0; i < points.length; i++) {
       final y = height - (i * dy);
       final x = width / 2 + (points[i] * scale);
-
-
 
       if (i == 0) {
         path.moveTo(x, y);

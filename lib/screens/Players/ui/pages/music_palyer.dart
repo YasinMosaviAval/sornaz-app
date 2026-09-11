@@ -11,7 +11,7 @@ import 'package:sornaz/helpers/app_functions.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
-import 'package:sornaz/components/bottom_nav.dart';
+
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/screens/Players/library/audio_library_manager.dart';
@@ -52,8 +52,8 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
       return;
     }
 
-    if(!mounted) return;
-    
+    if (!mounted) return;
+
     final libraryManager = context.read<AudioLibraryManager>();
     final folderNav = context.read<FolderNavigatorProvider>();
 
@@ -65,12 +65,17 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
     final storageDir = Directory(AppConstants.STORAGE);
     if (await storageDir.exists()) {
       try {
-        final List<FileSystemEntity> entities = storageDir.listSync();
+        final List<FileSystemEntity> entities = await storageDir
+            .list(followLinks: false)
+            .toList();
         for (var entity in entities) {
           if (entity is Directory) {
             final String path = entity.path;
             // if (path != AppConstants.STORAGE_EMULATED && path != AppConstants.STORAGE_SELF && !path.startsWith(AppConstants.STORAGE_0000_0000) && RegExp(r'^/storage/[A-F0-9]{4}-[A-F0-9]{4}$').hasMatch(path)) {
-            if (path != AppConstants.STORAGE_EMULATED && path != AppConstants.STORAGE_SELF && !path.startsWith(AppConstants.STORAGE_0000_0000) && RegExp(AppConstants.MUSIC_PLAYER_REGEX).hasMatch(path)) {
+            if (path != AppConstants.STORAGE_EMULATED &&
+                path != AppConstants.STORAGE_SELF &&
+                !path.startsWith(AppConstants.STORAGE_0000_0000) &&
+                RegExp(AppConstants.MUSIC_PLAYER_REGEX).hasMatch(path)) {
               if (await entity.exists()) {
                 availableRoots.add(entity);
               }
@@ -82,27 +87,17 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
       }
     }
 
-    if (availableRoots.isEmpty && await internalStorage.exists()) availableRoots.add(internalStorage);
-    await libraryManager.setRoots(availableRoots);
-    
+    if (availableRoots.isEmpty && await internalStorage.exists())
+      availableRoots.add(internalStorage);
     await libraryManager.setRoots(availableRoots);
 
     if (!mounted) return;
 
-    await libraryManager.loadOrScan();
-
     if (availableRoots.isNotEmpty) {
       await folderNav.startRealNavigation(availableRoots.first);
     }
-
-    if (libraryManager.allFiles.isNotEmpty && mounted) {
-      final folderPaths = libraryManager.allFiles.map((f) => f.file.parent.path).toSet().toList();
-      final folderMap = {
-        for (var path in folderPaths)
-          path: libraryManager.allFiles.where((f) => f.file.parent.path == path).toList()
-      };
-      folderNav.setRoots(folderPaths.map((p) => Directory(p)).toList(), folderMap);
-    }
+    await libraryManager.loadOrScan();
+    if (mounted) await folderNav.indexFiles(libraryManager.allFiles);
   }
 
   void _showPermissionDeniedDialog() {
@@ -112,7 +107,11 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: Text(AppStrings.need_permission.translate(context)),
-        content: Text(AppStrings.need_permission_for_scanning_audio_files.translate(context)),
+        content: Text(
+          AppStrings.need_permission_for_scanning_audio_files.translate(
+            context,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -136,7 +135,8 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
-    final bool isEnglish = localeProvider.locale.languageCode == AppConstants.LOCALIZATION_EN;
+    final bool isEnglish =
+        localeProvider.locale.languageCode == AppConstants.LOCALIZATION_EN;
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: Scaffold(
@@ -144,31 +144,41 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
           builder: (_, library, _) {
             if (library.isScanning) {
               return Container(
-                color: AppColors.music_player_is_scanning_background_color(isDark: isDark),
+                color: AppColors.music_player_is_scanning_background_color(
+                  isDark: isDark,
+                ),
                 child: Center(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_24),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.space_24,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          AppStrings.music_player_scanning_files.translate(context),
-                          style: AppTypography.musicPlayerScanningFiles(context)
+                          AppStrings.music_player_scanning_files.translate(
+                            context,
+                          ),
+                          style: AppTypography.musicPlayerScanningFiles(
+                            context,
+                          ),
                         ),
                         AppSpacing.sizedBoxH32(),
                         LinearProgressIndicator(value: library.progress),
                         AppSpacing.sizedBoxH32(),
                         Text(
                           "${library.scannedFiles} / ${library.totalFiles}   ${AppStrings.music_player_scanned_files.translate(context)}",
-                          style: AppTypography.musicPlayerScannedFiles(context)
+                          style: AppTypography.musicPlayerScannedFiles(context),
                         ),
                         AppSpacing.sizedBoxH32(),
                         Text(
-                          library.currentPath, 
-                          maxLines: 2, 
-                          overflow: TextOverflow.ellipsis, 
-                          textAlign: TextAlign.center, 
-                          style: AppTypography.musicPlayerCurrentFileAddress(context)
+                          library.currentPath,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: AppTypography.musicPlayerCurrentFileAddress(
+                            context,
+                          ),
                         ),
                       ],
                     ),
@@ -180,9 +190,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
             // return Expanded(child: MusicPlayerTabs());
           },
         ),
-        bottomNavigationBar: const BottomNavBarWidget(),
       ),
     );
   }
 }
-

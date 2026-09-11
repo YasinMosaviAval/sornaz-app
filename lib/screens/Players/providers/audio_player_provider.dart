@@ -185,7 +185,7 @@ class AudioPlayerProvider extends ChangeNotifier {
         _queue.setQueue(filteredFiles.length);
         _queue.setCurrentIndex(currentIndex);
       }
-      _buildFolderTree();
+      if (replaced) _buildFolderTree();
       notifyListeners();
     };
     libraryManager.addListener(_libraryListener);

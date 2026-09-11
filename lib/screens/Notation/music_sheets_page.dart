@@ -1,3 +1,6 @@
+import 'package:sornaz/components/join_community.dart';
+import 'package:sornaz/components/home_top_bar.dart';
+import 'package:sornaz/screens/Home/ui/components/app_drawer.dart';
 import 'package:flutter/foundation.dart';
 import 'browser_notation_host.dart';
 import 'package:sornaz/helpers/app_platform.dart';
@@ -24,9 +27,18 @@ class MusicSheetsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final session = context.watch<AuthSession>();
-    if (kIsWeb) return BrowserNotationHost(key: ValueKey(session.token), token: session.token ?? '', userId: session.user?.id ?? 0);
+    if (kIsWeb)
+      return BrowserNotationHost(
+        key: ValueKey(session.token),
+        token: session.token ?? '',
+        userId: session.user?.id ?? 0,
+      );
     if (AppPlatform.isWindows) {
-      return DesktopNotationHost(key: ValueKey(session.token), token: session.token ?? "", userId: session.user?.id ?? 0);
+      return DesktopNotationHost(
+        key: ValueKey(session.token),
+        token: session.token ?? "",
+        userId: session.user?.id ?? 0,
+      );
     }
     // A fresh host on account changes keeps private data out of the next account.
     return _NotationHost(
@@ -45,12 +57,14 @@ class _NotationHost extends StatefulWidget {
   State<_NotationHost> createState() => _NotationHostState();
 }
 
-class _NotationHostState extends State<_NotationHost> with WidgetsBindingObserver {
+class _NotationHostState extends State<_NotationHost>
+    with WidgetsBindingObserver {
   late final WebViewController _controller;
   late final NotationApi _api;
   bool _ready = false;
   bool _failed = false;
   String _route = 'list';
+  bool _guestTab = false;
   String _configuration = '';
   static const _asset = 'assets/notation/index.html';
 
@@ -124,7 +138,10 @@ class _NotationHostState extends State<_NotationHost> with WidgetsBindingObserve
       if (action == 'route') {
         final route = data['route'];
         if (mounted && ['list', 'form', 'editor'].contains(route)) {
-          setState(() => _route = route as String);
+          setState(() {
+            _route = route as String;
+            _guestTab = data['guest'] == true;
+          });
         }
         return;
       }
@@ -187,7 +204,11 @@ class _NotationHostState extends State<_NotationHost> with WidgetsBindingObserve
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (_ready && state != AppLifecycleState.resumed) {
-      unawaited(_controller.runJavaScript("window.Notation.dispose();").catchError((_) {}));
+      unawaited(
+        _controller
+            .runJavaScript("window.Notation.dispose();")
+            .catchError((_) {}),
+      );
     }
   }
 
@@ -216,7 +237,18 @@ class _NotationHostState extends State<_NotationHost> with WidgetsBindingObserve
         }
       },
       child: Scaffold(
-        appBar: AppBar(title: Text(socialText(context, 'نت‌های موسیقی', 'Music sheets')), leading: BackButton(onPressed: () { if (_route != 'list') { _controller.runJavaScript('window.Notation.back();'); } else { Navigator.maybePop(context); } })),
+        appBar: HomeTopBar(
+          hint: socialText(context, 'جست‌وجوی نت‌ها…', 'Search music sheets…'),
+          onSearch: _route != 'list'
+              ? null
+              : (q) {
+                  if (_ready)
+                    _controller.runJavaScript(
+                      'window.Notation.search(${jsonEncode(q)});',
+                    );
+                },
+        ),
+        drawer: const AppDrawer(),
         backgroundColor: _route == 'editor' || !dark
             ? Colors.white
             : Colors.black,
@@ -239,6 +271,16 @@ class _NotationHostState extends State<_NotationHost> with WidgetsBindingObserve
                     : Stack(
                         children: [
                           WebViewWidget(controller: _controller),
+                          if (_guestTab)
+                            Positioned.fill(
+                              top: 58,
+                              child: ColoredBox(
+                                color: Theme.of(
+                                  context,
+                                ).scaffoldBackgroundColor,
+                                child: const JoinCommunity(),
+                              ),
+                            ),
                           if (!_ready)
                             const Center(child: CircularProgressIndicator()),
                         ],

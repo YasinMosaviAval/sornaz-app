@@ -1,9 +1,9 @@
+import 'package:sornaz/components/home_top_bar.dart';
 import 'package:sornaz/helpers/user_facing_error.dart';
 import 'package:sornaz/screens/Social/cache_observer.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:sornaz/screens/Social/community_page.dart';
 import 'package:sornaz/screens/Social/course_browse.dart';
-import 'package:sornaz/components/app_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/bottom_nav.dart';
@@ -49,7 +49,8 @@ class HomeContent extends StatefulWidget {
   State<HomeContent> createState() => _HomeContentState();
 }
 
-class _HomeContentState extends State<HomeContent> with CourseCacheObserver<HomeContent> {
+class _HomeContentState extends State<HomeContent>
+    with CourseCacheObserver<HomeContent> {
   late final api = widget.api ?? SocialApi(widget.token);
   List<Json> courses = [], authors = [], articles = [];
   bool loading = true;
@@ -183,7 +184,12 @@ class _HomeContentState extends State<HomeContent> with CourseCacheObserver<Home
     final sorted = [...filtered]
       ..sort((a, b) => '${b['updated_at']}'.compareTo('${a['updated_at']}'));
     final updated = sorted.take(10).toList();
-    final newest = ([...filtered]..sort((a,b) => '${b['created_at']}'.compareTo('${a['created_at']}'))).take(10).toList();
+    final newest =
+        ([...filtered]..sort(
+              (a, b) => '${b['created_at']}'.compareTo('${a['created_at']}'),
+            ))
+            .take(10)
+            .toList();
     final library = context.watch<ArticlesProvider?>();
     final articleRows =
         (widget.articleLoader == null && library != null
@@ -203,54 +209,14 @@ class _HomeContentState extends State<HomeContent> with CourseCacheObserver<Home
       data: theme,
       child: Builder(
         builder: (context) => Scaffold(
-          appBar: AppBar(
-            backgroundColor: theme.scaffoldBackgroundColor,
-            automaticallyImplyLeading: false,
-            leading: const Padding(padding: EdgeInsets.all(8), child: AppLogo(size: 40, withBackground: false)),
-            titleSpacing: 0,
-            title: TextField(
-                          key: const ValueKey('home-search'),
-                          controller: search,
-                          onChanged: (v) => setState(() => query = v.trim()),
-                          decoration: InputDecoration(
-                            hintText: socialText(
-                              context,
-                              'جست‌وجوی دوره، موضوع، مدرس…',
-                              'Search course, topic, mentor…',
-                            ),
-                            hintStyle: const TextStyle(fontSize: 12),
-                            prefixIcon: const Icon(Icons.search, size: 22),
-                            suffixIcon: IconButton(
-                              tooltip: socialText(
-                                context,
-                                'فیلتر دوره‌ها',
-                                'Course filters',
-                              ),
-                              onPressed: filters,
-                              icon: Icon(
-                                Icons.tune,
-                                size: 20,
-                                color: filter == 'all' ? null : accent,
-                              ),
-                            ),
-                            filled: true,
-                            fillColor: theme.colorScheme.surface,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                        ),
-            actions: [
-              Builder(
-                builder: (c) => IconButton(
-                  tooltip: socialText(c, 'منو', 'Menu'),
-                  onPressed: () => Scaffold.of(c).openDrawer(),
-                  icon: const Icon(Icons.menu),
-                ),
-              ),
-              const SizedBox(width: 12),
-            ],
+          appBar: HomeTopBar(
+            onSearch: (v) => setState(() => query = v.trim()),
+            onFilter: filters,
+            hint: socialText(
+              context,
+              'جست‌وجوی دوره، موضوع، مدرس…',
+              'Search course, topic, mentor…',
+            ),
           ),
           drawer: const AppDrawer(),
           bottomNavigationBar: const BottomNavBarWidget(selectedIndex: 0),
@@ -368,9 +334,10 @@ class _HomeContentState extends State<HomeContent> with CourseCacheObserver<Home
                               },
                             ),
                           ),
-                        if (filtered.isNotEmpty) LearningHeading(
-                          socialText(context, 'دوره‌های جدید', 'New courses'),
-                        ),
+                        if (filtered.isNotEmpty)
+                          LearningHeading(
+                            socialText(context, 'دوره‌های جدید', 'New courses'),
+                          ),
                         if (error != null)
                           SocialEmpty(
                             socialText(
@@ -401,15 +368,16 @@ class _HomeContentState extends State<HomeContent> with CourseCacheObserver<Home
                               ),
                             ),
                           ),
-                        if (updated.isNotEmpty) LearningHeading(
-                          socialText(
-                            context,
-                            'دوره‌های به‌روزشده',
-                            'Updated courses',
+                        if (updated.isNotEmpty)
+                          LearningHeading(
+                            socialText(
+                              context,
+                              'دوره‌های به‌روزشده',
+                              'Updated courses',
+                            ),
+                            onMore: () =>
+                                socialPush(context, CoursesPage(api: api)),
                           ),
-                          onMore: () =>
-                              socialPush(context, CoursesPage(api: api)),
-                        ),
                         if (updated.isNotEmpty)
                           SizedBox(
                             height: 274,
@@ -493,7 +461,8 @@ class _HomeContentState extends State<HomeContent> with CourseCacheObserver<Home
                             'جامعه سرناز',
                             'Sornaz community',
                           ),
-                          onMore: () => socialPush(context, CommunityPage(api: api)),
+                          onMore: () =>
+                              socialPush(context, CommunityPage(api: api)),
                         ),
                         SizedBox(
                           height: 108,

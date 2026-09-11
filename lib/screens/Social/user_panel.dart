@@ -1,10 +1,10 @@
+import 'package:sornaz/components/join_community.dart';
 import 'package:sornaz/helpers/user_facing_error.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
-import 'package:sornaz/screens/Authentication/ui/pages/authentication.dart';
 import 'social_api.dart';
 import 'social_widgets.dart';
 import 'social_profile.dart';
@@ -15,37 +15,16 @@ import 'social_learning.dart';
 import 'package:sornaz/components/bottom_nav.dart';
 
 class UserPanelPage extends StatelessWidget {
-  const UserPanelPage({super.key, this.initialTab = 2});
+  const UserPanelPage({super.key, this.initialTab = 0});
   final int initialTab;
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthSession>();
     if (!auth.isAuthenticated)
       return SocialScaffold(
-        title: socialText(context, 'پنل کاربری', 'Your space'),
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.account_circle_outlined, size: 72),
-              const SizedBox(height: 16),
-              AppText(
-                socialText(
-                  context,
-                  'به جمع اهالی موسیقی بپیوندید',
-                  'Join the music community',
-                ),
-              ),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: () => socialPush(context, const SignInScreen()),
-                child: AppText(
-                  socialText(context, 'ورود یا ثبت‌نام', 'Sign in or register'),
-                ),
-              ),
-            ],
-          ),
-        ),
+        title: socialText(context, 'پروفایل', 'Profile'),
+        bottom: const BottomNavBarWidget(selectedIndex: 4),
+        body: const JoinCommunity(),
       );
     return _Panel(
       key: ValueKey(auth.token),
@@ -114,6 +93,8 @@ class _PanelState extends State<_Panel> {
     }
   }
 
+  List<List<Json>> get storyGroups => groupStoriesByAuthor(stories);
+
   Future<void> loadMore() async {
     if (fetchingMore || !more || posts.isEmpty) return;
     setState(() => fetchingMore = true);
@@ -167,38 +148,11 @@ class _PanelState extends State<_Panel> {
 
   @override
   Widget build(BuildContext context) => SocialScaffold(
-    title: socialText(context, 'دنیای موسیقی من', 'My music space'),
-    actions: [
-      IconButton(
-        tooltip: 'پست‌ها و استوری‌ها'.translate(context),
-        onPressed: () => setState(() => tab = tab == 0 ? 2 : 0),
-        icon: Icon(
-          tab == 0 ? Icons.person_outline : Icons.dynamic_feed_outlined,
-        ),
-      ),
-      IconButton(
-        tooltip: 'جست‌وجوی کاربران'.translate(context),
-        onPressed: () => socialPush(context, PeoplePage(api: api)),
-        icon: const Icon(Icons.search),
-      ),
-      IconButton(
-        tooltip: 'اعلان‌ها'.translate(context),
-        onPressed: () async {
-          await socialPush(context, NotificationsPage(api: api));
-          if (mounted) load();
-        },
-        icon: Badge(
-          isLabelVisible: unread > 0,
-          label: AppText('$unread'),
-          child: const Icon(Icons.notifications_none),
-        ),
-      ),
-      IconButton(
-        tooltip: 'دایرکت'.translate(context),
-        onPressed: () => socialPush(context, DirectPage(api: api)),
-        icon: const Icon(Icons.chat_bubble_outline),
-      ),
-    ],
+    title: socialText(
+      context,
+      tab == 2 ? 'حساب کاربری' : 'جامعه سُرناز',
+      tab == 2 ? 'Account' : 'Sornaz community',
+    ),
     body: switch (tab) {
       1 => CoursesBody(api: api),
       2 => AccountDashboardBody(api: api, key: ValueKey('profile-$tab')),
@@ -243,15 +197,11 @@ class _PanelState extends State<_Panel> {
                               ),
                             ),
                           ),
-                          for (var i = 0; i < stories.length; i++)
+                          for (final group in storyGroups)
                             InkWell(
                               onTap: () => socialPush(
                                 context,
-                                StoryPage(
-                                  api: api,
-                                  stories: stories,
-                                  initialIndex: i,
-                                ),
+                                StoryPage(api: api, stories: group),
                               ),
                               child: SizedBox(
                                 width: 82,
@@ -260,13 +210,13 @@ class _PanelState extends State<_Panel> {
                                   children: [
                                     SocialAvatar(
                                       api: api,
-                                      user: object(stories[i]['author']),
+                                      user: object(group.first['author']),
                                       story: true,
                                       size: 52,
                                     ),
                                     const SizedBox(height: 6),
                                     AppText(
-                                      '${stories[i]['author']['name']}',
+                                      '${group.first['author']['name']}',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(fontSize: 11),
@@ -304,28 +254,45 @@ class _PanelState extends State<_Panel> {
                 ),
               ),
     },
-    floatingActionButton: FloatingActionButton(
-      onPressed: create,
-      tooltip: 'ساخت محتوا'.translate(context),
-      child: const Icon(Icons.add),
-    ),
+    floatingActionButton: tab == 2
+        ? null
+        : FloatingActionButton(
+            onPressed: create,
+            tooltip: 'ساخت محتوا'.translate(context),
+            child: const Icon(Icons.add),
+          ),
     bottom: tab == 2
-        ? const BottomNavBarWidget(selectedIndex: 4)
+        ? null
         : NavigationBar(
-            selectedIndex: tab,
-            onDestinationSelected: (value) => setState(() => tab = value),
+            selectedIndex: 0,
+            onDestinationSelected: (value) async {
+              if (value == 1) await socialPush(context, DirectPage(api: api));
+              if (value == 2) {
+                await socialPush(context, NotificationsPage(api: api));
+                if (mounted) load();
+              }
+              if (value == 3) await socialPush(context, PeoplePage(api: api));
+            },
             destinations: [
               NavigationDestination(
                 icon: const Icon(Icons.dynamic_feed_outlined),
                 label: socialText(context, 'پست‌ها', 'Feed'),
               ),
               NavigationDestination(
-                icon: const Icon(Icons.school_outlined),
-                label: socialText(context, 'دوره‌ها', 'Courses'),
+                icon: const Icon(Icons.chat_bubble_outline),
+                label: socialText(context, 'چت', 'Chat'),
               ),
               NavigationDestination(
-                icon: const Icon(Icons.person_outline),
-                label: socialText(context, 'پروفایل', 'Profile'),
+                icon: Badge(
+                  isLabelVisible: unread > 0,
+                  label: Text('$unread'),
+                  child: const Icon(Icons.notifications_none),
+                ),
+                label: socialText(context, 'اعلان‌ها', 'Notifications'),
+              ),
+              NavigationDestination(
+                icon: const Icon(Icons.search),
+                label: socialText(context, 'جستجو', 'Search'),
               ),
             ],
           ),

@@ -31,6 +31,15 @@ class PublicRecordings(private val context: Context, messenger: BinaryMessenger)
                     val value: Any? = when (call.method) {
                         "save" -> save(call.argument<String>("path") ?: "")
                         "list" -> list()
+                        "spliceDraft" -> {
+                            val original = File(call.argument<String>("original") ?: "").canonicalFile
+                            val segment = File(call.argument<String>("segment") ?: "").canonicalFile
+                            for (file in listOf(original, segment)) require(file.isFile && file.extension == "m4a" && file.parentFile?.name == "Recordings" && file.path.startsWith(File(context.applicationInfo.dataDir).canonicalPath + File.separator))
+                            require(original != segment)
+                            AudioSplice.replace(context, Uri.fromFile(original), segment, call.argument<Number>("at")!!.toLong(), false)
+                            segment.delete()
+                            null
+                        }
                         "overwrite" -> {
                             val uri = owned(call.argument<String>("uri") ?: "")
                             val replacement = File(call.argument<String>("path") ?: "").canonicalFile

@@ -1,248 +1,123 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:sornaz/helpers/app_constants.dart';
-import 'package:sornaz/helpers/app_functions.dart';
-import 'package:sornaz/screens/Players/scan/audio_file.dart';
+import 'package:path/path.dart' as p;
+import '../scan/audio_file.dart';
 
 class FolderNavigatorProvider extends ChangeNotifier {
-  Directory? rootDir;
-  Directory? currentDir;
-  List<Directory> subFolders = [];
+  Directory? rootDir, currentDir;
+  List<Directory> subFolders = [], pathHistory = [];
   List<AudioFile> audioFiles = [];
   Map<String, List<AudioFile>> fakeRoots = {};
   Map<String, int> folderAudioCount = {};
+  bool showOnlyFoldersWithAudio = true, isLoading = false;
+  String? error;
+  int _generation = 0;
+  bool _disposed = false;
+  Map<String, AudioFile> _files = {};
+  final Set<String> _audioAncestors = {};
+  bool _indexed = false;
+  static const _extensions = {'.mp3', '.wav', '.aac', '.m4a', '.flac', '.ogg'};
 
-  bool showOnlyFoldersWithAudio = true;
-  
-  /*
-  void toggleShowOnlyAudioFolders() {
-    showOnlyFoldersWithAudio = !showOnlyFoldersWithAudio;
-    _loadRealFolder();
-  }
-  */
+  List<String> get breadcrumbParts =>
+      currentDir == null || rootDir == null || currentDir!.path == rootDir!.path
+      ? []
+      : p.split(p.relative(currentDir!.path, from: rootDir!.path));
 
-  List<Directory> pathHistory = [];
-
-  List<String> get breadcrumbParts {
-    if (currentDir == null || rootDir == null) return [];
-    final rootPath = rootDir!.path;
-    final currentPath = currentDir!.path;
-    if (currentPath == rootPath) return [];
-    final relativePath = currentPath.replaceFirst(rootPath, '');
-    final parts = relativePath.split('/')..removeWhere((p) => p.isEmpty);
-    return parts;
-  }
-
-  void updateFolderAudioCount() {
-    folderAudioCount.clear();
-    for (var folder in subFolders) {
-      folderAudioCount[folder.path] = fakeRoots[folder.path]?.length ?? 0;
+  Future<void> indexFiles(List<AudioFile> files) async {
+    _files = {for (final file in files) p.normalize(file.file.path): file};
+    _audioAncestors.clear();
+    for (final file in files) {
+      var parent = p.dirname(p.normalize(file.file.path));
+      while (_audioAncestors.add(parent)) {
+        final next = p.dirname(parent);
+        if (next == parent) break;
+        parent = next;
+      }
     }
+    _indexed = true;
+    await _loadRealFolder();
   }
 
-  Future<void> setRoots(List<Directory> roots, Map<String, List<AudioFile>> filesMap) async {
-    if (roots.isEmpty) return;
-    rootDir = roots.first;
-    currentDir = rootDir;
-    fakeRoots.clear();
-    for (var r in roots) {
-      fakeRoots[r.path] = filesMap[r.path] ?? [];
-    }
-    subFolders = roots;
-    audioFiles = fakeRoots[currentDir!.path] ?? [];
-    updateFolderAudioCount();
-    notifyListeners();
-  }
-
-  Future<void> startRealNavigation(Directory startDir) async {
-    if (!await startDir.exists()) return;
-
-    rootDir = startDir;
-    currentDir = startDir;
-    pathHistory = [startDir];
+  Future<void> startRealNavigation(Directory root) async {
+    rootDir = root;
+    currentDir = root;
+    pathHistory = [root];
     await _loadRealFolder();
   }
 
   Future<void> enterRealFolder(Directory folder) async {
-    if (!await folder.exists()) return;
-
     currentDir = folder;
     pathHistory.add(folder);
     await _loadRealFolder();
   }
 
-  void goBackReal() {
+  Future<void> goBackReal() async {
     if (pathHistory.length <= 1) return;
-
     pathHistory.removeLast();
     currentDir = pathHistory.last;
-    _loadRealFolder();
+    await _loadRealFolder();
   }
 
-/*
+  Future<void> toggleShowOnlyAudioFolders() async {
+    showOnlyFoldersWithAudio = !showOnlyFoldersWithAudio;
+    await _loadRealFolder();
+  }
+
   Future<void> _loadRealFolder() async {
-    if (currentDir == null) return;
-
-    subFolders.clear();
-    audioFiles.clear();
-
-    try {
-      final entities = currentDir!.listSync();
-
-      // اول همه فولدرها و فایل‌های صوتی رو جمع کن
-      List<Directory> allSubFolders = [];
-      List<AudioFile> tempAudioFiles = [];
-
-      var fileTypeList = [
-        AppStrings.file_type_mp3, 
-        AppStrings.file_type_wav, 
-        AppStrings.file_type_aac, 
-        AppStrings.file_type_m4a, 
-        AppStrings.file_type_flac, 
-        AppStrings.file_type_ogg
-      ];
-      
-      for (var entity in entities) {
-        if (entity is Directory) {
-          allSubFolders.add(entity);
-        } else if (entity is File) {
-          final ext = entity.path.split('.').last.toLowerCase();
-          if (fileTypeList.contains(ext)) {
-            tempAudioFiles.add(AudioFile(
-              file: entity,
-              fileName: entity.path.split('/').last,
-              folderName: currentDir!.path,
-              duration: Duration.zero,
-            ));
-          }
-        }
-      }
-
-      // فایل‌های صوتی فعلی فولدر
-      audioFiles = tempAudioFiles;
-      audioFiles.sort((a, b) => a.fileName.compareTo(b.fileName));
-      
-      // زیرفولدرها
-      if (showOnlyFoldersWithAudio) {
-        // فقط فولدرهایی که داخلشون حداقل یک فایل صوتی هست
-        subFolders = allSubFolders.where((dir) {
-          try {
-            return dir.listSync().any((e) =>
-                e is File &&
-                fileTypeList.contains(e.path.split('.').last.toLowerCase()));
-          } catch (e) {
-            return false;
-          }
-        }).toList();
-      } else {
-        // همه فولدرها
-        subFolders = allSubFolders;
-      }
-
-      subFolders.sort((a, b) => a.path.compareTo(b.path));
-      // audioFiles.sort((a, b) => a.fileName.compareTo(b.fileName));
-
-      notifyListeners();
-    } catch (e) {
-      loggingSornaz("خطا در لود فولدر واقعی: $e");
-    }
-  }
-*/
-
-  // void goBack() {
-  //   if (currentDir == rootDir) return;
-  //   currentDir = rootDir;
-  //   audioFiles = fakeRoots[rootDir!.path] ?? [];
-  //   updateFolderAudioCount();
-  //   notifyListeners();
-  // }
-
-
-
-void toggleShowOnlyAudioFolders() {
-  showOnlyFoldersWithAudio = !showOnlyFoldersWithAudio;
-  _filterSubFolders();
-  notifyListeners();
-}
-
-void _filterSubFolders() async {
-  if (currentDir == null) return;
-
-  subFolders.clear();
-
-  try {
-    final entities = currentDir!.listSync();
-
-    List<Directory> allSubFolders = [];
-
-    for (var entity in entities) {
-      if (entity is Directory) {
-        allSubFolders.add(entity);
-      }
-    }
-
-    if (showOnlyFoldersWithAudio) {
-      subFolders = allSubFolders.where((dir) {
-        try {
-          return dir.listSync().any((e) =>
-              e is File &&
-              [
-                AppConstants.MP3, 
-                AppConstants.WAV, 
-                AppConstants.AAC, 
-                AppConstants.M4A, 
-                AppConstants.FLAC, 
-                AppConstants.OGG
-              ].contains(e.path.split('.').last.toLowerCase()));
-        } catch (e) {
-          return false;
-        }
-      }).toList();
-    } else {
-      subFolders = allSubFolders;
-    }
-
-    subFolders.sort((a, b) => a.path.compareTo(b.path));
-  } catch (e) {
-    loggingSornaz(" --------------- ");
-  }
-}
-
-Future<void> _loadRealFolder() async {
-  if (currentDir == null) return;
-
-  audioFiles.clear();
-
-  try {
-    final entities = currentDir!.listSync();
-
-    for (var entity in entities) {
-      if (entity is File) {
-        final ext = entity.path.split('.').last.toLowerCase();
-        if ([
-          AppConstants.MP3, 
-          AppConstants.WAV, 
-          AppConstants.AAC, 
-          AppConstants.M4A, 
-          AppConstants.FLAC, 
-          AppConstants.OGG
-        ].contains(ext)) {
-          audioFiles.add(AudioFile(
-            file: entity,
-            fileName: entity.path.split('/').last,
-            folderName: currentDir!.path,
-            duration: Duration.zero,
-          ));
-        }
-      }
-    }
-
-    audioFiles.sort((a, b) => a.fileName.compareTo(b.fileName));
-
-    _filterSubFolders();
+    final dir = currentDir;
+    if (dir == null || _disposed) return;
+    final request = ++_generation;
+    isLoading = true;
+    error = null;
     notifyListeners();
-  } catch (e) {
-    loggingSornaz(" ================== ");
+    final folders = <Directory>[], files = <AudioFile>[];
+    try {
+      await for (final entity in dir.list(followLinks: false)) {
+        if (_disposed || request != _generation) return;
+        if (entity is Directory) {
+          // Until the library index is ready, keep folders accessible. Once
+          // indexed, include ancestors too so deeply nested songs are reachable.
+          if (!showOnlyFoldersWithAudio ||
+              !_indexed ||
+              _audioAncestors.contains(p.normalize(entity.path)))
+            folders.add(entity);
+        } else if (entity is File &&
+            _extensions.contains(p.extension(entity.path).toLowerCase())) {
+          files.add(
+            _files[p.normalize(entity.path)] ??
+                AudioFile(
+                  file: entity,
+                  fileName: p.basename(entity.path),
+                  folderName: dir.path,
+                  duration: Duration.zero,
+                ),
+          );
+        }
+      }
+      folders.sort((a, b) => a.path.compareTo(b.path));
+      files.sort((a, b) => a.fileName.compareTo(b.fileName));
+      if (!_disposed && request == _generation) {
+        subFolders = folders;
+        audioFiles = files;
+      }
+    } on FileSystemException {
+      if (!_disposed && request == _generation) {
+        error = 'دسترسی به این پوشه ممکن نیست.';
+        subFolders = [];
+        audioFiles = [];
+      }
+    } finally {
+      if (!_disposed && request == _generation) {
+        isLoading = false;
+        notifyListeners();
+      }
+    }
   }
-}
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _generation++;
+    super.dispose();
+  }
 }

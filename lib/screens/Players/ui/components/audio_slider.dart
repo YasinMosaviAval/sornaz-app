@@ -17,7 +17,9 @@ class AudioSlider extends StatelessWidget {
     final provider = context.watch<AudioPlayerProvider>();
 
     final double currentPosition = provider.position.inSeconds.toDouble();
-    final double totalDuration = provider.duration.inSeconds.toDouble() == 0 ? 1.0 : provider.duration.inSeconds.toDouble();
+    final double totalDuration = provider.duration.inSeconds.toDouble() == 0
+        ? 1.0
+        : provider.duration.inSeconds.toDouble();
 
     return Row(
       children: [
@@ -30,26 +32,42 @@ class AudioSlider extends StatelessWidget {
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
           child: Text(
-            formatDuration(provider.duration), 
-            style: AppTypography.musicPlayerAudioWidgetDurationTime(context)
+            formatDuration(provider.duration),
+            style: AppTypography.musicPlayerAudioWidgetDurationTime(context),
           ),
         ),
         Directionality(
           textDirection: TextDirection.ltr,
           child: Expanded(
-            child: AbTrack(repeat: provider.abRepeat, duration: provider.duration, child: Slider(
-              activeColor: Theme.of(context).colorScheme.primary,
-              inactiveColor: AppColors.music_player_audio_slider_inactive_color(isDark: isDark),
-              value: provider.duration == Duration.zero ? 0 : currentPosition.clamp(0.0, totalDuration),
-              max: totalDuration,
-              onChangeStart: (_) => [provider.startSliding()],
-              onChanged: (v) => {},
-              onChangeEnd: (v) => {
-                provider.seek(Duration(seconds: v.toInt())),
-                // تایمر رو دوباره شروع کن تا ۱۰ ثانیه فرصت داشته باشه
-                provider.restartUndoTimer(),  // اگر private بود، یک متد عمومی بساز
-              },
-            )),
+            child: SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
+                overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
+              ),
+              child: AbTrack(
+                repeat: provider.abRepeat,
+                duration: provider.duration,
+                child: Slider(
+                  activeColor: Theme.of(context).colorScheme.primary,
+                  inactiveColor:
+                      AppColors.music_player_audio_slider_inactive_color(
+                        isDark: isDark,
+                      ),
+                  value: provider.duration == Duration.zero
+                      ? 0
+                      : currentPosition.clamp(0.0, totalDuration),
+                  max: totalDuration,
+                  onChangeStart: (_) => [provider.startSliding()],
+                  onChanged: (v) => {},
+                  onChangeEnd: (v) => {
+                    provider.seek(Duration(seconds: v.toInt())),
+                    // تایمر رو دوباره شروع کن تا ۱۰ ثانیه فرصت داشته باشه
+                    provider
+                        .restartUndoTimer(), // اگر private بود، یک متد عمومی بساز
+                  },
+                ),
+              ),
+            ),
           ),
         ),
         TextButton(

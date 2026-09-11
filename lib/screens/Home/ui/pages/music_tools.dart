@@ -1,3 +1,5 @@
+import 'package:sornaz/components/home_top_bar.dart';
+import '../components/app_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:sornaz/components/bottom_nav.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
@@ -11,6 +13,8 @@ class MusicToolsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SocialScaffold(
     title: socialText(context, 'ابزار موسیقی', 'Music tools'),
+    appBar: const HomeTopBar(),
+    drawer: const AppDrawer(),
     bottom: const BottomNavBarWidget(selectedIndex: 3),
     body: ListView(
       padding: const EdgeInsets.all(24),

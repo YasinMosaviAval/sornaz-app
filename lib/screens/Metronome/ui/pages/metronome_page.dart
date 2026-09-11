@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/app_bar.dart';
-import 'package:sornaz/components/bottom_nav.dart';
+
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_data.dart';
@@ -28,7 +28,8 @@ class MetronomePage extends StatefulWidget {
   State<MetronomePage> createState() => _MetronomePageState();
 }
 
-class _MetronomePageState extends State<MetronomePage> with TickerProviderStateMixin  {
+class _MetronomePageState extends State<MetronomePage>
+    with TickerProviderStateMixin {
   final MetronomeController _controller = MetronomeController();
   late AnimationController _uiController;
   late Animation<double> _tapOpacity;
@@ -42,8 +43,14 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
   late TimeSignatureOption selectedTimeSignature;
 
   String formatDuration(Duration d) {
-    final minutes = d.inMinutes.remainder(60).toString().padLeft(2, AppConstants.NUMBER_0);
-    final seconds = d.inSeconds.remainder(60).toString().padLeft(2, AppConstants.NUMBER_0);
+    final minutes = d.inMinutes
+        .remainder(60)
+        .toString()
+        .padLeft(2, AppConstants.NUMBER_0);
+    final seconds = d.inSeconds
+        .remainder(60)
+        .toString()
+        .padLeft(2, AppConstants.NUMBER_0);
     return '$minutes:$seconds';
   }
 
@@ -69,7 +76,6 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
 
     _controller.init();
 
-    
     selectedTimeSignature = timeSignatures.firstWhere(
       (t) => t.beats == 4 && t.noteValue == 4,
     );
@@ -89,21 +95,23 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
       duration: const Duration(milliseconds: 500),
     );
 
-    _tapOpacity = Tween<double>(begin: 1, end: 0).animate(
-      CurvedAnimation(parent: _uiController, curve: Curves.easeOut),
-    );
+    _tapOpacity = Tween<double>(
+      begin: 1,
+      end: 0,
+    ).animate(CurvedAnimation(parent: _uiController, curve: Curves.easeOut));
 
-    _tapScale = Tween<double>(begin: 1, end: 0.7).animate(
-      CurvedAnimation(parent: _uiController, curve: Curves.easeOut),
-    );
+    _tapScale = Tween<double>(
+      begin: 1,
+      end: 0.7,
+    ).animate(CurvedAnimation(parent: _uiController, curve: Curves.easeOut));
 
-    _playButtonOffset = Tween<Offset>(
-      begin: const Offset(0, 0),
-      end: const Offset(0, 0),
-    ).animate(
-      CurvedAnimation(parent: _uiController, curve: Curves.easeOutCubic),
-    );
-
+    _playButtonOffset =
+        Tween<Offset>(
+          begin: const Offset(0, 0),
+          end: const Offset(0, 0),
+        ).animate(
+          CurvedAnimation(parent: _uiController, curve: Curves.easeOutCubic),
+        );
   }
 
   @override
@@ -114,13 +122,13 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
-    final isEnglish = localeProvider.locale.languageCode == AppConstants.LOCALIZATION_EN;
+    final isEnglish =
+        localeProvider.locale.languageCode == AppConstants.LOCALIZATION_EN;
 
     final tempoName = getTempoName(bpm);
 
@@ -142,7 +150,9 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
             }
           },
         ),
-        backgroundColor: AppColors.metronome_page_background_color(isDark: isDark),
+        backgroundColor: AppColors.metronome_page_background_color(
+          isDark: isDark,
+        ),
         body: Padding(
           padding: const EdgeInsets.all(AppSpacing.space_24),
           child: Column(
@@ -174,7 +184,7 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
                   });
                 },
               ),
-              
+
               AppSpacing.sizedBoxH56(),
 
               StopModeSection(
@@ -206,7 +216,9 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
                       IgnorePointer(
                         ignoring: _controller.stopMode != StopMode.timer,
                         child: Opacity(
-                          opacity: _controller.stopMode == StopMode.timer ? 1 : 0.3,
+                          opacity: _controller.stopMode == StopMode.timer
+                              ? 1
+                              : 0.3,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -218,8 +230,7 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
                         ),
                       ),
                     const SizedBox(width: AppSpacing.space_48),
-                    if (_controller.showBarsStopwatch)
-                      _barsDropdown(isDark),
+                    if (_controller.showBarsStopwatch) _barsDropdown(isDark),
                   ],
                 ),
               ),
@@ -253,19 +264,27 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: _controller.tapActive
-                                      ? AppColors.metronome_page_tapping_icon_active_decoration_color(isDark: isDark)
-                                      : AppColors.metronome_page_tapping_icon_inactive_decoration_color(isDark: isDark),
+                                        ? AppColors.metronome_page_tapping_icon_active_decoration_color(
+                                            isDark: isDark,
+                                          )
+                                        : AppColors.metronome_page_tapping_icon_inactive_decoration_color(
+                                            isDark: isDark,
+                                          ),
                                   ),
                                   child: Icon(
                                     Icons.touch_app,
                                     size: AppSpacing.space_32,
                                     color: _controller.tapActive
-                                      ? AppColors.metronome_page_tapping_icon_active_color(isDark: isDark)
-                                      : AppColors.metronome_page_tapping_icon_inactive_color(isDark: isDark),
+                                        ? AppColors.metronome_page_tapping_icon_active_color(
+                                            isDark: isDark,
+                                          )
+                                        : AppColors.metronome_page_tapping_icon_inactive_color(
+                                            isDark: isDark,
+                                          ),
                                   ),
                                 );
                               },
-                            )
+                            ),
                           ),
                         ),
                       ),
@@ -274,74 +293,90 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
                       child: AnimatedAlign(
                         duration: const Duration(milliseconds: 500),
                         alignment: _controller.showTapTempo
-                          ? _controller.isPlaying ? Alignment(0, 0) : Alignment(-0.5, 0)
-                          : _controller.isPlaying ? Alignment(0, 0) : Alignment(0, 0),
+                            ? _controller.isPlaying
+                                  ? Alignment(0, 0)
+                                  : Alignment(-0.5, 0)
+                            : _controller.isPlaying
+                            ? Alignment(0, 0)
+                            : Alignment(0, 0),
                         curve: Curves.easeOutCubic,
                         child: ScaleTransition(
-                        scale: Tween(begin: 1.0, end: 1.1).animate(
-                          CurvedAnimation(
-                            parent: _pulseController,
-                            curve: Curves.easeOut,
-                          ),
-                        ),
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              if (_controller.isPlaying) {
-                                _controller.stop();
-                              } else {
-                                _controller.start();
-                              }
-                            });
-                          },
-                          child: Container(
-                            width: AppSpacing.space_100,
-                            height: AppSpacing.space_100,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: _controller.isAccentBeat
-                                ? AppColors.metronome_page_accent_beat_icon_active_decoration_color(isDark: isDark)
-                                : AppColors.metronome_page_accent_beat_icon_inactive_decoration_color(isDark: isDark),
+                          scale: Tween(begin: 1.0, end: 1.1).animate(
+                            CurvedAnimation(
+                              parent: _pulseController,
+                              curve: Curves.easeOut,
                             ),
-                            child: Icon(
-                              _controller.isPlaying ? Icons.pause : Icons.play_arrow,
-                              size: AppSpacing.space_56,
-                              color: _controller.isAccentBeat
-                                ? AppColors.metronome_page_accent_beat_icon_active_color(isDark: isDark)
-                                : AppColors.metronome_page_accent_beat_icon_inactive_color(isDark: isDark),
+                          ),
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                if (_controller.isPlaying) {
+                                  _controller.stop();
+                                } else {
+                                  _controller.start();
+                                }
+                              });
+                            },
+                            child: Container(
+                              width: AppSpacing.space_100,
+                              height: AppSpacing.space_100,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: _controller.isAccentBeat
+                                    ? AppColors.metronome_page_accent_beat_icon_active_decoration_color(
+                                        isDark: isDark,
+                                      )
+                                    : AppColors.metronome_page_accent_beat_icon_inactive_decoration_color(
+                                        isDark: isDark,
+                                      ),
+                              ),
+                              child: Icon(
+                                _controller.isPlaying
+                                    ? Icons.pause
+                                    : Icons.play_arrow,
+                                size: AppSpacing.space_56,
+                                color: _controller.isAccentBeat
+                                    ? AppColors.metronome_page_accent_beat_icon_active_color(
+                                        isDark: isDark,
+                                      )
+                                    : AppColors.metronome_page_accent_beat_icon_inactive_color(
+                                        isDark: isDark,
+                                      ),
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                    )
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),
-        bottomNavigationBar: const BottomNavBarWidget(),
       ),
     );
   }
 
-
   String getTempoName(int bpm) {
     return tempoTerms
-      .firstWhere(
-        (term) => bpm >= term.min && bpm <= term.max,
-        orElse: () => const TempoTerm(AppConstants.DASH, 0, 0),
-      )
-      .name;
+        .firstWhere(
+          (term) => bpm >= term.min && bpm <= term.max,
+          orElse: () => const TempoTerm(AppConstants.DASH, 0, 0),
+        )
+        .name;
   }
 
   Widget _minutesDropdown(bool isDark) {
     return DropdownButton<int>(
       value: selectedMinutes,
       dropdownColor: AppColors.metronome_page_drop_down_color(isDark: isDark),
-      iconEnabledColor: AppColors.metronome_page_icon_enabled_color(isDark: isDark),
-      iconDisabledColor: AppColors.metronome_page_icon_disabled_color(isDark: isDark),
+      iconEnabledColor: AppColors.metronome_page_icon_enabled_color(
+        isDark: isDark,
+      ),
+      iconDisabledColor: AppColors.metronome_page_icon_disabled_color(
+        isDark: isDark,
+      ),
       underline: null,
       items: List.generate(
         60,
@@ -367,34 +402,38 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
   }
 
   Widget _secondsDropdown(bool isDark) {
-      return DropdownButton<int>(
-        value: selectedSeconds,
-        dropdownColor: AppColors.metronome_page_drop_down_color(isDark: isDark),
-        iconEnabledColor: AppColors.metronome_page_icon_enabled_color(isDark: isDark),
-        iconDisabledColor: AppColors.metronome_page_icon_disabled_color(isDark: isDark),
-        underline: null,
-        items: List.generate(
-          60,
-          (i) => DropdownMenuItem(
-            value: i,
-            child: Text(
-              '$i ${AppStrings.second.translate(context)}',
-              style: AppTypography.metronomePageDropDownItem(context),
-            ),
+    return DropdownButton<int>(
+      value: selectedSeconds,
+      dropdownColor: AppColors.metronome_page_drop_down_color(isDark: isDark),
+      iconEnabledColor: AppColors.metronome_page_icon_enabled_color(
+        isDark: isDark,
+      ),
+      iconDisabledColor: AppColors.metronome_page_icon_disabled_color(
+        isDark: isDark,
+      ),
+      underline: null,
+      items: List.generate(
+        60,
+        (i) => DropdownMenuItem(
+          value: i,
+          child: Text(
+            '$i ${AppStrings.second.translate(context)}',
+            style: AppTypography.metronomePageDropDownItem(context),
           ),
         ),
-        onChanged: (v) {
-          if (v == null) return;
-          setState(() {
-            selectedSeconds = v;
-            _controller.enableTimerMode(
-              minutes: selectedMinutes,
-              seconds: selectedSeconds,
-            );
-          });
-        },
-      );
-    }
+      ),
+      onChanged: (v) {
+        if (v == null) return;
+        setState(() {
+          selectedSeconds = v;
+          _controller.enableTimerMode(
+            minutes: selectedMinutes,
+            seconds: selectedSeconds,
+          );
+        });
+      },
+    );
+  }
 
   IgnorePointer _barsDropdown(bool isDark) {
     return IgnorePointer(
@@ -403,9 +442,15 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
         opacity: _controller.stopMode == StopMode.bars ? 1.0 : 0.3,
         child: DropdownButton<int>(
           value: selectedBars,
-          dropdownColor: AppColors.metronome_page_drop_down_color(isDark: isDark),
-          iconEnabledColor: AppColors.metronome_page_icon_enabled_color(isDark: isDark),
-          iconDisabledColor: AppColors.metronome_page_icon_disabled_color(isDark: isDark),
+          dropdownColor: AppColors.metronome_page_drop_down_color(
+            isDark: isDark,
+          ),
+          iconEnabledColor: AppColors.metronome_page_icon_enabled_color(
+            isDark: isDark,
+          ),
+          iconDisabledColor: AppColors.metronome_page_icon_disabled_color(
+            isDark: isDark,
+          ),
           underline: null,
           items: List.generate(
             64,
@@ -413,7 +458,7 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
               value: i + 2,
               child: Text(
                 '${i + 1} ${AppStrings.bars.translate(context)}',
-                style: AppTypography.metronomePageDropDownItem(context)
+                style: AppTypography.metronomePageDropDownItem(context),
               ),
             ),
           ),
@@ -430,5 +475,4 @@ class _MetronomePageState extends State<MetronomePage> with TickerProviderStateM
       ),
     );
   }
-
 }

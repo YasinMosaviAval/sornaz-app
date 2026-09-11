@@ -9,7 +9,7 @@ import java.io.File
 import java.nio.ByteBuffer
 
 object AudioSplice {
-    fun replace(context: Context, original: Uri, replacement: File, atMs: Long) {
+    fun replace(context: Context, original: Uri, replacement: File, atMs: Long, keepTail: Boolean = true) {
         require(atMs >= 0 && replacement.isFile)
         val old = MediaExtractor(); val new = MediaExtractor()
         val output = File(context.cacheDir, "splice-${System.nanoTime()}.m4a")
@@ -48,7 +48,7 @@ object AudioSplice {
             val at = atMs * 1000
             val duration = newFormat.getLong(MediaFormat.KEY_DURATION)
             copy(old, 0, at, 0); copy(new, 0, Long.MAX_VALUE, at)
-            copy(old, at + duration, Long.MAX_VALUE, 0)
+            if (keepTail) copy(old, at + duration, Long.MAX_VALUE, 0)
             writer.stop(); writer.release(); muxer = null
             try { context.contentResolver.openOutputStream(original, "wt")!!.use { out -> output.inputStream().use { it.copyTo(out) } } }
             catch (e: Exception) {

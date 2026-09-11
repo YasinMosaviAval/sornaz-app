@@ -1,3 +1,6 @@
+import 'package:sornaz/components/home_top_bar.dart';
+import 'package:sornaz/screens/Home/ui/components/app_drawer.dart';
+import 'course_browse.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
@@ -24,6 +27,7 @@ class _Catalog extends StatefulWidget {
 
 class _CatalogState extends State<_Catalog> {
   late final api = SocialApi(widget.token);
+  final browse = GlobalKey<CourseBrowseState>();
   @override
   void dispose() {
     api.dispose();
@@ -33,7 +37,17 @@ class _CatalogState extends State<_Catalog> {
   @override
   Widget build(BuildContext context) => SocialScaffold(
     title: socialText(context, 'دوره‌ها', 'Courses'),
-    body: CoursesBody(api: api),
+    appBar: HomeTopBar(
+      onSearch: (q) => browse.currentState?.search(q),
+      onFilter: () => browse.currentState?.filters(),
+      hint: socialText(
+        context,
+        'جست‌وجوی دوره، موضوع، مدرس…',
+        'Search course, topic, mentor…',
+      ),
+    ),
+    drawer: const AppDrawer(),
+    body: CoursesBody(api: api, browseKey: browse),
     bottom: const BottomNavBarWidget(selectedIndex: 2),
   );
 }

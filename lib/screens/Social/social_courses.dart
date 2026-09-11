@@ -1,3 +1,5 @@
+import 'package:sornaz/components/home_top_bar.dart';
+import 'package:sornaz/screens/Home/ui/components/app_drawer.dart';
 import 'lesson_media.dart';
 import 'package:sornaz/helpers/user_facing_error.dart';
 import 'package:sornaz/screens/Social/cache_observer.dart';
@@ -16,7 +18,7 @@ import 'social_widgets.dart';
 import 'social_edit_dialog.dart';
 import 'learning_actions.dart';
 
-class CoursesPage extends StatelessWidget {
+class CoursesPage extends StatefulWidget {
   const CoursesPage({
     super.key,
     required this.api,
@@ -24,16 +26,39 @@ class CoursesPage extends StatelessWidget {
     this.initialQuery = '',
   });
   final SocialApi api;
-  final String mode;
-  final String initialQuery;
+  final String mode, initialQuery;
+  @override
+  State<CoursesPage> createState() => _CoursesPageState();
+}
+
+class _CoursesPageState extends State<CoursesPage> {
+  final browse = GlobalKey<CourseBrowseState>();
   @override
   Widget build(BuildContext context) => SocialScaffold(
-    title: mode == 'manage'
+    title: widget.mode == 'manage'
         ? 'مدیریت دوره‌ها'
-        : mode == 'library'
+        : widget.mode == 'library'
         ? 'خریدهای من'
         : 'دوره‌های آموزشی',
-    body: CoursesBody(api: api, initialMode: mode, initialQuery: initialQuery),
+    appBar: widget.mode != 'catalog'
+        ? null
+        : HomeTopBar(
+            initialQuery: widget.initialQuery,
+            onSearch: (q) => browse.currentState?.search(q),
+            onFilter: () => browse.currentState?.filters(),
+            hint: socialText(
+              context,
+              'جست‌وجوی دوره، موضوع، مدرس…',
+              'Search course, topic, mentor…',
+            ),
+          ),
+    drawer: widget.mode == 'catalog' ? const AppDrawer() : null,
+    body: CoursesBody(
+      api: widget.api,
+      initialMode: widget.mode,
+      initialQuery: widget.initialQuery,
+      browseKey: browse,
+    ),
   );
 }
 
@@ -42,11 +67,13 @@ class CoursesBody extends StatefulWidget {
     super.key,
     required this.api,
     this.owner,
+    this.browseKey,
     this.embedded = false,
     this.initialMode = 'catalog',
     this.initialQuery = '',
   });
   final SocialApi api;
+  final GlobalKey<CourseBrowseState>? browseKey;
   final int? owner;
   final bool embedded;
   final String initialMode;
@@ -55,7 +82,8 @@ class CoursesBody extends StatefulWidget {
   State<CoursesBody> createState() => _CoursesBodyState();
 }
 
-class _CoursesBodyState extends State<CoursesBody> with CourseCacheObserver<CoursesBody> {
+class _CoursesBodyState extends State<CoursesBody>
+    with CourseCacheObserver<CoursesBody> {
   List<Json>? items;
   String? error;
   late String mode = widget.initialMode;
@@ -86,6 +114,7 @@ class _CoursesBodyState extends State<CoursesBody> with CourseCacheObserver<Cour
   Widget build(BuildContext context) {
     if (mode == 'catalog' && items != null)
       return CourseBrowse(
+        key: widget.browseKey,
         initialQuery: widget.initialQuery,
         api: widget.api,
         items: items!,
@@ -381,7 +410,18 @@ class LessonPage extends StatelessWidget {
         if ('${lesson['text']}'.isNotEmpty) AppText('${lesson['text']}'),
         const SizedBox(height: 20),
         for (final id in lesson['media'] as List) ...[
-          LessonMedia(api: api, courseId: courseId, id: number(id), mime: files.where((f) => number(f['id']) == number(id)).firstOrNull?['mime']?.toString() ?? '', title: lesson['title'].toString()),
+          LessonMedia(
+            api: api,
+            courseId: courseId,
+            id: number(id),
+            mime:
+                files
+                    .where((f) => number(f['id']) == number(id))
+                    .firstOrNull?['mime']
+                    ?.toString() ??
+                '',
+            title: lesson['title'].toString(),
+          ),
           const SizedBox(height: 20),
         ],
         if (courseId != null)

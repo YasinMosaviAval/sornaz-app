@@ -126,11 +126,25 @@ class _RecordedFilesPageState extends State<RecordedFilesPage> {
     final player = vm.playbackService;
     return Scaffold(
       appBar: ExpandingSearchBar(
-        title: Row(children: [const BackButton(), Expanded(child: Text(socialText(context, 'صداهای ضبط‌شده', 'Recordings'), style: const TextStyle(fontSize: 13)))]),
+        title: Row(
+          children: [
+            const BackButton(),
+            Expanded(
+              child: Text(
+                socialText(context, 'صداهای ضبط‌شده', 'Recordings'),
+                style: const TextStyle(fontSize: 13),
+              ),
+            ),
+          ],
+        ),
         onChanged: (value) => setState(() => query = value.toLowerCase()),
-        onSettings: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RecorderSettingsPage())),
+        onSettings: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const RecorderSettingsPage()),
+        ),
       ),
-      body: Column(children: [
+      body: Column(
+        children: [
           Expanded(
             child: RefreshIndicator(
               onRefresh: vm.refreshFiles,
@@ -158,11 +172,20 @@ class _RecordedFilesPageState extends State<RecordedFilesPage> {
                         final active = player.currentPath == file.uri;
                         return Card(
                           margin: EdgeInsets.zero,
-                          shape: RoundedRectangleBorder(side: BorderSide(width: .4, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: .12))),
+                          shape: RoundedRectangleBorder(
+                            side: BorderSide(
+                              width: .4,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: .12),
+                            ),
+                          ),
                           child: Column(
                             children: [
                               ListTile(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
                                 selected: selected.contains(file.uri),
                                 onLongPress: () =>
                                     setState(() => selected.add(file.uri)),
@@ -198,7 +221,14 @@ class _RecordedFilesPageState extends State<RecordedFilesPage> {
                                 ),
                                 trailing: PopupMenuButton<String>(
                                   onSelected: (action) async {
-                                    if (action == 'wave') await Navigator.push(context, MaterialPageRoute(builder: (_) => RecordingPlaybackPage(file: file)));
+                                    if (action == 'wave')
+                                      await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              RecordingPlaybackPage(file: file),
+                                        ),
+                                      );
                                     if (action == 'delete')
                                       await _delete([file]);
                                     if (action == 'rename') await _rename(file);
@@ -221,7 +251,10 @@ class _RecordedFilesPageState extends State<RecordedFilesPage> {
                                     }
                                   },
                                   itemBuilder: (_) => [
-                                    const PopupMenuItem(value: 'wave', child: Text('پخش با نمایش موج صدا')),
+                                    const PopupMenuItem(
+                                      value: 'wave',
+                                      child: Text('پخش با نمایش موج صدا'),
+                                    ),
                                     PopupMenuItem(
                                       value: 'rename',
                                       child: Text(
@@ -316,20 +349,6 @@ class _RecordedFilesPageState extends State<RecordedFilesPage> {
                                     ],
                                   ),
                                 ),
-                              if (active)
-                                TextButton.icon(
-                                  onPressed: vm.canBookmarkPlayback ? () =>
-                                      _run(() => vm.addPlaybackBookmark(file)) : null,
-                                  icon: const Icon(Icons.bookmark_add_outlined),
-                                  label: Text(
-                                    socialText(
-                                      context,
-                                      'افزودن نشانک',
-                                      'Add bookmark',
-                                    ),
-                                  ),
-                                ),
-
                             ],
                           ),
                         );

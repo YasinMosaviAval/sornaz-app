@@ -1,3 +1,4 @@
+import '../components/seekable_waveform.dart';
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -180,34 +181,13 @@ class _RecordingPlaybackPageState extends State<RecordingPlaybackPage> {
                             ),
                         ],
                       )
-                    : GestureDetector(
+                    : SeekableWaveform(
                         key: const ValueKey('wave'),
-                        onTapDown: (tap) {
-                          final box = context.findRenderObject() as RenderBox?;
-                          if (box != null)
-                            player.seek(
-                              Duration(
-                                milliseconds:
-                                    (tap.localPosition.dx /
-                                            (box.size.width - 32) *
-                                            player.duration.inMilliseconds)
-                                        .round(),
-                              ),
-                            );
-                        },
-                        child: CustomPaint(
-                          painter: _RecordingWave(
-                            samples,
-                            markers,
-                            player.duration.inMilliseconds,
-                            player.position.inMilliseconds,
-                            Theme.of(context).colorScheme.primary,
-                            Theme.of(context).colorScheme.onSurface,
-                          ),
-                          child: Center(
-                            child: error == null ? null : Text(error!),
-                          ),
-                        ),
+                        samples: samples.map((v) => v / 32768).toList(),
+                        duration: player.duration.inMilliseconds,
+                        position: player.position.inMilliseconds,
+                        markers: markers,
+                        onSeek: (at) => player.seek(Duration(milliseconds: at)),
                       ),
               ),
             ),
@@ -242,21 +222,6 @@ class _RecordingPlaybackPageState extends State<RecordingPlaybackPage> {
               ],
             ),
             if (!recording) ...[
-              Directionality(
-                textDirection: TextDirection.ltr,
-                child: AbTrack(
-                  repeat: player.abRepeat,
-                  duration: player.duration,
-                  child: Slider(
-                    max: math.max(1, player.duration.inMilliseconds).toDouble(),
-                    value: player.position.inMilliseconds
-                        .clamp(0, math.max(1, player.duration.inMilliseconds))
-                        .toDouble(),
-                    onChanged: (v) =>
-                        player.seek(Duration(milliseconds: v.round())),
-                  ),
-                ),
-              ),
               Text(
                 '${formatSeconds(player.position.inSeconds)} / ${formatSeconds(player.duration.inSeconds)}',
                 textAlign: TextAlign.center,
@@ -354,46 +319,4 @@ class _RecordingPlaybackPageState extends State<RecordingPlaybackPage> {
       ),
     );
   }
-}
-
-class _RecordingWave extends CustomPainter {
-  _RecordingWave(
-    this.samples,
-    this.markers,
-    this.duration,
-    this.position,
-    this.accent,
-    this.foreground,
-  );
-  final List<int> samples, markers;
-  final int duration, position;
-  final Color accent, foreground;
-  @override
-  void paint(Canvas canvas, Size size) {
-    final pen = Paint()
-      ..color = foreground.withValues(alpha: .6)
-      ..strokeWidth = 1.2;
-    final count = (size.width / 4).floor();
-    for (var i = 0; i < count && samples.isNotEmpty; i++) {
-      final value = samples[(i * samples.length / count).floor()].abs() / 32768;
-      final h = value.clamp(0, 1) * size.height;
-      canvas.drawLine(
-        Offset(i * 4, (size.height - h) / 2),
-        Offset(i * 4, (size.height + h) / 2),
-        pen,
-      );
-    }
-    if (duration <= 0) return;
-    pen.color = accent;
-    for (final t in markers) {
-      final x = t / duration * size.width;
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), pen);
-    }
-    pen.color = foreground;
-    final x = position / duration * size.width;
-    canvas.drawLine(Offset(x, 0), Offset(x, size.height), pen);
-  }
-
-  @override
-  bool shouldRepaint(covariant _RecordingWave old) => true;
 }

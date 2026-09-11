@@ -2,7 +2,7 @@ import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/app_bar.dart';
-import 'package:sornaz/components/bottom_nav.dart';
+
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
@@ -132,7 +132,6 @@ class _TunerView extends StatelessWidget {
           ),
         ],
       ),
-      bottomNavigationBar: const BottomNavBarWidget(),
     );
   }
 }

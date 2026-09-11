@@ -97,19 +97,29 @@ class AudioActionsMenu extends StatelessWidget {
   final List<AudioFile> files;
   final VoidCallback? after;
   @override
-  Widget build(BuildContext context) => PopupMenuButton<String>(
-    onSelected: (action) async {
-      await audioAction(context, files, action);
-      after?.call();
-    },
-    itemBuilder: (_) => [
-      for (final action in [
-        ('rename', 'تغییر نام'),
-        ('favorite', 'افزودن به علاقه‌مندی‌ها'),
-        ('share', 'اشتراک‌گذاری'),
-        ('delete', 'حذف'),
-      ])
-        PopupMenuItem(value: action.$1, child: Text(action.$2)),
-    ],
+  Widget build(BuildContext context) => SizedBox(
+    width: 32,
+    height: 32,
+    child: PopupMenuButton<String>(
+      padding: EdgeInsets.zero,
+      child: const SizedBox(
+        width: 32,
+        height: 32,
+        child: Center(child: Icon(Icons.more_vert, size: 24)),
+      ),
+      onSelected: (action) async {
+        await audioAction(context, files, action);
+        after?.call();
+      },
+      itemBuilder: (_) => [
+        for (final action in [
+          ('rename', 'تغییر نام'),
+          ('favorite', 'افزودن به علاقه‌مندی‌ها'),
+          ('share', 'اشتراک‌گذاری'),
+          ('delete', 'حذف'),
+        ])
+          PopupMenuItem(value: action.$1, child: Text(action.$2)),
+      ],
+    ),
   );
 }
