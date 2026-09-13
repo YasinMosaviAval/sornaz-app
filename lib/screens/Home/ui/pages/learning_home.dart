@@ -1,9 +1,12 @@
+import 'package:sornaz/screens/Site/site_api.dart';
+import 'package:sornaz/screens/Site/academy_search.dart';
+import 'package:sornaz/components/main_tab_scaffold.dart';
+import 'package:sornaz/components/main_tabs.dart';
 import 'package:sornaz/components/home_top_bar.dart';
 import 'package:sornaz/helpers/user_facing_error.dart';
 import 'package:sornaz/screens/Social/cache_observer.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:sornaz/screens/Social/community_page.dart';
-import 'package:sornaz/screens/Social/course_browse.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/bottom_nav.dart';
@@ -20,17 +23,21 @@ import 'package:sornaz/screens/Social/social_profile.dart';
 import 'package:sornaz/screens/Social/learning_widgets.dart';
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key, this.api, this.articleLoader});
+  const HomePage({super.key, this.api, this.articleLoader, this.academyApi});
   final SocialApi? api;
+  final SiteApi? academyApi;
   final Future<List<dynamic>> Function()? articleLoader;
   @override
   Widget build(BuildContext context) {
+    if (MainTabsScope.maybeOf(context) == null)
+      return MainTabs(initialIndex: 0, initialChild: this);
     final token = context.watch<AuthSession?>()?.token ?? '';
     return HomeContent(
       key: ValueKey(token),
       api: api,
       token: token,
       articleLoader: articleLoader,
+      academyApi: academyApi,
     );
   }
 }
@@ -41,8 +48,10 @@ class HomeContent extends StatefulWidget {
     this.api,
     required this.token,
     this.articleLoader,
+    this.academyApi,
   });
   final SocialApi? api;
+  final SiteApi? academyApi;
   final String token;
   final Future<List<dynamic>> Function()? articleLoader;
   @override
@@ -184,12 +193,6 @@ class _HomeContentState extends State<HomeContent>
     final sorted = [...filtered]
       ..sort((a, b) => '${b['updated_at']}'.compareTo('${a['updated_at']}'));
     final updated = sorted.take(10).toList();
-    final newest =
-        ([...filtered]..sort(
-              (a, b) => '${b['created_at']}'.compareTo('${a['created_at']}'),
-            ))
-            .take(10)
-            .toList();
     final library = context.watch<ArticlesProvider?>();
     final articleRows =
         (widget.articleLoader == null && library != null
@@ -208,7 +211,8 @@ class _HomeContentState extends State<HomeContent>
     return Theme(
       data: theme,
       child: Builder(
-        builder: (context) => Scaffold(
+        builder: (context) => MainTabScaffold(
+          index: 0,
           appBar: HomeTopBar(
             onSearch: (v) => setState(() => query = v.trim()),
             onFilter: filters,
@@ -334,40 +338,7 @@ class _HomeContentState extends State<HomeContent>
                               },
                             ),
                           ),
-                        if (filtered.isNotEmpty)
-                          LearningHeading(
-                            socialText(context, 'دوره‌های جدید', 'New courses'),
-                          ),
-                        if (error != null)
-                          SocialEmpty(
-                            socialText(
-                              context,
-                              'دوره‌ها دریافت نشدند.',
-                              'Could not load courses.',
-                            ),
-                            onRetry: loadCourses,
-                          )
-                        else if (filtered.isNotEmpty)
-                          SizedBox(
-                            height: 370,
-                            child: ListView.separated(
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                              ),
-                              itemCount: newest.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(width: 16),
-                              itemBuilder: (context, i) => SizedBox(
-                                width: 270,
-                                child: CourseCard(
-                                  api: api,
-                                  course: newest[i],
-                                  onTap: () => openCourse(newest[i]),
-                                ),
-                              ),
-                            ),
-                          ),
+                        AcademySearchCard(api: widget.academyApi),
                         if (updated.isNotEmpty)
                           LearningHeading(
                             socialText(
@@ -471,7 +442,7 @@ class _HomeContentState extends State<HomeContent>
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             itemCount: people.length,
                             separatorBuilder: (_, __) =>
-                                const SizedBox(width: 18),
+                                const SizedBox(width: 24),
                             itemBuilder: (context, i) {
                               final a = people[i];
                               return InkWell(

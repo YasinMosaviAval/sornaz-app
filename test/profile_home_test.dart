@@ -40,11 +40,12 @@ void main(){
         final key=GlobalKey();
         await tester.pumpWidget(host(RepaintBoundary(key:key,child:HomePage(api:api,articleLoader:() async=>[{'title':{'rendered':'راهنمای شروع یادگیری موسیقی'}}])),dark:dark));
         await tester.pumpAndSettle();expect(tester.takeException(),isNull);
-        expect(find.text('دوره‌های جدید'),findsOneWidget);
+        expect(find.text('دوره‌های جدید'),findsNothing);expect(find.text('جست‌وجوی آموزشگاه‌های موسیقی'),findsOneWidget);
         if(width==375){await tester.runAsync(() async{final image=await (key.currentContext!.findRenderObject()! as RenderRepaintBoundary).toImage();final bytes=await image.toByteData(format:ui.ImageByteFormat.png);await Directory('build/profile-previews').create(recursive:true);await File('build/profile-previews/home-${dark?'dark':'light'}.png').writeAsBytes(bytes!.buffer.asUint8List());image.dispose();});}
         await tester.drag(find.byType(ListView).first,const Offset(0,-650));await tester.pumpAndSettle();expect(tester.takeException(),isNull);
         await tester.drag(find.byType(ListView).first,const Offset(0,1500));await tester.pumpAndSettle();
-        await tester.enterText(find.byKey(const ValueKey('home-search')),'ناموجود');await tester.pumpAndSettle();expect(find.text('دوره‌ای با این مشخصات پیدا نشد.'),findsOneWidget);expect(tester.takeException(),isNull);
+        await tester.tap(find.byKey(const ValueKey('open-home-search')));await tester.pumpAndSettle();
+        await tester.enterText(find.byKey(const ValueKey('home-search')),'ناموجود');await tester.pumpAndSettle();expect(find.text(sampleCourse['title'] as String),findsNothing);expect(find.text('دوره‌های جدید'),findsNothing);await tester.enterText(find.byKey(const ValueKey('home-search')),'');await tester.pumpAndSettle();expect(find.text('دوره‌های جدید'),findsNothing);expect(find.text('جست‌وجوی آموزشگاه‌های موسیقی'),findsOneWidget);expect(tester.takeException(),isNull);
         await tester.pumpWidget(const SizedBox());api.dispose();
       });
     }

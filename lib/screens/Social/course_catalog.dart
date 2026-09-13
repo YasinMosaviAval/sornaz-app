@@ -4,7 +4,6 @@ import 'course_browse.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
-import 'package:sornaz/components/bottom_nav.dart';
 import 'social_api.dart';
 import 'social_widgets.dart';
 import 'social_courses.dart';
@@ -48,6 +47,5 @@ class _CatalogState extends State<_Catalog> {
     ),
     drawer: const AppDrawer(),
     body: CoursesBody(api: api, browseKey: browse),
-    bottom: const BottomNavBarWidget(selectedIndex: 2),
   );
 }

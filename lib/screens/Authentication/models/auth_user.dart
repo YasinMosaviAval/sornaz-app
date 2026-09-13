@@ -18,10 +18,10 @@ class AuthUser {
     id: (json['id'] as num).toInt(),
     username: json['username']?.toString() ?? '',
     fullName:
-        json['full_name']?.toString() ?? json['username']?.toString() ?? '',
+        json['full_name']?.toString() ?? json['name']?.toString() ?? json['username']?.toString() ?? '',
     email: json['email']?.toString(),
     phone: json['phone']?.toString(),
-    avatar: (json['avatar_url'] ?? json['avatar'])?.toString(),
+    avatar: (json['avatar_url'] ?? json['avatar'] ?? json['profile_image'])?.toString(),
   );
   Map<String, dynamic> toJson() => {
     'id': id,

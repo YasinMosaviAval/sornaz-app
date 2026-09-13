@@ -6,9 +6,13 @@ class ExpandingSearchBar extends StatefulWidget implements PreferredSizeWidget {
     required this.title,
     required this.onChanged,
     this.onSettings,
+    this.searchIconSize = 24,
+    this.searchIconColor,
     this.hint = 'جستجو',
     this.actions = const [],
   });
+  final double searchIconSize;
+  final Color? searchIconColor;
   final Widget title;
   final ValueChanged<String> onChanged;
   final VoidCallback? onSettings;
@@ -75,7 +79,11 @@ class _ExpandingSearchBarState extends State<ExpandingSearchBar> {
                           hintText: widget.hint,
                           filled: false,
                           border: InputBorder.none,
-                          prefixIcon: const Icon(Icons.search),
+                          prefixIcon: Icon(
+                            Icons.search,
+                            size: widget.searchIconSize,
+                            color: widget.searchIconColor,
+                          ),
                           suffixIcon: IconButton(
                             icon: const Icon(Icons.close),
                             onPressed: () {
@@ -97,7 +105,7 @@ class _ExpandingSearchBarState extends State<ExpandingSearchBar> {
             if (!open) ...widget.actions,
             if (!open)
               IconButton(
-                icon: const Icon(Icons.settings),
+                icon: Icon(Icons.settings, size: widget.searchIconSize, color: widget.searchIconColor),
                 onPressed: widget.onSettings,
               ),
           ],

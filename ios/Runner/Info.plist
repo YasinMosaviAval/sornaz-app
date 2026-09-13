@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <key>NSCameraUsageDescription</key>
+    <string>برای ثبت تصویر و تماس تصویری در پنل کاربری.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>اجازه دسترسی به میکروفون برای ضبط صدا.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

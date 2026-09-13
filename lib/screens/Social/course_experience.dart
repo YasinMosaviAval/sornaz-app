@@ -37,7 +37,7 @@ class _CourseExperienceState extends State<CourseExperience> {
   int? parent;
   Json get c => widget.course;
   int get id => number(c['id']);
-  Json get details => (c['details'] as Map?)?.cast<String, dynamic>() ?? {};
+  Json get details => optionalObject(c['details']);
   String t(String fa, String en) => socialText(context, fa, en);
   @override
   void dispose() {
@@ -97,7 +97,7 @@ class _CourseExperienceState extends State<CourseExperience> {
                           '${c['title']}',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        AppText('${(c['author'] as Map?)?['name'] ?? ''}'),
+                        AppText('${optionalObject(c['author'])['name'] ?? ''}'),
                         AppText(
                           '${c['category'] ?? ''} · ${c['lesson_count'] ?? 0} ${t('درس', 'lessons')}',
                         ),
@@ -299,11 +299,11 @@ class _CourseExperienceState extends State<CourseExperience> {
 
   @override
   Widget build(BuildContext context) {
-    final author = (c['author'] as Map?) ?? {};
+    final author = optionalObject(c['author']);
     final chapters = (c['curriculum'] as List?)?.map(object).toList() ?? [];
     final reviews = (c['reviews'] as List?)?.map(object).toList() ?? [];
     final questions = (c['questions'] as List?)?.map(object).toList() ?? [];
-    final rating = (c['rating'] as Map?) ?? {};
+    final rating = optionalObject(c['rating']);
     return ListView(
       children: [
         Padding(
@@ -625,8 +625,10 @@ class _CourseExperienceState extends State<CourseExperience> {
                             'Choose a time to study this course.',
                           ),
                         ),
-                        if (c['schedule'] != null)
-                          AppText('${(c['schedule'] as Map)['starts_at']}'),
+                        if (optionalObject(c['schedule'])['starts_at'] != null)
+                          AppText(
+                            '${optionalObject(c['schedule'])['starts_at']}',
+                          ),
                         FilledButton(
                           onPressed: schedule,
                           child: AppText(t('شروع کنید', 'Get started')),

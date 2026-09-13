@@ -9,8 +9,10 @@ import io.flutter.plugin.common.MethodChannel
 import java.io.File
 
 class MainActivity : AudioServiceActivity() {
+    private var notationStorage: NotationStorage? = null
     private var recordingWorkspace: RecordingWorkspace? = null
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (notationStorage?.onResult(requestCode, resultCode, data) == true) return
         if (recordingWorkspace?.onResult(requestCode, resultCode, data) == true) return
         super.onActivityResult(requestCode, resultCode, data)
     }
@@ -19,6 +21,8 @@ class MainActivity : AudioServiceActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         practiceMetronome = PracticeMetronome(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
+        notationStorage = NotationStorage(this, flutterEngine.dartExecutor.binaryMessenger)
+        MusicMetadata(flutterEngine.dartExecutor.binaryMessenger)
         PublicRecordings(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         recordingWorkspace = RecordingWorkspace(this, flutterEngine.dartExecutor.binaryMessenger)
         PrivatePdf(applicationContext, flutterEngine.dartExecutor.binaryMessenger)

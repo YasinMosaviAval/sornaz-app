@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../services/music_playlists.dart';
+import '../pages/playlists.dart';
 import '../../providers/audio_player_provider.dart';
 import '../../scan/audio_file.dart';
 
@@ -48,17 +49,9 @@ Future<void> audioAction(
     }
     if (action == 'share')
       await Share.shareXFiles(files.map((f) => XFile(f.file.path)).toList());
-    if (action == 'favorite') {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList(
-        'music.favorites',
-        {
-          ...?prefs.getStringList('music.favorites'),
-          ...files.map((f) => f.file.path),
-        }.toList(),
-      );
-    }
-    if (action == 'delete') {
+    if (action == 'favorite') await MusicPlaylists.instance.add(MusicPlaylists.favorite, files.map((f)=>f.file.path));
+    if (action == 'playlist' && context.mounted) await chooseMusicPlaylist(context, files);
+    if (action == 'delete' && context.mounted) {
       final yes = await showDialog<bool>(
         context: context,
         builder: (c) => AlertDialog(
@@ -115,6 +108,7 @@ class AudioActionsMenu extends StatelessWidget {
         for (final action in [
           ('rename', 'تغییر نام'),
           ('favorite', 'افزودن به علاقه‌مندی‌ها'),
+          ('playlist', 'افزودن به پلی‌لیست'),
           ('share', 'اشتراک‌گذاری'),
           ('delete', 'حذف'),
         ])

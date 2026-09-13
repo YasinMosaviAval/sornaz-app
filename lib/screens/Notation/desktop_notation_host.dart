@@ -31,7 +31,10 @@ class DesktopNotationHost extends StatefulWidget {
 
 class _DesktopNotationHostState extends State<DesktopNotationHost> {
   HttpServer? _server;
-  late final NotationApi _api = NotationApi(widget.token);
+  late final NotationApi _api = NotationApi(
+    widget.token,
+    userId: widget.userId,
+  );
   final String _secret = List.generate(
     32,
     (_) => Random.secure().nextInt(256).toRadixString(16).padLeft(2, '0'),
@@ -203,7 +206,7 @@ class _DesktopNotationHostState extends State<DesktopNotationHost> {
   }
 
   @override
-  Widget build(BuildContext context) => SocialScaffold(
+  Widget build(BuildContext context) => SocialScaffold(tabIndex:1,
     appBar: const HomeTopBar(),
     drawer: const AppDrawer(),
     title: socialText(context, 'نت‌های موسیقی', 'Music Sheets'),

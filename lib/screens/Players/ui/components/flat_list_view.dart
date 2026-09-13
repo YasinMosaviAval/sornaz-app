@@ -4,7 +4,6 @@ import '../../providers/audio_player_provider.dart';
 import '../../providers/folder_navigator_provider.dart';
 import 'audio_item.dart';
 import 'audio_selection.dart';
-import 'bottom_player.dart';
 import 'search_bar.dart';
 
 class FlatListView extends StatefulWidget {
@@ -133,7 +132,6 @@ class _FlatListViewState extends State<FlatListView> {
             },
           ),
         ),
-        const BottomPlayerWidget(),
       ],
     );
   }

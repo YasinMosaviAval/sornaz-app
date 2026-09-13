@@ -128,7 +128,7 @@ class AudioItem extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              // const SizedBox(width: 8),
               Padding(
                 padding: const EdgeInsetsDirectional.only(end: 8),
                 child: SizedBox(

@@ -9,6 +9,7 @@ class AudioMetadata {
   final Duration? duration;
   final Uint8List? artwork;
   final int? bitrate;
+  final Map<String,String> details;
 
   AudioMetadata({
     this.title,
@@ -19,5 +20,6 @@ class AudioMetadata {
     this.duration,
     this.artwork,
     this.bitrate,
+    this.details=const {},
   });
 }

@@ -1,3 +1,5 @@
+import 'package:provider/provider.dart';
+import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 import 'package:sornaz/helpers/user_facing_error.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/components/app_text.dart';
@@ -535,11 +537,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (!(form.currentState?.validate() ?? false)) return;
     setState(() => busy = true);
     try {
-      await widget.api.post('/me', {
-        'name': name.text.trim(),
-        'bio': bio.text,
-        ...media,
-      });
+      final updated = object(
+        await widget.api.post('/me', {
+          'name': name.text.trim(),
+          'bio': bio.text,
+          ...media,
+        }),
+      );
+      if (mounted)
+        await context.read<AuthSession?>()?.updateProfile(
+          number(updated['id']),
+          updated,
+        );
       await widget.api.post('/settings', {
         for (final e in links.entries) e.key: e.value.text.trim(),
       });

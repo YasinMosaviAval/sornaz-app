@@ -1,6 +1,8 @@
+import '../services/music_playlists.dart';
+import 'package:just_audio/just_audio.dart' show AndroidEqualizer;
 import 'package:sornaz/screens/Players/services/music_audio_handler.dart';
 import 'dart:async';
-import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:sornaz/screens/Players/cache/audio_cache_factory.dart';
 import 'package:sornaz/components/ab_repeat.dart';
 import 'package:flutter/material.dart' hide RepeatMode;
@@ -36,6 +38,8 @@ class AudioPlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  AndroidEqualizer? get equalizer=>_controller.equalizer;
+  Future<void> saveEqualizer()=>_controller.saveEqualizer();
   bool get isPlaying => _controller.isPlaying;
   Duration get duration => _controller.duration;
   Duration get position => _controller.position;
@@ -412,12 +416,7 @@ class AudioPlayerProvider extends ChangeNotifier {
     final newFile = await file.file.rename(newPath);
     file.file = newFile;
     file.fileName = newName;
-    final prefs = await SharedPreferences.getInstance();
-    final favorites = prefs.getStringList('music.favorites') ?? [];
-    await prefs.setStringList(
-      'music.favorites',
-      favorites.map((p) => p == oldPath ? newFile.path : p).toList(),
-    );
+    await MusicPlaylists.instance.replacePath(oldPath, newFile.path);
     await (await AudioCacheFactory.getCache()).saveFiles(allFiles);
     notifyListeners();
     _showSnackBar(message);
@@ -446,13 +445,7 @@ class AudioPlayerProvider extends ChangeNotifier {
         : filteredFiles.indexOf(currentAudio!);
     _queue.setCurrentIndex(currentIndex);
     await (await AudioCacheFactory.getCache()).saveFiles(allFiles);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
-      'music.favorites',
-      (prefs.getStringList('music.favorites') ?? [])
-          .where((p) => p != file.file.path)
-          .toList(),
-    );
+    await MusicPlaylists.instance.replacePath(file.file.path, null);
     notifyListeners();
     _showSnackBar(message);
     return true;

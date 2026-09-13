@@ -1,3 +1,4 @@
+import 'package:sornaz/components/main_tab_scaffold.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
@@ -42,10 +43,12 @@ class SocialScaffold extends StatelessWidget {
     required this.body,
     this.actions,
     this.appBar,
+    this.tabIndex,
     this.drawer,
     this.bottom,
     this.floatingActionButton,
   });
+  final int? tabIndex;
   final PreferredSizeWidget? appBar;
   final Widget? drawer;
   final String title;
@@ -74,7 +77,7 @@ class SocialScaffold extends StatelessWidget {
     );
     return Theme(
       data: theme,
-      child: Scaffold(
+      child: tabIndex != null ? MainTabScaffold(index: tabIndex!, appBar: appBar ?? AppBar(title:AppText(title),actions:actions), drawer:drawer,body:body,bottomNavigationBar:bottom,floatingActionButton:floatingActionButton) : Scaffold(
         appBar: appBar ?? AppBar(title: AppText(title), actions: actions),
         drawer: drawer,
         body: body,

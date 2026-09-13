@@ -1,3 +1,5 @@
+import 'package:sornaz/components/account_avatar.dart';
+import 'package:sornaz/screens/Social/social_api.dart';
 import 'package:flutter/material.dart';
 import 'registration_feedback.dart';
 import '../../services/saved_credentials.dart';
@@ -38,6 +40,16 @@ class _SignInScreenState extends State<SignInScreen> {
         context.read<AuthSession>().accounts.map((e) => e.id).toSet(),
       );
       if (!mounted || entries.isEmpty) return;
+      final publicApi=SocialApi('');
+      try { for(var i=0;i<entries.length;i++) {
+        final entry=entries[i];
+        if(entry.avatar?.isNotEmpty==true)continue;
+        try { final profile=object(await publicApi.get('/users/${entry.userId}').timeout(const Duration(seconds:3)));
+          final updated=SavedCredential(entry.userId,entry.identifier,entry.password,avatar:profile['avatar'] as String?);
+          entries[i]=updated;await credentials.update(updated,remember:true);
+        }catch(_){}
+      }}finally{publicApi.dispose();}
+      if(!mounted)return;
       final en = context.read<LocaleProvider>().locale.languageCode == 'en';
       final selected = await showModalBottomSheet<SavedCredential>(
         context: context,
@@ -62,7 +74,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 for (final entry in entries)
                   Card(
                     child: ListTile(
-                      leading: const Icon(Icons.account_circle_outlined),
+                      leading: AccountAvatar(avatar:entry.avatar),
                       title: Text(
                         entry.identifier,
                         textDirection: TextDirection.ltr,
@@ -130,6 +142,7 @@ class _SignInScreenState extends State<SignInScreen> {
             result.user.id,
             identifier.text.trim(),
             password.text,
+            avatar: result.user.avatar,
           ),
           remember: remember,
         );

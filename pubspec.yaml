@@ -52,6 +52,7 @@ dependencies:
 
   flutter_localizations:
     sdk: flutter
+  pdf: ^3.13.0
 
 
 dev_dependencies:

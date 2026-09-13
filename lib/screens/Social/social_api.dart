@@ -8,6 +8,9 @@ import 'package:http/http.dart' as http;
 typedef Json = Map<String, dynamic>;
 int number(dynamic value) => int.tryParse('$value') ?? 0;
 Json object(dynamic value) => (value as Map).cast<String, dynamic>();
+// PHP serializes empty optional records as []; cached responses retain that shape.
+Json optionalObject(dynamic value) =>
+    value is Map ? value.cast<String, dynamic>() : <String, dynamic>{};
 List<Json> objects(dynamic value) => (value as List).map(object).toList();
 
 class SocialException implements Exception {

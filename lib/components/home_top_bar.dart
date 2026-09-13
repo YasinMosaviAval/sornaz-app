@@ -5,10 +5,14 @@ class HomeTopBar extends StatefulWidget implements PreferredSizeWidget {
   const HomeTopBar({
     super.key,
     this.onSearch,
+    this.leadingWidget,
+    this.extraActions = const [],
     this.onFilter,
     this.hint = '',
     this.initialQuery = '',
   });
+  final Widget? leadingWidget;
+  final List<Widget> extraActions;
   final ValueChanged<String>? onSearch;
   final VoidCallback? onFilter;
   final String hint, initialQuery;
@@ -22,6 +26,15 @@ class _HomeTopBarState extends State<HomeTopBar> {
   late bool open = widget.initialQuery.isNotEmpty;
   late final input = TextEditingController(text: widget.initialQuery);
   @override
+  void didUpdateWidget(HomeTopBar old) {
+    super.didUpdateWidget(old);
+    if (old.hint != widget.hint) {
+      open = widget.initialQuery.isNotEmpty;
+      input.text = widget.initialQuery;
+    }
+  }
+
+  @override
   void dispose() {
     input.dispose();
     super.dispose();
@@ -31,10 +44,12 @@ class _HomeTopBarState extends State<HomeTopBar> {
   Widget build(BuildContext context) => AppBar(
     automaticallyImplyLeading: false,
     titleSpacing: 0,
-    leading: const Padding(
-      padding: EdgeInsets.all(8),
-      child: AppLogo(size: 40, withBackground: false),
-    ),
+    leading:
+        widget.leadingWidget ??
+        const Padding(
+          padding: EdgeInsets.all(8),
+          child: AppLogo(size: 40, withBackground: false),
+        ),
     title: widget.onSearch == null
         ? null
         : LayoutBuilder(
@@ -94,6 +109,7 @@ class _HomeTopBarState extends State<HomeTopBar> {
             ),
           ),
     actions: [
+      if (!open) ...widget.extraActions,
       Builder(
         builder: (c) => IconButton(
           icon: const Icon(Icons.menu),

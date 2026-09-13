@@ -235,7 +235,7 @@ class CourseBrowseState extends State<CourseBrowse> {
                         groupValue: selectedRating,
                         onChanged: (v) => change(() => selectedRating = v),
                         title: AppText(
-                          '★ $value ${socialText(c, 'و بالاتر', '& up')} (${widget.items.where((r) => (double.tryParse('${(r['rating'] as Map?)?['average']}') ?? 0) >= value).length})',
+                          '★ $value ${socialText(c, 'و بالاتر', '& up')} (${widget.items.where((r) => (double.tryParse('${optionalObject(r['rating'])['average']}') ?? 0) >= value).length})',
                         ),
                         controlAffinity: ListTileControlAffinity.trailing,
                       ),

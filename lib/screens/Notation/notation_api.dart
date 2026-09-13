@@ -1,16 +1,95 @@
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:sornaz/screens/Social/social_api.dart';
 
 /// Only the bundled editor can request these operations. Credentials stay native.
 class NotationApi {
-  NotationApi(this.token, {http.Client? client})
+  NotationApi(this.token, {http.Client? client, this.userId = 0})
     : _client = client ?? http.Client();
   final String token;
+  final int userId;
+  final Map<int, Map<String, dynamic>> _fetched = {};
   final http.Client _client;
   void close() => _client.close();
 
+  Future<Map<String, dynamic>> _local() async {
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      return Map<String, dynamic>.from(
+        jsonDecode(prefs.getString('notation_local_v2_$userId') ?? '{}'),
+      );
+    } catch (_) {
+      return {};
+    }
+  }
+
+  Future<void> remember(Map<String, dynamic> sheet) async {
+    final entries = await _local();
+    entries[sheet['id'].toString()] = {...sheet, 'local': true};
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('notation_local_v2_$userId', jsonEncode(entries));
+  }
+
+  Future<void> markDownloaded(int id) async {
+    final sheet = _fetched[id];
+    if (sheet != null) await remember(sheet);
+  }
+
   Future<dynamic> request(String action, Map<String, dynamic> message) async {
+    try {
+      final value = await _requestRemote(action, message);
+      if ((action == 'get' || action == 'save') && value is Map) {
+        final sheet = Map<String, dynamic>.from(value);
+        _fetched[sheet['id'] as int] = sheet;
+        if (action == 'save' ||
+            (await _local()).containsKey(sheet['id'].toString()))
+          await remember(sheet);
+      }
+      if (action == 'list' && value is Map) {
+        final local = await _local();
+        for (final item in value['items'] as List) {
+          final cached = local[item['id'].toString()];
+          item['local'] =
+              cached != null && cached['version'] == item['version'];
+        }
+      }
+      if (action == 'delete') {
+        final local = await _local();
+        local.remove(message['sheetId'].toString());
+        await (await SharedPreferences.getInstance()).setString(
+          'notation_local_v2_$userId',
+          jsonEncode(local),
+        );
+      }
+      return value;
+    } on SocialException {
+      rethrow;
+    } catch (error) {
+      if (error is FormatException) rethrow;
+      final local = await _local();
+      if (action == 'get' && local.containsKey(message['sheetId'].toString()))
+        return local[message['sheetId'].toString()];
+      if (action == 'list' && local.isNotEmpty) {
+        final items = local.values
+            .where(
+              (s) => message['mode'] == 'mine'
+                  ? s['editable'] == true
+                  : message['mode'] == 'saved'
+                  ? s['saved'] == true
+                  : true,
+            )
+            .toList();
+        return {'items': message['page'] == 1 ? items : [], 'has_more': false};
+      }
+      rethrow;
+    }
+  }
+
+  Future<dynamic> _requestRemote(
+    String action,
+    Map<String, dynamic> message,
+  ) async {
     final id = message['sheetId'];
     if (!['list', 'get', 'save', 'delete', 'bookmark'].contains(action)) {
       throw const FormatException('Invalid operation.');

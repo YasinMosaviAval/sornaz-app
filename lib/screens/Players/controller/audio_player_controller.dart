@@ -1,107 +1,215 @@
 import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
+import 'package:just_audio/just_audio.dart' as just;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AudioPlayerController {
-  final AudioPlayer _player = AudioPlayer();
+  final bool _useAndroid =
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+  late final AudioPlayer _player = AudioPlayer();
+  late final just.AndroidEqualizer _equalizer = just.AndroidEqualizer();
+  late final just.AudioPlayer _android = just.AudioPlayer(
+    audioPipeline: just.AudioPipeline(androidAudioEffects: [_equalizer]),
+  );
+  just.AndroidEqualizer? get equalizer =>
+      _useAndroid && !_eqFailed ? _equalizer : null;
   final List<StreamSubscription> _subscriptions = [];
-  
-  Duration duration = Duration.zero;
-  Duration position = Duration.zero;
-  double playbackSpeed = 1.0;
-  bool isPlaying = false;
+  Duration duration = Duration.zero, position = Duration.zero;
+  double playbackSpeed = 1;
+  bool _eqFailed = false;
+  bool isPlaying = false,
+      _disposed = false,
+      _completed = false,
+      _restored = false;
   String? _path;
-
-  final StreamController<void> _stateChanged = StreamController.broadcast();
-  final StreamController<void> _completeChanged = StreamController.broadcast(); // جدید: برای complete
-
+  final _stateChanged = StreamController<void>.broadcast(),
+      _completeChanged = StreamController<void>.broadcast();
   Stream<void> get onStateChanged => _stateChanged.stream;
-  Stream<void> get onComplete => _completeChanged.stream; // جدید
+  Stream<void> get onComplete => _completeChanged.stream;
+  void changed() {
+    if (!_disposed) _stateChanged.add(null);
+  }
 
   AudioPlayerController() {
-    _initListeners();
+    if (_useAndroid) {
+      _subscriptions.add(
+        _android.playerStateStream.listen((s) {
+          isPlaying =
+              s.playing && s.processingState != just.ProcessingState.completed;
+          changed();
+          if (s.processingState == just.ProcessingState.completed &&
+              !_completed) {
+            _completed = true;
+            _completeChanged.add(null);
+          }
+        }),
+      );
+      _subscriptions.add(
+        _android.durationStream.listen((d) {
+          if (d != null && d > Duration.zero) duration = d;
+          changed();
+        }),
+      );
+      _subscriptions.add(
+        _android.positionStream.listen((p) {
+          position = p;
+          changed();
+        }),
+      );
+    } else {
+      _subscriptions.add(
+        _player.onPlayerStateChanged.listen((s) {
+          isPlaying = s == PlayerState.playing;
+          changed();
+        }),
+      );
+      _subscriptions.add(
+        _player.onDurationChanged.listen((d) {
+          if (d > Duration.zero) duration = d;
+          changed();
+        }),
+      );
+      _subscriptions.add(
+        _player.onPositionChanged.listen((p) {
+          position = p;
+          changed();
+        }),
+      );
+      _subscriptions.add(
+        _player.onPlayerComplete.listen((_) {
+          _completeChanged.add(null);
+        }),
+      );
+      _player.setReleaseMode(ReleaseMode.stop);
+    }
+  }
+  Future<void> _restoreEqualizer() async {
+    if (_restored) return;
+    try {
+      final p = await _equalizer.parameters.timeout(const Duration(seconds: 3));
+      final prefs = await SharedPreferences.getInstance();
+      await _equalizer.setEnabled(prefs.getBool('music_eq_enabled') ?? true);
+      for (final band in p.bands) {
+        await band.setGain(
+          (prefs.getDouble('music_eq_${band.centerFrequency.round()}') ?? 0)
+              .clamp(p.minDecibels, p.maxDecibels),
+        );
+      }
+      _restored = true;
+    } catch (_) {
+      _restored = true;
+      _eqFailed = true;
+    }
   }
 
-  void _initListeners() {
-    _subscriptions.add(_player.onPlayerStateChanged.listen((state) {
-      isPlaying = state == PlayerState.playing;
-      _stateChanged.add(null);
-    }));
-
-    _subscriptions.add(_player.onDurationChanged.listen((d) {
-      if (d > Duration.zero) duration = d;
-      _stateChanged.add(null);
-    }));
-
-    _subscriptions.add(_player.onPositionChanged.listen((p) {
-      position = p;
-      _stateChanged.add(null);
-    }));
-
-    _subscriptions.add(_player.onPlayerComplete.listen((_) {
-      _completeChanged.add(null);
-    }));
-
-    _player.setReleaseMode(ReleaseMode.stop);
+  Future<void> saveEqualizer() async {
+    if (!_useAndroid) return;
+    final p = await _equalizer.parameters;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('music_eq_enabled', _equalizer.enabled);
+    for (final band in p.bands) {
+      await prefs.setDouble(
+        'music_eq_${band.centerFrequency.round()}',
+        band.gain,
+      );
+    }
   }
-
-  // ========================
-  // Playback controls
-  // ========================
 
   Future<void> playFile(String path) async {
-    await _player.stop();
+    await pause();
     if (_path != path) duration = Duration.zero;
     _path = path;
     position = Duration.zero;
-    await _player.setSource(DeviceFileSource(path));
-    final loaded = await _player.getDuration();
-    if (loaded != null && loaded > Duration.zero) duration = loaded;
-    await _player.seek(Duration.zero);
-    await _player.resume();
-    _stateChanged.add(null);
+    _completed = false;
+    if (_useAndroid) {
+      final d = await _android.setFilePath(path);
+      if (d != null && d > Duration.zero) duration = d;
+      await _android.setSpeed(playbackSpeed);
+      await _restoreEqualizer();
+      unawaited(_android.play());
+    } else {
+      await _player.stop();
+      await _player.setSource(DeviceFileSource(path));
+      final d = await _player.getDuration();
+      if (d != null && d > Duration.zero) duration = d;
+      await _player.setPlaybackRate(playbackSpeed);
+      await _player.seek(Duration.zero);
+      await _player.resume();
+    }
+    changed();
   }
 
-  Future<void> pause() async => await _player.pause();
+  Future<void> pause() async {
+    if (_useAndroid) {
+      await _android.pause();
+    } else {
+      await _player.pause();
+    }
+  }
 
   Future<void> resume() async {
     if (_path == null) return;
-    if (duration > Duration.zero && position >= duration) await seek(Duration.zero);
-    await _player.resume();
-    final loaded = await _player.getDuration();
-    if (loaded != null && loaded > Duration.zero) duration = loaded;
-    _stateChanged.add(null);
+    if (position >= duration && duration > Duration.zero)
+      await seek(Duration.zero);
+    _completed = false;
+    if (_useAndroid) {
+      unawaited(_android.play());
+    } else {
+      await _player.resume();
+      final d = await _player.getDuration();
+      if (d != null && d > Duration.zero) duration = d;
+    }
+    changed();
   }
 
   Future<void> stop() async {
-    await _player.stop();
-    position = Duration.zero;
-    _stateChanged.add(null);
+    await pause();
+    await seek(Duration.zero);
+    isPlaying = false;
+    changed();
   }
 
-  Future<void> seek(Duration newPosition) async {
-    final safePosition = Duration(milliseconds: newPosition.inMilliseconds.clamp(0, duration.inMilliseconds));
-    await _player.seek(safePosition);
-    position = safePosition;
-    _stateChanged.add(null);
+  Future<void> seek(Duration target) async {
+    final safe = Duration(
+      milliseconds: target.inMilliseconds.clamp(0, duration.inMilliseconds),
+    );
+    if (_useAndroid) {
+      await _android.seek(safe);
+    } else {
+      await _player.seek(safe);
+    }
+    position = safe;
+    _completed = false;
+    changed();
   }
 
-  Future<void> setSpeed(double speed) async {
-    playbackSpeed = speed;
-    await _player.setPlaybackRate(speed);
-    _stateChanged.add(null);
+  Future<void> setSpeed(double value) async {
+    if (_useAndroid) {
+      await _android.setSpeed(value);
+    } else {
+      await _player.setPlaybackRate(value);
+    }
+    playbackSpeed = value;
+    changed();
   }
 
-  Future<void> playFileAndSeek(String path, Duration position) async {
-    await _player.stop();
-    await _player.setSource(DeviceFileSource(path));
-    await _player.seek(position);
-    await _player.resume();
+  Future<void> playFileAndSeek(String path, Duration target) async {
+    await playFile(path);
+    await seek(target);
   }
 
   void dispose() {
-    for (final subscription in _subscriptions) { subscription.cancel(); }
+    _disposed = true;
+    for (final s in _subscriptions) {
+      s.cancel();
+    }
     _stateChanged.close();
     _completeChanged.close();
-    _player.dispose();
+    if (_useAndroid) {
+      _android.dispose();
+    } else {
+      _player.dispose();
+    }
   }
 }

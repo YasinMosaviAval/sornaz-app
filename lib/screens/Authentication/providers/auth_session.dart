@@ -1,3 +1,6 @@
+import 'package:sornaz/screens/Authentication/services/saved_credentials.dart';
+import 'dart:async';
+import 'package:sornaz/screens/Social/social_api.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,6 +13,43 @@ class AuthSession extends ChangeNotifier {
   bool _changing = false;
   bool get isChanging => _changing;
   String? token;
+  String? tokenFor(int id) => _accounts[id]?.token;
+  bool _refreshingProfiles = false;
+  Future<void> refreshProfiles() async {
+    if (_refreshingProfiles) return;
+    _refreshingProfiles = true;
+    try {
+      for (final entry in _accounts.values.toList()) {
+        final api = SocialApi(entry.token);
+        try {
+          final profile = object(await api.get('/me', refresh: true));
+          if (_accounts[entry.user.id]?.token == entry.token)
+            await updateProfile(entry.user.id, profile);
+        } catch (_) {
+        } finally {
+          api.dispose();
+        }
+      }
+    } finally {
+      _refreshingProfiles = false;
+    }
+  }
+
+  Future<void> updateProfile(int id, Map<String, dynamic> profile) async {
+    final old = _accounts[id];
+    if (old == null) return;
+    final next = AuthUser.fromJson({
+      ...old.user.toJson(),
+      'full_name': profile['name'] ?? old.user.fullName,
+      'avatar': profile['avatar'] ?? old.user.avatar,
+    });
+    _accounts[id] = AuthResult(token: old.token, user: next);
+    if (user?.id == id) user = next;
+    try{await SavedCredentials().updateAvatar(id,next.avatar);}catch(_){}
+    await _persist();
+    notifyListeners();
+  }
+
   AuthUser? user;
   bool get isAuthenticated => token != null && user != null;
   List<AuthUser> get accounts =>
@@ -53,6 +93,7 @@ class AuthSession extends ChangeNotifier {
     }
     await _persist();
     notifyListeners();
+    unawaited(refreshProfiles());
   }
 
   Future<void> _persist() async {
@@ -96,15 +137,18 @@ class AuthSession extends ChangeNotifier {
   }
 
   /// Removes only the active account; other signed-in sessions remain available.
-  Future<void> clear() async {
+  Future<void> clear({int? accountId}) async {
     if (_changing) return;
     _changing = true;
     notifyListeners();
     try {
-      _accounts.remove(user?.id);
-      final next = _accounts.values.firstOrNull;
-      token = next?.token;
-      user = next?.user;
+      final id = accountId ?? user?.id;
+      _accounts.remove(id);
+      if (user?.id == id) {
+        final next = _accounts.values.firstOrNull;
+        token = next?.token;
+        user = next?.user;
+      }
       await _persist();
     } finally {
       _changing = false;

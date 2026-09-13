@@ -50,7 +50,7 @@ class _CourseMetadataEditorState extends State<CourseMetadataEditor> {
   Future<void> load() async {
     try {
       final c = object(await widget.api.get('/courses/${widget.id}'));
-      metadata = (c['details'] as Map?)?.cast<String, dynamic>() ?? {};
+      metadata = optionalObject(c['details']);
       metadata['resources'] = c['resources'] ?? [];
       for (final k in labels.keys) fields[k]!.text = '${metadata[k] ?? ''}';
       if (mounted) setState(() => loading = false);

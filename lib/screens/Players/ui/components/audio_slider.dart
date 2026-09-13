@@ -42,7 +42,7 @@ class AudioSlider extends StatelessWidget {
             child: SliderTheme(
               data: SliderTheme.of(context).copyWith(
                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
-                overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
+                overlayShape: const RoundSliderOverlayShape(overlayRadius: 15),
               ),
               child: AbTrack(
                 repeat: provider.abRepeat,

@@ -1,3 +1,4 @@
+import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'package:sornaz/components/app_logo.dart';
 
 import 'package:flutter/material.dart';
@@ -21,7 +22,7 @@ class NowPlayingInfoTab extends StatelessWidget {
     final isDark = appData.isDark;
     final audio = context.watch<AudioPlayerProvider>();
 
-    if (audio.currentIndex == -1) {
+    if (audio.currentAudio == null) {
       return Container(
         decoration: BoxDecoration(
           color: AppColors.music_player_song_information_background_color(
@@ -38,13 +39,9 @@ class NowPlayingInfoTab extends StatelessWidget {
     }
 
     final meta = audio.currentMetadata;
-    final title =
-        meta?.title ??
-        audio.currentAudio?.fileName.substring(
-          0,
-          audio.currentAudio?.fileName.lastIndexOf('.'),
-        ) ??
-        AppStrings.unknown.translate(context);
+    final title = meta?.title?.isNotEmpty == true
+        ? meta!.title!
+        : audio.currentAudio!.fileName;
     final artist = meta?.artist ?? AppStrings.unknown.translate(context);
     final album = meta?.album ?? AppStrings.unknown.translate(context);
     final genre = meta?.genre ?? AppStrings.unknown.translate(context);
@@ -134,6 +131,63 @@ class NowPlayingInfoTab extends StatelessWidget {
               isDark,
               context,
             ),
+            for (final entry in <String, String>{
+              'filename': audio.currentAudio!.fileName,
+              'folder': audio.currentAudio!.folderName,
+              'path': audio.currentAudio!.file.path,
+              ...?meta?.details,
+            }.entries)
+              if (![
+                'title',
+                'artist',
+                'album',
+                'genre',
+                'year',
+                'durationMs',
+                'bitrate',
+              ].contains(entry.key))
+                _info(
+                  socialText(
+                    context,
+                    const {
+                          'filename': 'نام فایل',
+                          'folder': 'پوشه',
+                          'path': 'مسیر فایل',
+                          'albumArtist': 'هنرمند آلبوم',
+                          'author': 'پدیدآورنده',
+                          'composer': 'آهنگساز',
+                          'writer': 'نویسنده',
+                          'date': 'تاریخ انتشار',
+                          'track': 'شماره آهنگ',
+                          'disc': 'شماره دیسک',
+                          'compilation': 'آلبوم مجموعه',
+                          'mime': 'نوع فایل',
+                          'codec': 'کدک',
+                          'sampleRate': 'نرخ نمونه‌برداری (Hz)',
+                          'channels': 'تعداد کانال‌ها',
+                          'bitsPerSample': 'عمق بیت',
+                          'tracks': 'تعداد جریان‌ها',
+                          'fileSize': 'حجم فایل (بایت)',
+                          'modified': 'آخرین تغییر',
+                        }[entry.key] ??
+                        entry.key,
+                    const {
+                          'filename': 'File name',
+                          'folder': 'Folder',
+                          'path': 'File path',
+                          'albumArtist': 'Album artist',
+                          'sampleRate': 'Sample rate (Hz)',
+                          'bitsPerSample': 'Bit depth',
+                          'fileSize': 'File size (bytes)',
+                          'modified': 'Last modified',
+                        }[entry.key] ??
+                        entry.key,
+                  ),
+                  entry.value,
+                  '',
+                  isDark,
+                  context,
+                ),
           ],
         ),
       ),
@@ -155,7 +209,10 @@ class NowPlayingInfoTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label, style: AppTypography.songInformationLabel(context)),
-          Text(value, style: AppTypography.songInformationValue(context)),
+          SelectableText(
+            value,
+            style: AppTypography.songInformationValue(context),
+          ),
         ],
       ),
     );

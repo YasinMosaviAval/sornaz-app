@@ -20,7 +20,7 @@ class BottomPlayerWidget extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(color: AppColors.music_player_bottom_player_background_color(isDark: isDark)),
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_16, vertical: AppSpacing.space_4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_8, vertical: AppSpacing.space_4),
       child: Column(
         children: [
           AudioSlider(),

@@ -22,8 +22,9 @@ class _CommunityPageState extends State<CommunityPage> {
         if (!snapshot.hasData)
           return const Center(child: CircularProgressIndicator());
         final people = objects(snapshot.data);
-        return ListView.builder(
+        return ListView.separated(
           itemCount: people.length,
+          separatorBuilder: (_, _) => const SizedBox(height: 12),
           itemBuilder: (_, i) => ListTile(
             leading: SocialAvatar(api: widget.api, user: people[i]),
             title: Text('${people[i]['name']}'),

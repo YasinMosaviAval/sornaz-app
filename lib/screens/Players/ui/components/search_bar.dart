@@ -1,3 +1,5 @@
+import 'package:sornaz/helpers/app_data.dart';
+import 'package:sornaz/helpers/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/expanding_search_bar.dart';
@@ -13,6 +15,8 @@ class SearchBarWidget extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) => ExpandingSearchBar(
     title: const BreadcrumbWidget(),
+    searchIconSize: 32,
+    searchIconColor: AppColors.sornaz_app_bar_text_color(isDark: context.watch<AppData>().isDark),
     onChanged: context.read<AudioPlayerProvider>().filter,
     onSettings: () => Navigator.push(
       context,
@@ -27,7 +31,12 @@ class PlayerSettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final folder = context.watch<FolderNavigatorProvider>();
     return Scaffold(
-      appBar: AppBar(title: const Text('تنظیمات پخش موسیقی')),
+      appBar: AppBar(
+        title: const Text(
+          'تنظیمات پخش موسیقی',
+          style: TextStyle(fontSize: 16),
+        )
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

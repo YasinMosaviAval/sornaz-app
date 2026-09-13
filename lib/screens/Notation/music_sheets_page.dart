@@ -1,3 +1,9 @@
+import 'package:sornaz/helpers/app_colors.dart';
+import 'notation_settings.dart';
+import 'notation_top_bar.dart';
+import 'package:sornaz/components/main_tab_scaffold.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:sornaz/components/main_tabs.dart';
 import 'package:sornaz/components/join_community.dart';
 import 'package:sornaz/components/home_top_bar.dart';
 import 'package:sornaz/screens/Home/ui/components/app_drawer.dart';
@@ -6,10 +12,8 @@ import 'browser_notation_host.dart';
 import 'package:sornaz/helpers/app_platform.dart';
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:sornaz/components/bottom_nav.dart';
@@ -26,6 +30,8 @@ class MusicSheetsPage extends StatelessWidget {
   const MusicSheetsPage({super.key});
   @override
   Widget build(BuildContext context) {
+    if (MainTabsScope.maybeOf(context) == null)
+      return MainTabs(initialIndex: 1, initialChild: this);
     final session = context.watch<AuthSession>();
     if (kIsWeb)
       return BrowserNotationHost(
@@ -64,7 +70,10 @@ class _NotationHostState extends State<_NotationHost>
   bool _ready = false;
   bool _failed = false;
   String _route = 'list';
+  Map<String, dynamic> _toolbar = {};
   bool _guestTab = false;
+  double _guestTop = 88;
+  ValueChanged<bool>? _setEditorOpen;
   String _configuration = '';
   static const _asset = 'assets/notation/index.html';
 
@@ -72,7 +81,7 @@ class _NotationHostState extends State<_NotationHost>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _api = NotationApi(widget.token);
+    _api = NotationApi(widget.token, userId: widget.userId);
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..addJavaScriptChannel('SornazNotation', onMessageReceived: _message)
@@ -106,6 +115,7 @@ class _NotationHostState extends State<_NotationHost>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _setEditorOpen = MainTabsScope.maybeOf(context)?.setEditorOpen;
     final app = context.watch<AppData>();
     final locale = context.watch<LocaleProvider>().locale.languageCode;
     final next = jsonEncode({
@@ -113,6 +123,8 @@ class _NotationHostState extends State<_NotationHost>
       'dark': app.isDark,
       'userId': widget.userId,
       'embedded': true,
+      'nativeToolbar': true,
+      'accent': '#${app.accent.toARGB32().toRadixString(16).substring(2)}',
       'fontScale': ((16 + app.fontSize) / 16).clamp(.8, 1.5),
     });
     if (next != _configuration) {
@@ -131,7 +143,7 @@ class _NotationHostState extends State<_NotationHost>
   Future<void> _message(JavaScriptMessage message) async {
     int? requestId;
     try {
-      if (message.message.length > 400000) return;
+      if (message.message.length > 10000000) return;
       final data = jsonDecode(message.message) as Map<String, dynamic>;
       requestId = data['id'] as int?;
       final action = data['action'] as String;
@@ -140,13 +152,23 @@ class _NotationHostState extends State<_NotationHost>
         if (mounted && ['list', 'form', 'editor'].contains(route)) {
           setState(() {
             _route = route as String;
+            _toolbar = Map<String, dynamic>.from(data['toolbar'] as Map? ?? {});
+            _setEditorOpen?.call(_route != 'list');
+            _guestTop = (data['guestTop'] as num?)?.toDouble() ?? 88;
             _guestTab = data['guest'] == true;
           });
         }
         return;
       }
       if (action == 'exit') {
-        if (mounted) Navigator.maybePop(context);
+        if (mounted) {
+          final tabs = MainTabsScope.maybeOf(context);
+          if (tabs != null) {
+            tabs.select(0);
+          } else {
+            Navigator.maybePop(context);
+          }
+        }
         return;
       }
       if (action == 'login') {
@@ -159,22 +181,33 @@ class _NotationHostState extends State<_NotationHost>
         return;
       }
       dynamic result;
-      if (action == 'export') {
+      if (action == 'pdf') {
+        final html = data['html'];
+        if (html is! String || html.length > 8000000)
+          throw const FormatException('Invalid PDF data.');
+        result = await const MethodChannel(
+          'sornaz/notation_storage',
+        ).invokeMethod<String>('pdf', {'html': html, 'name': data['name']});
+      } else if (action == 'export' || action == 'download') {
         final content = data['content'];
         if (content is! String ||
             utf8.encode(content).length > 300000 ||
             jsonDecode(content)['format'] != 'sornaz-notation') {
           throw const FormatException('Invalid score data.');
         }
-        final directory = Directory(
-          '${(await getTemporaryDirectory()).path}/notation-exports',
-        );
-        await directory.create(recursive: true);
-        final file = File('${directory.path}/sornaz-notation.json');
-        await file.writeAsString(content, flush: true);
-        await const MethodChannel(
-          'sornaz/app_share',
-        ).invokeMethod<void>('shareNotation', {'path': file.path});
+        const storage = MethodChannel('sornaz/notation_storage');
+        final sdk = await storage.invokeMethod<int>('sdk') ?? 29;
+        if (sdk < 29 && !await Permission.storage.request().isGranted) {
+          throw const SocialException(
+            'Storage permission is required to download this sheet.',
+          );
+        }
+        await storage.invokeMethod<String>('save', {
+          'content': content,
+          'name': data['name'],
+        });
+        if (action == 'download')
+          await _api.markDownloaded(data['sheetId'] as int);
         result = true;
       } else {
         result = await _api.request(action, data);
@@ -185,7 +218,9 @@ class _NotationHostState extends State<_NotationHost>
         await _reply(
           requestId,
           null,
-          error is SocialException
+          error is PlatformException && error.code == 'NOTATION_STORAGE'
+              ? 'Could not save the music sheet.'
+              : error is SocialException
               ? error.message
               : 'Connection failed. Your changes are still here.',
         );
@@ -215,6 +250,7 @@ class _NotationHostState extends State<_NotationHost>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _setEditorOpen?.call(false);
     _api.close();
     if (_ready) {
       unawaited(
@@ -232,22 +268,47 @@ class _NotationHostState extends State<_NotationHost>
     return PopScope(
       canPop: _route == 'list',
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop && _ready) {
+        if (!didPop && _ready && _route != 'list') {
           unawaited(_controller.runJavaScript('window.Notation.back();'));
         }
       },
-      child: Scaffold(
-        appBar: HomeTopBar(
-          hint: socialText(context, 'جست‌وجوی نت‌ها…', 'Search music sheets…'),
-          onSearch: _route != 'list'
-              ? null
-              : (q) {
-                  if (_ready)
-                    _controller.runJavaScript(
-                      'window.Notation.search(${jsonEncode(q)});',
-                    );
-                },
-        ),
+      child: MainTabScaffold(
+        index: 1,
+        appBar: _route != 'list'
+            ? NotationTopBar(
+                editor: _route == 'editor',
+                signedIn: widget.userId > 0,
+                data: _toolbar,
+                command: (action) => _controller.runJavaScript(
+                  'window.Notation.command(${jsonEncode(action)});',
+                ),
+              )
+            : HomeTopBar(
+                extraActions: [
+                  IconButton(
+                    icon: Icon(Icons.settings, size: 32, color: AppColors.sornaz_app_bar_text_color(isDark: Theme.of(context).brightness == Brightness.dark)),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => const NotationSettingsPage(),
+                      ),
+                    ),
+                  ),
+                ],
+                hint: socialText(
+                  context,
+                  'جست‌وجوی نت‌ها…',
+                  'Search music sheets…',
+                ),
+                onSearch: _route != 'list'
+                    ? null
+                    : (q) {
+                        if (_ready)
+                          _controller.runJavaScript(
+                            'window.Notation.search(${jsonEncode(q)});',
+                          );
+                      },
+              ),
         drawer: const AppDrawer(),
         backgroundColor: _route == 'editor' || !dark
             ? Colors.white
@@ -273,7 +334,7 @@ class _NotationHostState extends State<_NotationHost>
                           WebViewWidget(controller: _controller),
                           if (_guestTab)
                             Positioned.fill(
-                              top: 58,
+                              top: _guestTop,
                               child: ColoredBox(
                                 color: Theme.of(
                                   context,

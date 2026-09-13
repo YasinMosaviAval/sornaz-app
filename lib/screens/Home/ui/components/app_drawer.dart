@@ -1,3 +1,4 @@
+import 'package:sornaz/components/account_avatar.dart';
 import 'package:sornaz/screens/Social/user_panel.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:sornaz/components/app_logo.dart';
@@ -48,9 +49,7 @@ class AppDrawer extends StatelessWidget {
                           padding: const EdgeInsets.all(20),
                           child: Row(
                             children: [
-                              ClipOval(
-                                child: AppLogo(size: 48, withBackground: true),
-                              ),
+                              authUser==null?AppLogo(size:48,withBackground:true):AccountAvatar(avatar:authUser.avatar,token:session.token,size:48),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
@@ -254,7 +253,9 @@ class AppDrawer extends StatelessWidget {
                                     : () async {
                                         final session = context
                                             .read<AuthSession>();
-                                        await session.clear();
+                                        final selected=await showModalBottomSheet<int>(context:context,builder:(c)=>SafeArea(child:ListView(shrinkWrap:true,children:[for(final account in session.accounts) ListTile(leading:AccountAvatar(avatar:account.avatar,token:session.tokenFor(account.id)),title:Text(account.fullName),subtitle:Text(account.contact),trailing:const Icon(Icons.logout),onTap:()=>Navigator.pop(c,account.id))])));
+                                        if(selected==null)return;
+                                        await session.clear(accountId:selected);
                                         if (context.mounted) _home(context);
                                       },
                               ),
@@ -301,29 +302,7 @@ class AppDrawer extends StatelessWidget {
                     ),
                     for (final account in session.accounts)
                       ListTile(
-                        leading: ClipOval(
-                          child: account.avatar?.isNotEmpty == true
-                              ? Image.network(
-                                  Uri.parse(
-                                    const String.fromEnvironment(
-                                      'Sornaz_API_BASE_URL',
-                                      defaultValue:
-                                          'https://sornaz.com/api/sornaz/v1',
-                                    ),
-                                  ).resolve(account.avatar!).toString(),
-                                  width: 40,
-                                  height: 40,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, _, _) => const Icon(
-                                    Icons.account_circle_outlined,
-                                    size: 40,
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.account_circle_outlined,
-                                  size: 40,
-                                ),
-                        ),
+                        leading: AccountAvatar(avatar:account.avatar,token:session.tokenFor(account.id)),
                         title: AppText(account.fullName),
                         subtitle: AppText(account.contact),
                         trailing: account.id == session.user?.id

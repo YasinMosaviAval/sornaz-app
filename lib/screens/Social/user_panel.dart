@@ -1,3 +1,8 @@
+import 'dart:async';
+import 'package:sornaz/components/account_avatar.dart';
+import 'package:sornaz/components/home_top_bar.dart';
+import 'package:sornaz/screens/Home/ui/components/app_drawer.dart';
+import 'package:sornaz/components/main_tabs.dart';
 import 'package:sornaz/components/join_community.dart';
 import 'package:sornaz/helpers/user_facing_error.dart';
 import 'package:sornaz/helpers/app_translations.dart';
@@ -19,9 +24,12 @@ class UserPanelPage extends StatelessWidget {
   final int initialTab;
   @override
   Widget build(BuildContext context) {
+    if (initialTab != 2 && MainTabsScope.maybeOf(context) == null)
+      return MainTabs(initialIndex: 4, initialChild: this);
     final auth = context.watch<AuthSession>();
     if (!auth.isAuthenticated)
       return SocialScaffold(
+        tabIndex: 4,
         title: socialText(context, 'پروفایل', 'Profile'),
         bottom: const BottomNavBarWidget(selectedIndex: 4),
         body: const JoinCommunity(),
@@ -54,6 +62,30 @@ class _PanelState extends State<_Panel> {
   List<Json> posts = [], stories = [];
   late int tab = widget.initialTab;
   int unread = 0;
+  String searchQuery = '';
+  Timer? searchTimer;
+  int searchVersion = 0;
+  List<Json> peopleResults = [];
+  void searchCommunity(String value) {
+    searchTimer?.cancel();
+    final query = value.trim().toLowerCase();
+    final version = ++searchVersion;
+    setState(() {
+      searchQuery = query;
+      peopleResults = [];
+    });
+    if (query.isEmpty) return;
+    searchTimer = Timer(const Duration(milliseconds: 300), () async {
+      try {
+        final people = objects(
+          await api.get('/people?q=${Uri.encodeQueryComponent(query)}'),
+        );
+        if (mounted && version == searchVersion)
+          setState(() => peopleResults = people);
+      } catch (_) {}
+    });
+  }
+
   bool loading = true, more = true, fetchingMore = false;
   String? error;
   @override
@@ -64,6 +96,7 @@ class _PanelState extends State<_Panel> {
 
   @override
   void dispose() {
+    searchTimer?.cancel();
     api.dispose();
     super.dispose();
   }
@@ -148,6 +181,42 @@ class _PanelState extends State<_Panel> {
 
   @override
   Widget build(BuildContext context) => SocialScaffold(
+    tabIndex: tab == 2 ? null : 4,
+    appBar: tab == 2
+        ? null
+        : HomeTopBar(
+            leadingWidget: Padding(
+              padding: const EdgeInsets.all(8),
+              child: AccountAvatar(
+                avatar: context.watch<AuthSession>().user?.avatar,
+                token: widget.token,
+              ),
+            ),
+            hint: socialText(
+              context,
+              'جست‌وجو در پست‌ها و جامعه سرناز…',
+              'Search posts and the Sornaz community…',
+            ),
+            onSearch: searchCommunity,
+            extraActions: [
+              IconButton(
+                icon: const Icon(Icons.chat_bubble_outline),
+                onPressed: () => socialPush(context, DirectPage(api: api)),
+              ),
+              IconButton(
+                icon: Badge(
+                  isLabelVisible: unread > 0,
+                  label: Text('$unread'),
+                  child: const Icon(Icons.notifications_none),
+                ),
+                onPressed: () async {
+                  await socialPush(context, NotificationsPage(api: api));
+                  if (mounted) load();
+                },
+              ),
+            ],
+          ),
+    drawer: tab == 2 ? null : const AppDrawer(),
     title: socialText(
       context,
       tab == 2 ? 'حساب کاربری' : 'جامعه سُرناز',
@@ -165,6 +234,19 @@ class _PanelState extends State<_Panel> {
                 onRefresh: load,
                 child: ListView(
                   children: [
+                    if (searchQuery.isNotEmpty)
+                      for (final person in peopleResults)
+                        ListTile(
+                          leading: AccountAvatar(
+                            avatar: person['avatar'] as String?,
+                            token: widget.token,
+                          ),
+                          title: Text('${person['name']}'),
+                          onTap: () => socialPush(
+                            context,
+                            ProfilePage(api: api, userId: number(person['id'])),
+                          ),
+                        ),
                     SizedBox(
                       height: 112,
                       child: ListView(
@@ -180,7 +262,7 @@ class _PanelState extends State<_Panel> {
                               if (mounted) load();
                             },
                             child: const SizedBox(
-                              width: 82,
+                              width: 94,
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -232,7 +314,13 @@ class _PanelState extends State<_Panel> {
                       const SocialEmpty(
                         'هنوز پستی منتشر نشده؛ اولین اجرای خود را به اشتراک بگذارید.',
                       ),
-                    for (final p in posts)
+                    for (final p in posts.where(
+                      (p) =>
+                          searchQuery.isEmpty ||
+                          '${p['body']} ${p['caption']} ${p['title']} ${p['author']}'
+                              .toLowerCase()
+                              .contains(searchQuery),
+                    ))
                       PostCard(
                         key: ValueKey(p['id']),
                         api: api,
@@ -261,41 +349,7 @@ class _PanelState extends State<_Panel> {
             tooltip: 'ساخت محتوا'.translate(context),
             child: const Icon(Icons.add),
           ),
-    bottom: tab == 2
-        ? null
-        : NavigationBar(
-            selectedIndex: 0,
-            onDestinationSelected: (value) async {
-              if (value == 1) await socialPush(context, DirectPage(api: api));
-              if (value == 2) {
-                await socialPush(context, NotificationsPage(api: api));
-                if (mounted) load();
-              }
-              if (value == 3) await socialPush(context, PeoplePage(api: api));
-            },
-            destinations: [
-              NavigationDestination(
-                icon: const Icon(Icons.dynamic_feed_outlined),
-                label: socialText(context, 'پست‌ها', 'Feed'),
-              ),
-              NavigationDestination(
-                icon: const Icon(Icons.chat_bubble_outline),
-                label: socialText(context, 'چت', 'Chat'),
-              ),
-              NavigationDestination(
-                icon: Badge(
-                  isLabelVisible: unread > 0,
-                  label: Text('$unread'),
-                  child: const Icon(Icons.notifications_none),
-                ),
-                label: socialText(context, 'اعلان‌ها', 'Notifications'),
-              ),
-              NavigationDestination(
-                icon: const Icon(Icons.search),
-                label: socialText(context, 'جستجو', 'Search'),
-              ),
-            ],
-          ),
+    bottom: tab == 2 ? null : const BottomNavBarWidget(selectedIndex: 4),
   );
 }
 
