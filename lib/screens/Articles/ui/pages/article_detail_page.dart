@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -112,7 +113,9 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
         requestedPage = reset ? 1 : _page;
     setState(() => _loadingComments = true);
     try {
-      final receipts = token == null ? await library.cache.receipts(id) : <String>[];
+      final receipts = token == null
+          ? await library.cache.receipts(id)
+          : <String>[];
       final rows = await library.api.fetchComments(
         id,
         locale: language,
@@ -239,7 +242,10 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
   Future<void> _link(String raw) async {
     if (_openingLink || raw.startsWith('#')) return;
     final uri = Uri.parse('https://sornaz.com/').resolve(raw);
-    final internal = uri.host == 'sornaz.com' || uri.host == 'www.sornaz.com' || uri.host == Uri.parse(ArticleApiService.baseUrl).host;
+    final internal =
+        uri.host == 'sornaz.com' ||
+        uri.host == 'www.sornaz.com' ||
+        uri.host == Uri.parse(ArticleApiService.baseUrl).host;
     if (internal) {
       int? target = int.tryParse(
         uri.queryParameters['id'] ??
@@ -479,16 +485,18 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
       child: Directionality(
         textDirection: en ? TextDirection.ltr : TextDirection.rtl,
         child: Scaffold(
-          appBar: AppBar(
-            title: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTypography.articleDetailsPageAppBar(context),
-            ),
-            flexibleSpace: ArticleProgressBackground(
-              progress: _progress,
-              isDark: dark,
+          appBar: AppTopBarDirection(
+            child: AppBar(
+              title: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.articleDetailsPageAppBar(context),
+              ),
+              flexibleSpace: ArticleProgressBackground(
+                progress: _progress,
+                isDark: dark,
+              ),
             ),
           ),
           body: _loading && post == null
@@ -513,9 +521,12 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                         padding: const EdgeInsets.all(16),
                         sliver: SliverList.list(
                           children: [
-                            Text(title, style: AppTypography.headline1(context)),
-                    const SizedBox(height:16),
-                    if (articleImage(post).isNotEmpty)
+                            Text(
+                              title,
+                              style: AppTypography.headline1(context),
+                            ),
+                            const SizedBox(height: 16),
+                            if (articleImage(post).isNotEmpty)
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
                                 child: CachedNetworkImage(

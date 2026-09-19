@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -88,7 +89,9 @@ class _ShareAppPageState extends State<ShareAppPage> {
   @override
   Widget build(BuildContext context) => DrawerThemeScope(
     child: Scaffold(
-      appBar: AppBar(title: const AppText('اشتراک‌گذاری برنامه')),
+      appBar: AppTopBarDirection(
+        child: AppBar(title: const AppText('اشتراک‌گذاری برنامه')),
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),

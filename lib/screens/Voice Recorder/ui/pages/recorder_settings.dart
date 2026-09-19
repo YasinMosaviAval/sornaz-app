@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/settings_section_header.dart';
@@ -14,7 +15,9 @@ class _RecorderSettingsPageState extends State<RecorderSettingsPage> {
   Widget build(BuildContext context) {
     final vm = context.read<VoiceRecorderProvider>();
     return Scaffold(
-      appBar: AppBar(title: const Text('تنظیمات ضبط صدا')),
+      appBar: AppTopBarDirection(
+        child: AppBar(title: const Text('تنظیمات ضبط صدا')),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

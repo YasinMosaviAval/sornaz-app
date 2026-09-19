@@ -1,7 +1,6 @@
 import 'package:sornaz/helpers/app_colors.dart';
 import 'notation_settings.dart';
 import 'notation_top_bar.dart';
-import 'package:sornaz/components/main_tab_scaffold.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sornaz/components/main_tabs.dart';
 import 'package:sornaz/components/join_community.dart';
@@ -16,7 +15,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:sornaz/components/bottom_nav.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
@@ -30,8 +28,6 @@ class MusicSheetsPage extends StatelessWidget {
   const MusicSheetsPage({super.key});
   @override
   Widget build(BuildContext context) {
-    if (MainTabsScope.maybeOf(context) == null)
-      return MainTabs(initialIndex: 1, initialChild: this);
     final session = context.watch<AuthSession>();
     if (kIsWeb)
       return BrowserNotationHost(
@@ -272,8 +268,7 @@ class _NotationHostState extends State<_NotationHost>
           unawaited(_controller.runJavaScript('window.Notation.back();'));
         }
       },
-      child: MainTabScaffold(
-        index: 1,
+      child: Scaffold(
         appBar: _route != 'list'
             ? NotationTopBar(
                 editor: _route == 'editor',
@@ -284,9 +279,16 @@ class _NotationHostState extends State<_NotationHost>
                 ),
               )
             : HomeTopBar(
+                leadingWidget: const BackButton(),
                 extraActions: [
                   IconButton(
-                    icon: Icon(Icons.settings, size: 32, color: AppColors.sornaz_app_bar_text_color(isDark: Theme.of(context).brightness == Brightness.dark)),
+                    icon: Icon(
+                      Icons.settings,
+                      size: 24,
+                      color: AppColors.sornaz_app_bar_text_color(
+                        isDark: Theme.of(context).brightness == Brightness.dark,
+                      ),
+                    ),
                     onPressed: () => Navigator.push(
                       context,
                       MaterialPageRoute<void>(
@@ -350,9 +352,6 @@ class _NotationHostState extends State<_NotationHost>
             ],
           ),
         ),
-        bottomNavigationBar: _route == 'list'
-            ? const BottomNavBarWidget(selectedIndex: 1)
-            : null,
       ),
     );
   }

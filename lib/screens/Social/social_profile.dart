@@ -111,8 +111,9 @@ class _ProfileBodyState extends State<ProfileBody> {
       child: ListView(
         children: [
           SizedBox(
-            height: 238,
+            height: 180,
             child: Stack(
+              clipBehavior: Clip.none,
               children: [
                 SocialImage(
                   api: widget.api,
@@ -122,7 +123,7 @@ class _ProfileBodyState extends State<ProfileBody> {
                 ),
                 PositionedDirectional(
                   start: 20,
-                  bottom: 0,
+                  bottom: -48,
                   child: Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
@@ -132,54 +133,45 @@ class _ProfileBodyState extends State<ProfileBody> {
                     child: SocialAvatar(api: widget.api, user: u, size: 96),
                   ),
                 ),
-                PositionedDirectional(
-                  end: 16,
-                  bottom: 7,
-                  child: u['isMe'] == true
-                      ? OutlinedButton(
-                          onPressed: () async {
-                            await socialPush(
-                              context,
-                              EditProfilePage(api: widget.api, profile: u),
-                            );
-                            if (mounted) load();
-                          },
-                          child: AppText(
-                            socialText(
-                              context,
-                              'ویرایش پروفایل',
-                              'Edit profile',
-                            ),
-                          ),
-                        )
-                      : Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            OutlinedButton(
-                              onPressed: busy ? null : follow,
-                              child: AppText(
-                                u['isFollowing'] == true
-                                    ? 'دنبال می‌کنید'
-                                    : 'دنبال کردن',
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            IconButton.filledTonal(
-                              tooltip: 'پیام خصوصی'.translate(context),
-                              onPressed: () => openDirect(
-                                context,
-                                widget.api,
-                                widget.userId,
-                                '${u['name']}',
-                              ),
-                              icon: const Icon(Icons.chat_bubble_outline),
-                            ),
-                          ],
-                        ),
-                ),
               ],
             ),
           ),
+          ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 64),
+            child: Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(130, 10, 20, 8),
+              child: AppText(
+                '${u['bio'] ?? ''}',
+                key: const ValueKey('profile-bio'),
+              ),
+            ),
+          ),
+          if (u['isMe'] != true)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  OutlinedButton(
+                    onPressed: busy ? null : follow,
+                    child: AppText(
+                      u['isFollowing'] == true ? 'دنبال می‌کنید' : 'دنبال کردن',
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton.filledTonal(
+                    tooltip: 'پیام خصوصی'.translate(context),
+                    onPressed: () => openDirect(
+                      context,
+                      widget.api,
+                      widget.userId,
+                      '${u['name']}',
+                    ),
+                    icon: const Icon(Icons.chat_bubble_outline),
+                  ),
+                ],
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
             child: Column(
@@ -246,11 +238,6 @@ class _ProfileBodyState extends State<ProfileBody> {
               ],
             ),
           ),
-          if ('${u['bio']}'.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: AppText('${u['bio']}'),
-            ),
           if (u['links'] is Map)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -278,29 +265,6 @@ class _ProfileBodyState extends State<ProfileBody> {
                       icon: const Icon(Icons.open_in_new, size: 16),
                       label: AppText(entry.key),
                     ),
-                ],
-              ),
-            ),
-          if (u['isMe'] == true)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Wrap(
-                spacing: 8,
-                children: [
-                  ActionChip(
-                    avatar: const Icon(Icons.school_outlined, size: 18),
-                    label: const AppText('مدیریت دوره‌ها'),
-                    onPressed: () => socialPush(
-                      context,
-                      CoursesPage(api: widget.api, mode: 'manage'),
-                    ),
-                  ),
-                  ActionChip(
-                    avatar: const Icon(Icons.bookmark_border, size: 18),
-                    label: const AppText('ذخیره‌شده‌ها'),
-                    onPressed: () =>
-                        socialPush(context, SavedPostsPage(api: widget.api)),
-                  ),
                 ],
               ),
             ),
@@ -339,13 +303,7 @@ class _ProfileBodyState extends State<ProfileBody> {
           ),
           if (tab == 0) ...[
             if (posts.isEmpty) const SocialEmpty('هنوز پستی منتشر نشده است.'),
-            for (final post in posts)
-              PostCard(
-                key: ValueKey(post['id']),
-                api: widget.api,
-                post: post,
-                onChanged: load,
-              ),
+            ProfilePostGrid(api: widget.api, posts: posts, onChanged: load),
           ] else
             CoursesBody(api: widget.api, owner: widget.userId, embedded: true),
           const SizedBox(height: 90),
@@ -353,6 +311,86 @@ class _ProfileBodyState extends State<ProfileBody> {
       ),
     );
   }
+}
+
+class ProfilePostGrid extends StatelessWidget {
+  const ProfilePostGrid({
+    super.key,
+    required this.api,
+    required this.posts,
+    required this.onChanged,
+  });
+  final SocialApi api;
+  final List<Json> posts;
+  final VoidCallback onChanged;
+  @override
+  Widget build(BuildContext context) => GridView.builder(
+    key: const ValueKey('profile-post-grid'),
+    shrinkWrap: true,
+    physics: const NeverScrollableScrollPhysics(),
+    padding: const EdgeInsets.symmetric(horizontal: 3),
+    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: 3,
+      childAspectRatio: 9 / 16,
+      crossAxisSpacing: 3,
+      mainAxisSpacing: 3,
+    ),
+    itemCount: posts.length,
+    itemBuilder: (context, index) {
+      final post = posts[index];
+      final video = '${post['mime']}'.startsWith('video/');
+      final path = video ? post['thumbnail'] : post['media'];
+      return InkWell(
+        key: ValueKey('profile-post-${post['id']}'),
+        onTap: () async {
+          var changed = false;
+          await socialPush(
+            context,
+            SocialScaffold(
+              title: socialText(context, 'پست', 'Post'),
+              body: SingleChildScrollView(
+                child: PostCard(
+                  api: api,
+                  post: post,
+                  onChanged: () => changed = true,
+                ),
+              ),
+            ),
+          );
+          if (changed && context.mounted) onChanged();
+        },
+        child: Semantics(
+          label: '${post['body'] ?? ''}',
+          button: true,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              SocialImage(api: api, path: path is String ? path : null),
+              if (path == null && '${post['body'] ?? ''}'.isNotEmpty)
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: AppText(
+                      '${post['body']}',
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ),
+              if (video)
+                const PositionedDirectional(
+                  top: 8,
+                  end: 8,
+                  child: Icon(Icons.play_circle_fill, color: Colors.white),
+                ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }
 
 class PeoplePage extends StatefulWidget {

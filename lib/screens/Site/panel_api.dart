@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
@@ -10,7 +11,7 @@ class PanelApi {
   final String token;
   final bool Function()? isCurrentAccount;
   void checkAccount() {
-    if (isCurrentAccount?.call() == false) {
+    if (_disposed || isCurrentAccount?.call() == false) {
       throw SocialException(
         'حساب کاربری تغییر کرده است. دوباره پنل را باز کنید.',
         401,
@@ -26,16 +27,111 @@ class PanelApi {
     'Accept': 'application/json',
     'Accept-Language': SocialApi.locale,
   };
+  // Session-only cache: no background revalidation or automatic retry.
+  final Map<String, (DateTime, String)> _cache = {};
+  final Map<String, Future<Json>> _pending = {};
+  final Map<String, DateTime> _refreshes = {};
+  Future<void> _queue = Future<void>.value();
+  DateTime? _blockedUntil;
+  Object? _lastFailure;
+  bool _disposed = false;
+  int _revision = 0;
+
+  String _key(String path, Map<String, String>? query) {
+    final sorted = Map.fromEntries(
+      (query ?? {}).entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
+    );
+    return '${SocialApi.locale}:${uri(path, sorted)}';
+  }
+
+  Future<Json> refresh(String path, [Map<String, String>? query]) {
+    final key = _key(path, query);
+    final now = DateTime.now();
+    if (!_refreshes.containsKey(key) ||
+        now.difference(_refreshes[key]!) >= const Duration(seconds: 10)) {
+      _refreshes[key] = now;
+      _cache.remove(key);
+    }
+    return get(path, query);
+  }
+
   Future<Json> get(String path, [Map<String, String>? query]) async {
     checkAccount();
-    final request = http.Request('GET', uri(path, query))
-      ..followRedirects = false
-      ..headers.addAll(headers);
-    final response = await http.Response.fromStream(
-      await client.send(request).timeout(const Duration(seconds: 30)),
-    );
-    checkAccount();
-    return decode(response);
+    final key = _key(path, query);
+    final cached = _cache[key];
+    if (cached != null && DateTime.now().isBefore(cached.$1)) {
+      return object(jsonDecode(cached.$2));
+    }
+    final pending = _pending[key];
+    if (pending != null) return object(jsonDecode(jsonEncode(await pending)));
+    if (_pending.length >= 16) {
+      throw const SocialException('Please wait for the current request.');
+    }
+    final previous = _queue;
+    final done = Completer<void>();
+    _queue = done.future;
+    final revision = _revision;
+    final future = () async {
+      await previous;
+      checkAccount();
+      if (_blockedUntil != null && DateTime.now().isBefore(_blockedUntil!)) {
+        throw _lastFailure!;
+      }
+      try {
+        final request = http.Request('GET', uri(path, query))
+          ..followRedirects = false
+          ..headers.addAll(headers);
+        final response = await (() async => http.Response.fromStream(
+          await client.send(request),
+        ))().timeout(const Duration(seconds: 30));
+        checkAccount();
+        if (response.statusCode == 429 || response.statusCode == 503) {
+          final raw = response.headers['retry-after'] ?? '';
+          final seconds = int.tryParse(raw);
+          DateTime? date;
+          try {
+            date = HttpDate.parse(raw);
+          } catch (_) {}
+          _blockedUntil = DateTime.now().add(
+            Duration(
+              seconds:
+                  (seconds ?? date?.difference(DateTime.now()).inSeconds ?? 60)
+                      .clamp(30, 3600),
+            ),
+          );
+        }
+        final value = decode(response);
+        if (revision == _revision) {
+          if (_cache.length >= 64) _cache.remove(_cache.keys.first);
+          _cache[key] = (
+            DateTime.now().add(
+              path.isEmpty
+                  ? const Duration(minutes: 10)
+                  : const Duration(minutes: 2),
+            ),
+            jsonEncode(value),
+          );
+        }
+        return value;
+      } catch (error) {
+        _lastFailure = error;
+        if (error is SocialException &&
+            (error.status == 401 || error.status == 403)) {
+          _cache.clear();
+        }
+        if (_blockedUntil == null || _blockedUntil!.isBefore(DateTime.now())) {
+          _blockedUntil = DateTime.now().add(const Duration(seconds: 30));
+        }
+        rethrow;
+      }
+    }();
+    _pending[key] = future;
+    try {
+      return object(jsonDecode(jsonEncode(await future)));
+    } finally {
+      _pending.remove(key);
+      done.complete();
+    }
   }
 
   Future<Json> act(
@@ -78,7 +174,10 @@ class PanelApi {
       await client.send(request).timeout(const Duration(minutes: 2)),
     );
     checkAccount();
-    return decode(response);
+    final value = decode(response);
+    _revision++;
+    _cache.clear();
+    return value;
   }
 
   Future<void> download(
@@ -136,7 +235,11 @@ class PanelApi {
     return data is List ? {'items': data} : optionalObject(data);
   }
 
-  void dispose() => client.close();
+  void dispose() {
+    _disposed = true;
+    _cache.clear();
+    client.close();
+  }
 }
 
 dynamic panelValue(dynamic value, String path) {

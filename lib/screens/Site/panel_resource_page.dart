@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'dart:async';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -54,21 +55,24 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
     load();
   }
 
-  Future<void> load() async {
+  Future<void> load({bool refresh = false}) async {
     final request = ++generation;
     try {
-      final value = await widget.api.get('/$section/list', {
-        ...widget.params,
-        for (final entry in filters.entries)
-          if (entry.value != null && '${entry.value}'.isNotEmpty)
-            entry.key: '${entry.value}',
-        if (!widget.params.containsKey('page')) 'page': '$page',
-        'perPage': '50',
-        if (query.trim().isNotEmpty) ...{
-          'q': query.trim(),
-          'search': query.trim(),
+      final value = await (refresh ? widget.api.refresh : widget.api.get)(
+        '/$section/list',
+        {
+          ...widget.params,
+          for (final entry in filters.entries)
+            if (entry.value != null && '${entry.value}'.isNotEmpty)
+              entry.key: '${entry.value}',
+          if (!widget.params.containsKey('page')) 'page': '$page',
+          'perPage': '50',
+          if (query.trim().isNotEmpty) ...{
+            'q': query.trim(),
+            'search': query.trim(),
+          },
         },
-      });
+      );
       for (final option
           in widget.section['optionActions'] as List? ?? const []) {
         value.addAll(await widget.api.get('/$section/$option', widget.params));
@@ -256,7 +260,9 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
           await Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) => Scaffold(
-                appBar: AppBar(title: Text('${action['label']}')),
+                appBar: AppTopBarDirection(
+                  child: AppBar(title: Text('${action['label']}')),
+                ),
                 body: SingleChildScrollView(
                   padding: const EdgeInsets.all(16),
                   child: PanelDataView(value: detail),
@@ -493,89 +499,91 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
         )
         .toList();
     return Scaffold(
-      appBar: AppBar(
-        title: Text(panelLabel(context, widget.section)),
-        actions: [
-          if (filtered.isNotEmpty)
-            IconButton(
-              tooltip: socialText(
-                context,
-                'خروجی فهرست نمایش‌داده‌شده',
-                'Export displayed records',
+      appBar: AppTopBarDirection(
+        child: AppBar(
+          title: Text(panelLabel(context, widget.section)),
+          actions: [
+            if (filtered.isNotEmpty)
+              IconButton(
+                tooltip: socialText(
+                  context,
+                  'خروجی فهرست نمایش‌داده‌شده',
+                  'Export displayed records',
+                ),
+                icon: const Icon(Icons.file_download_outlined),
+                onPressed: () async {
+                  try {
+                    await exportPanelRows(section, filtered);
+                  } catch (e) {
+                    if (mounted) socialError(this.context, e);
+                  }
+                },
               ),
-              icon: const Icon(Icons.file_download_outlined),
-              onPressed: () async {
-                try {
-                  await exportPanelRows(section, filtered);
-                } catch (e) {
-                  if (mounted) socialError(this.context, e);
-                }
-              },
-            ),
-          if (filtered.isNotEmpty || data['stats'] is Map)
-            IconButton(
-              tooltip: 'PDF',
-              icon: const Icon(Icons.picture_as_pdf_outlined),
-              onPressed: () async {
-                final exportRows = filtered.isEmpty
-                    ? [optionalObject(data['stats'])]
-                    : filtered;
-                final labels = {
-                  for (final key in exportRows.expand((row) => row.keys))
-                    key: panelDataLabel(context, key),
-                };
-                final title = panelLabel(context, widget.section);
-                final rtl = Directionality.of(context) == TextDirection.rtl;
-                try {
-                  await exportPanelPdf(
-                    title,
-                    exportRows,
-                    rtl: rtl,
-                    labels: labels,
-                  );
-                } catch (e) {
-                  if (mounted) socialError(this.context, e);
-                }
-              },
-            ),
-          if (widget.section['filters'] is List)
-            IconButton(
-              icon: const Icon(Icons.filter_list),
-              onPressed: () async {
-                final result = await Navigator.of(context)
-                    .push<PanelFormResult>(
-                      MaterialPageRoute(
-                        builder: (_) => PanelFormPage(
-                          title: socialText(context, 'فیلترها', 'Filters'),
-                          fields: objects(widget.section['filters']),
-                          data: data,
-                          initial: filters,
-                        ),
-                      ),
+            if (filtered.isNotEmpty || data['stats'] is Map)
+              IconButton(
+                tooltip: 'PDF',
+                icon: const Icon(Icons.picture_as_pdf_outlined),
+                onPressed: () async {
+                  final exportRows = filtered.isEmpty
+                      ? [optionalObject(data['stats'])]
+                      : filtered;
+                  final labels = {
+                    for (final key in exportRows.expand((row) => row.keys))
+                      key: panelDataLabel(context, key),
+                  };
+                  final title = panelLabel(context, widget.section);
+                  final rtl = Directionality.of(context) == TextDirection.rtl;
+                  try {
+                    await exportPanelPdf(
+                      title,
+                      exportRows,
+                      rtl: rtl,
+                      labels: labels,
                     );
-                if (result != null && mounted) {
+                  } catch (e) {
+                    if (mounted) socialError(this.context, e);
+                  }
+                },
+              ),
+            if (widget.section['filters'] is List)
+              IconButton(
+                icon: const Icon(Icons.filter_list),
+                onPressed: () async {
+                  final result = await Navigator.of(context)
+                      .push<PanelFormResult>(
+                        MaterialPageRoute(
+                          builder: (_) => PanelFormPage(
+                            title: socialText(context, 'فیلترها', 'Filters'),
+                            fields: objects(widget.section['filters']),
+                            data: data,
+                            initial: filters,
+                          ),
+                        ),
+                      );
+                  if (result != null && mounted) {
+                    setState(() {
+                      filters = result.values;
+                      page = 1;
+                    });
+                    await load();
+                  }
+                },
+              ),
+            if (filters.isNotEmpty)
+              IconButton(
+                tooltip: socialText(context, 'حذف فیلترها', 'Clear filters'),
+                icon: const Icon(Icons.filter_alt_off),
+                onPressed: () {
                   setState(() {
-                    filters = result.values;
+                    filters = {};
                     page = 1;
                   });
-                  await load();
-                }
-              },
-            ),
-          if (filters.isNotEmpty)
-            IconButton(
-              tooltip: socialText(context, 'حذف فیلترها', 'Clear filters'),
-              icon: const Icon(Icons.filter_alt_off),
-              onPressed: () {
-                setState(() {
-                  filters = {};
-                  page = 1;
-                });
-                load();
-              },
-            ),
-          IconButton(onPressed: load, icon: const Icon(Icons.refresh)),
-        ],
+                  load();
+                },
+              ),
+            IconButton(onPressed: load, icon: const Icon(Icons.refresh)),
+          ],
+        ),
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
@@ -589,7 +597,7 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
               onRetry: load,
             )
           : RefreshIndicator(
-              onRefresh: load,
+              onRefresh: () => load(refresh: true),
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
@@ -931,52 +939,47 @@ class PanelConversationPage extends StatefulWidget {
 class _PanelConversationPageState extends State<PanelConversationPage> {
   final text = TextEditingController();
   List<Json> messages = [];
-  Timer? timer;
   PlatformFile? attachment;
   bool sending = false, loading = true, fetching = false;
   Object? error;
+  bool hasMore = false;
+  int historyCursor = 0;
   String get id => '${widget.conversation['id']}';
   Json get actions => optionalObject(widget.section['actions']);
   @override
   void initState() {
     super.initState();
     load();
-    timer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (mounted &&
-          ModalRoute.of(context)?.isCurrent == true &&
-          WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
-        load();
-      }
-    });
   }
 
   @override
   void dispose() {
-    timer?.cancel();
     text.dispose();
     super.dispose();
   }
 
-  Future<void> load() async {
+  Future<void> load({bool nextPage = false, bool refresh = false}) async {
     if (fetching) return;
     fetching = true;
     try {
-      // Read every server page: the legacy endpoint caps its first batch at 200.
-      final result = <Json>[];
-      var after = 0;
-      while (mounted) {
-        final data = await widget.api.get('/chat/messages', {
-          'id': id,
-          'after': '$after',
-        });
-        final batch = objects(data['messages'] ?? []);
-        result.addAll(batch);
-        final next = batch.isEmpty
-            ? after
-            : int.tryParse('${batch.last['id']}') ?? after;
-        if (batch.length < (after == 0 ? 200 : 100) || next <= after) break;
-        after = next;
-      }
+      // One batch per explicit action; never drain the entire history automatically.
+      final after = nextPage ? historyCursor : 0;
+      final data = await (refresh ? widget.api.refresh : widget.api.get)(
+        '/chat/messages',
+        {'id': id, 'after': '$after'},
+      );
+      final batch = objects(data['messages'] ?? []);
+      final result =
+          <int, Json>{
+              if (nextPage)
+                for (final message in messages) number(message['id']): message,
+              for (final message in batch) number(message['id']): message,
+            }.values.toList()
+            ..sort((a, b) => number(a['id']).compareTo(number(b['id'])));
+      if (batch.isNotEmpty) historyCursor = number(batch.last['id']);
+      hasMore =
+          batch.length == (after == 0 ? 200 : 100) &&
+          number(batch.last['id']) > after;
       if (mounted) {
         setState(() {
           messages = result;
@@ -995,7 +998,7 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
     if (sending || text.text.trim().isEmpty && attachment == null) return;
     setState(() => sending = true);
     try {
-      await widget.api.act(
+      final sent = await widget.api.act(
         'chat',
         'send',
         params: {'id': id},
@@ -1005,7 +1008,23 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
       if (!mounted) return;
       text.clear();
       setState(() => attachment = null);
-      await load();
+      final sentId = number(sent['id']);
+      if (sentId > 0) {
+        final result = await widget.api.get('/chat/messages', {
+          'id': id,
+          'after': '${sentId - 1}',
+        });
+        if (mounted)
+          setState(() {
+            final merged = <int, Json>{
+              for (final m in messages) number(m['id']): m,
+              for (final m in objects(result['messages'] ?? []))
+                number(m['id']): m,
+            };
+            messages = merged.values.toList()
+              ..sort((a, b) => number(a['id']).compareTo(number(b['id'])));
+          });
+      }
     } catch (e) {
       if (mounted) socialError(context, e);
     } finally {
@@ -1064,13 +1083,22 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
         );
         if (confirmed != true || !mounted) return;
       }
-      await widget.api.act(
+      final updated = await widget.api.act(
         'chat',
         action,
         params: {'id': '${row['id']}'},
         values: values,
       );
-      await load();
+      if (mounted)
+        setState(() {
+          if (action == 'delete-message')
+            messages.removeWhere((m) => m['id'] == row['id']);
+          if (action == 'edit-message') {
+            row['body'] = values['body'];
+            row['edited'] = true;
+          }
+          if (action == 'like') row.addAll(updated);
+        });
     } catch (e) {
       if (mounted) socialError(context, e);
     }
@@ -1083,10 +1111,32 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
       return const Scaffold(body: JoinCommunity());
     }
     return Scaffold(
-      appBar: AppBar(title: Text(panelTitle(widget.conversation))),
+      appBar: AppTopBarDirection(
+        child: AppBar(
+          title: Text(panelTitle(widget.conversation)),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: fetching ? null : () => load(refresh: true),
+            ),
+          ],
+        ),
+      ),
       body: Column(
         children: [
           if (loading) const LinearProgressIndicator(),
+          if (hasMore)
+            TextButton(
+              key: const ValueKey('panel-more-messages'),
+              onPressed: fetching ? null : () => load(nextPage: true),
+              child: Text(
+                socialText(
+                  context,
+                  'نمایش پیام‌های بیشتر',
+                  'Load more messages',
+                ),
+              ),
+            ),
           if (error != null)
             TextButton(
               onPressed: load,
@@ -1330,9 +1380,11 @@ class _PanelGroupDetailsState extends State<PanelGroupDetails> {
       return const Scaffold(body: JoinCommunity());
     }
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          socialText(context, 'اطلاعات گفتگو', 'Conversation details'),
+      appBar: AppTopBarDirection(
+        child: AppBar(
+          title: Text(
+            socialText(context, 'اطلاعات گفتگو', 'Conversation details'),
+          ),
         ),
       ),
       body: loading

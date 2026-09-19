@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/screens/Home/ui/pages/home.dart';
-import 'package:sornaz/screens/Notation/music_sheets_page.dart';
+import 'package:sornaz/screens/Social/my_profile_page.dart';
 import 'package:sornaz/screens/Home/ui/pages/music_tools.dart';
 import 'package:sornaz/screens/Social/user_panel.dart';
 import 'package:sornaz/screens/Site/site_panel_page.dart';
@@ -40,10 +40,10 @@ class BottomNavBarWidget extends StatelessWidget {
             MaterialPageRoute(
               builder: (_) => const [
                 HomePage(),
-                MusicSheetsPage(),
                 SitePanelPage(),
-                MusicToolsPage(),
                 UserPanelPage(),
+                MusicToolsPage(),
+                MyProfilePage(),
               ][index],
             ),
           );
@@ -52,16 +52,16 @@ class BottomNavBarWidget extends StatelessWidget {
           for (final item in [
             (Icons.home_outlined, Icons.home, 'خانه', 'Home'),
             (
-              Icons.music_note_outlined,
-              Icons.music_note,
-              'نت‌های موسیقی',
-              'Music Sheet',
-            ),
-            (
               Icons.dashboard_outlined,
               Icons.dashboard,
               'پنل کاربری',
               'User panel',
+            ),
+            (
+              Icons.dynamic_feed_outlined,
+              Icons.dynamic_feed,
+              'جامعه سرناز',
+              'Sornaz community',
             ),
             (Icons.tune, Icons.tune, 'ابزار موسیقی', 'Music tools'),
             (Icons.person_outline, Icons.person, 'پروفایل', 'Profile'),

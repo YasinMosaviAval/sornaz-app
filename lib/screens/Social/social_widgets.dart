@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:sornaz/components/main_tab_scaffold.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sornaz/helpers/app_strings.dart';
@@ -77,13 +78,30 @@ class SocialScaffold extends StatelessWidget {
     );
     return Theme(
       data: theme,
-      child: tabIndex != null ? MainTabScaffold(index: tabIndex!, appBar: appBar ?? AppBar(title:AppText(title),actions:actions), drawer:drawer,body:body,bottomNavigationBar:bottom,floatingActionButton:floatingActionButton) : Scaffold(
-        appBar: appBar ?? AppBar(title: AppText(title), actions: actions),
-        drawer: drawer,
-        body: body,
-        bottomNavigationBar: bottom,
-        floatingActionButton: floatingActionButton,
-      ),
+      child: tabIndex != null
+          ? MainTabScaffold(
+              index: tabIndex!,
+              appBar:
+                  appBar ??
+                  AppTopBarDirection(
+                    child: AppBar(title: AppText(title), actions: actions),
+                  ),
+              drawer: drawer,
+              body: body,
+              bottomNavigationBar: bottom,
+              floatingActionButton: floatingActionButton,
+            )
+          : Scaffold(
+              appBar:
+                  appBar ??
+                  AppTopBarDirection(
+                    child: AppBar(title: AppText(title), actions: actions),
+                  ),
+              drawer: drawer,
+              body: body,
+              bottomNavigationBar: bottom,
+              floatingActionButton: floatingActionButton,
+            ),
     );
   }
 }
@@ -362,7 +380,7 @@ class _SocialVideoState extends State<SocialVideo> with WidgetsBindingObserver {
                     : Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (ctx) => Scaffold(
-                            appBar: AppBar(),
+                            appBar: AppTopBarDirection(child: AppBar()),
                             body: Center(child: player(ctx, full: true)),
                           ),
                         ),

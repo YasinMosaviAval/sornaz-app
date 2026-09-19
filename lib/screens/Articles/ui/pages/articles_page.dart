@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:sornaz/screens/Articles/ui/components/article_progress.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -31,23 +32,25 @@ class ArticlesPage extends StatelessWidget {
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: AppColors.articles_page_app_bar_background_color(
-            isDark: isDark,
+        appBar: AppTopBarDirection(
+          child: AppBar(
+            backgroundColor: AppColors.articles_page_app_bar_background_color(
+              isDark: isDark,
+            ),
+            elevation: 0,
+            flexibleSpace: ArticleProgressBackground(
+              progress: context.read<ArticlesProvider>().progress,
+              isDark: isDark,
+            ),
+            automaticallyImplyLeading: false,
+            titleSpacing: AppSpacing.space_16,
+            leading: HeaderMenuIcon(isDark: isDark),
+            title: ApplicationTitle(isDark: isDark),
+            actions: [
+              ApplicationLogo(isDark: isDark),
+              AppSpacing.sizedBoxW24(),
+            ],
           ),
-          elevation: 0,
-          flexibleSpace: ArticleProgressBackground(
-            progress: context.read<ArticlesProvider>().progress,
-            isDark: isDark,
-          ),
-          automaticallyImplyLeading: false,
-          titleSpacing: AppSpacing.space_16,
-          leading: HeaderMenuIcon(isDark: isDark),
-          title: ApplicationTitle(isDark: isDark),
-          actions: [
-            ApplicationLogo(isDark: isDark),
-            AppSpacing.sizedBoxW24(),
-          ],
         ),
         drawer: const AppDrawer(),
         body: Container(

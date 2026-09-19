@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -57,7 +58,7 @@ class _AcademyDetailsPageState extends State<AcademyDetailsPage> {
   Widget build(BuildContext context) {
     final a = academy;
     return Scaffold(
-      appBar: AppBar(title: Text(widget.name)),
+      appBar: AppTopBarDirection(child: AppBar(title: Text(widget.name))),
       body: failed
           ? SocialEmpty(
               socialText(

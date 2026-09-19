@@ -116,11 +116,11 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('پنل کاربری و پروفایل'), findsNothing);
       expect(find.text('ارسال بازخورد'), findsNothing);
-      final themeSize = textSize(tester, 'حالت تاریک'),
+      final themeSize = textSize(tester, 'درباره ما'),
           shareSize = textSize(tester, 'اشتراک‌گذاری برنامه');
       await data.updateFontSize(2);
       await tester.pumpAndSettle();
-      expect(textSize(tester, 'حالت تاریک'), themeSize + 2);
+      expect(textSize(tester, 'درباره ما'), themeSize + 2);
       expect(textSize(tester, 'اشتراک‌گذاری برنامه'), shareSize + 2);
       await tester.ensureVisible(find.text('ورود با حساب دیگر'));
       await tester.tap(find.text('ورود با حساب دیگر'));

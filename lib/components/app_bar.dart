@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
@@ -20,8 +21,6 @@ class SornazAppBar extends StatelessWidget implements PreferredSizeWidget {
   final double iconSize;
   final double padding;
 
-
-
   const SornazAppBar({
     super.key,
 
@@ -40,44 +39,46 @@ class SornazAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.padding = AppSpacing.space_16,
   });
 
-
-
   @override
   Widget build(BuildContext context) {
     final isDark = Provider.of<AppData>(context).isDark;
 
     final textColor = AppColors.sornaz_app_bar_text_color(isDark: isDark);
 
-    return AppBar(
-      automaticallyImplyLeading: false,
-      centerTitle: centerTitle,
-      elevation: elevation,
-      backgroundColor: AppColors.sornaz_app_bar_background_color(isDark: isDark),
-      
-      leading: showBackButton
-          ? IconButton(
-              icon: const Icon(Icons.arrow_back),
-              color: textColor,
-              onPressed: onBack ?? () => Navigator.pop(context),
-            )
-          : null,
+    return AppTopBarDirection(
+      child: AppBar(
+        automaticallyImplyLeading: false,
+        centerTitle: centerTitle,
+        elevation: elevation,
+        backgroundColor: AppColors.sornaz_app_bar_background_color(
+          isDark: isDark,
+        ),
 
-      title: title != null
-          ? Text(
-              title!,
-              style: AppTypography.sornazAppBarTitle(context, textColor),
-            )
-          : centerIcon != null
-              ? IconButton(
-                  icon: Icon(centerIcon),
-                  iconSize: iconSize,
-                  color: textColor,
-                  onPressed: onCenterIconPressed,
-                  padding: EdgeInsets.symmetric(horizontal: padding),
-                )
-              : null,
-      titleSpacing: 0,
-      actions: actions,
+        leading: showBackButton
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                color: textColor,
+                onPressed: onBack ?? () => Navigator.pop(context),
+              )
+            : null,
+
+        title: title != null
+            ? Text(
+                title!,
+                style: AppTypography.sornazAppBarTitle(context, textColor),
+              )
+            : centerIcon != null
+            ? IconButton(
+                icon: Icon(centerIcon),
+                iconSize: iconSize,
+                color: textColor,
+                onPressed: onCenterIconPressed,
+                padding: EdgeInsets.symmetric(horizontal: padding),
+              )
+            : null,
+        titleSpacing: 0,
+        actions: actions,
+      ),
     );
   }
 

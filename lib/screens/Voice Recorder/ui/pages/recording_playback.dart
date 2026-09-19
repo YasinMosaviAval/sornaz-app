@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_top_bar_direction.dart';
 import '../components/seekable_waveform.dart';
 import 'dart:io';
 import 'dart:math' as math;
@@ -118,8 +119,10 @@ class _RecordingPlaybackPageState extends State<RecordingPlaybackPage> {
     return PopScope(
       canPop: !recording,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(widget.file.name, style: const TextStyle(fontSize: 14)),
+        appBar: AppTopBarDirection(
+          child: AppBar(
+            title: Text(widget.file.name, style: const TextStyle(fontSize: 14)),
+          ),
         ),
         body: ListView(
           padding: const EdgeInsets.all(16),

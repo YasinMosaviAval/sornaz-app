@@ -2,7 +2,6 @@ import 'package:sornaz/components/account_avatar.dart';
 import 'package:sornaz/screens/Social/user_panel.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:sornaz/components/app_logo.dart';
-import 'package:flutter/cupertino.dart' show CupertinoSwitch;
 import 'package:flutter/material.dart';
 import 'package:sornaz/screens/Home/ui/pages/home.dart';
 import 'package:sornaz/components/drawer_theme.dart';
@@ -49,7 +48,13 @@ class AppDrawer extends StatelessWidget {
                           padding: const EdgeInsets.all(20),
                           child: Row(
                             children: [
-                              authUser==null?AppLogo(size:48,withBackground:true):AccountAvatar(avatar:authUser.avatar,token:session.token,size:48),
+                              authUser == null
+                                  ? AppLogo(size: 48, withBackground: true)
+                                  : AccountAvatar(
+                                      avatar: authUser.avatar,
+                                      token: session.token,
+                                      size: 48,
+                                    ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
@@ -80,63 +85,12 @@ class AppDrawer extends StatelessWidget {
                             ],
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Ink(
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? const Color(0xff111111)
-                                  : const Color(0xfff7f7f7),
-                              border: Border.all(
-                                color: isDark ? Colors.white12 : Colors.black12,
-                              ),
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        AppText(
-                                          'حالت تاریک',
-                                          style:
-                                              AppTypography.appDrawerItemTitle(
-                                                context,
-                                              ),
-                                        ),
-                                        AppText(
-                                          'نمایش برنامه با تم تاریک',
-                                          style:
-                                              AppTypography.appDrawerApplicationEmail(
-                                                context,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Transform.scale(
-                                    scale: 0.8,
-                                    child: CupertinoSwitch(
-                                      activeTrackColor: appData.accent,
-                                      value: isDark,
-                                      onChanged: appData.toggleDarkMode,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
                         const Padding(
                           padding: EdgeInsets.fromLTRB(20, 16, 20, 4),
-                          child: AppText('برنامه'),
+                          child: AppText(
+                            'برنامه',
+                            style: TextStyle(color: Colors.grey),
+                          ),
                         ),
                         AppDrawerItem(
                           icon: Icons.info,
@@ -144,15 +98,11 @@ class AppDrawer extends StatelessWidget {
                           link: AboutUsPage(),
                         ),
                         AppDrawerItem(
-                          icon: Icons.bookmark_border,
-                          text: 'نشان‌شده‌ها',
-                          link: const SimpleInfoPage(
-                            title: 'نشان‌شده‌ها',
-                            icon: Icons.bookmark_border,
-                            body:
-                                'محتواهایی که نشان می‌کنید در این بخش نمایش داده می‌شوند.',
-                          ),
+                          icon: Icons.rate_review_outlined,
+                          text: 'تماس با ما',
+                          link: const ContactUsPage(),
                         ),
+
                         const AppDrawerItem(
                           icon: Icons.share_outlined,
                           text: 'اشتراک‌گذاری برنامه',
@@ -168,16 +118,7 @@ class AppDrawer extends StatelessWidget {
                           text: AppStrings.settings_title.translate(context),
                           link: SettingsPage(),
                         ),
-                        AppDrawerItem(
-                          icon: Icons.emoji_events_outlined,
-                          text: 'دستاوردها',
-                          link: const SimpleInfoPage(
-                            title: 'دستاوردها',
-                            icon: Icons.emoji_events_outlined,
-                            body:
-                                'دستاوردها و روند پیشرفت آموزشی شما در این بخش نمایش داده می‌شود.',
-                          ),
-                        ),
+
                         AppDrawerItem(
                           icon: Icons.privacy_tip_outlined,
                           text: 'حریم خصوصی',
@@ -201,11 +142,7 @@ class AppDrawer extends StatelessWidget {
                           text: 'حساب کاربری',
                           link: const UserPanelPage(initialTab: 2),
                         ),
-                        AppDrawerItem(
-                          icon: Icons.rate_review_outlined,
-                          text: 'تماس با ما',
-                          link: const ContactUsPage(),
-                        ),
+
                         AppDrawerItem(
                           icon: Icons.card_membership_outlined,
                           text: 'عضویت',
@@ -214,6 +151,16 @@ class AppDrawer extends StatelessWidget {
                             icon: Icons.card_membership_outlined,
                             body:
                                 'جزئیات عضویت و خدمات حساب شما پس از فعال شدن طرح‌های عضویت اینجا قرار می‌گیرد.',
+                          ),
+                        ),
+                        AppDrawerItem(
+                          icon: Icons.emoji_events_outlined,
+                          text: 'دستاوردها',
+                          link: const SimpleInfoPage(
+                            title: 'دستاوردها',
+                            icon: Icons.emoji_events_outlined,
+                            body:
+                                'دستاوردها و روند پیشرفت آموزشی شما در این بخش نمایش داده می‌شود.',
                           ),
                         ),
                       ],
@@ -253,9 +200,47 @@ class AppDrawer extends StatelessWidget {
                                     : () async {
                                         final session = context
                                             .read<AuthSession>();
-                                        final selected=await showModalBottomSheet<int>(context:context,builder:(c)=>SafeArea(child:ListView(shrinkWrap:true,children:[for(final account in session.accounts) ListTile(leading:AccountAvatar(avatar:account.avatar,token:session.tokenFor(account.id)),title:Text(account.fullName),subtitle:Text(account.contact),trailing:const Icon(Icons.logout),onTap:()=>Navigator.pop(c,account.id))])));
-                                        if(selected==null)return;
-                                        await session.clear(accountId:selected);
+                                        final selected =
+                                            await showModalBottomSheet<int>(
+                                              context: context,
+                                              builder: (c) => SafeArea(
+                                                child: ListView(
+                                                  shrinkWrap: true,
+                                                  children: [
+                                                    for (final account
+                                                        in session.accounts)
+                                                      ListTile(
+                                                        leading: AccountAvatar(
+                                                          avatar:
+                                                              account.avatar,
+                                                          token: session
+                                                              .tokenFor(
+                                                                account.id,
+                                                              ),
+                                                        ),
+                                                        title: Text(
+                                                          account.fullName,
+                                                        ),
+                                                        subtitle: Text(
+                                                          account.contact,
+                                                        ),
+                                                        trailing: const Icon(
+                                                          Icons.logout,
+                                                        ),
+                                                        onTap: () =>
+                                                            Navigator.pop(
+                                                              c,
+                                                              account.id,
+                                                            ),
+                                                      ),
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                        if (selected == null) return;
+                                        await session.clear(
+                                          accountId: selected,
+                                        );
                                         if (context.mounted) _home(context);
                                       },
                               ),
@@ -302,7 +287,10 @@ class AppDrawer extends StatelessWidget {
                     ),
                     for (final account in session.accounts)
                       ListTile(
-                        leading: AccountAvatar(avatar:account.avatar,token:session.tokenFor(account.id)),
+                        leading: AccountAvatar(
+                          avatar: account.avatar,
+                          token: session.tokenFor(account.id),
+                        ),
                         title: AppText(account.fullName),
                         subtitle: AppText(account.contact),
                         trailing: account.id == session.user?.id

@@ -1,4 +1,5 @@
 import 'package:sornaz/screens/Site/site_api.dart';
+import 'package:sornaz/screens/Site/academy_registration.dart';
 import 'package:sornaz/screens/Site/academy_search.dart';
 import 'package:sornaz/components/main_tab_scaffold.dart';
 import 'package:sornaz/components/main_tabs.dart';
@@ -236,6 +237,8 @@ class _HomeContentState extends State<HomeContent>
                             padding: EdgeInsets.only(top: 12),
                             child: LinearProgressIndicator(),
                           ),
+                        AcademySearchCard(api: widget.academyApi),
+                        const AcademyRegistrationCard(),
                         LearningHeading(
                           socialText(context, 'تازه‌های وبلاگ', 'New blog'),
                           onMore: () =>
@@ -338,7 +341,7 @@ class _HomeContentState extends State<HomeContent>
                               },
                             ),
                           ),
-                        AcademySearchCard(api: widget.academyApi),
+
                         if (updated.isNotEmpty)
                           LearningHeading(
                             socialText(

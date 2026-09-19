@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:sornaz/screens/Social/social_api.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/components/app_text.dart';
@@ -26,7 +27,7 @@ class SimpleInfoPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DrawerThemeScope(
     child: Scaffold(
-      appBar: AppBar(title: AppText(title)),
+      appBar: AppTopBarDirection(child: AppBar(title: AppText(title))),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(28),
@@ -176,7 +177,9 @@ class _ContactUsPageState extends State<ContactUsPage> {
     final user = context.watch<AuthSession>().user;
     return DrawerThemeScope(
       child: Scaffold(
-        appBar: AppBar(title: const AppText('تماس با ما')),
+        appBar: AppTopBarDirection(
+          child: AppBar(title: const AppText('تماس با ما')),
+        ),
         body: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) => SingleChildScrollView(

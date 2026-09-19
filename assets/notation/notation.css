@@ -36,3 +36,37 @@ body{font-size:calc(14px * var(--font-scale,1))} .field span{font-size:calc(12px
 .score-delete svg{width:24px;height:24px}
 .score-title h2{min-height:48px;padding:0 100px 0 52px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px}
 .palette-key,.rest-key{width:28px;height:28px;min-width:28px;min-height:28px;padding:0;font-size:21px;line-height:1;display:flex;align-items:center;justify-content:center}
+.shell.form{min-height:100dvh;display:flex;flex-direction:column;padding:16px 16px 24px}
+.native-toolbar .shell.form{min-height:100dvh}
+#metadata{flex:1;display:flex;flex-direction:column;justify-content:space-between;gap:20px}
+#metadata .form-row{display:grid;gap:12px;align-items:start}
+#metadata .columns-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+#metadata .columns-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+#metadata .field{min-width:0;margin:0}
+#metadata .field>span{min-height:34px;display:flex;align-items:center;font-size:12px}
+#metadata input,#metadata select{width:100%;height:46px;padding:6px;font-size:12px}
+#metadata select:disabled{opacity:.45;cursor:not-allowed}
+.beat-field{position:relative;min-width:0}
+.beat-field select{color:transparent!important}
+.beat-field select option{color:var(--ink);font:26px 'Segoe UI Symbol',serif}
+.beat-preview{position:absolute;bottom:5px;inset-inline-start:calc(50% - 12px);pointer-events:none;height:34px}
+.note-glyph{width:24px;height:34px;display:block;flex-shrink:0}
+.duration-choice .duration-btn{height:44px;display:flex;align-items:center;justify-content:center;padding:0;overflow:hidden}
+.sheet .icon{width:32px;height:40px;min-width:32px;padding:4px;display:inline-flex;align-items:center;justify-content:center}
+.sheet .icon svg{width:24px;height:24px;flex-shrink:0}
+.sheet .danger{color:#dc2626}
+.score-title .state.synced{background:#bbf7d0;color:#14532d;border-color:#86efac}
+.score-title .state.unsaved{background:#fef08a;color:#713f12;border-color:#fde047}
+.tempo .metronome-mark{display:inline-flex;align-items:center;gap:4px}
+.tempo .metronome-mark .note-glyph{height:38px;width:27px}
+.tempo .metronome-mark .tempo-number{font-size:12px}
+.keyboard-wrap .palette-key,.keyboard-wrap .rest-key{width:32px;height:32px;min-width:32px;min-height:32px;padding:4px;display:flex;align-items:center;justify-content:center;line-height:1}
+.keyboard-wrap .palette-key svg,.keyboard-wrap .rest-key svg{width:24px;height:24px;display:block;flex-shrink:0}
+.beat-field .beat-native{position:absolute;width:1px!important;height:1px!important;opacity:0;pointer-events:none}
+.beat-picker{position:relative;margin-top:0}
+.beat-picker summary{height:46px;display:flex;align-items:center;justify-content:space-between;list-style:none;border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:5px 8px;cursor:pointer}
+.beat-picker summary::-webkit-details-marker{display:none}
+.beat-picker .beat-preview{position:static;pointer-events:none;display:flex;align-items:center;justify-content:center;flex:1;height:34px}
+.beat-options{position:absolute;inset-inline-start:0;top:100%;display:grid;grid-template-columns:repeat(4,44px);padding:6px;gap:4px;background:var(--bg);border:1px solid var(--line);box-shadow:0 4px 16px #0002;z-index:8;border-radius:6px}
+.beat-options button{display:flex;align-items:center;justify-content:center;padding:4px;min-height:44px}
+#metadata select[name=tempo_text]{direction:ltr;text-align:left;font-size:11px}

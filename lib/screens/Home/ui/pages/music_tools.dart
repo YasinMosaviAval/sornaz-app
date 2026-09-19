@@ -1,3 +1,4 @@
+import 'package:sornaz/screens/Notation/music_sheets_page.dart';
 import 'package:sornaz/components/main_tabs.dart';
 import 'package:sornaz/components/home_top_bar.dart';
 import '../components/app_drawer.dart';
@@ -14,7 +15,8 @@ class MusicToolsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MainTabsScope.maybeOf(context) == null
       ? MainTabs(initialIndex: 3, initialChild: this)
-      : SocialScaffold(tabIndex:3,
+      : SocialScaffold(
+          tabIndex: 3,
           title: socialText(context, 'ابزار موسیقی', 'Music tools'),
           appBar: const HomeTopBar(),
           drawer: const AppDrawer(),
@@ -23,6 +25,12 @@ class MusicToolsPage extends StatelessWidget {
             padding: const EdgeInsets.all(24),
             children: [
               for (final item in [
+                (
+                  Icons.music_note_outlined,
+                  'نت‌نویسی',
+                  'Notation',
+                  const MusicSheetsPage(),
+                ),
                 (
                   Icons.library_music_outlined,
                   'پخش‌کننده',

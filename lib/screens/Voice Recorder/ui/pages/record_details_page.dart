@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
@@ -64,24 +65,39 @@ class _RecordDetailsPageState extends State<RecordDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final fileName = widget.file.path.split('/').last.replaceAll(AppConstants.DOT_M4A, "");
+    final fileName = widget.file.path
+        .split('/')
+        .last
+        .replaceAll(AppConstants.DOT_M4A, "");
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
-    final bool isEnglish = localeProvider.locale.languageCode == AppConstants.LOCALIZATION_EN;
+    final bool isEnglish =
+        localeProvider.locale.languageCode == AppConstants.LOCALIZATION_EN;
 
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            AppStrings.record_details_record_information.translate(context),
-            style: AppTypography.recordDetailsAppBar(context),
+        appBar: AppTopBarDirection(
+          child: AppBar(
+            title: Text(
+              AppStrings.record_details_record_information.translate(context),
+              style: AppTypography.recordDetailsAppBar(context),
+            ),
+            backgroundColor:
+                AppColors.voice_recorder_record_details_page_app_bar_background_color(
+                  isDark: isDark,
+                ),
+            foregroundColor:
+                AppColors.voice_recorder_record_details_page_app_bar_foreground_color(
+                  isDark: isDark,
+                ),
           ),
-          backgroundColor: AppColors.voice_recorder_record_details_page_app_bar_background_color(isDark: isDark),
-          foregroundColor: AppColors.voice_recorder_record_details_page_app_bar_foreground_color(isDark: isDark),
         ),
-        backgroundColor: AppColors.voice_recorder_record_details_page_background_color(isDark: isDark),
+        backgroundColor:
+            AppColors.voice_recorder_record_details_page_background_color(
+              isDark: isDark,
+            ),
         body: Padding(
           padding: const EdgeInsets.all(AppSpacing.space_16),
           child: Column(
@@ -113,7 +129,10 @@ class _RecordDetailsPageState extends State<RecordDetailsPage> {
                           samples: waveformSnap.data!,
                           duration: durationSnap.data!,
                           filePath: widget.file.path,
-                          color: AppColors.voice_recorder_record_details_page_waveform_player_view_background_color(isDark: isDark),
+                          color:
+                              AppColors.voice_recorder_record_details_page_waveform_player_view_background_color(
+                                isDark: isDark,
+                              ),
                         );
                       },
                     );

@@ -19,8 +19,10 @@ class AudioItem extends StatelessWidget {
     this.onTap,
     this.onLongPress,
     this.selected = false,
+    this.trailing,
   });
   final AudioFile audio;
+  final Widget? trailing;
   final bool isPlaying, selected;
   final int index;
   final VoidCallback? onTap, onLongPress;
@@ -134,7 +136,7 @@ class AudioItem extends StatelessWidget {
                 child: SizedBox(
                   width: 32,
                   height: 32,
-                  child: AudioActionsMenu(files: [audio]),
+                  child: trailing ?? AudioActionsMenu(files: [audio]),
                 ),
               ),
             ],

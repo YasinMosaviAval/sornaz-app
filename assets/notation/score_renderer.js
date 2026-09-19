@@ -4,6 +4,13 @@
 const VF=Vex.Flow,M=NotationModel;
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const estimate=bar=>Math.max(90,bar.notes.length*18+55);
+function ottava(pitch,rest=false){
+ if(rest)return {pitch,label:''};
+ const octave=Number(pitch.slice(1)),letter=pitch[0];
+ const low=octave<2||(octave===2&&'CDEFG'.includes(letter));
+ const shift=low?(octave<2?2:1):octave>=7?(octave===8?-2:-1):0;
+ return {pitch:letter+(octave+shift),label:shift?(Math.abs(shift)===2?'16':'8')+(shift>0?'vb':'va'):'',below:shift>0};
+}
 function groups(measures,width,printing){
  const result=[];
  if(printing){
@@ -20,7 +27,7 @@ function groups(measures,width,printing){
 function renderRow(target,bars,start,options){
  const m=options.metadata,width=Math.max(options.width,bars.reduce((v,b)=>v+estimate(b),70)),height=120;
  const renderer=new VF.Renderer(target,VF.Renderer.Backends.SVG);renderer.resize(width,height);
- const ctx=renderer.getContext(),engraved=[];
+ const ctx=renderer.getContext(),engraved=[],octaveNotes=[];
  const svg=target.querySelector('svg');svg.setAttribute('viewBox',`0 0 ${width} ${height}`);svg.setAttribute('width','100%');svg.setAttribute('height',String(options.printing?86:height*options.pixels/width));
  svg.style.display='block';svg.style.maxWidth='100%';
  const barWidth=(width-8)/bars.length;
@@ -35,7 +42,9 @@ function renderRow(target,bars,start,options){
   const source=bar.notes.map(n=>({...n}));
   if(!options.printing&&index===options.ghostBar&&options.ghost)source.push({...options.ghost,ghost:true,rest:false});
   const notes=source.map((n,i)=>{
-   const v=new VF.StaveNote({clef:m.clef,keys:[n.rest?'b/4':n.pitch[0].toLowerCase()+'/'+n.pitch.slice(1)],duration:n.duration+(n.rest?'r':''),dots:n.dots||0,auto_stem:true});
+   const display=ottava(n.pitch,n.rest);
+   const v=new VF.StaveNote({clef:m.clef,keys:[n.rest?'b/4':display.pitch[0].toLowerCase()+'/'+display.pitch.slice(1)],duration:n.duration+(n.rest?'r':''),dots:n.dots||0,auto_stem:true});
+   octaveNotes.push({note:v,...display});
    if(!n.rest)v.setStemDirection(v.getKeyProps()[0].line<=3?VF.Stem.UP:VF.Stem.DOWN);
    if(n.accidental&&!n.rest)v.addModifier(new VF.Accidental(n.accidental),0);
    for(let d=0;d<(n.dots||0);d++)VF.Dot.buildAndAttach([v],{all:true});
@@ -58,6 +67,17 @@ function renderRow(target,bars,start,options){
    notes.slice(0,bar.notes.length).forEach((note,i)=>{const box=note.getBoundingBox();if(box)hit({x:box.getX()-4,y:box.getY()-6,width:Math.max(22,box.getW()+8),height:Math.max(38,box.getH()+12),'data-bar':index,'data-note':i});});
   }
  });
+ // Brackets continue over adjacent notes and bars, with a fresh label on each row.
+ const add=(tag,attrs,text)=>{const el=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const[k,v]of Object.entries(attrs))el.setAttribute(k,String(v));if(text)el.textContent=text;svg.append(el);};
+ let run=[];
+ const bracket=()=>{if(!run.length)return;const first=run[0],boxes=run.map(n=>n.note.getBoundingBox()).filter(Boolean);if(!boxes.length){run=[];return;}
+  const x=boxes[0].getX(),end=Math.min(width-4,boxes.at(-1).getX()+boxes.at(-1).getW()+10),y=first.below?Math.max(...boxes.map(b=>b.getY()+b.getH()))+14:Math.min(...boxes.map(b=>b.getY()))-14;
+  add('text',{x,y,'font-size':10,'font-family':'Arial',fill:'#111','class':'ottava-label'},first.label);
+  const lineStart=Math.min(x+28,end-2);add('path',{d:'M'+lineStart+' '+(y-3)+'H'+end+'v'+(first.below?-5:5),fill:'none',stroke:'#111','stroke-width':.8,'stroke-dasharray':'3 2','class':'ottava-line'});run=[];
+ };
+ for(const entry of octaveNotes){if(!entry.label||run.length&&run[0].label!==entry.label)bracket();if(entry.label)run.push(entry);}bracket();
+ const bounds=svg.getBBox(),top=Math.min(0,bounds.y-5),bottom=Math.max(height,bounds.y+bounds.height+5),total=bottom-top;
+ svg.setAttribute('viewBox',`0 ${top} ${width} ${total}`);if(!options.printing)svg.setAttribute('height',String(total*options.pixels/width));
  return engraved;
 }
 function ties(measures,engraved){
@@ -79,8 +99,11 @@ function draw(element,sheet,options={}){
 }
 function printDocument(sheet,locale='en',symbols={}){
  const measures=M.trimmedMeasures(sheet),rows=groups(measures,1000,true),pages=[],engraved=[];let index=0;
+ const host=document.createElement('div');host.style.cssText='position:absolute;left:-10000px;top:0;visibility:hidden';document.body.append(host);
+ try{
  for(let cursor=0;cursor<rows.length;){
   const page=document.createElement('section');page.className='print-page';const first=pages.length===0,m=sheet.metadata;
+  host.append(page);
   if(first)page.innerHTML=`<header><h1>${escape(m.title)}</h1>${m.subtitle?`<p class="subtitle">${escape(m.subtitle)}</p>`:''}<div class="score-meta"><div class="credits">${m.lyricist?`<p>${locale==='fa'?'ترانه‌سرا':'Lyricist'}: ${escape(m.lyricist)}</p>`:''}${m.composer?`<p>${locale==='fa'?'آهنگساز':'Composer'}: ${escape(m.composer)}</p>`:''}${m.arranger?`<p>${locale==='fa'?'تنظیم‌کننده':'Arranger'}: ${escape(m.arranger)}</p>`:''}</div><div class="tempo"><span>${escape(m.tempo_text)}</span><span>${escape(symbols[m.tempo_note]||m.tempo_note)} = ${m.bpm}</span></div></div></header>`;
   const count=first?10:12;
   for(const bars of rows.slice(cursor,cursor+count)){
@@ -89,6 +112,7 @@ function printDocument(sheet,locale='en',symbols={}){
   }cursor+=count;pages.push(page);
  }ties(measures,engraved);
  return `<!doctype html><html lang="${locale}"><head><meta charset="utf-8"><style>@font-face{font-family:Sornaz;src:url('../fonts/iran_sansx_fa/regular.ttf')}@page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;background:white;color:black;font:12px Sornaz,Arial,sans-serif}.print-page{width:210mm;height:297mm;padding:8mm;break-after:page;overflow:hidden}.print-page:last-child{break-after:auto}.print-page header{height:40mm}h1{text-align:center;font-size:20px;margin:0 0 4px}.subtitle{text-align:center;margin:0}.score-meta{display:flex;direction:rtl;justify-content:space-between;align-items:center;gap:12px}.credits{text-align:right;direction:${locale==='fa'?'rtl':'ltr'}}.credits p{margin:2px 0}.tempo{display:flex;gap:12px;direction:ltr;align-items:center}.print-staff{height:23mm}.print-page:not(:first-child){padding-top:9mm}svg{width:100%;height:100%}</style></head><body>${pages.map(p=>p.outerHTML).join('')}</body></html>`;
+ }finally{host.remove();}
 }
-root.NotationRenderer={draw,printDocument,groups};
+root.NotationRenderer={draw,printDocument,groups,ottava};
 })(globalThis);

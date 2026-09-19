@@ -41,7 +41,7 @@ class _NotationSettingsPageState extends State<NotationSettingsPage> {
 
   @override
   Widget build(BuildContext context) => SocialScaffold(
-    title: socialText(context, 'تنظیمات نت‌های موسیقی', 'Music sheet settings'),
+    title: socialText(context, 'تنظیمات نت‌نویسی', 'Notation settings'),
     body: ListView(
       padding: const EdgeInsets.all(20),
       children: [

@@ -39,6 +39,12 @@ class NotationApi {
   Future<dynamic> request(String action, Map<String, dynamic> message) async {
     try {
       final value = await _requestRemote(action, message);
+      if (action == 'instruments' && value is List) {
+        await (await SharedPreferences.getInstance()).setString(
+          'notation_instruments_v1',
+          jsonEncode(value),
+        );
+      }
       if ((action == 'get' || action == 'save') && value is Map) {
         final sheet = Map<String, dynamic>.from(value);
         _fetched[sheet['id'] as int] = sheet;
@@ -64,9 +70,21 @@ class NotationApi {
       }
       return value;
     } on SocialException {
+      if (action == 'instruments') {
+        final cached = (await SharedPreferences.getInstance()).getString(
+          'notation_instruments_v1',
+        );
+        if (cached != null) return jsonDecode(cached);
+      }
       rethrow;
     } catch (error) {
       if (error is FormatException) rethrow;
+      if (action == 'instruments') {
+        final cached = (await SharedPreferences.getInstance()).getString(
+          'notation_instruments_v1',
+        );
+        if (cached != null) return jsonDecode(cached);
+      }
       final local = await _local();
       if (action == 'get' && local.containsKey(message['sheetId'].toString()))
         return local[message['sheetId'].toString()];
@@ -91,14 +109,21 @@ class NotationApi {
     Map<String, dynamic> message,
   ) async {
     final id = message['sheetId'];
-    if (!['list', 'get', 'save', 'delete', 'bookmark'].contains(action)) {
+    if (![
+      'list',
+      'get',
+      'save',
+      'delete',
+      'bookmark',
+      'instruments',
+    ].contains(action)) {
       throw const FormatException('Invalid operation.');
     }
-    if (action != 'list' &&
+    if (!['list', 'instruments'].contains(action) &&
         (id is! int || id < 0 || (action != 'save' && id == 0))) {
       throw const FormatException('Invalid sheet.');
     }
-    String suffix = '';
+    String suffix = action == 'instruments' ? '/instruments' : '';
     if (action == 'list') {
       final mode = message['mode'];
       final page = message['page'];
@@ -122,7 +147,7 @@ class NotationApi {
       'Content-Type': 'application/json',
       if (token.isNotEmpty) 'Authorization': 'Bearer $token',
     };
-    final write = !['list', 'get'].contains(action);
+    final write = !['list', 'get', 'instruments'].contains(action);
     if (write && token.isEmpty) {
       throw const SocialException('Sign in to continue.', 401);
     }

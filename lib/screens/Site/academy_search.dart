@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:flutter/material.dart';
 import '../Social/social_api.dart';
 import '../Social/social_widgets.dart';
@@ -100,10 +101,29 @@ class _AcademySearchCardState extends State<AcademySearchCard> {
             Text(
               socialText(
                 context,
-                'جست‌وجوی آموزشگاه‌های موسیقی',
-                'Find music academies',
+                'همراه شما در مسیر یادگیری موسیقی',
+                'With you on your music learning journey',
+              ),
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              socialText(
+                context,
+                'بهترین آموزشگاه موسیقی را پیدا کنید',
+                'Find the best music academy',
               ),
               style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              socialText(
+                context,
+                'آموزشگاه‌ها، اساتید، کلاس‌ها و دوره‌های موسیقی سراسر ایران را جستجو و مقایسه کنید.',
+                'Search and compare music academies, teachers, classes and courses across Iran.',
+              ),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -217,9 +237,11 @@ class _AcademyResultsPageState extends State<AcademyResultsPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: Text(
-        socialText(context, 'آموزشگاه‌های موسیقی', 'Music academies'),
+    appBar: AppTopBarDirection(
+      child: AppBar(
+        title: Text(
+          socialText(context, 'آموزشگاه‌های موسیقی', 'Music academies'),
+        ),
       ),
     ),
     body: RefreshIndicator(

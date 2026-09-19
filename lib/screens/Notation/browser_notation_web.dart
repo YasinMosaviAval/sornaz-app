@@ -1,5 +1,4 @@
 import 'notation_top_bar.dart';
-import 'package:sornaz/components/main_tab_scaffold.dart';
 import 'package:sornaz/components/main_tabs.dart';
 import 'package:sornaz/components/join_community.dart';
 import 'package:sornaz/components/home_top_bar.dart';
@@ -15,7 +14,6 @@ import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/browser_bridge.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
-import 'package:sornaz/components/bottom_nav.dart';
 import 'package:sornaz/screens/Authentication/ui/pages/authentication.dart';
 import 'notation_api.dart';
 
@@ -188,8 +186,7 @@ window.addEventListener('message',(event)=>{
             'action': 'back',
           }, Uri.base.origin);
       },
-      child: MainTabScaffold(
-        index: 1,
+      child: Scaffold(
         appBar: route != 'list'
             ? NotationTopBar(
                 editor: route == 'editor',
@@ -202,6 +199,7 @@ window.addEventListener('message',(event)=>{
                 }, Uri.base.origin),
               )
             : HomeTopBar(
+                leadingWidget: const BackButton(),
                 hint: socialText(
                   context,
                   'جست‌وجوی نت‌ها…',
@@ -240,9 +238,6 @@ window.addEventListener('message',(event)=>{
             ),
           ],
         ),
-        bottomNavigationBar: route != 'list'
-            ? null
-            : const BottomNavBarWidget(),
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_top_bar_direction.dart';
 import '../components/seekable_waveform.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -27,41 +28,46 @@ class VoiceRecorderPage extends StatelessWidget {
     return Consumer<VoiceRecorderProvider>(
       builder: (context, vm, _) {
         return Scaffold(
-          appBar: AppBar(
-            automaticallyImplyLeading: false,
-            actions: [
-              if (vm.isRecording || vm.isPaused)
-                IconButton(
-                  icon: Icon(
-                    vm.isFavorite
-                        ? Icons.favorite_rounded
-                        : Icons.favorite_outline_rounded,
-                    size: AppSpacing.space_32,
-                    color: vm.isFavorite
-                        ? AppColors.voice_recorder_favorite_icon_active_color(
-                            isDark: isDark,
-                          )
-                        : AppColors.voice_recorder_icon_color(isDark: isDark),
+          appBar: AppTopBarDirection(
+            child: AppBar(
+              automaticallyImplyLeading: false,
+              actions: [
+                if (vm.isRecording || vm.isPaused)
+                  IconButton(
+                    icon: Icon(
+                      vm.isFavorite
+                          ? Icons.favorite_rounded
+                          : Icons.favorite_outline_rounded,
+                      size: AppSpacing.space_32,
+                      color: vm.isFavorite
+                          ? AppColors.voice_recorder_favorite_icon_active_color(
+                              isDark: isDark,
+                            )
+                          : AppColors.voice_recorder_icon_color(isDark: isDark),
+                    ),
+                    onPressed: vm.toggleFavorite,
                   ),
-                  onPressed: vm.toggleFavorite,
-                ),
 
-              if (!vm.isRecording && !vm.isPaused)
-                IconButton(
-                  icon: Icon(
-                    Icons.folder_open,
-                    color: AppColors.voice_recorder_icon_color(isDark: isDark),
+                if (!vm.isRecording && !vm.isPaused)
+                  IconButton(
+                    icon: Icon(
+                      Icons.folder_open,
+                      color: AppColors.voice_recorder_icon_color(
+                        isDark: isDark,
+                      ),
+                    ),
+                    tooltip: AppStrings
+                        .voice_recorder_recording_icon_button_tooltip
+                        .translate(context),
+                    onPressed: () {
+                      navigateWithFade(context, RecordedFilesPage());
+                    },
                   ),
-                  tooltip: AppStrings
-                      .voice_recorder_recording_icon_button_tooltip
-                      .translate(context),
-                  onPressed: () {
-                    navigateWithFade(context, RecordedFilesPage());
-                  },
-                ),
-            ],
-            backgroundColor: AppColors.voice_recorder_app_bar_background_color(
-              isDark: isDark,
+              ],
+              backgroundColor:
+                  AppColors.voice_recorder_app_bar_background_color(
+                    isDark: isDark,
+                  ),
             ),
           ),
           backgroundColor: AppColors.voice_recorder_body_background_color(

@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -60,9 +61,9 @@ class _BrowserMusicPlayerState extends State<BrowserMusicPlayer> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
+    appBar: AppTopBarDirection(child: AppBar(
       title: Text(socialText(context, 'پخش موسیقی', 'Music player')),
-    ),
+    )),
 
     body: Column(
       children: [

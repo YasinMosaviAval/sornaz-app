@@ -159,7 +159,11 @@ void main() {
       await tester.scrollUntilVisible(
         find.text('دوره‌های به‌روزشده'),
         200,
-        scrollable: find.byType(Scrollable).first,
+        scrollable: find
+            .byWidgetPredicate(
+              (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
+            )
+            .first,
       );
       expect(find.text('دوره‌های به‌روزشده'), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -169,15 +173,15 @@ void main() {
     },
   );
   testWidgets(
-    'third tab is the panel, guests can join, and profile remains a separate destination',
+    'second tab is the panel, guests can join, and profile remains a separate destination',
     (tester) async {
       await tester.pumpWidget(
         fixture.host(
           const MainTabs(
             pages: [
               Center(child: Text('home body')),
-              SizedBox(),
               SitePanelPage(),
+              SizedBox(),
               SizedBox(),
               Center(child: Text('profile body')),
             ],
@@ -196,7 +200,7 @@ void main() {
         tester
             .widget<BottomNavigationBar>(find.byType(BottomNavigationBar))
             .currentIndex,
-        2,
+        1,
       );
       expect(find.byType(BottomNavBarWidget), findsOneWidget);
       await tester.tap(find.text('پروفایل'));

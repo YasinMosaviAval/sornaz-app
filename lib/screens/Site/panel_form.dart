@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
@@ -50,27 +51,29 @@ class _PanelFormPageState extends State<PanelFormPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: Text(widget.title),
-      actions: [
-        IconButton(
-          tooltip: socialText(context, 'ذخیره', 'Save'),
-          icon: const Icon(Icons.save_outlined),
-          onPressed: () {
-            for (final field in widget.fields) {
-              if (field['type'] == 'multi' && values[field['key']] is List) {
-                values[field['key']] = (values[field['key']] as List)
-                    .map((item) => item is Map ? item['id'] : item)
-                    .where((item) => item != null)
-                    .toList();
+    appBar: AppTopBarDirection(
+      child: AppBar(
+        title: Text(widget.title),
+        actions: [
+          IconButton(
+            tooltip: socialText(context, 'ذخیره', 'Save'),
+            icon: const Icon(Icons.save_outlined),
+            onPressed: () {
+              for (final field in widget.fields) {
+                if (field['type'] == 'multi' && values[field['key']] is List) {
+                  values[field['key']] = (values[field['key']] as List)
+                      .map((item) => item is Map ? item['id'] : item)
+                      .where((item) => item != null)
+                      .toList();
+                }
               }
-            }
-            if (form.currentState!.validate()) {
-              Navigator.pop(context, PanelFormResult(values, files));
-            }
-          },
-        ),
-      ],
+              if (form.currentState!.validate()) {
+                Navigator.pop(context, PanelFormResult(values, files));
+              }
+            },
+          ),
+        ],
+      ),
     ),
     body: Form(
       key: form,

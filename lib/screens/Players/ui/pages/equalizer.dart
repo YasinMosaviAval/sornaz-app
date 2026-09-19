@@ -9,7 +9,7 @@ class EqualizerTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final player = context.watch<AudioPlayerProvider>(), eq = player.equalizer;
-    if (eq == null)
+    if (eq == null) {
       return Center(
         child: Text(
           socialText(
@@ -19,10 +19,11 @@ class EqualizerTab extends StatelessWidget {
           ),
         ),
       );
+    }
     return FutureBuilder<AndroidEqualizerParameters>(
       future: eq.parameters,
       builder: (context, snapshot) {
-        if (!snapshot.hasData)
+        if (!snapshot.hasData) {
           return Center(
             child: Text(
               socialText(
@@ -32,6 +33,7 @@ class EqualizerTab extends StatelessWidget {
               ),
             ),
           );
+        }
         final p = snapshot.data!;
         return StreamBuilder<bool>(
           stream: eq.enabledStream,

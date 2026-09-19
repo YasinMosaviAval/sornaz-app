@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:sornaz/components/bottom_nav.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/screens/Authentication/ui/pages/authentication.dart';
@@ -206,11 +205,10 @@ class _DesktopNotationHostState extends State<DesktopNotationHost> {
   }
 
   @override
-  Widget build(BuildContext context) => SocialScaffold(tabIndex:1,
-    appBar: const HomeTopBar(),
+  Widget build(BuildContext context) => SocialScaffold(
+    appBar: const HomeTopBar(leadingWidget: BackButton()),
     drawer: const AppDrawer(),
-    title: socialText(context, 'نت‌های موسیقی', 'Music Sheets'),
-    bottom: const BottomNavBarWidget(selectedIndex: 1),
+    title: socialText(context, 'نت‌نویسی', 'Notation'),
     body: Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520),

@@ -278,62 +278,66 @@ void main() {
     api.dispose();
   });
 
-  testWidgets('conversation drains message batches and exposes owner actions', (
-    tester,
-  ) async {
-    var calls = 0;
-    final api = PanelApi(
-      'test',
-      client: MockClient((request) async {
-        calls++;
-        final after = request.url.queryParameters['after'];
-        return reply({
-          'messages': after == '0'
-              ? List.generate(
-                  200,
-                  (i) => {
-                    'id': i + 1,
-                    'sender': 'کاربر',
-                    'body': 'پیام ${i + 1}',
-                    'mine': true,
-                  },
-                )
-              : [
-                  {
-                    'id': 201,
-                    'sender': 'کاربر',
-                    'body': 'آخرین پیام',
-                    'mine': true,
-                  },
-                ],
-        });
-      }),
-    );
-    await tester.pumpWidget(
-      localized.host(
-        PanelConversationPage(
-          api: api,
-          conversation: const {'id': 7, 'title': 'گفتگو'},
-          section: const {
-            'actions': {
-              'edit-message': {'label': 'ویرایش پیام'},
-              'delete-message': {'label': 'حذف پیام'},
-              'forward': {'label': 'ارسال'},
+  testWidgets(
+    'conversation fetches additional batches only on demand and exposes owner actions',
+    (tester) async {
+      var calls = 0;
+      final api = PanelApi(
+        'test',
+        client: MockClient((request) async {
+          calls++;
+          final after = request.url.queryParameters['after'];
+          return reply({
+            'messages': after == '0'
+                ? List.generate(
+                    200,
+                    (i) => {
+                      'id': i + 1,
+                      'sender': 'کاربر',
+                      'body': 'پیام ${i + 1}',
+                      'mine': true,
+                    },
+                  )
+                : [
+                    {
+                      'id': 201,
+                      'sender': 'کاربر',
+                      'body': 'آخرین پیام',
+                      'mine': true,
+                    },
+                  ],
+          });
+        }),
+      );
+      await tester.pumpWidget(
+        localized.host(
+          PanelConversationPage(
+            api: api,
+            conversation: const {'id': 7, 'title': 'گفتگو'},
+            section: const {
+              'actions': {
+                'edit-message': {'label': 'ویرایش پیام'},
+                'delete-message': {'label': 'حذف پیام'},
+                'forward': {'label': 'ارسال'},
+              },
             },
-          },
+          ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(calls, 2);
-    expect(find.text('آخرین پیام'), findsOneWidget);
-    await tester.tap(find.byType(PopupMenuButton<String>).first);
-    await tester.pumpAndSettle();
-    expect(find.text('ویرایش پیام'), findsOneWidget);
-    expect(find.text('حذف پیام'), findsOneWidget);
-    await tester.pumpWidget(const SizedBox());
-    api.dispose();
-  });
+      );
+      await tester.pumpAndSettle();
+      expect(calls, 1);
+      await tester.tap(find.byKey(const ValueKey('panel-more-messages')));
+      await tester.pumpAndSettle();
+      expect(calls, 2);
+      expect(find.text('آخرین پیام'), findsOneWidget);
+      await tester.tap(find.byType(PopupMenuButton<String>).first);
+      await tester.pumpAndSettle();
+      expect(find.text('ویرایش پیام'), findsOneWidget);
+      expect(find.text('حذف پیام'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+      api.dispose();
+    },
+  );
 
   test('PDF export creates an A4 document with long Persian records', () async {
     final bytes = await panelPdf(

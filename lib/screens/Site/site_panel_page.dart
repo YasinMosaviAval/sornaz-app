@@ -16,12 +16,12 @@ class SitePanelPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (MainTabsScope.maybeOf(context) == null) {
-      return MainTabs(initialIndex: 2, initialChild: this);
+      return MainTabs(initialIndex: 1, initialChild: this);
     }
     final token = context.watch<AuthSession?>()?.token ?? '';
     if (token.isEmpty && api == null) {
       return const MainTabScaffold(
-        index: 2,
+        index: 1,
         appBar: HomeTopBar(),
         body: JoinCommunity(),
       );
@@ -62,9 +62,12 @@ class _NativePanelState extends State<NativePanel> {
     super.dispose();
   }
 
-  Future<void> load() async {
+  bool fetching = false;
+  Future<void> load({bool refresh = false}) async {
+    if (fetching) return;
+    fetching = true;
     try {
-      final result = await api.get('');
+      final result = await (refresh ? api.refresh('') : api.get(''));
       if (mounted) {
         setState(() {
           sections = objects(result['sections'] ?? []);
@@ -74,6 +77,7 @@ class _NativePanelState extends State<NativePanel> {
     } catch (e) {
       if (mounted) setState(() => error = e);
     } finally {
+      fetching = false;
       if (mounted) setState(() => loading = false);
     }
   }
@@ -96,7 +100,7 @@ class _NativePanelState extends State<NativePanel> {
   };
   @override
   Widget build(BuildContext context) => MainTabScaffold(
-    index: 2,
+    index: 1,
     appBar: HomeTopBar(
       onSearch: (v) => setState(() => query = v),
       hint: socialText(context, 'جستجو در پنل کاربری', 'Search user panel'),
@@ -113,7 +117,7 @@ class _NativePanelState extends State<NativePanel> {
             onRetry: load,
           )
         : RefreshIndicator(
-            onRefresh: load,
+            onRefresh: () => load(refresh: true),
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [

@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/screens/Home/ui/pages/home.dart';
 import 'package:sornaz/screens/Home/ui/pages/music_tools.dart';
-import 'package:sornaz/screens/Notation/music_sheets_page.dart';
+import 'package:sornaz/screens/Social/my_profile_page.dart';
 import 'package:sornaz/screens/Site/site_panel_page.dart';
 import 'package:sornaz/screens/Social/user_panel.dart';
 
@@ -57,10 +57,10 @@ class _MainTabsState extends State<MainTabs> {
               ? widget.initialChild!
               : const [
                   HomePage(),
-                  MusicSheetsPage(),
                   SitePanelPage(),
-                  MusicToolsPage(),
                   UserPanelPage(),
+                  MusicToolsPage(),
+                  MyProfilePage(),
                 ][i],
       ];
   void setChrome(int page, PreferredSizeWidget? bar) {
@@ -80,6 +80,10 @@ class _MainTabsState extends State<MainTabs> {
   late final controller = PageController(initialPage: index);
   void select(int value) {
     if (value == index || editorOpen) return;
+    if ((value - index).abs() > 1) {
+      controller.jumpToPage(value);
+      return;
+    }
     controller.animateToPage(
       value,
       duration: const Duration(milliseconds: 280),
@@ -131,9 +135,31 @@ class _MainTabsState extends State<MainTabs> {
             setState(() => index = value);
             context.read<AppData>().setBottomNavIndex(value);
           },
-          itemBuilder: (_, value) => pages[value],
+          itemBuilder: (_, value) =>
+              _RetainedTab(index: value, child: pages[value]),
         ),
       ),
     ),
   );
+}
+
+class _RetainedTab extends StatefulWidget {
+  const _RetainedTab({required this.index, required this.child});
+  final int index;
+  final Widget child;
+  @override
+  State<_RetainedTab> createState() => _RetainedTabState();
+}
+
+class _RetainedTabState extends State<_RetainedTab>
+    with AutomaticKeepAliveClientMixin {
+  bool visited = false;
+  @override
+  bool get wantKeepAlive => true;
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    if (MainTabsScope.maybeOf(context)?.index == widget.index) visited = true;
+    return visited ? widget.child : const SizedBox.shrink();
+  }
 }

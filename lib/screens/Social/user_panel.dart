@@ -25,13 +25,13 @@ class UserPanelPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (initialTab != 2 && MainTabsScope.maybeOf(context) == null)
-      return MainTabs(initialIndex: 4, initialChild: this);
+      return MainTabs(initialIndex: 2, initialChild: this);
     final auth = context.watch<AuthSession>();
     if (!auth.isAuthenticated)
       return SocialScaffold(
-        tabIndex: 4,
-        title: socialText(context, 'پروفایل', 'Profile'),
-        bottom: const BottomNavBarWidget(selectedIndex: 4),
+        tabIndex: 2,
+        title: socialText(context, 'جامعه سرناز', 'Sornaz community'),
+        bottom: const BottomNavBarWidget(selectedIndex: 2),
         body: const JoinCommunity(),
       );
     return _Panel(
@@ -91,7 +91,7 @@ class _PanelState extends State<_Panel> {
   @override
   void initState() {
     super.initState();
-    load();
+    if (tab != 2) load();
   }
 
   @override
@@ -145,43 +145,9 @@ class _PanelState extends State<_Panel> {
     }
   }
 
-  Future<void> create() async {
-    final choice = await showModalBottomSheet<String>(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final item in [
-              ('post', Icons.grid_on_outlined, 'پست جدید'),
-              ('story', Icons.add_circle_outline, 'استوری جدید'),
-              ('course', Icons.school_outlined, 'دوره جدید'),
-            ])
-              ListTile(
-                leading: Icon(item.$2),
-                title: AppText(item.$3),
-                onTap: () => Navigator.pop(context, item.$1),
-              ),
-          ],
-        ),
-      ),
-    );
-    if (!mounted || choice == null) return;
-    await socialPush(
-      context,
-      choice == 'course'
-          ? CourseEditorPage(api: api)
-          : PublishPage(api: api, kind: choice),
-    );
-    if (mounted) {
-      setState(() => tab = 0);
-      await load();
-    }
-  }
-
   @override
   Widget build(BuildContext context) => SocialScaffold(
-    tabIndex: tab == 2 ? null : 4,
+    tabIndex: tab == 2 ? null : 2,
     appBar: tab == 2
         ? null
         : HomeTopBar(
@@ -342,14 +308,7 @@ class _PanelState extends State<_Panel> {
                 ),
               ),
     },
-    floatingActionButton: tab == 2
-        ? null
-        : FloatingActionButton(
-            onPressed: create,
-            tooltip: 'ساخت محتوا'.translate(context),
-            child: const Icon(Icons.add),
-          ),
-    bottom: tab == 2 ? null : const BottomNavBarWidget(selectedIndex: 4),
+    bottom: tab == 2 ? null : const BottomNavBarWidget(selectedIndex: 2),
   );
 }
 

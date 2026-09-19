@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:flutter/material.dart';
 import 'app_logo.dart';
 
@@ -41,82 +42,91 @@ class _HomeTopBarState extends State<HomeTopBar> {
   }
 
   @override
-  Widget build(BuildContext context) => AppBar(
-    automaticallyImplyLeading: false,
-    titleSpacing: 0,
-    leading:
-        widget.leadingWidget ??
-        const Padding(
-          padding: EdgeInsets.all(8),
-          child: AppLogo(size: 40, withBackground: false),
-        ),
-    title: widget.onSearch == null
-        ? null
-        : LayoutBuilder(
-            builder: (context, constraints) => Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 280),
-                curve: Curves.easeInOutCubic,
-                height: 48,
-                width: open ? constraints.maxWidth : 48,
-                child: open
-                    ? ClipRect(
-                        child: OverflowBox(
-                          minWidth: constraints.maxWidth,
-                          maxWidth: constraints.maxWidth,
-                          alignment: AlignmentDirectional.centerEnd,
-                          child: TextField(
-                            key: const ValueKey('home-search'),
-                            controller: input,
-                            autofocus: true,
-                            onChanged: widget.onSearch,
-                            style: const TextStyle(fontSize: 13),
-                            decoration: InputDecoration(
-                              filled: false,
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              hintText: widget.hint,
-                              suffixIcon: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (widget.onFilter != null)
+  Widget build(BuildContext context) => AppTopBarDirection(
+    child: AppBar(
+      automaticallyImplyLeading: false,
+      titleSpacing: 0,
+      leading:
+          widget.leadingWidget ??
+          const Padding(
+            padding: EdgeInsets.all(8),
+            child: AppLogo(size: 40, withBackground: false),
+          ),
+      title: widget.onSearch == null
+          ? null
+          : LayoutBuilder(
+              builder: (context, constraints) => Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 280),
+                  curve: Curves.easeInOutCubic,
+                  height: 48,
+                  width: open ? constraints.maxWidth : 48,
+                  child: open
+                      ? ClipRect(
+                          child: OverflowBox(
+                            minWidth: constraints.maxWidth,
+                            maxWidth: constraints.maxWidth,
+                            alignment: AlignmentDirectional.centerEnd,
+                            child: TextField(
+                              key: const ValueKey('home-search'),
+                              controller: input,
+                              textDirection:
+                                  Localizations.localeOf(
+                                        context,
+                                      ).languageCode ==
+                                      'fa'
+                                  ? TextDirection.rtl
+                                  : TextDirection.ltr,
+                              autofocus: true,
+                              onChanged: widget.onSearch,
+                              style: const TextStyle(fontSize: 13),
+                              decoration: InputDecoration(
+                                filled: false,
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                hintText: widget.hint,
+                                suffixIcon: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (widget.onFilter != null)
+                                      IconButton(
+                                        icon: const Icon(Icons.tune),
+                                        onPressed: widget.onFilter,
+                                      ),
                                     IconButton(
-                                      icon: const Icon(Icons.tune),
-                                      onPressed: widget.onFilter,
+                                      icon: const Icon(Icons.close),
+                                      onPressed: () {
+                                        input.clear();
+                                        widget.onSearch?.call('');
+                                        setState(() => open = false);
+                                      },
                                     ),
-                                  IconButton(
-                                    icon: const Icon(Icons.close),
-                                    onPressed: () {
-                                      input.clear();
-                                      widget.onSearch?.call('');
-                                      setState(() => open = false);
-                                    },
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),
+                        )
+                      : IconButton(
+                          key: const ValueKey('open-home-search'),
+                          icon: const Icon(Icons.search),
+                          onPressed: () => setState(() => open = true),
                         ),
-                      )
-                    : IconButton(
-                        key: const ValueKey('open-home-search'),
-                        icon: const Icon(Icons.search),
-                        onPressed: () => setState(() => open = true),
-                      ),
+                ),
               ),
             ),
+      actions: [
+        if (!open) ...widget.extraActions,
+        Builder(
+          builder: (c) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(c).openDrawer(),
           ),
-    actions: [
-      if (!open) ...widget.extraActions,
-      Builder(
-        builder: (c) => IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () => Scaffold.of(c).openDrawer(),
         ),
-      ),
-      const SizedBox(width: 12),
-    ],
+        const SizedBox(width: 12),
+      ],
+    ),
   );
 }
