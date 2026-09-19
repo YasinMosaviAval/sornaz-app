@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/app_bar.dart';
@@ -23,7 +24,6 @@ class MetronomeSettingsPage extends StatefulWidget {
 }
 
 class _MetronomeSettingsPageState extends State<MetronomeSettingsPage> {
-
   int bpm = 120;
 
   @override
@@ -32,16 +32,23 @@ class _MetronomeSettingsPageState extends State<MetronomeSettingsPage> {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
-    final isEnglish = localeProvider.locale.languageCode == AppConstants.LOCALIZATION_EN;
+    final isEnglish =
+        localeProvider.locale.languageCode == AppConstants.LOCALIZATION_EN;
 
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
-      child:  Scaffold(
-        appBar: SornazAppBar(title: AppStrings.metronome_settings_title.translate(context)),
-        backgroundColor: AppColors.metronome_settings_page_background_color(isDark: isDark),
+      child: ScrollAwareScaffold(
+        appBar: SornazAppBar(
+          title: AppStrings.metronome_settings_title.translate(context),
+        ),
+        backgroundColor: AppColors.metronome_settings_page_background_color(
+          isDark: isDark,
+        ),
         body: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_16),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.space_16,
+            ),
             child: Column(
               children: [
                 SettingsSectionHeader(
@@ -51,7 +58,10 @@ class _MetronomeSettingsPageState extends State<MetronomeSettingsPage> {
                     LabeledSlider(
                       leadingIcon: Icon(
                         Icons.access_alarm,
-                        color: AppColors.metronome_settings_page_leading_icon_color(isDark: isDark),
+                        color:
+                            AppColors.metronome_settings_page_leading_icon_color(
+                              isDark: isDark,
+                            ),
                         size: AppSpacing.space_20,
                       ),
                       value: controller.accentVolume * 100,
@@ -63,7 +73,10 @@ class _MetronomeSettingsPageState extends State<MetronomeSettingsPage> {
                     LabeledSlider(
                       leadingIcon: Icon(
                         Icons.access_time,
-                        color: AppColors.metronome_settings_page_leading_icon_color(isDark: isDark),
+                        color:
+                            AppColors.metronome_settings_page_leading_icon_color(
+                              isDark: isDark,
+                            ),
                         size: AppSpacing.space_20,
                       ),
                       value: controller.tickVolume * 100,
@@ -75,13 +88,18 @@ class _MetronomeSettingsPageState extends State<MetronomeSettingsPage> {
                     LabeledSlider(
                       leadingIcon: Icon(
                         Icons.graphic_eq,
-                        color: AppColors.metronome_settings_page_leading_icon_color(isDark: isDark),
+                        color:
+                            AppColors.metronome_settings_page_leading_icon_color(
+                              isDark: isDark,
+                            ),
                         size: AppSpacing.space_20,
                       ),
-                      value: controller.subTickVolume  * 100,
+                      value: controller.subTickVolume * 100,
                       isDark: isDark,
                       onChanged: (value) {
-                        setState(() => controller.setSubTickVolume(value / 100));
+                        setState(
+                          () => controller.setSubTickVolume(value / 100),
+                        );
                       },
                     ),
                   ],
@@ -91,8 +109,11 @@ class _MetronomeSettingsPageState extends State<MetronomeSettingsPage> {
                   leadingIcon: Icons.construction_outlined,
                   children: [
                     SettingsSwitchTile(
-                      title: AppStrings.show_bars_division_title.translate(context),
-                      subtitle: AppStrings.show_bars_division_subtitle.translate(context),
+                      title: AppStrings.show_bars_division_title.translate(
+                        context,
+                      ),
+                      subtitle: AppStrings.show_bars_division_subtitle
+                          .translate(context),
                       value: controller.showBarsDivision,
                       isDark: isDark,
                       onChanged: (value) {
@@ -103,7 +124,9 @@ class _MetronomeSettingsPageState extends State<MetronomeSettingsPage> {
                     ),
                     SettingsSwitchTile(
                       title: AppStrings.show_tap_tempo_title.translate(context),
-                      subtitle: AppStrings.show_tap_tempo_subtitle.translate(context),
+                      subtitle: AppStrings.show_tap_tempo_subtitle.translate(
+                        context,
+                      ),
                       value: controller.showTapTempo,
                       isDark: isDark,
                       onChanged: (value) {
@@ -113,8 +136,11 @@ class _MetronomeSettingsPageState extends State<MetronomeSettingsPage> {
                       },
                     ),
                     SettingsSwitchTile(
-                      title: AppStrings.enable_timer_stopwatch_title.translate(context),
-                      subtitle: AppStrings.enable_timer_stopwatch_subtitle.translate(context),
+                      title: AppStrings.enable_timer_stopwatch_title.translate(
+                        context,
+                      ),
+                      subtitle: AppStrings.enable_timer_stopwatch_subtitle
+                          .translate(context),
                       value: controller.showTimerStopwatch,
                       isDark: isDark,
                       onChanged: (value) {
@@ -124,8 +150,11 @@ class _MetronomeSettingsPageState extends State<MetronomeSettingsPage> {
                       },
                     ),
                     SettingsSwitchTile(
-                      title: AppStrings.enable_bars_stopwatch_title.translate(context),
-                      subtitle: AppStrings.enable_bars_stopwatch_subtitle.translate(context),
+                      title: AppStrings.enable_bars_stopwatch_title.translate(
+                        context,
+                      ),
+                      subtitle: AppStrings.enable_bars_stopwatch_subtitle
+                          .translate(context),
                       value: controller.showBarsStopwatch,
                       isDark: isDark,
                       onChanged: (value) {
@@ -136,13 +165,12 @@ class _MetronomeSettingsPageState extends State<MetronomeSettingsPage> {
                     ),
                   ],
                 ),
-                AppSpacing.sizedBoxH16()
+                AppSpacing.sizedBoxH16(),
               ],
             ),
           ),
         ),
-      )
+      ),
     );
   }
 }
-

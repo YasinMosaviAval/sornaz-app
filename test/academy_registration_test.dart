@@ -9,6 +9,7 @@ import 'package:sornaz/screens/Site/academy_registration_api.dart';
 import 'social_widget_test.dart' as fixture;
 
 class RegistrationFake extends AcademyRegistrationApi {
+  bool admin = false;
   String stage = 'academy';
   int academies = 0, branches = 0, skips = 0;
   String? sentStep;
@@ -16,6 +17,7 @@ class RegistrationFake extends AcademyRegistrationApi {
   Future<Map<String, dynamic>> state() async => data();
   Map<String, dynamic> data() => {
     'stage': stage,
+    'otp_required': !admin,
     'academy_name': 'Sornaz',
     'terms': 'Academy terms',
     'branch_terms': 'Branch terms',
@@ -36,7 +38,7 @@ class RegistrationFake extends AcademyRegistrationApi {
     String step,
     String otp,
   ) async {
-    expect(otp, '123456');
+    expect(otp, admin ? '' : '123456');
     if (step == 'academy') {
       academies++;
       stage = 'choice';
@@ -66,7 +68,11 @@ Future<void> fill(WidgetTester tester, String key, String value) async {
   await tester.pumpAndSettle();
 }
 
-Future<void> register(WidgetTester tester, {bool branch = false}) async {
+Future<void> register(
+  WidgetTester tester, {
+  bool branch = false,
+  bool admin = false,
+}) async {
   await fill(
     tester,
     'email',
@@ -85,6 +91,7 @@ Future<void> register(WidgetTester tester, {bool branch = false}) async {
   await tester.pumpAndSettle();
   await tester.tap(find.byKey(const ValueKey('send-registration-code')));
   await tester.pumpAndSettle();
+  if (admin) return;
   await fill(tester, 'registration-otp', '123456');
   await tester.ensureVisible(find.text('تأیید و ثبت'));
   await tester.pumpAndSettle();
@@ -93,6 +100,26 @@ Future<void> register(WidgetTester tester, {bool branch = false}) async {
 }
 
 void main() {
+  testWidgets(
+    'administrator registers academy and branch without requesting OTP',
+    (tester) async {
+      final api = RegistrationFake()..admin = true;
+      await tester.pumpWidget(
+        fixture.host(AcademyRegistrationPage(api: api, userId: 1)),
+      );
+      await tester.pumpAndSettle();
+      await register(tester, admin: true);
+      expect(api.academies, 1);
+      expect(api.sentStep, isNull);
+      await tester.tap(find.widgetWithText(FilledButton, 'ثبت شعبه اصلی'));
+      await tester.pumpAndSettle();
+      await register(tester, branch: true, admin: true);
+      expect(api.branches, 1);
+      expect(api.sentStep, isNull);
+      expect(find.byKey(const ValueKey('registration-otp')), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
   for (final branch in [false, true]) {
     testWidgets('native academy registration completes with branch=$branch', (
       tester,

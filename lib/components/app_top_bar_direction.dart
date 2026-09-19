@@ -9,7 +9,7 @@ class AppTopBarDirection extends StatelessWidget
   Size get preferredSize => child.preferredSize;
   @override
   Widget build(BuildContext context) => Directionality(
-    textDirection: Directionality.of(context) == TextDirection.rtl
+    textDirection: Localizations.localeOf(context).languageCode == 'fa'
         ? TextDirection.ltr
         : TextDirection.rtl,
     child: child,

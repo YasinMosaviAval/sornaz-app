@@ -63,7 +63,9 @@ void main() {
       expect(find.text('مدیریت دوره‌ها'), findsNothing);
       expect(find.text('ذخیره‌شده‌ها'), findsNothing);
       final bio = tester.getRect(find.byKey(const ValueKey('profile-bio')));
-      final name = tester.getRect(find.text('Name'));
+      final name = tester.getRect(
+        find.byKey(const ValueKey('profile-username')),
+      );
       expect(bio.bottom, lessThanOrEqualTo(name.top));
       final grid = tester.widget<GridView>(
         find.byKey(const ValueKey('profile-post-grid')),
@@ -85,7 +87,9 @@ void main() {
       api.dispose();
     });
   }
-  testWidgets('profile FAB opens all three publishing options', (tester) async {
+  testWidgets('profile top-bar button opens all three publishing options', (
+    tester,
+  ) async {
     final api = SocialApi(
       'test',
       client: MockClient(
@@ -117,8 +121,8 @@ void main() {
       fixture.host(MyProfilePage(api: api), AppData(), auth),
     );
     await tester.pumpAndSettle();
-    expect(find.byType(FloatingActionButton), findsOneWidget);
-    await tester.tap(find.byType(FloatingActionButton));
+    expect(find.byType(FloatingActionButton), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('create-content')));
     await tester.pumpAndSettle();
     expect(find.text('پست جدید'), findsOneWidget);
     expect(find.text('استوری جدید'), findsOneWidget);

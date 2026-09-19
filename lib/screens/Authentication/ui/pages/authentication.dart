@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/account_avatar.dart';
 import 'package:sornaz/screens/Social/social_api.dart';
 import 'package:flutter/material.dart';
@@ -40,16 +41,31 @@ class _SignInScreenState extends State<SignInScreen> {
         context.read<AuthSession>().accounts.map((e) => e.id).toSet(),
       );
       if (!mounted || entries.isEmpty) return;
-      final publicApi=SocialApi('');
-      try { for(var i=0;i<entries.length;i++) {
-        final entry=entries[i];
-        if(entry.avatar?.isNotEmpty==true)continue;
-        try { final profile=object(await publicApi.get('/users/${entry.userId}').timeout(const Duration(seconds:3)));
-          final updated=SavedCredential(entry.userId,entry.identifier,entry.password,avatar:profile['avatar'] as String?);
-          entries[i]=updated;await credentials.update(updated,remember:true);
-        }catch(_){}
-      }}finally{publicApi.dispose();}
-      if(!mounted)return;
+      final publicApi = SocialApi('');
+      try {
+        for (var i = 0; i < entries.length; i++) {
+          final entry = entries[i];
+          if (entry.avatar?.isNotEmpty == true) continue;
+          try {
+            final profile = object(
+              await publicApi
+                  .get('/users/${entry.userId}')
+                  .timeout(const Duration(seconds: 3)),
+            );
+            final updated = SavedCredential(
+              entry.userId,
+              entry.identifier,
+              entry.password,
+              avatar: profile['avatar'] as String?,
+            );
+            entries[i] = updated;
+            await credentials.update(updated, remember: true);
+          } catch (_) {}
+        }
+      } finally {
+        publicApi.dispose();
+      }
+      if (!mounted) return;
       final en = context.read<LocaleProvider>().locale.languageCode == 'en';
       final selected = await showModalBottomSheet<SavedCredential>(
         context: context,
@@ -74,7 +90,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 for (final entry in entries)
                   Card(
                     child: ListTile(
-                      leading: AccountAvatar(avatar:entry.avatar),
+                      leading: AccountAvatar(avatar: entry.avatar),
                       title: Text(
                         entry.identifier,
                         textDirection: TextDirection.ltr,
@@ -386,15 +402,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
     try {
       final submittedForm = form;
-      await api.sendRegistrationOtp(submittedForm);
+      final actor = context.read<AuthSession>();
+      final administrator = actor.user?.id == 1;
+      api.registrationActorToken = actor.token;
+      if (!administrator) await api.sendRegistrationOtp(submittedForm);
       if (!mounted) return;
-      final otp = await _askForOtp(
-        submittedForm[submittedForm['register_method']]!,
-      );
+      final otp = administrator
+          ? ''
+          : await _askForOtp(submittedForm[submittedForm['register_method']]!);
       if (otp == null || !mounted) return;
       final result = await api.register(submittedForm, otp);
       if (!mounted) return;
-      await context.read<AuthSession>().save(result);
+      if (!administrator) await context.read<AuthSession>().save(result);
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const HomePage()),
@@ -597,7 +616,7 @@ class _AuthPage extends StatelessWidget {
     final en = context.watch<LocaleProvider>().locale.languageCode == 'en';
     return Directionality(
       textDirection: en ? TextDirection.ltr : TextDirection.rtl,
-      child: Scaffold(
+      child: ScrollAwareScaffold(
         backgroundColor: dark
             ? AppColors.background_dark
             : AppColors.background_light,

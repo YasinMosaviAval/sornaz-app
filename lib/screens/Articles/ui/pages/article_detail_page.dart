@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -484,7 +485,8 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
     return DrawerThemeScope(
       child: Directionality(
         textDirection: en ? TextDirection.ltr : TextDirection.rtl,
-        child: Scaffold(
+        child: ScrollAwareScaffold(
+          pinTopBar: true,
           appBar: AppTopBarDirection(
             child: AppBar(
               title: Text(
@@ -513,267 +515,310 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                     await library.synchronize();
                     await _loadComments(reset: true);
                   },
-                  child: CustomScrollView(
-                    controller: _scroll,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    slivers: [
-                      SliverPadding(
-                        padding: const EdgeInsets.all(16),
-                        sliver: SliverList.list(
-                          children: [
-                            Text(
-                              title,
-                              style: AppTypography.headline1(context),
-                            ),
-                            const SizedBox(height: 16),
-                            if (articleImage(post).isNotEmpty)
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: CachedNetworkImage(
-                                  imageUrl: articleImage(post),
-                                  fit: BoxFit.contain,
-                                  errorWidget: (_, _, _) =>
-                                      const Icon(Icons.broken_image_outlined),
-                                ),
-                              ),
-                            const SizedBox(height: 16),
-                            Wrap(
-                              spacing: 18,
-                              runSpacing: 10,
+                  child: NotificationListener<ScrollMetricsNotification>(
+                    onNotification: (_) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) _onScroll();
+                      });
+                      return false;
+                    },
+                    child: CustomScrollView(
+                      controller: _scroll,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      slivers: [
+                        SliverPadding(
+                          padding: const EdgeInsets.all(16),
+                          sliver: SliverToBoxAdapter(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                if (name.isNotEmpty)
-                                  _meta(Icons.person_outline, name),
-                                _meta(
-                                  Icons.calendar_today_outlined,
-                                  tr('تاریخ انتشار: ', 'Published: ') +
-                                      articleDate(
-                                        context,
-                                        '${post['date'] ?? ''}',
-                                      ),
+                                Text(
+                                  title,
+                                  style: AppTypography.headline1(context),
                                 ),
-                                if ('${post['modified'] ?? ''}'.isNotEmpty)
-                                  _meta(
-                                    Icons.update,
-                                    tr('به‌روزرسانی: ', 'Updated: ') +
-                                        articleDate(
-                                          context,
-                                          '${post['modified']}',
-                                        ),
-                                  ),
-                                _meta(
-                                  Icons.visibility_outlined,
-                                  '${post['views'] ?? 0} ${tr('بازدید', 'views')}',
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: [
-                                for (final category
-                                    in post['category_names'] as List? ?? [])
-                                  Chip(label: Text('$category')),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            RepaintBoundary(
-                              child: ArticlesContentWidget(
-                                content:
-                                    '${post['content']?['rendered'] ?? ''}',
-                                onLinkTap: _link,
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16),
-                                color: dark
-                                    ? const Color(0xff302a17)
-                                    : const Color(0xfffffbeb),
-                                border: Border.all(
-                                  color: Colors.amber.shade100,
-                                ),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    tr(
-                                      'امتیاز به این مقاله',
-                                      'Rate this article',
-                                    ),
-                                    style: AppTypography.headline4(context),
-                                  ),
-                                  ArticleRating(
-                                    key: ValueKey('post-rating-$id'),
-                                    api: library.api,
-                                    type: 'post',
-                                    id: id,
-                                    locale: _locale,
-                                    token: _token,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 32),
-                            Text(
-                              tr('نظرات کاربران', 'User comments'),
-                              style: AppTypography.headline3(context),
-                            ),
-                            const SizedBox(height: 16),
-                          ],
-                        ),
-                      ),
-                      SliverPadding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        sliver: SliverList.builder(
-                          itemCount: _comments.length,
-                          itemBuilder: (_, i) => _comment(_comments[i], dark),
-                        ),
-                      ),
-                      SliverPadding(
-                        padding: const EdgeInsets.all(16),
-                        sliver: SliverList.list(
-                          children: [
-                            if (_loadingComments)
-                              const Center(child: CircularProgressIndicator()),
-                            if (_commentError != null)
-                              TextButton(
-                                onPressed: () => _loadComments(reset: true),
-                                child: Text(
-                                  '${_commentError!} ${tr('تلاش مجدد', 'Retry')}',
-                                ),
-                              ),
-                            if (!_loadingComments &&
-                                _comments.isEmpty &&
-                                _commentError == null)
-                              Text(
-                                tr(
-                                  'هنوز نظری برای این مقاله ثبت نشده است.',
-                                  'No comments have been posted for this article yet.',
-                                ),
-                              ),
-                            if (_more && !_loadingComments)
-                              TextButton(
-                                onPressed: () => _loadComments(),
-                                child: Text(
-                                  tr('نمایش نظرات بیشتر', 'Load more comments'),
-                                ),
-                              ),
-                            const SizedBox(height: 24),
-                            Container(
-                              key: _formKey,
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16),
-                                color: dark
-                                    ? const Color(0xff202020)
-                                    : const Color(0xfff9fafb),
-                                border: Border.all(
-                                  color: dark
-                                      ? Colors.white12
-                                      : const Color(0xffeeeeee),
-                                ),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Text(
-                                    _reply == null
-                                        ? tr(
-                                            'ارسال نظر جدید',
-                                            'Submit a new comment',
-                                          )
-                                        : '${tr('پاسخ به ', 'Reply to ')}${_reply!['author_name']}',
-                                    style: AppTypography.headline4(context),
-                                  ),
-                                  if (_reply != null)
-                                    TextButton(
-                                      onPressed: () =>
-                                          setState(() => _reply = null),
-                                      child: Text(
-                                        tr('لغو پاسخ', 'Cancel reply'),
+                                const SizedBox(height: 16),
+                                if (articleImage(post).isNotEmpty)
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: CachedNetworkImage(
+                                      imageUrl: articleImage(post),
+                                      fit: BoxFit.contain,
+                                      errorWidget: (_, _, _) => const Icon(
+                                        Icons.broken_image_outlined,
                                       ),
                                     ),
-                                  if (_token == null) ...[
-                                    const SizedBox(height: 16),
-                                    TextField(
-                                      controller: _author,
-                                      decoration: InputDecoration(
-                                        labelText: tr(
-                                          'نام و نام خانوادگی',
-                                          'Full name',
-                                        ),
-                                        border: const OutlineInputBorder(),
-                                      ),
+                                  ),
+                                const SizedBox(height: 16),
+                                Wrap(
+                                  spacing: 18,
+                                  runSpacing: 10,
+                                  children: [
+                                    if (name.isNotEmpty)
+                                      _meta(Icons.person_outline, name),
+                                    _meta(
+                                      Icons.calendar_today_outlined,
+                                      tr('تاریخ انتشار: ', 'Published: ') +
+                                          articleDate(
+                                            context,
+                                            '${post['date'] ?? ''}',
+                                          ),
                                     ),
-                                    const SizedBox(height: 12),
-                                    TextField(
-                                      controller: _email,
-                                      keyboardType: TextInputType.emailAddress,
-                                      decoration: InputDecoration(
-                                        labelText: tr('ایمیل', 'Email'),
-                                        border: const OutlineInputBorder(),
+                                    if ('${post['modified'] ?? ''}'.isNotEmpty)
+                                      _meta(
+                                        Icons.update,
+                                        tr('به‌روزرسانی: ', 'Updated: ') +
+                                            articleDate(
+                                              context,
+                                              '${post['modified']}',
+                                            ),
                                       ),
+                                    _meta(
+                                      Icons.visibility_outlined,
+                                      '${post['views'] ?? 0} ${tr('بازدید', 'views')}',
                                     ),
                                   ],
-                                  const SizedBox(height: 12),
-                                  Align(
-                                    alignment: AlignmentDirectional.centerStart,
-                                    child: TextButton.icon(
-                                      onPressed: _insertLink,
-                                      icon: const Icon(Icons.link),
-                                      label: Text(
-                                        tr('افزودن لینک', 'Insert link'),
+                                ),
+                                const SizedBox(height: 12),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    for (final category
+                                        in post['category_names'] as List? ??
+                                            [])
+                                      Chip(label: Text('$category')),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                RepaintBoundary(
+                                  child: ArticlesContentWidget(
+                                    content:
+                                        '${post['content']?['rendered'] ?? ''}',
+                                    onLinkTap: _link,
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16),
+                                    color: dark
+                                        ? const Color(0xff302a17)
+                                        : const Color(0xfffffbeb),
+                                    border: Border.all(
+                                      color: Colors.amber.shade100,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        tr(
+                                          'امتیاز به این مقاله',
+                                          'Rate this article',
+                                        ),
+                                        style: AppTypography.headline4(context),
+                                      ),
+                                      ArticleRating(
+                                        key: ValueKey('post-rating-$id'),
+                                        api: library.api,
+                                        type: 'post',
+                                        id: id,
+                                        locale: _locale,
+                                        token: _token,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 32),
+                                Text(
+                                  tr('نظرات کاربران', 'User comments'),
+                                  style: AppTypography.headline3(context),
+                                ),
+                                const SizedBox(height: 16),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SliverPadding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          sliver: SliverToBoxAdapter(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                for (final comment in _comments)
+                                  _comment(comment, dark),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SliverPadding(
+                          padding: const EdgeInsets.all(16),
+                          sliver: SliverToBoxAdapter(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                if (_loadingComments)
+                                  const Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                if (_commentError != null)
+                                  TextButton(
+                                    onPressed: () => _loadComments(reset: true),
+                                    child: Text(
+                                      '${_commentError!} ${tr('تلاش مجدد', 'Retry')}',
+                                    ),
+                                  ),
+                                if (!_loadingComments &&
+                                    _comments.isEmpty &&
+                                    _commentError == null)
+                                  Text(
+                                    tr(
+                                      'هنوز نظری برای این مقاله ثبت نشده است.',
+                                      'No comments have been posted for this article yet.',
+                                    ),
+                                  ),
+                                if (_more && !_loadingComments)
+                                  TextButton(
+                                    onPressed: () => _loadComments(),
+                                    child: Text(
+                                      tr(
+                                        'نمایش نظرات بیشتر',
+                                        'Load more comments',
                                       ),
                                     ),
                                   ),
-                                  TextField(
-                                    key: const Key('article-comment-input'),
-                                    controller: _content,
-                                    minLines: 5,
-                                    maxLines: 12,
-                                    maxLength: 3000,
-                                    decoration: InputDecoration(
-                                      labelText: tr('نظر شما', 'Your comment'),
-                                      alignLabelWithHint: true,
-                                      border: const OutlineInputBorder(),
+                                const SizedBox(height: 24),
+                                Container(
+                                  key: _formKey,
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16),
+                                    color: dark
+                                        ? const Color(0xff202020)
+                                        : const Color(0xfff9fafb),
+                                    border: Border.all(
+                                      color: dark
+                                          ? Colors.white12
+                                          : const Color(0xffeeeeee),
                                     ),
                                   ),
-                                  const SizedBox(height: 12),
-                                  Align(
-                                    alignment: AlignmentDirectional.centerEnd,
-                                    child: FilledButton(
-                                      onPressed: _sending ? null : _send,
-                                      child: Text(
-                                        _sending
-                                            ? tr('در حال ارسال…', 'Submitting…')
-                                            : tr('ارسال نظر', 'Submit comment'),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      Text(
+                                        _reply == null
+                                            ? tr(
+                                                'ارسال نظر جدید',
+                                                'Submit a new comment',
+                                              )
+                                            : '${tr('پاسخ به ', 'Reply to ')}${_reply!['author_name']}',
+                                        style: AppTypography.headline4(context),
                                       ),
-                                    ),
+                                      if (_reply != null)
+                                        TextButton(
+                                          onPressed: () =>
+                                              setState(() => _reply = null),
+                                          child: Text(
+                                            tr('لغو پاسخ', 'Cancel reply'),
+                                          ),
+                                        ),
+                                      if (_token == null) ...[
+                                        const SizedBox(height: 16),
+                                        TextField(
+                                          controller: _author,
+                                          decoration: InputDecoration(
+                                            labelText: tr(
+                                              'نام و نام خانوادگی',
+                                              'Full name',
+                                            ),
+                                            border: const OutlineInputBorder(),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 12),
+                                        TextField(
+                                          controller: _email,
+                                          keyboardType:
+                                              TextInputType.emailAddress,
+                                          decoration: InputDecoration(
+                                            labelText: tr('ایمیل', 'Email'),
+                                            border: const OutlineInputBorder(),
+                                          ),
+                                        ),
+                                      ],
+                                      const SizedBox(height: 12),
+                                      Align(
+                                        alignment:
+                                            AlignmentDirectional.centerStart,
+                                        child: TextButton.icon(
+                                          onPressed: _insertLink,
+                                          icon: const Icon(Icons.link),
+                                          label: Text(
+                                            tr('افزودن لینک', 'Insert link'),
+                                          ),
+                                        ),
+                                      ),
+                                      TextField(
+                                        key: const Key('article-comment-input'),
+                                        controller: _content,
+                                        minLines: 5,
+                                        maxLines: 12,
+                                        maxLength: 3000,
+                                        decoration: InputDecoration(
+                                          labelText: tr(
+                                            'نظر شما',
+                                            'Your comment',
+                                          ),
+                                          alignLabelWithHint: true,
+                                          border: const OutlineInputBorder(),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Align(
+                                        alignment:
+                                            AlignmentDirectional.centerEnd,
+                                        child: FilledButton(
+                                          onPressed: _sending ? null : _send,
+                                          child: Text(
+                                            _sending
+                                                ? tr(
+                                                    'در حال ارسال…',
+                                                    'Submitting…',
+                                                  )
+                                                : tr(
+                                                    'ارسال نظر',
+                                                    'Submit comment',
+                                                  ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (related.isNotEmpty) ...[
+                                  const SizedBox(height: 32),
+                                  Text(
+                                    tr('مقاله‌های مرتبط', 'Related articles'),
+                                    style: AppTypography.headline3(context),
                                   ),
                                 ],
-                              ),
+                              ],
                             ),
-                            if (related.isNotEmpty) ...[
-                              const SizedBox(height: 32),
-                              Text(
-                                tr('مقاله‌های مرتبط', 'Related articles'),
-                                style: AppTypography.headline3(context),
-                              ),
-                            ],
-                          ],
+                          ),
                         ),
-                      ),
-                      SliverList.builder(
-                        itemCount: related.length,
-                        itemBuilder: (_, i) =>
-                            ArticleItemWidget(post: related[i], isDark: dark),
-                      ),
-                      const SliverToBoxAdapter(child: SizedBox(height: 16)),
-                    ],
+                        SliverToBoxAdapter(
+                          child: Column(
+                            children: [
+                              for (final p in related)
+                                ArticleItemWidget(post: p, isDark: dark),
+                            ],
+                          ),
+                        ),
+                        const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                      ],
+                    ),
                   ),
                 ),
         ),

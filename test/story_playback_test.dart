@@ -49,6 +49,28 @@ class FakeVideo extends VideoPlayerController {
 }
 
 void main() {
+  test('viewed authors move last and new stories restore unread priority', () {
+    final rows = <Json>[
+      {'id': 1, 'owner_id': 4},
+      {'id': 2, 'owner_id': 7},
+      {'id': 3, 'owner_id': 8},
+    ];
+    expect(
+      groupStoriesByAuthor(
+        rows,
+        seen: {'1', '3'},
+      ).map((g) => g.first['owner_id']),
+      [7, 4, 8],
+    );
+    rows.add({'id': 4, 'owner_id': 4});
+    expect(
+      groupStoriesByAuthor(
+        rows,
+        seen: {'1', '3'},
+      ).map((g) => g.first['owner_id']),
+      [4, 7, 8],
+    );
+  });
   test('groups multiple stories under one author without dropping items', () {
     final groups = groupStoriesByAuthor([
       {'id': 1, 'owner_id': 4},

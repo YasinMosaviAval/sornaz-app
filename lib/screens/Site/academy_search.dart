@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:flutter/material.dart';
 import '../Social/social_api.dart';
@@ -91,93 +92,87 @@ class _AcademySearchCardState extends State<AcademySearchCard> {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-    child: Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              socialText(
-                context,
-                'همراه شما در مسیر یادگیری موسیقی',
-                'With you on your music learning journey',
-              ),
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-              ),
+    padding: const EdgeInsets.symmetric(vertical: 16),
+    child: Padding(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            socialText(
+              context,
+              'همراه شما در مسیر یادگیری موسیقی',
+              'With you on your music learning journey',
             ),
-            const SizedBox(height: 8),
-            Text(
-              socialText(
-                context,
-                'بهترین آموزشگاه موسیقی را پیدا کنید',
-                'Find the best music academy',
-              ),
-              style: Theme.of(context).textTheme.titleMedium,
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            socialText(
+              context,
+              'بهترین آموزشگاه موسیقی را پیدا کنید',
+              'Find the best music academy',
             ),
-            const SizedBox(height: 8),
-            Text(
-              socialText(
-                context,
-                'آموزشگاه‌ها، اساتید، کلاس‌ها و دوره‌های موسیقی سراسر ایران را جستجو و مقایسه کنید.',
-                'Search and compare music academies, teachers, classes and courses across Iran.',
-              ),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            socialText(
+              context,
+              'آموزشگاه‌ها، اساتید، کلاس‌ها و دوره‌های موسیقی سراسر ایران را جستجو و مقایسه کنید.',
+              'Search and compare music academies, teachers, classes and courses across Iran.',
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: query,
-              textInputAction: TextInputAction.search,
-              onSubmitted: (_) => search(),
-              decoration: InputDecoration(
-                labelText: socialText(context, 'نام آموزشگاه', 'Academy name'),
-                border: const OutlineInputBorder(),
-              ),
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: query,
+            textInputAction: TextInputAction.search,
+            onSubmitted: (_) => search(),
+            decoration: InputDecoration(
+              labelText: socialText(context, 'نام آموزشگاه', 'Academy name'),
+              border: const OutlineInputBorder(),
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: select(
-                    socialText(context, 'همه سازها', 'All instruments'),
-                    instrument,
-                    instruments,
-                    (v) => instrument = v,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: select(
-                    socialText(context, 'همه شهرها', 'All cities'),
-                    city,
-                    cities,
-                    (v) => city = v,
-                  ),
-                ),
-              ],
-            ),
-            if (loading) const LinearProgressIndicator(),
-            if (failed)
-              TextButton.icon(
-                onPressed: load,
-                icon: const Icon(Icons.refresh),
-                label: Text(
-                  socialText(
-                    context,
-                    'بارگیری دوباره سازها و شهرها',
-                    'Retry loading instruments and cities',
-                  ),
+          ),
+          const SizedBox(height: 12),
+          select(
+            socialText(context, 'همه سازها', 'All instruments'),
+            instrument,
+            instruments,
+            (v) => instrument = v,
+          ),
+          const SizedBox(height: 12),
+          select(
+            socialText(context, 'همه شهرها', 'All cities'),
+            city,
+            cities,
+            (v) => city = v,
+          ),
+          if (loading) const LinearProgressIndicator(),
+          if (failed)
+            TextButton.icon(
+              onPressed: load,
+              icon: const Icon(Icons.refresh),
+              label: Text(
+                socialText(
+                  context,
+                  'بارگیری دوباره سازها و شهرها',
+                  'Retry loading instruments and cities',
                 ),
               ),
-            const SizedBox(height: 12),
-            FilledButton.icon(
-              onPressed: search,
-              icon: const Icon(Icons.search),
-              label: Text(socialText(context, 'جستجو', 'Search')),
             ),
-          ],
-        ),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            onPressed: search,
+            icon: const Icon(Icons.search),
+            label: Text(socialText(context, 'جستجو', 'Search')),
+          ),
+        ],
       ),
     ),
   );
@@ -236,7 +231,7 @@ class _AcademyResultsPageState extends State<AcademyResultsPage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => ScrollAwareScaffold(
     appBar: AppTopBarDirection(
       child: AppBar(
         title: Text(

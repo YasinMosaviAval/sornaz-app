@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 // ignore_for_file: unused_field
 
 import 'package:flutter/material.dart';
@@ -134,7 +135,7 @@ class _MetronomePageState extends State<MetronomePage>
 
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
-      child: Scaffold(
+      child: ScrollAwareScaffold(
         appBar: SornazAppBar(
           showBackButton: false,
           centerIcon: Icons.settings,

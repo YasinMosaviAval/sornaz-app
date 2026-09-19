@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:sornaz/screens/Social/social_api.dart';
 import 'package:sornaz/helpers/app_translations.dart';
@@ -26,7 +27,7 @@ class SimpleInfoPage extends StatelessWidget {
   final String body;
   @override
   Widget build(BuildContext context) => DrawerThemeScope(
-    child: Scaffold(
+    child: ScrollAwareScaffold(
       appBar: AppTopBarDirection(child: AppBar(title: AppText(title))),
       body: Center(
         child: SingleChildScrollView(
@@ -70,7 +71,7 @@ class FaqPage extends StatelessWidget {
   ];
   @override
   Widget build(BuildContext context) => DrawerThemeScope(
-    child: Scaffold(
+    child: ScrollAwareScaffold(
       appBar: SornazAppBar(title: 'پرسش‌های متداول'.translate(context)),
       backgroundColor: AppColors.about_us_background_color(
         isDark: context.watch<AppData>().isDark,
@@ -176,7 +177,7 @@ class _ContactUsPageState extends State<ContactUsPage> {
   Widget build(BuildContext context) {
     final user = context.watch<AuthSession>().user;
     return DrawerThemeScope(
-      child: Scaffold(
+      child: ScrollAwareScaffold(
         appBar: AppTopBarDirection(
           child: AppBar(title: const AppText('تماس با ما')),
         ),

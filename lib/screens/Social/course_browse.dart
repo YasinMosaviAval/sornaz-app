@@ -231,6 +231,7 @@ class CourseBrowseState extends State<CourseBrowse> {
                     for (final value in [4.5, 3.5, 3.0])
                       RadioListTile<double>(
                         contentPadding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
                         value: value,
                         groupValue: selectedRating,
                         onChanged: (v) => change(() => selectedRating = v),
@@ -246,6 +247,7 @@ class CourseBrowseState extends State<CourseBrowse> {
                     for (int i = 0; i < 4; i++)
                       CheckboxListTile(
                         contentPadding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
                         value: selectedDurations.contains(i),
                         onChanged: (v) => change(
                           () => v == true
@@ -263,6 +265,7 @@ class CourseBrowseState extends State<CourseBrowse> {
                     for (final category in options)
                       CheckboxListTile(
                         contentPadding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
                         value: selectedCategories.contains(category),
                         onChanged: (v) => change(
                           () => v == true
@@ -324,30 +327,50 @@ class CourseBrowseState extends State<CourseBrowse> {
     final children = <Widget>[
       Row(
         children: [
-          Expanded(
-            child: CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
-              value: free,
-              onChanged: (v) => setState(() => free = v ?? false),
-              title: Text(
-                socialText(context, 'دوره‌های رایگان', 'Free courses'),
-                style: const TextStyle(fontSize: 12),
+          for (final filter in [
+            (free, 'دوره‌های رایگان', 'Free courses', true),
+            (paid, 'دوره‌های غیررایگان', 'Paid courses', false),
+          ])
+            Expanded(
+              child: InkWell(
+                onTap: () => setState(() {
+                  if (filter.$4)
+                    free = !free;
+                  else
+                    paid = !paid;
+                }),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 18,
+                        height: 24,
+                        child: Checkbox(
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                          value: filter.$1,
+                          onChanged: (v) => setState(() {
+                            if (filter.$4)
+                              free = v ?? false;
+                            else
+                              paid = v ?? false;
+                          }),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          socialText(context, filter.$2, filter.$3),
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
-              value: paid,
-              onChanged: (v) => setState(() => paid = v ?? false),
-              title: Text(
-                socialText(context, 'دوره‌های غیررایگان', 'Paid courses'),
-                style: const TextStyle(fontSize: 12),
-              ),
-            ),
-          ),
         ],
       ),
       const SizedBox(height: 12),
@@ -417,13 +440,13 @@ class CourseBrowseState extends State<CourseBrowse> {
     ];
     if (widget.embedded)
       return Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Column(children: children),
       );
     return RefreshIndicator(
       onRefresh: widget.refresh,
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         physics: const AlwaysScrollableScrollPhysics(),
         children: children,
       ),

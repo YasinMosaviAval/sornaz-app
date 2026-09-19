@@ -237,8 +237,16 @@ class _HomeContentState extends State<HomeContent>
                             padding: EdgeInsets.only(top: 12),
                             child: LinearProgressIndicator(),
                           ),
-                        AcademySearchCard(api: widget.academyApi),
-                        const AcademyRegistrationCard(),
+                        if (context.watch<AuthSession?>()?.user?.type ==
+                            'human') ...[
+                          AcademySearchCard(
+                            key: const ValueKey('academy-search-card'),
+                            api: widget.academyApi,
+                          ),
+                          const AcademyRegistrationCard(
+                            key: ValueKey('academy-registration-card'),
+                          ),
+                        ],
                         LearningHeading(
                           socialText(context, 'تازه‌های وبلاگ', 'New blog'),
                           onMore: () =>
@@ -481,6 +489,7 @@ class _HomeContentState extends State<HomeContent>
                         (child) => child is SizedBox
                             ? child
                             : Padding(
+                                key: child.key,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 24,
                                 ),

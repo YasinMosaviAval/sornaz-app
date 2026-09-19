@@ -26,6 +26,8 @@ class _FlatListViewState extends State<FlatListView> {
 
   @override
   Widget build(BuildContext context) {
+    final controller =
+        PrimaryScrollController.maybeOf(context) ?? this.controller;
     final player = context.watch<AudioPlayerProvider>();
     final nav = context.watch<FolderNavigatorProvider>();
     final knownFiles = {for (final f in player.allFiles) f.file.path: f};

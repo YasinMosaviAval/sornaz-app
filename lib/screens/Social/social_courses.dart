@@ -1,5 +1,4 @@
 import 'package:sornaz/components/home_top_bar.dart';
-import 'package:sornaz/screens/Home/ui/components/app_drawer.dart';
 import 'lesson_media.dart';
 import 'package:sornaz/helpers/user_facing_error.dart';
 import 'package:sornaz/screens/Social/cache_observer.dart';
@@ -43,6 +42,8 @@ class _CoursesPageState extends State<CoursesPage> {
     appBar: widget.mode != 'catalog'
         ? null
         : HomeTopBar(
+            searchOnly: true,
+            searchTextInset: 24,
             initialQuery: widget.initialQuery,
             onSearch: (q) => browse.currentState?.search(q),
             onFilter: () => browse.currentState?.filters(),
@@ -52,7 +53,7 @@ class _CoursesPageState extends State<CoursesPage> {
               'Search course, topic, mentor…',
             ),
           ),
-    drawer: widget.mode == 'catalog' ? const AppDrawer() : null,
+
     body: CoursesBody(
       api: widget.api,
       initialMode: widget.mode,

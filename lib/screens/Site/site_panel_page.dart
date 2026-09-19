@@ -119,34 +119,25 @@ class _NativePanelState extends State<NativePanel> {
         : RefreshIndicator(
             onRefresh: () => load(refresh: true),
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(vertical: 24),
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Text(
-                    socialText(context, 'پنل کاربری', 'User panel'),
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ),
                 for (final section in sections.where(
                   (s) => '${s['label']} ${s['en']}'.toLowerCase().contains(
                     query.toLowerCase(),
                   ),
                 ))
-                  Card(
-                    child: ListTile(
-                      leading: Icon(icon('${section['key']}')),
-                      title: Text(panelLabel(context, section)),
-                      trailing: Icon(
-                        Directionality.of(context) == TextDirection.rtl
-                            ? Icons.chevron_left
-                            : Icons.chevron_right,
-                      ),
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              PanelResourcePage(api: api, section: section),
-                        ),
+                  ListTile(
+                    contentPadding: const EdgeInsetsDirectional.only(
+                      start: 24,
+                      end: 8,
+                    ),
+                    leading: Icon(icon('${section['key']}')),
+                    title: Text(panelLabel(context, section)),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            PanelResourcePage(api: api, section: section),
                       ),
                     ),
                   ),

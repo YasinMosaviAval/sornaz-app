@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -79,7 +80,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
-      child: Scaffold(
+      child: ScrollAwareScaffold(
         body: PageView.builder(
           controller: _controller,
           physics: const NeverScrollableScrollPhysics(),

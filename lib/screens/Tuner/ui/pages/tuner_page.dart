@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -63,7 +64,7 @@ class _TunerView extends StatelessWidget {
     final analyzed = tuner.analyzePitch(tuner.frequency);
     final inRange = analyzed.cents.abs() <= 20;
 
-    return Scaffold(
+    return ScrollAwareScaffold(
       appBar: SornazAppBar(
         showBackButton: false,
         centerIcon: Icons.settings,

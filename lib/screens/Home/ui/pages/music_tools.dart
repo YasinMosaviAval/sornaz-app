@@ -22,7 +22,7 @@ class MusicToolsPage extends StatelessWidget {
           drawer: const AppDrawer(),
           bottom: const BottomNavBarWidget(selectedIndex: 3),
           body: ListView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(vertical: 24),
             children: [
               for (final item in [
                 (
@@ -51,13 +51,15 @@ class MusicToolsPage extends StatelessWidget {
                   const VoiceRecorderPage(),
                 ),
               ])
-                Card(
-                  child: ListTile(
-                    leading: Icon(item.$1),
-                    title: Text(socialText(context, item.$2, item.$3)),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => socialPush(context, item.$4),
+                ListTile(
+                  contentPadding: const EdgeInsetsDirectional.only(
+                    start: 24,
+                    end: 8,
                   ),
+                  leading: Icon(item.$1),
+                  title: Text(socialText(context, item.$2, item.$3)),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => socialPush(context, item.$4),
                 ),
             ],
           ),

@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'notation_top_bar.dart';
 import 'package:sornaz/components/main_tabs.dart';
 import 'package:sornaz/components/join_community.dart';
@@ -186,7 +187,7 @@ window.addEventListener('message',(event)=>{
             'action': 'back',
           }, Uri.base.origin);
       },
-      child: Scaffold(
+      child: ScrollAwareScaffold(
         appBar: route != 'list'
             ? NotationTopBar(
                 editor: route == 'editor',

@@ -33,19 +33,7 @@ class ArticlesListWidget extends StatelessWidget {
       itemCount: posts.length + 3,
       itemBuilder: (context, index) {
         if (index == 0) {
-          return Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              onChanged: provider.updateSearchQuery,
-              decoration: InputDecoration(
-                hintText: AppStrings.home_searchbar_hint.translate(context),
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          );
+          return const SizedBox(height: 16);
         }
         if (index == 1) {
           return SingleChildScrollView(
@@ -57,7 +45,7 @@ class ArticlesListWidget extends StatelessWidget {
                 for (var i = 0; i < filters.length; i++) ...[
                   if (i > 0) const SizedBox(width: 16),
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: EdgeInsets.zero,
                     child: InkWell(
                       borderRadius: BorderRadius.circular(4),
                       onTap: () => provider.updateCategory(
@@ -106,7 +94,7 @@ class ArticlesListWidget extends StatelessWidget {
                         : 'مقاله‌ای با این فیلتر پیدا نشد.',
                   ),
                 )
-              : const SizedBox(height: 8);
+              : const SizedBox.shrink();
         }
         return ArticleItemWidget(
           key: ValueKey(posts[index - 3]['id']),

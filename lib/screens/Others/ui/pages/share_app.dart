@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
@@ -88,7 +89,7 @@ class _ShareAppPageState extends State<ShareAppPage> {
 
   @override
   Widget build(BuildContext context) => DrawerThemeScope(
-    child: Scaffold(
+    child: ScrollAwareScaffold(
       appBar: AppTopBarDirection(
         child: AppBar(title: const AppText('اشتراک‌گذاری برنامه')),
       ),

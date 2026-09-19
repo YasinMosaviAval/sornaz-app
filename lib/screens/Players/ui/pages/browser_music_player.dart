@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -60,10 +61,12 @@ class _BrowserMusicPlayerState extends State<BrowserMusicPlayer> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppTopBarDirection(child: AppBar(
-      title: Text(socialText(context, 'پخش موسیقی', 'Music player')),
-    )),
+  Widget build(BuildContext context) => ScrollAwareScaffold(
+    appBar: AppTopBarDirection(
+      child: AppBar(
+        title: Text(socialText(context, 'پخش موسیقی', 'Music player')),
+      ),
+    ),
 
     body: Column(
       children: [

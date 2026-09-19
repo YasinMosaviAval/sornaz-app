@@ -1,3 +1,6 @@
+import 'package:sornaz/screens/Authentication/models/auth_user.dart';
+import 'package:sornaz/screens/Authentication/services/auth_api_service.dart';
+import 'package:sornaz/screens/Site/academy_registration.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -34,6 +37,65 @@ SiteApi optionsApi() => SiteApi(
   ),
 );
 void main() {
+  for (final type in ['human', 'academy', 'branch', 'guest']) {
+    testWidgets(
+      'home academy sections are restricted by account type ' + type,
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        final session = AuthSession();
+        if (type != 'guest')
+          await session.save(
+            AuthResult(
+              token: 'test',
+              user: AuthUser(
+                id: 7,
+                username: 'user',
+                fullName: 'User',
+                type: type,
+              ),
+            ),
+          );
+        var optionRequests = 0;
+        final site = SiteApi(
+          client: MockClient((_) async {
+            optionRequests++;
+            return reply({'instruments': [], 'cities': []});
+          }),
+        );
+        final api = SocialApi(
+          '',
+          client: MockClient(
+            (_) async => reply({
+              'success': true,
+              'data': {'courses': [], 'authors': []},
+            }),
+          ),
+        );
+        await tester.pumpWidget(
+          fixture.host(
+            HomePage(api: api, academyApi: site, articleLoader: () async => []),
+            AppData(),
+            session,
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find.byType(AcademySearchCard),
+          type == 'human' ? findsOneWidget : findsNothing,
+        );
+        expect(
+          find.byType(AcademyRegistrationCard),
+          type == 'human' ? findsOneWidget : findsNothing,
+        );
+        expect(optionRequests, type == 'human' ? 1 : 0);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox());
+        api.dispose();
+        site.dispose();
+      },
+    );
+  }
+
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     SocialApi.locale = 'fa';
@@ -146,11 +208,13 @@ void main() {
           ),
         ),
       );
+      final session = AuthSession();
+      await session.save(fixture.account(7));
       await tester.pumpWidget(
         fixture.host(
           HomePage(api: api, academyApi: site, articleLoader: () async => []),
           AppData(),
-          AuthSession(),
+          session,
         ),
       );
       await tester.pumpAndSettle();

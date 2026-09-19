@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'bottom_nav.dart';
 import 'home_top_bar.dart';
 import 'package:sornaz/screens/Home/ui/components/app_drawer.dart';
@@ -120,7 +121,7 @@ class _MainTabsState extends State<MainTabs> {
           SystemNavigator.pop();
         }
       },
-      child: Scaffold(
+      child: ScrollAwareScaffold(
         appBar: chrome[index] ?? const HomeTopBar(),
         drawer: const AppDrawer(),
         bottomNavigationBar: editorOpen
@@ -160,6 +161,11 @@ class _RetainedTabState extends State<_RetainedTab>
   Widget build(BuildContext context) {
     super.build(context);
     if (MainTabsScope.maybeOf(context)?.index == widget.index) visited = true;
-    return visited ? widget.child : const SizedBox.shrink();
+    if (!visited) return const SizedBox.shrink();
+    final primary = PrimaryScrollController.maybeOf(context);
+    return MainTabsScope.maybeOf(context)?.index == widget.index &&
+            primary != null
+        ? PrimaryScrollController(controller: primary, child: widget.child)
+        : PrimaryScrollController.none(child: widget.child);
   }
 }

@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
@@ -77,7 +78,7 @@ class _RecordDetailsPageState extends State<RecordDetailsPage> {
 
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
-      child: Scaffold(
+      child: ScrollAwareScaffold(
         appBar: AppTopBarDirection(
           child: AppBar(
             title: Text(

@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_colors.dart';
@@ -33,7 +34,7 @@ class PlayerSettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final folder = context.watch<FolderNavigatorProvider>();
-    return Scaffold(
+    return ScrollAwareScaffold(
       appBar: AppTopBarDirection(
         child: AppBar(
           title: const Text(

@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -14,7 +15,7 @@ class _RecorderSettingsPageState extends State<RecorderSettingsPage> {
   @override
   Widget build(BuildContext context) {
     final vm = context.read<VoiceRecorderProvider>();
-    return Scaffold(
+    return ScrollAwareScaffold(
       appBar: AppTopBarDirection(
         child: AppBar(title: const Text('تنظیمات ضبط صدا')),
       ),

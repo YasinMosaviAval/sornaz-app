@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -50,7 +51,7 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
-    return Scaffold(
+    return ScrollAwareScaffold(
       backgroundColor: AppColors.splash_background_color(isDark: isDark),
       body: Center(child: AppLogo(size: 154, withBackground: false)),
     );

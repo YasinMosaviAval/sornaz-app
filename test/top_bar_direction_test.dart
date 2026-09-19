@@ -1,3 +1,4 @@
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sornaz/components/home_top_bar.dart';
@@ -10,6 +11,9 @@ void main() {
       (tester) async {
         await tester.pumpWidget(
           MaterialApp(
+            locale: Locale(direction == TextDirection.rtl ? 'fa' : 'en'),
+            supportedLocales: const [Locale('fa'), Locale('en')],
+            localizationsDelegates: GlobalMaterialLocalizations.delegates,
             home: Directionality(
               textDirection: direction,
               child: Scaffold(
@@ -43,6 +47,9 @@ void main() {
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(
           MaterialApp(
+            locale: Locale(direction == TextDirection.rtl ? 'fa' : 'en'),
+            supportedLocales: const [Locale('fa'), Locale('en')],
+            localizationsDelegates: GlobalMaterialLocalizations.delegates,
             home: Directionality(
               textDirection: direction,
               child: Scaffold(

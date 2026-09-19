@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'dart:async';
 import 'package:file_picker/file_picker.dart';
@@ -259,7 +260,7 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
         if (mounted) {
           await Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => Scaffold(
+              builder: (_) => ScrollAwareScaffold(
                 appBar: AppTopBarDirection(
                   child: AppBar(title: Text('${action['label']}')),
                 ),
@@ -471,7 +472,7 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthSession?>();
     if (auth != null && auth.token != widget.api.token) {
-      return const Scaffold(body: JoinCommunity());
+      return const ScrollAwareScaffold(body: JoinCommunity());
     }
     final dynamic collection = panelValue(
       data,
@@ -498,7 +499,7 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                   .contains(query.toLowerCase()),
         )
         .toList();
-    return Scaffold(
+    return ScrollAwareScaffold(
       appBar: AppTopBarDirection(
         child: AppBar(
           title: Text(panelLabel(context, widget.section)),
@@ -1108,9 +1109,9 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthSession?>();
     if (auth != null && auth.token != widget.api.token) {
-      return const Scaffold(body: JoinCommunity());
+      return const ScrollAwareScaffold(body: JoinCommunity());
     }
-    return Scaffold(
+    return ScrollAwareScaffold(
       appBar: AppTopBarDirection(
         child: AppBar(
           title: Text(panelTitle(widget.conversation)),
@@ -1377,9 +1378,9 @@ class _PanelGroupDetailsState extends State<PanelGroupDetails> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthSession?>();
     if (auth != null && auth.token != widget.api.token) {
-      return const Scaffold(body: JoinCommunity());
+      return const ScrollAwareScaffold(body: JoinCommunity());
     }
-    return Scaffold(
+    return ScrollAwareScaffold(
       appBar: AppTopBarDirection(
         child: AppBar(
           title: Text(

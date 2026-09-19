@@ -57,12 +57,7 @@ class BottomNavBarWidget extends StatelessWidget {
               'پنل کاربری',
               'User panel',
             ),
-            (
-              Icons.dynamic_feed_outlined,
-              Icons.dynamic_feed,
-              'جامعه سرناز',
-              'Sornaz community',
-            ),
+            (Icons.dynamic_feed_outlined, Icons.dynamic_feed, 'صحنه', 'Stage'),
             (Icons.tune, Icons.tune, 'ابزار موسیقی', 'Music tools'),
             (Icons.person_outline, Icons.person, 'پروفایل', 'Profile'),
           ])

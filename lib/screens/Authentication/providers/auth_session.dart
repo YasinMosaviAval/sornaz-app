@@ -40,12 +40,15 @@ class AuthSession extends ChangeNotifier {
     if (old == null) return;
     final next = AuthUser.fromJson({
       ...old.user.toJson(),
+      'type': profile['type'] ?? old.user.type,
       'full_name': profile['name'] ?? old.user.fullName,
       'avatar': profile['avatar'] ?? old.user.avatar,
     });
     _accounts[id] = AuthResult(token: old.token, user: next);
     if (user?.id == id) user = next;
-    try{await SavedCredentials().updateAvatar(id,next.avatar);}catch(_){}
+    try {
+      await SavedCredentials().updateAvatar(id, next.avatar);
+    } catch (_) {}
     await _persist();
     notifyListeners();
   }

@@ -19,13 +19,15 @@ class AuthApiException implements Exception {
 }
 
 class AuthApiService {
-  AuthApiService({http.Client? client}) : _client = client ?? createHttpClient();
+  AuthApiService({http.Client? client})
+    : _client = client ?? createHttpClient();
   static const _baseUrl = String.fromEnvironment(
     'Sornaz_API_BASE_URL',
     defaultValue: 'https://sornaz.com/api/sornaz/v1',
   );
   final http.Client _client;
   String? _cookie;
+  String? registrationActorToken;
 
   Future<AuthResult> login({
     required String identifier,
@@ -57,6 +59,9 @@ class AuthApiService {
             'Accept': 'application/json',
             'X-Requested-With': 'XMLHttpRequest',
             'Cookie': ?_cookie,
+            if (path.startsWith('/auth/register') &&
+                registrationActorToken != null)
+              'Authorization': 'Bearer $registrationActorToken',
           },
           body: body,
         )

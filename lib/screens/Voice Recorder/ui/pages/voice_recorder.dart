@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import '../components/seekable_waveform.dart';
 import 'package:flutter/foundation.dart';
@@ -27,7 +28,7 @@ class VoiceRecorderPage extends StatelessWidget {
 
     return Consumer<VoiceRecorderProvider>(
       builder: (context, vm, _) {
-        return Scaffold(
+        return ScrollAwareScaffold(
           appBar: AppTopBarDirection(
             child: AppBar(
               automaticallyImplyLeading: false,

@@ -1,3 +1,7 @@
+import 'story_seen.dart';
+import 'story_page.dart';
+import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:sornaz/components/main_tab_scaffold.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -84,14 +88,19 @@ class SocialScaffold extends StatelessWidget {
               appBar:
                   appBar ??
                   AppTopBarDirection(
-                    child: AppBar(title: AppText(title), actions: actions),
+                    child: AppBar(
+                      titleSpacing: 0,
+                      centerTitle: false,
+                      title: AppText(title),
+                      actions: actions,
+                    ),
                   ),
               drawer: drawer,
               body: body,
               bottomNavigationBar: bottom,
               floatingActionButton: floatingActionButton,
             )
-          : Scaffold(
+          : ScrollAwareScaffold(
               appBar:
                   appBar ??
                   AppTopBarDirection(
@@ -144,6 +153,11 @@ class SocialImage extends StatelessWidget {
   }
 }
 
+String socialUserName(Json user) {
+  final value = (user['username'] ?? user['name'] ?? '').toString();
+  return value.contains('@') ? value.split('@').first : value;
+}
+
 class SocialAvatar extends StatelessWidget {
   const SocialAvatar({
     super.key,
@@ -151,30 +165,77 @@ class SocialAvatar extends StatelessWidget {
     required this.user,
     this.size = 48,
     this.story = false,
+    this.seen = false,
+    this.ringWidth,
+    this.showEmptyRing = true,
   });
   final SocialApi api;
   final Json user;
   final double size;
-  final bool story;
+  final bool story, seen, showEmptyRing;
+  final double? ringWidth;
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(3),
-    decoration: BoxDecoration(
-      shape: BoxShape.circle,
-      border: Border.all(
-        color: story ? const Color(0xffcc338c) : Theme.of(context).dividerColor,
-        width: story ? 2 : 1,
-      ),
-    ),
-    child: ClipOval(
-      child: SocialImage(
-        api: api,
-        path: user['avatar'] as String?,
-        width: size,
-        height: size,
-      ),
-    ),
-  );
+  Widget build(BuildContext context) {
+    final account = context.watch<AuthSession?>()?.user?.id ?? 0;
+    final viewed = StorySeen.forAccount(account);
+    final stories = user['stories'] is List
+        ? objects(user['stories'])
+        : <Json>[];
+    return AnimatedBuilder(
+      animation: viewed,
+      builder: (context, _) {
+        final active = stories.isNotEmpty || story;
+        final read = stories.isNotEmpty
+            ? stories.every((s) => viewed.ids.contains(s['id'].toString()))
+            : seen;
+        return InkWell(
+          customBorder: const CircleBorder(),
+          onTap: stories.isEmpty
+              ? null
+              : () async {
+                  await viewed.load();
+                  if (!context.mounted) return;
+                  final first = stories.indexWhere(
+                    (s) => !viewed.ids.contains(s['id'].toString()),
+                  );
+                  await socialPush(
+                    context,
+                    StoryPage(
+                      api: api,
+                      stories: [
+                        for (final s in stories) {...s, 'author': user},
+                      ],
+                      initialIndex: first < 0 ? 0 : first,
+                      onSeen: viewed.mark,
+                    ),
+                  );
+                },
+          child: Container(
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: (!active && !showEmptyRing)
+                  ? null
+                  : Border.all(
+                      color: active && !read
+                          ? const Color(0xffcc338c)
+                          : Colors.grey,
+                      width: ringWidth ?? (active ? 2 : 1),
+                    ),
+            ),
+            child: ClipOval(
+              child: SocialImage(
+                api: api,
+                path: user['avatar'] as String?,
+                width: size,
+                height: size,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 class SocialEmpty extends StatelessWidget {
@@ -379,7 +440,7 @@ class _SocialVideoState extends State<SocialVideo> with WidgetsBindingObserver {
                     ? Navigator.pop(context)
                     : Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (ctx) => Scaffold(
+                          builder: (ctx) => ScrollAwareScaffold(
                             appBar: AppTopBarDirection(child: AppBar()),
                             body: Center(child: player(ctx, full: true)),
                           ),

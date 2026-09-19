@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -5,7 +6,10 @@ import 'package:video_player/video_player.dart';
 import 'social_api.dart';
 import 'social_widgets.dart';
 
-List<List<Json>> groupStoriesByAuthor(List<Json> stories) {
+List<List<Json>> groupStoriesByAuthor(
+  List<Json> stories, {
+  Set<String> seen = const {},
+}) {
   final groups = <String, List<Json>>{};
   for (final story in stories) {
     final author = story['author'] is Map ? story['author'] as Map : const {};
@@ -13,7 +17,12 @@ List<List<Json>> groupStoriesByAuthor(List<Json> stories) {
         '${story['owner_id'] ?? author['id'] ?? author['username'] ?? story['id']}';
     groups.putIfAbsent(owner, () => []).add(story);
   }
-  return groups.values.toList();
+  bool allSeen(List<Json> group) =>
+      group.every((s) => seen.contains(s['id'].toString()));
+  return [
+    ...groups.values.where((g) => !allSeen(g)),
+    ...groups.values.where(allSeen),
+  ];
 }
 
 List<(Duration, Duration)> storySegments(Duration duration) {
@@ -33,11 +42,13 @@ class StoryPage extends StatefulWidget {
     required this.api,
     required this.stories,
     this.initialIndex = 0,
+    this.onSeen,
     this.controllerFactory,
   });
   final SocialApi api;
   final List<Json> stories;
   final int initialIndex;
+  final ValueChanged<int>? onSeen;
   final VideoPlayerController Function(String)? controllerFactory;
   @override
   State<StoryPage> createState() => _StoryPageState();
@@ -126,6 +137,7 @@ class _StoryPageState extends State<StoryPage>
     failed = false;
     part = 0;
     if (!video) {
+      widget.onSeen?.call(number(story['id']));
       sync();
       return;
     }
@@ -147,6 +159,7 @@ class _StoryPageState extends State<StoryPage>
       if (!mounted || request != generation) return;
       c.addListener(tick);
       setState(() => loading = false);
+      widget.onSeen?.call(number(story['id']));
       sync();
     } catch (_) {
       if (mounted && request == generation)
@@ -269,9 +282,9 @@ class _StoryPageState extends State<StoryPage>
   @override
   Widget build(BuildContext context) {
     if (widget.stories.isEmpty)
-      return const Scaffold(backgroundColor: Colors.black);
+      return const ScrollAwareScaffold(backgroundColor: Colors.black);
     final c = player;
-    return Scaffold(
+    return ScrollAwareScaffold(
       backgroundColor: Colors.black,
       resizeToAvoidBottomInset: false,
       body: Stack(

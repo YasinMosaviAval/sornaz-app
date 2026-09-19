@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'notation_settings.dart';
 import 'notation_top_bar.dart';
@@ -268,7 +269,7 @@ class _NotationHostState extends State<_NotationHost>
           unawaited(_controller.runJavaScript('window.Notation.back();'));
         }
       },
-      child: Scaffold(
+      child: ScrollAwareScaffold(
         appBar: _route != 'list'
             ? NotationTopBar(
                 editor: _route == 'editor',

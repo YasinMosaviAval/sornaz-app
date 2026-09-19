@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,56 +13,69 @@ class AcademyRegistrationCard extends StatelessWidget {
   const AcademyRegistrationCard({super.key});
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-    child: Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Icon(Icons.add_business_outlined, size: 36),
-            const SizedBox(height: 12),
-            Text(
-              socialText(
-                context,
-                'آموزشگاهتان را به سُرناز بیاورید',
-                'Bring your academy to Sornaz',
-              ),
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              socialText(
-                context,
-                'آموزشگاه خود را به جامعه سرناز اضافه کنید. می‌توانید بدون شعبه ثبت‌نام کنید یا شعبه اصلی را هم بسازید؛ افزودن شعبه در آینده نیز امکان‌پذیر است.',
-                'Join the Sornaz community with your academy. Register without a branch or create its main branch too; you can add branches later.',
-              ),
-            ),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              key: const ValueKey('register-academy'),
-              icon: const Icon(Icons.add),
-              label: Text(
-                socialText(
-                  context,
-                  'درخواست ثبت آموزشگاه',
-                  'Register your academy',
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Padding(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.add_business_outlined, size: 24),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  socialText(
+                    context,
+                    'آموزشگاهتان را به سُرناز بیاورید',
+                    'Bring your academy to Sornaz',
+                  ),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-              onPressed: () {
-                final auth = context.read<AuthSession?>();
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => AcademyRegistrationPage(
-                      token: auth?.token ?? '',
-                      userId: auth?.user?.id ?? 0,
-                    ),
-                  ),
-                );
-              },
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            socialText(
+              context,
+              'آموزشگاه خود را به جامعه سرناز اضافه کنید. می‌توانید بدون شعبه ثبت‌نام کنید یا شعبه اصلی را هم بسازید؛ افزودن شعبه در آینده نیز امکان‌پذیر است.',
+              'Join the Sornaz community with your academy. Register without a branch or create its main branch too; you can add branches later.',
             ),
-          ],
-        ),
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            key: const ValueKey('register-academy'),
+            icon: const Icon(Icons.add),
+            label: Text(
+              socialText(
+                context,
+                'درخواست ثبت آموزشگاه',
+                'Register your academy',
+              ),
+            ),
+            onPressed: () {
+              final auth = context.read<AuthSession?>();
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => AcademyRegistrationPage(
+                    token: auth?.token ?? '',
+                    userId: auth?.user?.id ?? 0,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     ),
   );
@@ -197,6 +211,10 @@ class _AcademyRegistrationPageState extends State<AcademyRegistrationPage> {
         'terms': '1',
       };
     }
+    if (info['otp_required'] == false) {
+      await finish();
+      return;
+    }
     setState(() {
       busy = true;
       error = null;
@@ -227,7 +245,9 @@ class _AcademyRegistrationPageState extends State<AcademyRegistrationPage> {
   }
 
   Future<void> finish({bool withoutBranch = false}) async {
-    if (!withoutBranch && !RegExp(r'^\d{6}$').hasMatch(code.text)) {
+    if (!withoutBranch &&
+        info['otp_required'] != false &&
+        !RegExp(r'^\d{6}$').hasMatch(code.text)) {
       setState(
         () =>
             error = t('کد شش‌رقمی را وارد کنید.', 'Enter the six-digit code.'),
@@ -366,7 +386,7 @@ class _AcademyRegistrationPageState extends State<AcademyRegistrationPage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => ScrollAwareScaffold(
     appBar: SornazAppBar(
       title: t(
         phase == 'branch' ? 'ثبت شعبه اصلی' : 'ثبت آموزشگاه',
@@ -631,7 +651,12 @@ class _AcademyRegistrationPageState extends State<AcademyRegistrationPage> {
                           key: const ValueKey('send-registration-code'),
                           onPressed: busy ? null : send,
                           child: Text(
-                            t('دریافت کد تأیید', 'Send verification code'),
+                            info['otp_required'] == false
+                                ? t('ثبت', 'Register')
+                                : t(
+                                    'دریافت کد تأیید',
+                                    'Send verification code',
+                                  ),
                           ),
                         ),
                         if (phase == 'branch')

@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:sornaz/components/color_palette_picker.dart';
 import 'package:provider/provider.dart';
@@ -22,16 +23,21 @@ class SettingsPage extends StatelessWidget {
     final appData = Provider.of<AppData>(context);
     final bool isDark = appData.isDark;
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
-    final bool isEnglish = localeProvider.locale.languageCode == AppConstants.LOCALIZATION_EN;
+    final bool isEnglish =
+        localeProvider.locale.languageCode == AppConstants.LOCALIZATION_EN;
 
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
-      child: Scaffold(
-        appBar: SornazAppBar(title: AppStrings.settings_title.translate(context)),
+      child: ScrollAwareScaffold(
+        appBar: SornazAppBar(
+          title: AppStrings.settings_title.translate(context),
+        ),
         backgroundColor: AppColors.settings_background_color(isDark: isDark),
         body: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_16),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.space_16,
+            ),
             child: Column(
               children: [
                 SettingsSectionHeader(
@@ -40,7 +46,9 @@ class SettingsPage extends StatelessWidget {
                   children: [
                     SettingsSwitchTile(
                       title: AppStrings.dark_mode.translate(context),
-                      subtitle: AppStrings.dark_mode_description.translate(context),
+                      subtitle: AppStrings.dark_mode_description.translate(
+                        context,
+                      ),
                       value: appData.isDark,
                       isDark: isDark,
                       leadingIcon: Icons.dark_mode,
@@ -59,7 +67,9 @@ class SettingsPage extends StatelessWidget {
                         AppStrings.font_size.translate(context),
                         style: AppTypography.settingsItemTitle(context),
                       ),
-                      textColor: AppColors.settings_list_tile_text_color(isDark: isDark),
+                      textColor: AppColors.settings_list_tile_text_color(
+                        isDark: isDark,
+                      ),
                       subtitle: Text(
                         AppStrings.font_size_description.translate(context),
                         style: AppTypography.settingsItemSubtitle(context),
@@ -71,8 +81,15 @@ class SettingsPage extends StatelessWidget {
                           alignment: Alignment.center,
                           padding: const EdgeInsets.all(AppSpacing.space_8),
                           decoration: BoxDecoration(
-                            border: Border.all(color: AppColors.settings_list_tile_border_color(isDark: isDark)),
-                            color: AppColors.settings_list_tile_decoration_color(isDark: isDark),
+                            border: Border.all(
+                              color: AppColors.settings_list_tile_border_color(
+                                isDark: isDark,
+                              ),
+                            ),
+                            color:
+                                AppColors.settings_list_tile_decoration_color(
+                                  isDark: isDark,
+                                ),
                           ),
                           child: Text(
                             appData.fontSize.toInt().toString(),
@@ -83,8 +100,12 @@ class SettingsPage extends StatelessWidget {
                       ),
                     ),
                     Slider(
-                      activeColor: AppColors.settings_slider_active_color(isDark: isDark),
-                      inactiveColor: AppColors.settings_slider_inactive_color(isDark: isDark),
+                      activeColor: AppColors.settings_slider_active_color(
+                        isDark: isDark,
+                      ),
+                      inactiveColor: AppColors.settings_slider_inactive_color(
+                        isDark: isDark,
+                      ),
                       label: appData.fontSize.toInt().toString(),
                       value: appData.fontSize,
                       min: -2,
@@ -97,7 +118,9 @@ class SettingsPage extends StatelessWidget {
                         AppStrings.font_weight.translate(context),
                         style: AppTypography.settingsItemTitle(context),
                       ),
-                      textColor: AppColors.settings_list_tile_text_color(isDark: isDark),
+                      textColor: AppColors.settings_list_tile_text_color(
+                        isDark: isDark,
+                      ),
                       subtitle: Text(
                         AppStrings.font_weight_description.translate(context),
                         style: AppTypography.settingsItemSubtitle(context),
@@ -109,8 +132,15 @@ class SettingsPage extends StatelessWidget {
                           alignment: Alignment.center,
                           padding: const EdgeInsets.all(AppSpacing.space_8),
                           decoration: BoxDecoration(
-                            border: Border.all(color: AppColors.settings_list_tile_border_color(isDark: isDark)),
-                            color: AppColors.settings_list_tile_decoration_color(isDark: isDark),
+                            border: Border.all(
+                              color: AppColors.settings_list_tile_border_color(
+                                isDark: isDark,
+                              ),
+                            ),
+                            color:
+                                AppColors.settings_list_tile_decoration_color(
+                                  isDark: isDark,
+                                ),
                           ),
                           child: Text(
                             appData.fontWeight.toInt().toString(),
@@ -121,8 +151,12 @@ class SettingsPage extends StatelessWidget {
                       ),
                     ),
                     Slider(
-                      activeColor: AppColors.settings_slider_active_color(isDark: isDark),
-                      inactiveColor: AppColors.settings_slider_inactive_color(isDark: isDark),
+                      activeColor: AppColors.settings_slider_active_color(
+                        isDark: isDark,
+                      ),
+                      inactiveColor: AppColors.settings_slider_inactive_color(
+                        isDark: isDark,
+                      ),
                       label: appData.fontWeight.toInt().toString(),
                       value: appData.fontWeight,
                       min: 0,
@@ -141,48 +175,72 @@ class SettingsPage extends StatelessWidget {
                       ),
                       trailing: DropdownButton<String>(
                         value: appData.fontFamily,
-                        dropdownColor: AppColors.settings_drop_down_color(isDark: isDark),
+                        dropdownColor: AppColors.settings_drop_down_color(
+                          isDark: isDark,
+                        ),
                         items: [
                           DropdownMenuItem(
-                            value: isEnglish ? AppTypography.iran_sansx_en : AppTypography.iran_sansx_fa,
+                            value: isEnglish
+                                ? AppTypography.iran_sansx_en
+                                : AppTypography.iran_sansx_fa,
                             child: Text(
                               AppStrings.font_iran_sans.translate(context),
-                              style: AppTypography.settingsDropdownItem(context),
+                              style: AppTypography.settingsDropdownItem(
+                                context,
+                              ),
                             ),
                           ),
                           DropdownMenuItem(
-                            value: isEnglish ? AppTypography.iran_yekan_en : AppTypography.iran_yekan_fa,
+                            value: isEnglish
+                                ? AppTypography.iran_yekan_en
+                                : AppTypography.iran_yekan_fa,
                             child: Text(
                               AppStrings.font_iran_yekan.translate(context),
-                              style: AppTypography.settingsDropdownItem(context),
+                              style: AppTypography.settingsDropdownItem(
+                                context,
+                              ),
                             ),
                           ),
                           DropdownMenuItem(
-                            value: isEnglish ? AppTypography.kalameh_en : AppTypography.kalameh_fa,
+                            value: isEnglish
+                                ? AppTypography.kalameh_en
+                                : AppTypography.kalameh_fa,
                             child: Text(
                               AppStrings.font_kalameh.translate(context),
-                              style: AppTypography.settingsDropdownItem(context),
+                              style: AppTypography.settingsDropdownItem(
+                                context,
+                              ),
                             ),
                           ),
                           DropdownMenuItem(
                             value: AppTypography.peyda,
                             child: Text(
                               AppStrings.font_peyda.translate(context),
-                              style: AppTypography.settingsDropdownItem(context),
+                              style: AppTypography.settingsDropdownItem(
+                                context,
+                              ),
                             ),
                           ),
                           DropdownMenuItem(
-                            value: isEnglish ? AppTypography.sahel_en : AppTypography.sahel_fa,
+                            value: isEnglish
+                                ? AppTypography.sahel_en
+                                : AppTypography.sahel_fa,
                             child: Text(
                               AppStrings.font_sahel.translate(context),
-                              style: AppTypography.settingsDropdownItem(context),
+                              style: AppTypography.settingsDropdownItem(
+                                context,
+                              ),
                             ),
                           ),
                           DropdownMenuItem(
-                            value: isEnglish ? AppTypography.vazir_en : AppTypography.vazir_fa,
+                            value: isEnglish
+                                ? AppTypography.vazir_en
+                                : AppTypography.vazir_fa,
                             child: Text(
                               AppStrings.font_vazir.translate(context),
-                              style: AppTypography.settingsDropdownItem(context),
+                              style: AppTypography.settingsDropdownItem(
+                                context,
+                              ),
                             ),
                           ),
                         ],
@@ -191,9 +249,10 @@ class SettingsPage extends StatelessWidget {
                             appData.updateFontFamily(value);
                           }
                         },
-                        iconEnabledColor: AppColors.settings_icon_enabled_color(isDark: isDark),
+                        iconEnabledColor: AppColors.settings_icon_enabled_color(
+                          isDark: isDark,
+                        ),
                       ),
-                      
                     ),
                   ],
                 ),

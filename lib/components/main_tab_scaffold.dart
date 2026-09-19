@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'main_tabs.dart';
 
@@ -45,7 +46,7 @@ class _MainTabScaffoldState extends State<MainTabScaffold> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => ScrollAwareScaffold(
     appBar: scope == null ? widget.appBar : null,
     drawer: scope == null ? widget.drawer : null,
     bottomNavigationBar: scope == null ? widget.bottomNavigationBar : null,

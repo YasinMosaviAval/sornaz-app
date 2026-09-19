@@ -1,21 +1,18 @@
-import 'package:sornaz/components/app_top_bar_direction.dart';
+import 'package:sornaz/components/home_top_bar.dart';
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/screens/Articles/ui/components/article_progress.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:sornaz/components/bottom_nav.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
-import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/screens/Articles/ui/components/articles_list.dart';
-import 'package:sornaz/screens/Home/ui/components/app_drawer.dart';
 import 'package:sornaz/screens/Articles/provider/articles_provider.dart';
-import 'package:sornaz/screens/Home/ui/pages/home.dart';
 
 class ArticlesPage extends StatelessWidget {
   const ArticlesPage({super.key});
@@ -31,28 +28,18 @@ class ArticlesPage extends StatelessWidget {
 
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
-      child: Scaffold(
-        appBar: AppTopBarDirection(
-          child: AppBar(
-            backgroundColor: AppColors.articles_page_app_bar_background_color(
-              isDark: isDark,
-            ),
-            elevation: 0,
-            flexibleSpace: ArticleProgressBackground(
-              progress: context.read<ArticlesProvider>().progress,
-              isDark: isDark,
-            ),
-            automaticallyImplyLeading: false,
-            titleSpacing: AppSpacing.space_16,
-            leading: HeaderMenuIcon(isDark: isDark),
-            title: ApplicationTitle(isDark: isDark),
-            actions: [
-              ApplicationLogo(isDark: isDark),
-              AppSpacing.sizedBoxW24(),
-            ],
+      child: ScrollAwareScaffold(
+        pinTopBar: true,
+        appBar: HomeTopBar(
+          searchOnly: true,
+          searchTextInset: 16,
+          hint: AppStrings.home_searchbar_hint.translate(context),
+          onSearch: context.read<ArticlesProvider>().updateSearchQuery,
+          flexibleSpace: ArticleProgressBackground(
+            progress: context.read<ArticlesProvider>().progress,
+            isDark: isDark,
           ),
         ),
-        drawer: const AppDrawer(),
         body: Container(
           color: AppColors.articles_page_body_background_color(isDark: isDark),
           child: Consumer<ArticlesProvider>(
@@ -83,7 +70,6 @@ class ArticlesPage extends StatelessWidget {
             },
           ),
         ),
-        bottomNavigationBar: const BottomNavBarWidget(selectedIndex: 3),
       ),
     );
   }

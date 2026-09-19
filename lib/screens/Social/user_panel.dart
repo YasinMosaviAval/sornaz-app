@@ -1,5 +1,7 @@
+import 'post_comments.dart';
+import 'create_content_button.dart';
+import 'story_seen.dart';
 import 'dart:async';
-import 'package:sornaz/components/account_avatar.dart';
 import 'package:sornaz/components/home_top_bar.dart';
 import 'package:sornaz/screens/Home/ui/components/app_drawer.dart';
 import 'package:sornaz/components/main_tabs.dart';
@@ -14,7 +16,6 @@ import 'social_api.dart';
 import 'social_widgets.dart';
 import 'social_profile.dart';
 import 'social_activity.dart';
-import 'social_publish.dart';
 import 'social_courses.dart';
 import 'social_learning.dart';
 import 'package:sornaz/components/bottom_nav.dart';
@@ -30,7 +31,7 @@ class UserPanelPage extends StatelessWidget {
     if (!auth.isAuthenticated)
       return SocialScaffold(
         tabIndex: 2,
-        title: socialText(context, 'جامعه سرناز', 'Sornaz community'),
+        title: socialText(context, 'صحنه', 'Stage'),
         bottom: const BottomNavBarWidget(selectedIndex: 2),
         body: const JoinCommunity(),
       );
@@ -60,6 +61,16 @@ class _Panel extends StatefulWidget {
 class _PanelState extends State<_Panel> {
   late final SocialApi api = SocialApi(widget.token);
   List<Json> posts = [], stories = [];
+  late final viewed = StorySeen.forAccount(widget.userId);
+  Set<String> get seenStories => viewed.ids;
+  Future<void> restoreSeenStories() => viewed.load();
+  void markSeen(int id) {
+    viewed.mark(id);
+  }
+
+  bool groupSeen(List<Json> group) =>
+      group.every((s) => seenStories.contains(s['id'].toString()));
+  Json? self;
   late int tab = widget.initialTab;
   int unread = 0;
   String searchQuery = '';
@@ -91,11 +102,17 @@ class _PanelState extends State<_Panel> {
   @override
   void initState() {
     super.initState();
+    viewed.addListener(storyChanged);
     if (tab != 2) load();
+  }
+
+  void storyChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    viewed.removeListener(storyChanged);
     searchTimer?.cancel();
     api.dispose();
     super.dispose();
@@ -103,15 +120,27 @@ class _PanelState extends State<_Panel> {
 
   Future<void> load() async {
     try {
+      await restoreSeenStories();
       final data = await Future.wait([
         api.get('/posts'),
         api.get('/posts?kind=story'),
         api.get('/notifications'),
+        api.get('/users/' + widget.userId.toString()),
       ]);
       if (!mounted) return;
       setState(() {
         posts = objects(data[0]);
-        stories = objects(data[1]);
+        self = object(data[3]);
+        stories = [
+          ...objects(data[1]),
+          for (final s
+              in (self!['stories'] is List
+                  ? objects(self!['stories'])
+                  : <Json>[]))
+            {...s, 'author': self},
+        ];
+        final storyIds = <int>{};
+        stories = stories.where((s) => storyIds.add(number(s['id']))).toList();
         unread = objects(data[2]).where((n) => n['read_at'] == null).length;
         loading = false;
         error = null;
@@ -126,7 +155,16 @@ class _PanelState extends State<_Panel> {
     }
   }
 
-  List<List<Json>> get storyGroups => groupStoriesByAuthor(stories);
+  List<List<Json>> get storyGroups => groupStoriesByAuthor(
+    stories
+        .where(
+          (s) =>
+              number(s['owner_id'] ?? optionalObject(s['author'])['id']) !=
+              widget.userId,
+        )
+        .toList(),
+    seen: seenStories,
+  );
 
   Future<void> loadMore() async {
     if (fetchingMore || !more || posts.isEmpty) return;
@@ -151,13 +189,7 @@ class _PanelState extends State<_Panel> {
     appBar: tab == 2
         ? null
         : HomeTopBar(
-            leadingWidget: Padding(
-              padding: const EdgeInsets.all(8),
-              child: AccountAvatar(
-                avatar: context.watch<AuthSession>().user?.avatar,
-                token: widget.token,
-              ),
-            ),
+            leadingWidget: CreateContentButton(api: api, onCreated: load),
             hint: socialText(
               context,
               'جست‌وجو در پست‌ها و جامعه سرناز…',
@@ -185,8 +217,8 @@ class _PanelState extends State<_Panel> {
     drawer: tab == 2 ? null : const AppDrawer(),
     title: socialText(
       context,
-      tab == 2 ? 'حساب کاربری' : 'جامعه سُرناز',
-      tab == 2 ? 'Account' : 'Sornaz community',
+      tab == 2 ? 'حساب کاربری' : 'صحنه',
+      tab == 2 ? 'Account' : 'Stage',
     ),
     body: switch (tab) {
       1 => CoursesBody(api: api),
@@ -203,10 +235,7 @@ class _PanelState extends State<_Panel> {
                     if (searchQuery.isNotEmpty)
                       for (final person in peopleResults)
                         ListTile(
-                          leading: AccountAvatar(
-                            avatar: person['avatar'] as String?,
-                            token: widget.token,
-                          ),
+                          leading: SocialAvatar(api: api, user: person),
                           title: Text('${person['name']}'),
                           onTap: () => socialPush(
                             context,
@@ -219,38 +248,43 @@ class _PanelState extends State<_Panel> {
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         children: [
-                          InkWell(
-                            onTap: () async {
-                              await socialPush(
-                                context,
-                                PublishPage(api: api, kind: 'story'),
-                              );
-                              if (mounted) load();
-                            },
-                            child: const SizedBox(
-                              width: 94,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  CircleAvatar(
-                                    radius: 30,
-                                    child: Icon(Icons.add),
-                                  ),
-                                  SizedBox(height: 8),
-                                  AppText(
-                                    'استوری من',
-                                    style: TextStyle(fontSize: 11),
-                                  ),
-                                ],
-                              ),
+                          SizedBox(
+                            width: 82,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SocialAvatar(
+                                  api: api,
+                                  user: self ?? {'id': widget.userId},
+                                  size: 52,
+                                  showEmptyRing: false,
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  socialText(context, 'استوری من', 'My story'),
+                                  style: const TextStyle(fontSize: 11),
+                                ),
+                              ],
                             ),
                           ),
                           for (final group in storyGroups)
                             InkWell(
-                              onTap: () => socialPush(
-                                context,
-                                StoryPage(api: api, stories: group),
-                              ),
+                              onTap: () async {
+                                final first = group.indexWhere(
+                                  (s) =>
+                                      !seenStories.contains(s['id'].toString()),
+                                );
+                                await socialPush(
+                                  context,
+                                  StoryPage(
+                                    api: api,
+                                    stories: group,
+                                    initialIndex: first < 0 ? 0 : first,
+                                    onSeen: markSeen,
+                                  ),
+                                );
+                                if (mounted) setState(() {});
+                              },
                               child: SizedBox(
                                 width: 82,
                                 child: Column(
@@ -258,8 +292,12 @@ class _PanelState extends State<_Panel> {
                                   children: [
                                     SocialAvatar(
                                       api: api,
-                                      user: object(group.first['author']),
+                                      user: {
+                                        ...object(group.first['author']),
+                                        'stories': group,
+                                      },
                                       story: true,
+                                      seen: groupSeen(group),
                                       size: 52,
                                     ),
                                     const SizedBox(height: 6),
@@ -327,6 +365,7 @@ class PostCard extends StatefulWidget {
 }
 
 class _PostCardState extends State<PostCard> {
+  final comments = GlobalKey<PostCommentsState>();
   late Json post = widget.post;
   bool busy = false;
   @override
@@ -366,10 +405,9 @@ class _PostCardState extends State<PostCard> {
           ListTile(
             leading: SocialAvatar(api: widget.api, user: author, size: 36),
             title: AppText(
-              '${author['name']}',
+              socialUserName(author),
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
-            subtitle: AppText('@${author['username']}'),
             onTap: () => socialPush(
               context,
               ProfilePage(api: widget.api, userId: number(author['id'])),
@@ -439,6 +477,17 @@ class _PostCardState extends State<PostCard> {
                   ),
                 ),
                 AppText('${post['likes']}'),
+                IconButton(
+                  tooltip: socialText(context, 'نظرات', 'Comments'),
+                  onPressed: () => comments.currentState?.open(),
+                  icon: const Icon(Icons.chat_bubble_outline),
+                ),
+                IconButton(
+                  tooltip: socialText(context, 'ارسال پست', 'Share post'),
+                  onPressed: () =>
+                      sharePost(context, widget.api, number(post['id'])),
+                  icon: const Icon(Icons.send_outlined),
+                ),
                 const Spacer(),
                 IconButton(
                   onPressed: busy ? null : () => react('save'),
@@ -458,6 +507,7 @@ class _PostCardState extends State<PostCard> {
               child: AppText('${post['body']}'),
             ),
           const SizedBox(height: 12),
+          PostComments(key: comments, api: widget.api, post: post),
           const Divider(height: 1),
         ],
       ),

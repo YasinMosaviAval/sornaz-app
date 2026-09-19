@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/screens/Others/ui/pages/share_app.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -25,7 +26,7 @@ class AboutUsPage extends StatelessWidget {
 
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
-      child: Scaffold(
+      child: ScrollAwareScaffold(
         appBar: SornazAppBar(
           title: AppStrings.about_us_title.translate(context),
         ),

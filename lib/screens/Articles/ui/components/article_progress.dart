@@ -22,14 +22,20 @@ class ArticleProgressBackground extends StatelessWidget {
             child: const SizedBox.expand(),
           ),
           Align(
-            alignment: AlignmentDirectional.centerStart,
+            alignment: Localizations.localeOf(context).languageCode == 'fa'
+                ? Alignment.centerRight
+                : Alignment.centerLeft,
             child: SizedBox(
               width: box.maxWidth * value,
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    begin: AlignmentDirectional.centerStart,
-                    end: AlignmentDirectional.centerEnd,
+                    begin: Localizations.localeOf(context).languageCode == 'fa'
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
+                    end: Localizations.localeOf(context).languageCode == 'fa'
+                        ? Alignment.centerLeft
+                        : Alignment.centerRight,
                     colors: [
                       AppColors.article_details_page_app_bar_progress_color(
                         isDark: isDark,

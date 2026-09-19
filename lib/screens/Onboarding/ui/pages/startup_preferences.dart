@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:sornaz/components/color_palette_picker.dart';
@@ -16,7 +17,7 @@ class StartupPreferencesScreen extends StatelessWidget {
     final english = locale.locale.languageCode == 'en';
     return Directionality(
       textDirection: english ? TextDirection.ltr : TextDirection.rtl,
-      child: Scaffold(
+      child: ScrollAwareScaffold(
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -35,38 +36,47 @@ class StartupPreferencesScreen extends StatelessWidget {
                 const SizedBox(height: 32),
                 Card(
                   child: ListTileTheme(
-                    data: ListTileThemeData(titleTextStyle: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface),
-                    subtitleTextStyle: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                    data: ListTileThemeData(
+                      titleTextStyle: TextStyle(
+                        fontSize: 13,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                      subtitleTextStyle: TextStyle(
+                        fontSize: 11,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                     child: Column(
-                    children: [
-                      ListTile(
-                        leading: const Icon(Icons.language),
-                        title: Text(english ? 'Language' : 'زبان برنامه'),
-                        subtitle: Text(english ? 'English' : 'فارسی'),
-                        trailing: Switch(
-                          value: english,
-                          onChanged: (v) => locale.setLocale(v ? 'en' : 'fa'),
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.language),
+                          title: Text(english ? 'Language' : 'زبان برنامه'),
+                          subtitle: Text(english ? 'English' : 'فارسی'),
+                          trailing: Switch(
+                            value: english,
+                            onChanged: (v) => locale.setLocale(v ? 'en' : 'fa'),
+                          ),
                         ),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: Icon(
-                          app.isDark ? Icons.dark_mode : Icons.light_mode,
+                        const Divider(height: 1),
+                        ListTile(
+                          leading: Icon(
+                            app.isDark ? Icons.dark_mode : Icons.light_mode,
+                          ),
+                          title: Text(english ? 'Dark mode' : 'حالت تاریک'),
+                          subtitle: Text(
+                            english
+                                ? 'Choose light or dark theme'
+                                : 'تم روشن یا تاریک را انتخاب کنید',
+                          ),
+                          trailing: Switch(
+                            value: app.isDark,
+                            onChanged: app.toggleDarkMode,
+                          ),
                         ),
-                        title: Text(english ? 'Dark mode' : 'حالت تاریک'),
-                        subtitle: Text(
-                          english
-                              ? 'Choose light or dark theme'
-                              : 'تم روشن یا تاریک را انتخاب کنید',
-                        ),
-                        trailing: Switch(
-                          value: app.isDark,
-                          onChanged: app.toggleDarkMode,
-                        ),
-                      ),
-                      const ColorPalettePicker(),
-                    ],
-                  )),
+                        const ColorPalettePicker(),
+                      ],
+                    ),
+                  ),
                 ),
                 const Spacer(),
                 SizedBox(
@@ -77,9 +87,20 @@ class StartupPreferencesScreen extends StatelessWidget {
                       PageRouteBuilder(
                         pageBuilder: (_, _, _) => const OnboardingScreen(),
                         transitionDuration: const Duration(milliseconds: 320),
-                        transitionsBuilder: (_, animation, _, child) => SlideTransition(
-                          position: Tween(begin: Offset(english ? 1 : -1, 0), end: Offset.zero).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)), child: child,
-                        ),
+                        transitionsBuilder: (_, animation, _, child) =>
+                            SlideTransition(
+                              position:
+                                  Tween(
+                                    begin: Offset(english ? 1 : -1, 0),
+                                    end: Offset.zero,
+                                  ).animate(
+                                    CurvedAnimation(
+                                      parent: animation,
+                                      curve: Curves.easeOutCubic,
+                                    ),
+                                  ),
+                              child: child,
+                            ),
                       ),
                     ),
                     child: Text(english ? 'Continue' : 'ادامه'),

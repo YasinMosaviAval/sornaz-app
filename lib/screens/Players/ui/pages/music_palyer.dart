@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:flutter/foundation.dart';
 import 'browser_music_player.dart';
 import 'dart:io';
@@ -139,7 +140,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
         localeProvider.locale.languageCode == AppConstants.LOCALIZATION_EN;
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
-      child: Scaffold(
+      child: ScrollAwareScaffold(
         body: Consumer<AudioLibraryManager>(
           builder: (_, library, _) {
             if (library.isScanning) {

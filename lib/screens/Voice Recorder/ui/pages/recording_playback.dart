@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import '../components/seekable_waveform.dart';
 import 'dart:io';
@@ -118,7 +119,7 @@ class _RecordingPlaybackPageState extends State<RecordingPlaybackPage> {
         vm.overwriteTarget != null && (vm.isRecording || vm.isPaused);
     return PopScope(
       canPop: !recording,
-      child: Scaffold(
+      child: ScrollAwareScaffold(
         appBar: AppTopBarDirection(
           child: AppBar(
             title: Text(widget.file.name, style: const TextStyle(fontSize: 14)),

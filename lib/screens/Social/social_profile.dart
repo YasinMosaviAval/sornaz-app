@@ -1,3 +1,6 @@
+import 'package:sornaz/components/home_top_bar.dart';
+import 'dart:async';
+import 'profile_posts_page.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 import 'package:sornaz/helpers/user_facing_error.dart';
@@ -82,17 +85,17 @@ class _ProfileBodyState extends State<ProfileBody> {
     child: InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: 2),
         child: Column(
           children: [
             AppText(
               '${user![key]}',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
             AppText(
               label,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 10,
                 color: Theme.of(context).hintColor,
               ),
             ),
@@ -130,20 +133,66 @@ class _ProfileBodyState extends State<ProfileBody> {
                       color: Theme.of(context).scaffoldBackgroundColor,
                     ),
                     padding: const EdgeInsets.all(3),
-                    child: SocialAvatar(api: widget.api, user: u, size: 96),
+                    child: SocialAvatar(
+                      api: widget.api,
+                      user: u,
+                      size: 96,
+                      ringWidth: 3,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
           ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 64),
+            constraints: const BoxConstraints(minHeight: 52),
             child: Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(130, 10, 20, 8),
+              padding: const EdgeInsetsDirectional.fromSTEB(130, 4, 20, 0),
               child: AppText(
                 '${u['bio'] ?? ''}',
                 key: const ValueKey('profile-bio'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: AppText(
+                    socialUserName(u),
+                    key: const ValueKey('profile-username'),
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+                stat(
+                  'followers',
+                  socialText(context, 'دنبال‌کنندگان', 'Followers'),
+                  onTap: () => socialPush(
+                    context,
+                    PeoplePage(
+                      api: widget.api,
+                      userId: widget.userId,
+                      kind: 'followers',
+                    ),
+                  ),
+                ),
+                stat(
+                  'following',
+                  socialText(context, 'دنبال‌شونده‌ها', 'Following'),
+                  onTap: () => socialPush(
+                    context,
+                    PeoplePage(
+                      api: widget.api,
+                      userId: widget.userId,
+                      kind: 'following',
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           if (u['isMe'] != true)
@@ -158,86 +207,18 @@ class _ProfileBodyState extends State<ProfileBody> {
                       u['isFollowing'] == true ? 'دنبال می‌کنید' : 'دنبال کردن',
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  IconButton.filledTonal(
-                    tooltip: 'پیام خصوصی'.translate(context),
+                  IconButton(
                     onPressed: () => openDirect(
                       context,
                       widget.api,
                       widget.userId,
-                      '${u['name']}',
+                      socialUserName(u),
                     ),
                     icon: const Icon(Icons.chat_bubble_outline),
                   ),
                 ],
               ),
             ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AppText(
-                  '${u['name']}',
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                AppText(
-                  '@${u['username']}',
-                  style: TextStyle(color: Theme.of(context).hintColor),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              children: [
-                const Divider(),
-                Row(
-                  children: [
-                    stat(
-                      'posts',
-                      'پست‌ها',
-                      onTap: () => setState(() => tab = 0),
-                    ),
-                    stat(
-                      'courses',
-                      'دوره‌ها',
-                      onTap: () => setState(() => tab = 1),
-                    ),
-                    stat(
-                      'followers',
-                      'دنبال‌کنندگان',
-                      onTap: () => socialPush(
-                        context,
-                        PeoplePage(
-                          api: widget.api,
-                          userId: widget.userId,
-                          kind: 'followers',
-                        ),
-                      ),
-                    ),
-                    stat(
-                      'following',
-                      'دنبال‌شونده‌ها',
-                      onTap: () => socialPush(
-                        context,
-                        PeoplePage(
-                          api: widget.api,
-                          userId: widget.userId,
-                          kind: 'following',
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const Divider(),
-              ],
-            ),
-          ),
           if (u['links'] is Map)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -282,17 +263,24 @@ class _ProfileBodyState extends State<ProfileBody> {
                           border: Border(
                             bottom: BorderSide(
                               color: tab == i
-                                  ? const Color(0xffcc338c)
+                                  ? Theme.of(context).colorScheme.primary
                                   : Colors.transparent,
                               width: 2,
                             ),
                           ),
                         ),
                         child: AppText(
-                          i == 0 ? 'پست‌ها' : 'دوره‌ها',
+                          (i == 0
+                                  ? socialText(context, 'پست‌ها', 'Posts')
+                                  : socialText(context, 'دوره‌ها', 'Courses')) +
+                              ' (' +
+                              (i == 0 ? u['posts'] : u['courses']).toString() +
+                              ')',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: tab == i ? const Color(0xffcc338c) : null,
+                            color: tab == i
+                                ? Theme.of(context).colorScheme.primary
+                                : null,
                           ),
                         ),
                       ),
@@ -346,15 +334,11 @@ class ProfilePostGrid extends StatelessWidget {
           var changed = false;
           await socialPush(
             context,
-            SocialScaffold(
-              title: socialText(context, 'پست', 'Post'),
-              body: SingleChildScrollView(
-                child: PostCard(
-                  api: api,
-                  post: post,
-                  onChanged: () => changed = true,
-                ),
-              ),
+            ProfilePostsPage(
+              api: api,
+              posts: posts,
+              selected: index,
+              onChanged: () => changed = true,
             ),
           );
           if (changed && context.mounted) onChanged();
@@ -394,10 +378,17 @@ class ProfilePostGrid extends StatelessWidget {
 }
 
 class PeoplePage extends StatefulWidget {
-  const PeoplePage({super.key, required this.api, this.userId, this.kind});
+  const PeoplePage({
+    super.key,
+    required this.api,
+    this.userId,
+    this.kind,
+    this.community = false,
+  });
   final SocialApi api;
   final int? userId;
   final String? kind;
+  final bool community;
   @override
   State<PeoplePage> createState() => _PeoplePageState();
 }
@@ -407,6 +398,7 @@ class _PeoplePageState extends State<PeoplePage> {
   String? error;
   final search = TextEditingController();
   int requestId = 0;
+  Timer? debounce;
   @override
   void initState() {
     super.initState();
@@ -415,6 +407,7 @@ class _PeoplePageState extends State<PeoplePage> {
 
   @override
   void dispose() {
+    debounce?.cancel();
     search.dispose();
     super.dispose();
   }
@@ -425,8 +418,10 @@ class _PeoplePageState extends State<PeoplePage> {
       final rows = objects(
         await widget.api.get(
           widget.userId == null
-              ? '/people?q=${Uri.encodeQueryComponent(search.text.trim())}'
-              : '/users/${widget.userId}/${widget.kind}',
+              ? (widget.community && search.text.trim().isEmpty
+                    ? '/community'
+                    : '/people?q=${Uri.encodeQueryComponent(search.text.trim())}')
+              : '/users/${widget.userId}/${widget.kind}?q=${Uri.encodeQueryComponent(search.text.trim())}',
         ),
       );
       if (mounted && version == requestId)
@@ -447,24 +442,24 @@ class _PeoplePageState extends State<PeoplePage> {
         : widget.kind == 'following'
         ? 'دنبال‌شونده‌ها'
         : 'کشف کاربران',
+    appBar: HomeTopBar(
+      searchOnly: true,
+      pageTitle: widget.community
+          ? socialText(context, 'جامعه سرناز', 'Sornaz community')
+          : widget.kind == 'followers'
+          ? socialText(context, 'دنبال‌کنندگان', 'Followers')
+          : widget.kind == 'following'
+          ? socialText(context, 'دنبال‌شوندگان', 'Following')
+          : socialText(context, 'کشف کاربران', 'Discover people'),
+      hint: socialText(context, 'جستجوی نام کاربری', 'Search username'),
+      onSearch: (value) {
+        search.text = value;
+        debounce?.cancel();
+        debounce = Timer(const Duration(milliseconds: 350), load);
+      },
+    ),
     body: Column(
       children: [
-        if (widget.userId == null)
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: search,
-              onSubmitted: (_) => load(),
-              decoration: InputDecoration(
-                hintText: 'جست‌وجوی نام کاربری'.translate(context),
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  onPressed: load,
-                  icon: const Icon(Icons.search),
-                ),
-              ),
-            ),
-          ),
         Expanded(
           child: error != null
               ? SocialEmpty(error!, onRetry: load)
@@ -475,24 +470,24 @@ class _PeoplePageState extends State<PeoplePage> {
               : RefreshIndicator(
                   onRefresh: load,
                   child: ListView.builder(
+                    padding: const EdgeInsets.only(top: 12, bottom: 12),
                     itemCount: users!.length,
                     itemBuilder: (context, i) {
                       final user = users![i];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 6,
-                        ),
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
                         child: ListTile(
-                          contentPadding: const EdgeInsets.all(12),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                          ),
+                          minVerticalPadding: 0,
+                          minTileHeight: 48,
                           leading: SocialAvatar(
                             api: widget.api,
                             user: user,
-                            size: 40,
+                            size: 48,
                           ),
-                          title: AppText('${user['name']}'),
-                          subtitle: AppText('@${user['username']}'),
-                          trailing: const Icon(Icons.chevron_right),
+                          title: AppText(socialUserName(user)),
                           onTap: () async {
                             await socialPush(
                               context,

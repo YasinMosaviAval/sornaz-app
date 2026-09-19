@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -57,7 +58,7 @@ class _AcademyDetailsPageState extends State<AcademyDetailsPage> {
   @override
   Widget build(BuildContext context) {
     final a = academy;
-    return Scaffold(
+    return ScrollAwareScaffold(
       appBar: AppTopBarDirection(child: AppBar(title: Text(widget.name))),
       body: failed
           ? SocialEmpty(

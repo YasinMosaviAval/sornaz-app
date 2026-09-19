@@ -1,3 +1,4 @@
+import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/expanding_search_bar.dart';
 import 'recorder_settings.dart';
 import 'recording_playback.dart';
@@ -124,7 +125,7 @@ class _RecordedFilesPageState extends State<RecordedFilesPage> {
         .where((f) => f.name.toLowerCase().contains(query))
         .toList();
     final player = vm.playbackService;
-    return Scaffold(
+    return ScrollAwareScaffold(
       appBar: ExpandingSearchBar(
         title: Row(
           children: [
