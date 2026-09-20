@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'story_composer.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
@@ -70,74 +72,79 @@ class _PublishPageState extends State<PublishPage> {
   }
 
   @override
-  Widget build(BuildContext context) => PopScope(
-    canPop: !busy,
-    child: SocialScaffold(
-      title: widget.kind == 'story' ? 'استوری جدید' : 'پست جدید',
-      body: ListView(
-        padding: const EdgeInsets.all(24),
-        children: [
-          AppText(
-            widget.kind == 'story'
-                ? 'لحظه‌های موسیقایی شما، برای ۲۴ ساعت'
-                : 'اجرای تازه، تمرین امروز یا تجربه‌ات را منتشر کن.',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 24),
-          OutlinedButton.icon(
-            onPressed: busy ? null : pick,
-            icon: const Icon(Icons.add_photo_alternate_outlined),
-            label: AppText(filename ?? 'انتخاب تصویر یا ویدیو'),
-          ),
-          const AppText(
-            'تصویر تا ۱۰ مگابایت · ویدیو تا ۱۰۰ مگابایت',
-            style: TextStyle(fontSize: 12),
-          ),
-          if (media != null) ...[
-            const SizedBox(height: 16),
-            if ('${media!['mime']}'.startsWith('image/'))
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: SocialImage(
-                  api: widget.api,
-                  path: media!['url'],
-                  height: 260,
-                  width: double.infinity,
+  Widget build(BuildContext context) =>
+      widget.kind == 'story' &&
+          !kIsWeb &&
+          defaultTargetPlatform == TargetPlatform.android
+      ? StoryComposer(api: widget.api)
+      : PopScope(
+          canPop: !busy,
+          child: SocialScaffold(
+            title: widget.kind == 'story' ? 'استوری جدید' : 'پست جدید',
+            body: ListView(
+              padding: const EdgeInsets.all(24),
+              children: [
+                AppText(
+                  widget.kind == 'story'
+                      ? 'لحظه‌های موسیقایی شما، برای ۲۴ ساعت'
+                      : 'اجرای تازه، تمرین امروز یا تجربه‌ات را منتشر کن.',
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
-              )
-            else
-              SocialVideo(
-                key: ValueKey(media!['id']),
-                api: widget.api,
-                path: media!['url'],
-              ),
-          ],
-          const SizedBox(height: 20),
-          TextField(
-            controller: body,
-            enabled: !busy,
-            maxLength: 10000,
-            maxLines: 6,
-            decoration: InputDecoration(
-              labelText: 'متن و توضیحات'.translate(context),
-              alignLabelWithHint: true,
-              border: OutlineInputBorder(),
+                const SizedBox(height: 24),
+                OutlinedButton.icon(
+                  onPressed: busy ? null : pick,
+                  icon: const Icon(Icons.add_photo_alternate_outlined),
+                  label: AppText(filename ?? 'انتخاب تصویر یا ویدیو'),
+                ),
+                const AppText(
+                  'تصویر تا ۱۰ مگابایت · ویدیو تا ۱۰۰ مگابایت',
+                  style: TextStyle(fontSize: 12),
+                ),
+                if (media != null) ...[
+                  const SizedBox(height: 16),
+                  if ('${media!['mime']}'.startsWith('image/'))
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: SocialImage(
+                        api: widget.api,
+                        path: media!['url'],
+                        height: 260,
+                        width: double.infinity,
+                      ),
+                    )
+                  else
+                    SocialVideo(
+                      key: ValueKey(media!['id']),
+                      api: widget.api,
+                      path: media!['url'],
+                    ),
+                ],
+                const SizedBox(height: 20),
+                TextField(
+                  controller: body,
+                  enabled: !busy,
+                  maxLength: 10000,
+                  maxLines: 6,
+                  decoration: InputDecoration(
+                    labelText: 'متن و توضیحات'.translate(context),
+                    alignLabelWithHint: true,
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                if (busy) ...[
+                  const LinearProgressIndicator(),
+                  const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: AppText('در حال ارسال؛ صفحه را باز نگه دارید.'),
+                  ),
+                ],
+                FilledButton(
+                  onPressed: busy ? null : publish,
+                  child: const AppText('انتشار'),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 20),
-          if (busy) ...[
-            const LinearProgressIndicator(),
-            const Padding(
-              padding: EdgeInsets.all(12),
-              child: AppText('در حال ارسال؛ صفحه را باز نگه دارید.'),
-            ),
-          ],
-          FilledButton(
-            onPressed: busy ? null : publish,
-            child: const AppText('انتشار'),
-          ),
-        ],
-      ),
-    ),
-  );
+        );
 }

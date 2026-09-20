@@ -1,0 +1,38 @@
+[
+    {
+        "path":  "org/jetbrains/kotlinx/kotlinx-coroutines-android/1.9.0/kotlinx-coroutines-android-1.9.0.jar",
+        "sha256":  "bd783acd2f9738845d58380f46f45b5cde95d0cb03027d56725338b26bfc4d72"
+    },
+    {
+        "path":  "org/jetbrains/kotlinx/kotlinx-coroutines-android/1.9.0/kotlinx-coroutines-android-1.9.0.module",
+        "sha256":  "7df1e04d77f0cc411890d999a9449b0e3bcd4f159a46c3060b110204ca607d43"
+    },
+    {
+        "path":  "org/jetbrains/kotlinx/kotlinx-coroutines-android/1.9.0/kotlinx-coroutines-android-1.9.0.pom",
+        "sha256":  "be86020cd5b93b8a68ca43185a049b9b0baa345fd1be1fdaa014fdaef92d6e7c"
+    },
+    {
+        "path":  "org/jetbrains/kotlinx/kotlinx-coroutines-guava/1.9.0/kotlinx-coroutines-guava-1.9.0.jar",
+        "sha256":  "ca68323328a85a2df3c03429d5e7b124bc784f07fbace958399a5bba4118d7a0"
+    },
+    {
+        "path":  "org/jetbrains/kotlinx/kotlinx-coroutines-guava/1.9.0/kotlinx-coroutines-guava-1.9.0.module",
+        "sha256":  "3e0791a5731d1dda9e08588432d06a65b9175228b2a00355fb082c71a2b0f107"
+    },
+    {
+        "path":  "org/jetbrains/kotlinx/kotlinx-coroutines-guava/1.9.0/kotlinx-coroutines-guava-1.9.0.pom",
+        "sha256":  "3bb987bae11b2d61d3917ac1a7f732355e8b2d79a19581d35eb5085477176731"
+    },
+    {
+        "path":  "androidx/concurrent/concurrent-futures/1.2.0/concurrent-futures-1.2.0.jar",
+        "sha256":  "4810315a798690b5d3bb40c92bcd41c045fd2c36bbfc50b27cbac3d6a0eda190"
+    },
+    {
+        "path":  "androidx/concurrent/concurrent-futures/1.2.0/concurrent-futures-1.2.0.module",
+        "sha256":  "afd7094d3a07422be2e991bc87048542ae9724a5c42bd54b5cae3029c7970a1d"
+    },
+    {
+        "path":  "androidx/concurrent/concurrent-futures/1.2.0/concurrent-futures-1.2.0.pom",
+        "sha256":  "6be9a98d6cd75a787eeae2a1a0a3440ebe1ab4639740df9ec028094ab59b622f"
+    }
+]

@@ -9,17 +9,24 @@ import io.flutter.plugin.common.MethodChannel
 import java.io.File
 
 class MainActivity : AudioServiceActivity() {
+    private var storyMedia: StoryMedia? = null
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        if (storyMedia?.permissions(requestCode) == true) return
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    }
     private var notationStorage: NotationStorage? = null
     private var recordingWorkspace: RecordingWorkspace? = null
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (storyMedia?.onResult(requestCode, resultCode) == true) return
         if (notationStorage?.onResult(requestCode, resultCode, data) == true) return
         if (recordingWorkspace?.onResult(requestCode, resultCode, data) == true) return
         super.onActivityResult(requestCode, resultCode, data)
     }
     private var practiceMetronome: PracticeMetronome? = null
-    override fun onDestroy() { practiceMetronome?.stop(); super.onDestroy() }
+    override fun onDestroy() { practiceMetronome?.stop(); storyMedia?.dispose(); super.onDestroy() }
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        storyMedia = StoryMedia(this, flutterEngine.dartExecutor.binaryMessenger)
         practiceMetronome = PracticeMetronome(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         notationStorage = NotationStorage(this, flutterEngine.dartExecutor.binaryMessenger)
         MusicMetadata(flutterEngine.dartExecutor.binaryMessenger)

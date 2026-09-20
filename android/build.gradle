@@ -1,5 +1,21 @@
 allprojects {
     repositories {
+        // Keep the story editor's verified artifacts available to both compile and runtime.
+        // Exclusive versions prevent cached remote repository metadata from
+        // sending Gradle back to the network for these locally supplied files.
+        exclusiveContent {
+            forRepository {
+                maven {
+                    name = 'sornazStoryOffline'
+                    url = uri("$rootDir/offline-maven")
+                }
+            }
+            filter {
+                includeVersion('org.jetbrains.kotlinx', 'kotlinx-coroutines-android', '1.9.0')
+                includeVersion('org.jetbrains.kotlinx', 'kotlinx-coroutines-guava', '1.9.0')
+                includeVersion('androidx.concurrent', 'concurrent-futures', '1.2.0')
+            }
+        }
         // Flutter engine artifacts cached locally for reliable/offline builds.
         maven { url = uri("$rootDir/offline-maven") }
         maven { url = uri('https://maven.aliyun.com/repository/google') }

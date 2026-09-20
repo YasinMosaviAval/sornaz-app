@@ -293,7 +293,7 @@ class _StoryPageState extends State<StoryPage>
           if (video && c != null && c.value.isInitialized)
             ClipRect(
               child: FittedBox(
-                fit: BoxFit.cover,
+                fit: BoxFit.contain,
                 child: SizedBox(
                   width: c.value.size.width,
                   height: c.value.size.height,
@@ -307,7 +307,7 @@ class _StoryPageState extends State<StoryPage>
               path: story['media'],
               width: double.infinity,
               height: double.infinity,
-              fit: BoxFit.cover,
+              fit: BoxFit.contain,
             ),
           GestureDetector(
             behavior: HitTestBehavior.opaque,

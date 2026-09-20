@@ -3,4 +3,5 @@
     <cache-path name="shared_apk" path="shared-apk/" />
     <cache-path name="course_resources" path="course-resources/" />
     <cache-path name="notation_exports" path="notation-exports/" />
+    <cache-path name="story_drafts" path="story-drafts/" />
 </paths>

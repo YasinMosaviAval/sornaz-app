@@ -41,6 +41,8 @@ android {
 }
 
 dependencies {
+    implementation "androidx.media3:media3-transformer:1.9.2"
+    implementation "androidx.media3:media3-effect:1.9.2"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.0.3"
     
@@ -49,4 +51,25 @@ dependencies {
 
 flutter {
     source = "../.."
+}
+
+// Resolve the exact release artifacts without compiling or packaging an APK.
+tasks.register('verifyOfflineReleaseDependencies') {
+    doLast {
+        if (!gradle.startParameter.offline) {
+            throw new GradleException('Run with --offline to verify offline readiness.')
+        }
+        ['releaseCompileClasspath', 'releaseRuntimeClasspath'].each { name ->
+            def artifacts = configurations.getByName(name).incoming.artifactView {
+                componentFilter { id -> id instanceof org.gradle.api.artifacts.component.ModuleComponentIdentifier }
+                attributes {
+                    attribute(org.gradle.api.artifacts.type.ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, 'android-classes-jar')
+                }
+            }.files
+            artifacts.each { artifact ->
+                if (!artifact.isFile()) throw new GradleException("Missing artifact: " + artifact)
+            }
+            println("Verified offline " + name + ": " + artifacts.size() + " artifacts")
+        }
+    }
 }

@@ -1,4 +1,8 @@
 pluginManagement {
+    // --no-pub affects Dart only; this opt-in also disables Gradle networking.
+    if (System.getenv('SORNAZ_GRADLE_OFFLINE') == 'true') {
+        gradle.startParameter.offline = true
+    }
     def flutterSdkPath = {
         def properties = new Properties()
         file("local.properties").withInputStream { properties.load(it) }
