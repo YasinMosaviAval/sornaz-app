@@ -206,6 +206,7 @@ class SocialAvatar extends StatelessWidget {
                         for (final s in stories) {...s, 'author': user},
                       ],
                       initialIndex: first < 0 ? 0 : first,
+                      seen: viewed.ids,
                       onSeen: viewed.mark,
                     ),
                   );

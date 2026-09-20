@@ -1,3 +1,8 @@
+import '../Site/panel_form.dart';
+import 'package:provider/provider.dart';
+import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
+import '../Site/panel_api.dart';
+import '../Site/panel_resource_page.dart';
 import 'package:sornaz/helpers/user_facing_error.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/components/app_text.dart';
@@ -11,13 +16,91 @@ import 'social_downloads.dart';
 import 'learning_widgets.dart';
 
 class AccountDashboardBody extends StatefulWidget {
-  const AccountDashboardBody({super.key, required this.api});
+  const AccountDashboardBody({super.key, required this.api, this.accountApi});
+  final PanelApi? accountApi;
   final SocialApi api;
   @override
   State<AccountDashboardBody> createState() => _AccountDashboardBodyState();
 }
 
 class _AccountDashboardBodyState extends State<AccountDashboardBody> {
+  late final accountApi =
+      widget.accountApi ??
+      PanelApi(
+        widget.api.token,
+        isCurrentAccount: () =>
+            mounted &&
+            (context.read<AuthSession?>()?.token ?? widget.api.token) ==
+                widget.api.token,
+      );
+  Json? accountSection;
+  bool openingAccount = false;
+  bool get humanAccount =>
+      (optionalObject(data?['profile'])['type'] ??
+          context.read<AuthSession?>()?.user?.type) ==
+      'human';
+  @override
+  void dispose() {
+    if (widget.accountApi == null) accountApi.dispose();
+    super.dispose();
+  }
+
+  Future<void> openAccount(String area, String fa, String en) async {
+    if (openingAccount || (area == 'merge' && !humanAccount)) return;
+    openingAccount = true;
+    try {
+      accountSection ??= objects(
+        (await accountApi.get(''))['sections'],
+      ).firstWhere((s) => s['key'] == 'account');
+      if (!mounted) return;
+      if (['privacy', 'security', 'merge'].contains(area)) {
+        final action = optionalObject(
+          optionalObject(accountSection!['actions'])[area],
+        );
+        if (action.isEmpty) return;
+        final initial = area == 'privacy'
+            ? optionalObject(
+                optionalObject(
+                  (await accountApi.get('/account/list'))['profile'],
+                )['privacy'],
+              )
+            : <String, dynamic>{};
+        if (!mounted) return;
+        await socialPush(
+          context,
+          PanelFormPage(
+            title: socialText(context, fa, en),
+            fields: objects(action['fields']),
+            data: const {},
+            initial: initial,
+            settingsCheckboxes: area == 'privacy',
+            onSubmit: (result) async {
+              await accountApi.act(
+                'account',
+                area,
+                values: result.values,
+                files: result.files,
+              );
+            },
+          ),
+        );
+        return;
+      }
+      await socialPush(
+        context,
+        PanelResourcePage(
+          api: accountApi,
+          section: {...accountSection!, 'label': fa, 'en': en},
+          accountArea: area,
+        ),
+      );
+    } catch (e) {
+      if (mounted) socialError(context, e);
+    } finally {
+      openingAccount = false;
+    }
+  }
+
   Json? data;
   String? error;
   @override
@@ -82,29 +165,12 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () =>
-                      open(EditProfilePage(api: widget.api, profile: profile)),
-                  child: AppText(
-                    socialText(context, 'ویرایش پروفایل', 'Edit profile'),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => open(
-                    ProfilePage(api: widget.api, userId: number(profile['id'])),
-                  ),
-                  child: AppText(
-                    socialText(context, 'پروفایل عمومی', 'Public profile'),
-                  ),
-                ),
-              ),
-            ],
+          OutlinedButton(
+            onPressed: () =>
+                open(EditProfilePage(api: widget.api, profile: profile)),
+            child: AppText(
+              socialText(context, 'ویرایش پروفایل', 'Edit profile'),
+            ),
           ),
           const SizedBox(height: 16),
           for (final item in [
@@ -135,6 +201,47 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
                 title: AppText(socialText(context, item.$2, item.$3)),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => open(item.$4),
+              ),
+            ),
+          for (final item in [
+            ('privacy', Icons.privacy_tip_outlined, 'حریم خصوصی', 'Privacy'),
+            (
+              'security',
+              Icons.lock_outline,
+              'تغییر رمز عبور',
+              'Change password',
+            ),
+            if (humanAccount)
+              (
+                'merge',
+                Icons.merge_outlined,
+                'درخواست ادغام حساب',
+                'Request account merge',
+              ),
+            (
+              'securityAlerts',
+              Icons.security_outlined,
+              'هشدارهای امنیتی',
+              'Security alerts',
+            ),
+            ('loginHistory', Icons.history, 'تاریخچه ورود', 'Login history'),
+            ('documents', Icons.description_outlined, 'اسناد', 'Documents'),
+            ('devices', Icons.devices_outlined, 'دستگاه‌ها', 'Devices'),
+            (
+              'merges.requests',
+              Icons.merge_type,
+              'درخواست‌های ادغام',
+              'Merge requests',
+            ),
+          ])
+            Card(
+              elevation: 0,
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ListTile(
+                leading: Icon(item.$2),
+                title: AppText(socialText(context, item.$3, item.$4)),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => openAccount(item.$1, item.$3, item.$4),
               ),
             ),
           LearningHeading(

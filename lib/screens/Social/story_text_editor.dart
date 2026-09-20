@@ -8,11 +8,20 @@ class StorySticker {
     required this.text,
     this.color = Colors.white,
     this.mode = 0,
+    this.scale = 1,
     this.position = const Offset(.12, .3),
   });
   final String text;
   final Color color;
   final int mode;
+  final double scale;
+  StorySticker transform(Offset position, double scale) => StorySticker(
+    text: text,
+    color: color,
+    mode: mode,
+    position: position,
+    scale: scale.clamp(.3, 4),
+  );
   final Offset position;
   Color get foreground => mode == 1 ? Colors.white : color;
   Color get background => mode == 1
@@ -24,9 +33,10 @@ class StorySticker {
     text: text,
     color: color,
     mode: mode,
+    scale: scale,
     position: Offset(
-      (position.dx + delta.dx / bounds.width).clamp(0, .25),
-      (position.dy + delta.dy / bounds.height).clamp(0, .8),
+      (position.dx + delta.dx / bounds.width).clamp(-.5, 1),
+      (position.dy + delta.dy / bounds.height).clamp(-.5, 1),
     ),
   );
 }

@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +21,11 @@ class PanelFormPage extends StatefulWidget {
     required this.fields,
     required this.data,
     this.initial = const {},
+    this.onSubmit,
+    this.settingsCheckboxes = false,
   });
+  final Future<void> Function(PanelFormResult result)? onSubmit;
+  final bool settingsCheckboxes;
   final String title;
   final List<Json> fields;
   final Json data, initial;
@@ -30,6 +35,7 @@ class PanelFormPage extends StatefulWidget {
 
 class _PanelFormPageState extends State<PanelFormPage> {
   final form = GlobalKey<FormState>();
+  bool submitting = false;
   late final Json values = {
     ...widget.initial,
     for (final field in widget.fields)
@@ -59,43 +65,73 @@ class _PanelFormPageState extends State<PanelFormPage> {
           IconButton(
             tooltip: socialText(context, 'ذخیره', 'Save'),
             icon: const Icon(Icons.save_outlined),
-            onPressed: () {
-              for (final field in widget.fields) {
-                if (field['type'] == 'multi' && values[field['key']] is List) {
-                  values[field['key']] = (values[field['key']] as List)
-                      .map((item) => item is Map ? item['id'] : item)
-                      .where((item) => item != null)
-                      .toList();
-                }
-              }
-              if (form.currentState!.validate()) {
-                Navigator.pop(context, PanelFormResult(values, files));
-              }
-            },
+            onPressed: submitting
+                ? null
+                : () async {
+                    for (final field in widget.fields) {
+                      if (field['type'] == 'multi' &&
+                          values[field['key']] is List) {
+                        values[field['key']] = (values[field['key']] as List)
+                            .map((item) => item is Map ? item['id'] : item)
+                            .where((item) => item != null)
+                            .toList();
+                      }
+                    }
+                    if (form.currentState!.validate()) {
+                      final result = PanelFormResult(
+                        Map.of(values),
+                        Map.of(files),
+                      );
+                      if (widget.onSubmit == null) {
+                        Navigator.pop(context, result);
+                        return;
+                      }
+                      setState(() => submitting = true);
+                      try {
+                        await widget.onSubmit!(result);
+                        if (mounted) Navigator.pop(context, result);
+                      } catch (e) {
+                        if (mounted) socialError(context, e);
+                      } finally {
+                        if (mounted) setState(() => submitting = false);
+                      }
+                    }
+                  },
           ),
         ],
       ),
     ),
-    body: Form(
-      key: form,
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          for (final field in widget.fields)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: PanelField(
-                field: field,
-                value: values['${field['key']}'],
-                data: {...widget.data, '_form': values},
-                changed: (value) => change(field, value),
-                onFile: (file) {
-                  files['${field['key']}'] = file;
-                  setState(() => values['${field['key']}'] = file.name);
-                },
+    body: AbsorbPointer(
+      absorbing: submitting,
+      child: Form(
+        key: form,
+        child: ListView(
+          padding: widget.settingsCheckboxes
+              ? EdgeInsets.zero
+              : const EdgeInsets.all(16),
+          children: [
+            if (submitting) const LinearProgressIndicator(),
+            for (final field in widget.fields)
+              Padding(
+                padding: EdgeInsets.only(
+                  bottom: widget.settingsCheckboxes ? 0 : 16,
+                ),
+                child: PanelField(
+                  field: {
+                    ...field,
+                    if (widget.settingsCheckboxes) 'type': 'settingsCheckbox',
+                  },
+                  value: values['${field['key']}'],
+                  data: {...widget.data, '_form': values},
+                  changed: (value) => change(field, value),
+                  onFile: (file) {
+                    files['${field['key']}'] = file;
+                    setState(() => values['${field['key']}'] = file.name);
+                  },
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     ),
   );
@@ -140,6 +176,15 @@ class _PanelFieldState extends State<PanelField> {
                 (m) => '${m[1]} ${m[2]}',
               );
     final type = '${field['type'] ?? 'text'}';
+    if (type == 'settingsCheckbox') {
+      return CheckboxListTile(
+        contentPadding: const EdgeInsetsDirectional.only(start: 24, end: 16),
+        visualDensity: VisualDensity.compact,
+        title: Text(label, style: AppTypography.settingsItemTitle(context)),
+        value: widget.value == true || widget.value == 1 || widget.value == '1',
+        onChanged: (value) => widget.changed(value ?? false),
+      );
+    }
     if (type == 'bool') {
       return SwitchListTile(
         contentPadding: EdgeInsets.zero,

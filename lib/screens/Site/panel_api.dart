@@ -235,6 +235,12 @@ class PanelApi {
     return data is List ? {'items': data} : optionalObject(data);
   }
 
+  /// Drop responses after a mutation sent through another authenticated API.
+  void invalidate() {
+    _revision++;
+    _cache.clear();
+  }
+
   void dispose() {
     _disposed = true;
     _cache.clear();

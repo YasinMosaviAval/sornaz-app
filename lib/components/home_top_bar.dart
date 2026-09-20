@@ -1,3 +1,4 @@
+import 'app_top_bar_direction.dart';
 import 'package:flutter/material.dart';
 import 'app_logo.dart';
 
@@ -58,7 +59,11 @@ class _HomeTopBarState extends State<HomeTopBar> {
               : TextDirection.rtl),
     child: AppBar(
       automaticallyImplyLeading: false,
-      titleSpacing: widget.searchOnly ? 12 : 0,
+      titleSpacing: widget.pageTitle != null
+          ? 0
+          : widget.searchOnly
+          ? 12
+          : 0,
       flexibleSpace: widget.flexibleSpace,
       leading: widget.searchOnly
           ? (widget.pageTitle != null ? const BackButton() : null)
@@ -161,7 +166,11 @@ class _HomeTopBarState extends State<HomeTopBar> {
                               Expanded(
                                 child: Text(
                                   widget.pageTitle!,
-                                  style: const TextStyle(fontSize: 18),
+                                  style: TextStyle(
+                                    fontSize: AppTopBarDirection.titleSize(
+                                      context,
+                                    ),
+                                  ),
                                 ),
                               ),
                             if (widget.pageTitle == null) const Spacer(),
@@ -176,6 +185,8 @@ class _HomeTopBarState extends State<HomeTopBar> {
               ),
             ),
       actions: [
+        if (widget.searchOnly && widget.pageTitle != null)
+          const SizedBox(width: 12),
         if (!open) ...widget.extraActions,
         if (!widget.searchOnly)
           Builder(

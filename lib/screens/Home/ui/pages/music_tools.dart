@@ -58,7 +58,6 @@ class MusicToolsPage extends StatelessWidget {
                   ),
                   leading: Icon(item.$1),
                   title: Text(socialText(context, item.$2, item.$3)),
-                  trailing: const Icon(Icons.chevron_right),
                   onTap: () => socialPush(context, item.$4),
                 ),
             ],

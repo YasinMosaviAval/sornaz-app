@@ -1,3 +1,4 @@
+import 'social_profile.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'dart:async';
 import 'dart:math' as math;
@@ -5,6 +6,29 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'social_api.dart';
 import 'social_widgets.dart';
+
+List<Json> chronologicalStories(List<Json> values) =>
+    List<Json>.of(values)..sort((a, b) {
+      final timeA = DateTime.tryParse('${a['created_at'] ?? ''}'),
+          timeB = DateTime.tryParse('${b['created_at'] ?? ''}');
+      final cmp = timeA != null && timeB != null ? timeA.compareTo(timeB) : 0;
+      return cmp != 0 ? cmp : number(a['id']).compareTo(number(b['id']));
+    });
+String storyAge(BuildContext context, Json story) {
+  final created = DateTime.tryParse('${story['created_at'] ?? ''}');
+  if (created == null) return '';
+  final age = DateTime.now().toUtc().difference(
+    created.isUtc ? created : DateTime.parse('${story['created_at']}Z'),
+  );
+  final minutes = math.max(1, age.inMinutes);
+  return minutes < 60
+      ? socialText(context, '$minutes دقیقه پیش', '${minutes}m ago')
+      : socialText(
+          context,
+          '${minutes ~/ 60} ساعت پیش',
+          '${minutes ~/ 60}h ago',
+        );
+}
 
 List<List<Json>> groupStoriesByAuthor(
   List<Json> stories, {
@@ -20,8 +44,8 @@ List<List<Json>> groupStoriesByAuthor(
   bool allSeen(List<Json> group) =>
       group.every((s) => seen.contains(s['id'].toString()));
   return [
-    ...groups.values.where((g) => !allSeen(g)),
-    ...groups.values.where(allSeen),
+    ...groups.values.where((g) => !allSeen(g)).map(chronologicalStories),
+    ...groups.values.where(allSeen).map(chronologicalStories),
   ];
 }
 
@@ -43,8 +67,12 @@ class StoryPage extends StatefulWidget {
     required this.stories,
     this.initialIndex = 0,
     this.onSeen,
+    this.authorGroups = const [],
+    this.seen = const {},
     this.controllerFactory,
   });
+  final List<List<Json>> authorGroups;
+  final Set<String> seen;
   final SocialApi api;
   final List<Json> stories;
   final int initialIndex;
@@ -56,10 +84,55 @@ class StoryPage extends StatefulWidget {
 
 class _StoryPageState extends State<StoryPage>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  late int index = widget.initialIndex.clamp(
-    0,
-    math.max(0, widget.stories.length - 1),
+  late List<Json> stories = chronologicalStories(widget.stories);
+  late int index = widget.initialIndex > 0 && widget.seen.isEmpty
+      ? stories
+            .indexWhere(
+              (s) =>
+                  s['id'] ==
+                  widget.stories[widget.initialIndex.clamp(
+                    0,
+                    widget.stories.length - 1,
+                  )]['id'],
+            )
+            .clamp(0, stories.length - 1)
+      : startIndex(stories);
+  double swipeDistance = 0;
+  late int groupIndex = widget.authorGroups.indexWhere(
+    (g) => g.isNotEmpty && owner(g.first) == owner(stories.first),
   );
+  String owner(Json s) =>
+      '${s['owner_id'] ?? optionalObject(s['author'])['id']}';
+  int startIndex(List<Json> list) {
+    final unseen = list.indexWhere((s) => !widget.seen.contains('${s['id']}'));
+    return unseen < 0 ? 0 : unseen;
+  }
+
+  Future<void> authorNext(int direction) async {
+    final nextGroup = groupIndex + direction;
+    if (nextGroup < 0 || nextGroup >= widget.authorGroups.length) return;
+    setState(() {
+      groupIndex = nextGroup;
+      stories = chronologicalStories(widget.authorGroups[groupIndex]);
+      index = startIndex(stories);
+      durations.clear();
+    });
+    await load();
+  }
+
+  Future<void> openUser(Json user) async {
+    holding = true;
+    sync();
+    await socialPush(
+      context,
+      ProfilePage(api: widget.api, userId: number(user['id'])),
+    );
+    if (mounted) {
+      holding = false;
+      sync();
+    }
+  }
+
   int part = 0, generation = 0;
   final durations = <int, Duration>{};
   late final progress = AnimationController(
@@ -76,7 +149,7 @@ class _StoryPageState extends State<StoryPage>
       failed = false,
       switching = false,
       closing = false;
-  Json get story => widget.stories[index];
+  Json get story => stories[index];
   bool get video => '${story['mime']}'.startsWith('video/');
   bool get running =>
       foreground &&
@@ -97,7 +170,7 @@ class _StoryPageState extends State<StoryPage>
       if (status == AnimationStatus.completed && !video) next();
     });
     focus.addListener(sync);
-    if (widget.stories.isNotEmpty) load();
+    if (stories.isNotEmpty) load();
   }
 
   @override
@@ -107,7 +180,7 @@ class _StoryPageState extends State<StoryPage>
   }
 
   void sync() {
-    if (!mounted || closing || widget.stories.isEmpty) return;
+    if (!mounted || closing || stories.isEmpty) return;
     if (video) {
       final c = player;
       if (c == null || !c.value.isInitialized) return;
@@ -133,6 +206,24 @@ class _StoryPageState extends State<StoryPage>
     player = null;
     old?.removeListener(tick);
     if (old != null) unawaited(old.dispose());
+    if (story['summary'] == true) {
+      loading = true;
+      try {
+        final full = object(
+          await widget.api.get('/posts/' + story['id'].toString()),
+        );
+        if (!mounted || request != generation) return;
+        stories[index] = full;
+      } catch (_) {
+        if (mounted && request == generation)
+          setState(() {
+            loading = false;
+            failed = true;
+          });
+        return;
+      }
+      if (mounted) setState(() {});
+    }
     loading = video;
     failed = false;
     part = 0;
@@ -198,7 +289,7 @@ class _StoryPageState extends State<StoryPage>
   }
 
   Future<void> next([int direction = 1, bool automatic = false]) async {
-    if (closing || switching || widget.stories.isEmpty) return;
+    if (closing || switching || stories.isEmpty) return;
     final c = player;
     if (video &&
         parts.isNotEmpty &&
@@ -223,7 +314,13 @@ class _StoryPageState extends State<StoryPage>
       sync();
       return;
     }
-    if (target >= widget.stories.length) {
+    if (target >= stories.length &&
+        groupIndex >= 0 &&
+        groupIndex + 1 < widget.authorGroups.length) {
+      await authorNext(1);
+      return;
+    }
+    if (target >= stories.length) {
       closing = true;
       await player?.pause();
       if (mounted) Navigator.pop(context);
@@ -281,7 +378,7 @@ class _StoryPageState extends State<StoryPage>
 
   @override
   Widget build(BuildContext context) {
-    if (widget.stories.isEmpty)
+    if (stories.isEmpty)
       return const ScrollAwareScaffold(backgroundColor: Colors.black);
     final c = player;
     return ScrollAwareScaffold(
@@ -316,6 +413,17 @@ class _StoryPageState extends State<StoryPage>
                   ? -1
                   : 1,
             ),
+            onHorizontalDragStart: (_) => swipeDistance = 0,
+            onHorizontalDragUpdate: (d) => swipeDistance += d.primaryDelta ?? 0,
+            onHorizontalDragEnd: (d) {
+              final velocity = d.primaryVelocity ?? 0;
+              if (swipeDistance.abs() > 45 || velocity.abs() > 100)
+                authorNext(
+                  (swipeDistance.abs() > 45 ? swipeDistance : velocity) < 0
+                      ? 1
+                      : -1,
+                );
+            },
             onLongPressStart: (_) {
               holding = true;
               sync();
@@ -365,7 +473,7 @@ class _StoryPageState extends State<StoryPage>
                           textDirection: TextDirection.ltr,
                           child: Row(
                             children: [
-                              for (var i = 0; i < widget.stories.length; i++)
+                              for (var i = 0; i < stories.length; i++)
                                 for (var j = 0; j < count(i); j++)
                                   Expanded(
                                     child: Padding(
@@ -394,15 +502,21 @@ class _StoryPageState extends State<StoryPage>
                     Row(
                       children: [
                         const SizedBox(width: 12),
-                        SocialAvatar(
-                          api: widget.api,
-                          user: object(story['author']),
-                          size: 30,
+                        InkWell(
+                          onTap: () => openUser(object(story['author'])),
+                          child: IgnorePointer(
+                            child: SocialAvatar(
+                              api: widget.api,
+                              user: {...object(story['author']), 'stories': []},
+                              size: 30,
+                              showEmptyRing: false,
+                            ),
+                          ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            '${story['author']['name']}',
+                            '${socialUserName(object(story['author']))}  ${storyAge(context, story)}',
                             style: const TextStyle(color: Colors.white),
                           ),
                         ),
@@ -436,12 +550,47 @@ class _StoryPageState extends State<StoryPage>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      if (story['mentions'] is List)
+                        Wrap(
+                          children: [
+                            for (final user in objects(story['mentions']))
+                              TextButton(
+                                onPressed: () => openUser(user),
+                                child: Text(
+                                  '@${socialUserName(user)}',
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ),
+                          ],
+                        ),
                       if ('${story['body'] ?? ''}'.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 12),
-                          child: Text(
-                            '${story['body']}',
-                            style: const TextStyle(color: Colors.white),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              InkWell(
+                                onTap: () => openUser(object(story['author'])),
+                                child: IgnorePointer(
+                                  child: SocialAvatar(
+                                    api: widget.api,
+                                    user: {
+                                      ...object(story['author']),
+                                      'stories': [],
+                                    },
+                                    size: 28,
+                                    showEmptyRing: false,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '${story['body']}',
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       if (story['author']['isMe'] != true)

@@ -495,6 +495,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.articleDetailsPageAppBar(context),
               ),
+              actions: const [SizedBox(width: 16)],
               flexibleSpace: ArticleProgressBackground(
                 progress: _progress,
                 isDark: dark,

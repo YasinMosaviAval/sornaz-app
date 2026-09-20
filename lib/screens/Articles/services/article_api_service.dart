@@ -62,6 +62,7 @@ class ArticleApiService {
     required String locale,
     int page = 1,
     List<int>? ids,
+    int? author,
   }) async => _list(
     await request(
       '/articles',
@@ -70,6 +71,7 @@ class ArticleApiService {
         'per_page': '50',
         'page': '$page',
         if (ids != null) 'ids': ids.join(','),
+        if (author != null) 'author': '$author',
       },
     ),
   );

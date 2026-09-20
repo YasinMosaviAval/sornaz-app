@@ -197,7 +197,12 @@ void main() {
       }
       await tester.pumpAndSettle();
       expect(api.uploads.single.name, 'designed.png');
-      expect(api.posts.single, {'kind': 'story', 'body': '', 'media_id': '41'});
+      expect(api.posts.single, {
+        'kind': 'story',
+        'body': 'A music moment',
+        'media_id': '41',
+        'mention_ids': '[]',
+      });
       await tester.pumpWidget(const SizedBox());
       await tester.pumpAndSettle();
       expect(

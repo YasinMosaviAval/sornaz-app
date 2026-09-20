@@ -1,3 +1,4 @@
+import 'chat_message_bubble.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'dart:async';
@@ -25,7 +26,9 @@ class PanelResourcePage extends StatefulWidget {
     required this.api,
     required this.section,
     this.params = const {},
+    this.accountArea,
   });
+  final String? accountArea;
   final PanelApi api;
   final Json section;
   final Map<String, String> params;
@@ -49,7 +52,26 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
 
   final selected = <String>{};
   String get section => '${widget.section['key']}';
-  Json get actions => optionalObject(widget.section['actions']);
+  Json get actions {
+    final all = optionalObject(widget.section['actions']);
+    final area = widget.accountArea;
+    if (area == null) return all;
+    final keys = <String>{
+      'list',
+      area,
+      if (area == 'documents') ...[
+        'document',
+        'download-media',
+        'delete-media',
+        'backup',
+        'download-backup',
+      ],
+      if (area == 'devices') 'end-session',
+      if (area == 'merges.requests') ...['cancel-merge', 'decide-merge'],
+    };
+    return Map.fromEntries(all.entries.where((e) => keys.contains(e.key)));
+  }
+
   @override
   void initState() {
     super.initState();
@@ -215,7 +237,19 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
         MaterialPageRoute(
           builder: (_) => PanelFormPage(
             title: '${action['label']}',
-            fields: fields,
+            fields: [
+              for (final field in fields.where(
+                (f) =>
+                    !(section == 'gallery' &&
+                        widget.params.containsKey('collection') &&
+                        f['key'] == 'collection'),
+              ))
+                if (field['key'] == 'founded' &&
+                    optionalObject(data['profile'])['accountType'] == 'human')
+                  {...field, 'label': 'تاریخ تولد', 'en': 'Date of birth'}
+                else
+                  field,
+            ],
             data: {
               ...data,
               if (section == 'polls') 'options': record['options'],
@@ -719,33 +753,54 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                       ],
                     ),
                   if (section == 'account') ...[
-                    PanelProfileHeader(
-                      profile: optionalObject(data['profile']),
-                    ),
-                    PanelDataView(value: data['profile']),
+                    if (widget.accountArea == null) ...[
+                      PanelProfileHeader(
+                        profile: optionalObject(data['profile']),
+                      ),
+                      PanelDataView(value: data['profile']),
+                    ],
+                    if (widget.accountArea == 'privacy')
+                      PanelDataView(
+                        value: optionalObject(data['profile'])['privacy'],
+                      ),
                     for (final pair in [
                       ('documents', ['download-media', 'delete-media']),
                       ('devices', ['end-session']),
                       ('merges.requests', ['cancel-merge', 'decide-merge']),
-                    ]) ...[
-                      Text(panelDataLabel(context, pair.$1)),
-                      for (final row
-                          in (panelValue(data, pair.$1) is List
-                              ? objects(panelValue(data, pair.$1))
-                              : <Json>[]))
-                        recordCard(row, only: pair.$2),
-                    ],
-                    if (data['backup'] is Map)
+                    ])
+                      if (widget.accountArea == null ||
+                          widget.accountArea == pair.$1) ...[
+                        for (final row
+                            in (panelValue(data, pair.$1) is List
+                                ? objects(panelValue(data, pair.$1))
+                                : <Json>[]))
+                          recordCard(row, only: pair.$2),
+                        if (panelValue(data, pair.$1) is! List ||
+                            (panelValue(data, pair.$1) as List).isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Text(
+                              socialText(
+                                context,
+                                'موردی برای نمایش وجود ندارد.',
+                                'No records to display.',
+                              ),
+                            ),
+                          ),
+                      ],
+                    if ((widget.accountArea == null ||
+                            widget.accountArea == 'documents') &&
+                        data['backup'] is Map)
                       recordCard(
                         optionalObject(data['backup']),
                         only: ['download-backup'],
                       ),
-                    PanelDataView(
-                      value: {
-                        'loginHistory': data['loginHistory'],
-                        'securityAlerts': data['securityAlerts'],
-                      },
-                    ),
+                    if (widget.accountArea == null ||
+                        widget.accountArea == 'loginHistory')
+                      PanelDataView(value: data['loginHistory']),
+                    if (widget.accountArea == null ||
+                        widget.accountArea == 'securityAlerts')
+                      PanelDataView(value: data['securityAlerts']),
                   ] else if (['dashboard', 'reports'].contains(section)) ...[
                     PanelStatistics(stats: optionalObject(data['stats'])),
                     const SizedBox(height: 16),
@@ -930,7 +985,9 @@ class PanelConversationPage extends StatefulWidget {
     required this.api,
     required this.section,
     required this.conversation,
+    this.sendText,
   });
+  final Future<Json> Function(String body)? sendText;
   final PanelApi api;
   final Json section, conversation;
   @override
@@ -939,12 +996,21 @@ class PanelConversationPage extends StatefulWidget {
 
 class _PanelConversationPageState extends State<PanelConversationPage> {
   final text = TextEditingController();
+  final scroll = ScrollController();
+  void scrollToEnd() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && scroll.hasClients)
+        scroll.jumpTo(scroll.position.maxScrollExtent);
+    });
+  }
+
   List<Json> messages = [];
   PlatformFile? attachment;
   bool sending = false, loading = true, fetching = false;
   Object? error;
   bool hasMore = false;
   int historyCursor = 0;
+  final pendingMessages = <int>{};
   String get id => '${widget.conversation['id']}';
   Json get actions => optionalObject(widget.section['actions']);
   @override
@@ -955,6 +1021,7 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
 
   @override
   void dispose() {
+    scroll.dispose();
     text.dispose();
     super.dispose();
   }
@@ -984,6 +1051,7 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
       if (mounted) {
         setState(() {
           messages = result;
+          scrollToEnd();
           error = null;
         });
       }
@@ -999,13 +1067,15 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
     if (sending || text.text.trim().isEmpty && attachment == null) return;
     setState(() => sending = true);
     try {
-      final sent = await widget.api.act(
-        'chat',
-        'send',
-        params: {'id': id},
-        values: {'body': text.text.trim()},
-        files: {'file': ?attachment},
-      );
+      final sent = attachment == null && widget.sendText != null
+          ? await widget.sendText!(text.text.trim())
+          : await widget.api.act(
+              'chat',
+              'send',
+              params: {'id': id},
+              values: {'body': text.text.trim()},
+              files: {'file': ?attachment},
+            );
       if (!mounted) return;
       text.clear();
       setState(() => attachment = null);
@@ -1022,6 +1092,7 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
               for (final m in objects(result['messages'] ?? []))
                 number(m['id']): m,
             };
+            scrollToEnd();
             messages = merged.values.toList()
               ..sort((a, b) => number(a['id']).compareTo(number(b['id'])));
           });
@@ -1034,6 +1105,9 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
   }
 
   Future<void> messageAction(String action, Json row) async {
+    final messageId = number(row['id']);
+    if (pendingMessages.contains(messageId)) return;
+    setState(() => pendingMessages.add(messageId));
     try {
       if (action == 'file') {
         await widget.api.download('chat', 'file', {
@@ -1102,6 +1176,8 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
         });
     } catch (e) {
       if (mounted) socialError(context, e);
+    } finally {
+      if (mounted) setState(() => pendingMessages.remove(messageId));
     }
   }
 
@@ -1116,6 +1192,24 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
         child: AppBar(
           title: Text(panelTitle(widget.conversation)),
           actions: [
+            if (actions.containsKey('details'))
+              IconButton(
+                tooltip: socialText(
+                  context,
+                  'اطلاعات گفتگو',
+                  'Conversation details',
+                ),
+                icon: const Icon(Icons.info_outline),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => PanelGroupDetails(
+                      api: widget.api,
+                      section: widget.section,
+                      id: id,
+                    ),
+                  ),
+                ),
+              ),
             IconButton(
               icon: const Icon(Icons.refresh),
               onPressed: fetching ? null : () => load(refresh: true),
@@ -1151,61 +1245,54 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
             ),
           Expanded(
             child: ListView.builder(
-              reverse: true,
+              controller: scroll,
               padding: const EdgeInsets.all(12),
               itemCount: messages.length,
               itemBuilder: (context, index) {
-                final row = messages[messages.length - 1 - index];
-                return Card(
-                  child: ListTile(
-                    title: Text('${row['sender'] ?? ''}'),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('${row['body'] ?? ''}'),
-                        if ('${row['file']?['mime'] ?? ''}'.startsWith(
-                          'audio/',
-                        ))
-                          PanelVoicePlayback(
-                            key: ValueKey(row['id']),
-                            api: widget.api,
-                            messageId: '${row['id']}',
+                final row = messages[index];
+                final position = index;
+                final day = messageDay(row);
+                return Column(
+                  children: [
+                    if (day.isNotEmpty &&
+                        (position == 0 ||
+                            messageDay(messages[position - 1]) != day))
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Center(
+                          child: Text(
+                            day,
+                            key: ValueKey('chat-day-$day'),
+                            style: Theme.of(context).textTheme.labelMedium,
                           ),
-                        if (row['file'] != null) Text('${row['file']['name']}'),
-                        Text(
-                          '${row['createdAt'] ?? ''}${row['edited'] == true ? ' • ✎' : ''}',
                         ),
-                        if ((row['likes'] as num? ?? 0) > 0)
-                          Text(
-                            '♥ ${row['likes']}',
-                            style: TextStyle(
-                              color: row['liked'] == true
-                                  ? Theme.of(context).colorScheme.primary
-                                  : null,
+                      ),
+                    ChatMessageBubble(
+                      message: row,
+                      actions: actions,
+                      busy: pendingMessages.contains(number(row['id'])),
+                      onAction: (action) => messageAction(action, row),
+                      attachment: row['file'] == null
+                          ? null
+                          : Column(
+                              children: [
+                                if ('${row['file']?['mime'] ?? ''}'.startsWith(
+                                  'audio/',
+                                ))
+                                  PanelVoicePlayback(
+                                    key: ValueKey(row['id']),
+                                    api: widget.api,
+                                    messageId: '${row['id']}',
+                                  ),
+                                TextButton.icon(
+                                  onPressed: () => messageAction('file', row),
+                                  icon: const Icon(Icons.attach_file),
+                                  label: Text('${row['file']['name']}'),
+                                ),
+                              ],
                             ),
-                          ),
-                      ],
                     ),
-                    trailing: PopupMenuButton<String>(
-                      onSelected: (action) => messageAction(action, row),
-                      itemBuilder: (_) => [
-                        for (final action in [
-                          'like',
-                          'forward',
-                          if (row['mine'] == true) ...[
-                            'edit-message',
-                            'delete-message',
-                          ],
-                          if (row['file'] != null) 'file',
-                        ])
-                          if (actions.containsKey(action))
-                            PopupMenuItem(
-                              value: action,
-                              child: Text('${actions[action]['label']}'),
-                            ),
-                      ],
-                    ),
-                  ),
+                  ],
                 );
               },
             ),

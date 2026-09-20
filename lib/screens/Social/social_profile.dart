@@ -1,3 +1,6 @@
+import 'profile_highlights.dart';
+import 'profile_articles.dart';
+import '../Site/panel_api.dart';
 import 'package:sornaz/components/home_top_bar.dart';
 import 'dart:async';
 import 'profile_posts_page.dart';
@@ -230,8 +233,13 @@ class _ProfileBodyState extends State<ProfileBody> {
                   ).entries.where((e) => '${e.value}'.isNotEmpty))
                     TextButton.icon(
                       onPressed: () async {
-                        final url = Uri.tryParse('${entry.value}');
-                        if (url != null && url.scheme == 'https') {
+                        final url = entry.key == 'email'
+                            ? Uri(scheme: 'mailto', path: '${entry.value}')
+                            : Uri.tryParse('${entry.value}');
+                        if (url != null &&
+                            (url.scheme == 'https' ||
+                                (entry.key == 'email' &&
+                                    url.scheme == 'mailto'))) {
                           try {
                             if (!await launchUrl(
                               url,
@@ -249,11 +257,16 @@ class _ProfileBodyState extends State<ProfileBody> {
                 ],
               ),
             ),
+          ProfileHighlights(
+            api: widget.api,
+            owner: widget.userId,
+            isMe: u['isMe'] == true,
+          ),
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                for (var i = 0; i < 2; i++)
+                for (var i = 0; i < 3; i++)
                   Expanded(
                     child: InkWell(
                       onTap: () => setState(() => tab = i),
@@ -270,12 +283,19 @@ class _ProfileBodyState extends State<ProfileBody> {
                           ),
                         ),
                         child: AppText(
-                          (i == 0
-                                  ? socialText(context, 'پست‌ها', 'Posts')
-                                  : socialText(context, 'دوره‌ها', 'Courses')) +
-                              ' (' +
-                              (i == 0 ? u['posts'] : u['courses']).toString() +
-                              ')',
+                          i == 2
+                              ? socialText(context, 'مقاله‌ها', 'Articles')
+                              : (i == 0
+                                        ? socialText(context, 'پست‌ها', 'Posts')
+                                        : socialText(
+                                            context,
+                                            'دوره‌ها',
+                                            'Courses',
+                                          )) +
+                                    ' (' +
+                                    (i == 0 ? u['posts'] : u['courses'])
+                                        .toString() +
+                                    ')',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: tab == i
@@ -292,8 +312,10 @@ class _ProfileBodyState extends State<ProfileBody> {
           if (tab == 0) ...[
             if (posts.isEmpty) const SocialEmpty('هنوز پستی منتشر نشده است.'),
             ProfilePostGrid(api: widget.api, posts: posts, onChanged: load),
-          ] else
-            CoursesBody(api: widget.api, owner: widget.userId, embedded: true),
+          ] else if (tab == 1)
+            CoursesBody(api: widget.api, owner: widget.userId, embedded: true)
+          else
+            ProfileArticles(owner: widget.userId),
           const SizedBox(height: 90),
         ],
       ),
@@ -510,14 +532,85 @@ class _PeoplePageState extends State<PeoplePage> {
 }
 
 class EditProfilePage extends StatefulWidget {
-  const EditProfilePage({super.key, required this.api, required this.profile});
+  const EditProfilePage({
+    super.key,
+    required this.api,
+    required this.profile,
+    this.accountApi,
+  });
   final SocialApi api;
   final Json profile;
+  final PanelApi? accountApi;
   @override
   State<EditProfilePage> createState() => _EditProfilePageState();
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
+  late final panel =
+      widget.accountApi ??
+      PanelApi(
+        widget.api.token,
+        isCurrentAccount: () =>
+            mounted &&
+            (context.read<AuthSession?>()?.token ?? widget.api.token) ==
+                widget.api.token,
+      );
+  final contacts = {
+    for (final key in ['email', 'phone', 'founded', 'address', 'shortIntro'])
+      key: TextEditingController(),
+  };
+  Json privateProfile = {};
+  bool detailsLoading = true;
+  String? detailsError;
+  bool get human =>
+      (privateProfile['accountType'] ?? widget.profile['type'] ?? 'human') ==
+      'human';
+  @override
+  void initState() {
+    super.initState();
+    loadDetails();
+  }
+
+  Future<void> loadDetails() async {
+    setState(() => detailsLoading = true);
+    try {
+      final data = await panel.get('/account/list');
+      if (!mounted) return;
+      setState(() {
+        privateProfile = optionalObject(data['profile']);
+        for (final e in contacts.entries) {
+          e.value.text = (privateProfile[e.key] ?? '').toString();
+        }
+        detailsError = null;
+      });
+    } catch (e) {
+      if (mounted) setState(() => detailsError = userFacingError(e));
+    } finally {
+      if (mounted) setState(() => detailsLoading = false);
+    }
+  }
+
+  Future<void> pickDate() async {
+    final current = DateTime.tryParse(contacts['founded']!.text);
+    final last = DateTime.now();
+    final value = await showDatePicker(
+      context: context,
+      initialDate:
+          current != null && !current.isAfter(last) && current.year >= 1900
+          ? current
+          : last,
+      firstDate: DateTime(1900),
+      lastDate: last,
+    );
+    if (value != null)
+      contacts['founded']!.text =
+          value.year.toString() +
+          '-' +
+          value.month.toString().padLeft(2, '0') +
+          '-' +
+          value.day.toString().padLeft(2, '0');
+  }
+
   late final name = TextEditingController(
     text: '${widget.profile['name'] ?? ''}',
   );
@@ -525,7 +618,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     text: '${widget.profile['bio'] ?? ''}',
   );
   late final links = {
-    for (final key in ['website', 'instagram', 'youtube'])
+    for (final key in ['email', 'website', 'instagram', 'youtube'])
       key: TextEditingController(
         text:
             '${(widget.profile['links'] is Map ? widget.profile['links'] as Map : const {})[key] ?? ''}',
@@ -537,6 +630,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
   bool busy = false;
   @override
   void dispose() {
+    if (widget.accountApi == null) panel.dispose();
+    for (final c in contacts.values) {
+      c.dispose();
+    }
     name.dispose();
     bio.dispose();
     for (final c in links.values) {
@@ -567,9 +664,30 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Future<void> save() async {
-    if (!(form.currentState?.validate() ?? false)) return;
+    if (detailsLoading ||
+        detailsError != null ||
+        busy ||
+        !(form.currentState?.validate() ?? false))
+      return;
     setState(() => busy = true);
     try {
+      await panel.act(
+        'account',
+        'profile',
+        values: {
+          'name': name.text.trim(),
+          for (final key in ['email', 'phone', 'founded', 'address'])
+            key: contacts[key]!.text.trim(),
+        },
+      );
+      await panel.act(
+        'account',
+        'bio',
+        values: {
+          'shortIntro': contacts['shortIntro']!.text.trim(),
+          'biography': bio.text,
+        },
+      );
       final updated = object(
         await widget.api.post('/me', {
           'name': name.text.trim(),
@@ -578,10 +696,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
         }),
       );
       if (mounted)
-        await context.read<AuthSession?>()?.updateProfile(
-          number(updated['id']),
-          updated,
-        );
+        await context
+            .read<AuthSession?>()
+            ?.updateProfile(number(updated['id']), {
+              ...updated,
+              'email': contacts['email']!.text.trim(),
+              'phone': contacts['phone']!.text.trim(),
+            });
       await widget.api.post('/settings', {
         for (final e in links.entries) e.key: e.value.text.trim(),
       });
@@ -597,12 +718,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget build(BuildContext context) => SocialScaffold(
     title: 'ویرایش پروفایل',
     body: AbsorbPointer(
-      absorbing: busy,
+      absorbing: busy || detailsLoading,
       child: Form(
         key: form,
         child: ListView(
           padding: const EdgeInsets.all(24),
           children: [
+            if (detailsLoading) const LinearProgressIndicator(),
+            if (detailsError != null)
+              TextButton(onPressed: loadDetails, child: Text(detailsError!)),
             Center(
               child: Stack(
                 children: [
@@ -638,6 +762,56 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 labelText: 'نام نمایشی'.translate(context),
               ),
             ),
+            for (final field in [
+              ('email', 'ایمیل', 'Email'),
+              ('phone', 'شماره تماس', 'Phone number'),
+              (
+                'founded',
+                human ? 'تاریخ تولد' : 'تاریخ تأسیس',
+                human ? 'Date of birth' : 'Establishment date',
+              ),
+              ('address', 'نشانی', 'Address'),
+              ('shortIntro', 'معرفی کوتاه', 'Short introduction'),
+            ])
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: TextFormField(
+                  controller: contacts[field.$1],
+                  readOnly: field.$1 == 'founded',
+                  onTap: field.$1 == 'founded' ? pickDate : null,
+                  keyboardType: field.$1 == 'email'
+                      ? TextInputType.emailAddress
+                      : field.$1 == 'phone'
+                      ? TextInputType.phone
+                      : TextInputType.text,
+                  maxLines: ['address', 'shortIntro'].contains(field.$1)
+                      ? 3
+                      : 1,
+                  maxLength: field.$1 == 'shortIntro' ? 500 : null,
+                  decoration: InputDecoration(
+                    labelText: socialText(context, field.$2, field.$3),
+                    suffixIcon: field.$1 == 'founded'
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () => contacts['founded']!.clear(),
+                          )
+                        : null,
+                  ),
+                  validator: (v) =>
+                      field.$1 == 'email' &&
+                          v != null &&
+                          v.isNotEmpty &&
+                          !RegExp(
+                            r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
+                          ).hasMatch(v.trim())
+                      ? socialText(
+                          context,
+                          'ایمیل معتبر وارد کنید.',
+                          'Enter a valid email address.',
+                        )
+                      : null,
+                ),
+              ),
             TextField(
               controller: bio,
               maxLength: 3000,
@@ -656,17 +830,31 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: TextFormField(
                   controller: e.value,
-                  keyboardType: TextInputType.url,
+                  keyboardType: e.key == 'email'
+                      ? TextInputType.emailAddress
+                      : TextInputType.url,
                   textDirection: TextDirection.ltr,
                   maxLength: 500,
                   decoration: InputDecoration(
-                    labelText: e.key,
-                    hintText: 'https://',
+                    labelText: e.key == 'email'
+                        ? socialText(context, 'ایمیل عمومی', 'Public email')
+                        : e.key,
+                    hintText: e.key == 'email' ? null : 'https://',
                     border: const OutlineInputBorder(),
                     counterText: '',
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) return null;
+                    if (e.key == 'email')
+                      return RegExp(
+                            r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
+                          ).hasMatch(value.trim())
+                          ? null
+                          : socialText(
+                              context,
+                              'ایمیل معتبر وارد کنید.',
+                              'Enter a valid email address.',
+                            );
                     final uri = Uri.tryParse(value.trim());
                     return uri == null ||
                             uri.scheme != 'https' ||
@@ -691,7 +879,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
             const SizedBox(height: 20),
             if (busy) const LinearProgressIndicator(),
             FilledButton(
-              onPressed: busy ? null : save,
+              onPressed: busy || detailsLoading || detailsError != null
+                  ? null
+                  : save,
               child: const AppText('ذخیره تغییرات'),
             ),
           ],

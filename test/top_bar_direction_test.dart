@@ -67,7 +67,7 @@ void main() {
         expect(
           tester.getCenter(find.text('Files')).dx <
               tester.getCenter(find.byIcon(Icons.settings)).dx,
-          direction == TextDirection.rtl,
+          direction == TextDirection.ltr,
         );
         await tester.tap(find.byIcon(Icons.search));
         await tester.pumpAndSettle();

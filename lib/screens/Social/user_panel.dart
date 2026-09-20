@@ -279,6 +279,8 @@ class _PanelState extends State<_Panel> {
                                   StoryPage(
                                     api: api,
                                     stories: group,
+                                    authorGroups: storyGroups,
+                                    seen: seenStories,
                                     initialIndex: first < 0 ? 0 : first,
                                     onSeen: markSeen,
                                   ),

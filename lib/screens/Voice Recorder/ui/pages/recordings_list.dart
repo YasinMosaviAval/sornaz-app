@@ -1,4 +1,5 @@
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
+import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:sornaz/components/expanding_search_bar.dart';
 import 'recorder_settings.dart';
 import 'recording_playback.dart';
@@ -133,7 +134,9 @@ class _RecordedFilesPageState extends State<RecordedFilesPage> {
             Expanded(
               child: Text(
                 socialText(context, 'صداهای ضبط‌شده', 'Recordings'),
-                style: const TextStyle(fontSize: 13),
+                style: TextStyle(
+                  fontSize: AppTopBarDirection.titleSize(context),
+                ),
               ),
             ),
           ],

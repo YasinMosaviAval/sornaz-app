@@ -332,8 +332,8 @@ void main() {
       expect(find.text('آخرین پیام'), findsOneWidget);
       await tester.tap(find.byType(PopupMenuButton<String>).first);
       await tester.pumpAndSettle();
-      expect(find.text('ویرایش پیام'), findsOneWidget);
-      expect(find.text('حذف پیام'), findsOneWidget);
+      expect(find.byTooltip('ویرایش پیام'), findsWidgets);
+      expect(find.text('پاک کردن پیام'), findsOneWidget);
       await tester.pumpWidget(const SizedBox());
       api.dispose();
     },

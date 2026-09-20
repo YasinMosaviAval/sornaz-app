@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'social_profile.dart';
+import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
@@ -47,6 +50,13 @@ class _StoryComposerState extends State<StoryComposer>
   final gallery = <Json>[];
   final stickers = <StorySticker>[];
   List<Json> mentions = [];
+  bool exportingMetadata = false;
+  Offset imageOffset = Offset.zero,
+      gestureImageOffset = Offset.zero,
+      gestureStart = Offset.zero;
+  double imageScale = 1, gestureScale = 1;
+  StorySticker? gestureSticker;
+  final photos = <StoryPhotoLayer>[];
   Json? selected;
   Uint8List? preview;
   VideoPlayerController? player;
@@ -190,6 +200,9 @@ class _StoryComposerState extends State<StoryComposer>
         caption = '';
         mentions = [];
         stickers.clear();
+        photos.clear();
+        imageScale = 1;
+        imageOffset = Offset.zero;
       });
       await player?.play();
     } catch (_) {
@@ -339,6 +352,7 @@ class _StoryComposerState extends State<StoryComposer>
     try {
       if (save && await bridge.call<bool>('savePermission') != true) return;
       final video = selected!['video'] == true;
+      setState(() => exportingMetadata = !save);
       final bytes = await capture(video ? overlayKey : canvasKey);
       output = object(
         await bridge.call(
@@ -370,7 +384,10 @@ class _StoryComposerState extends State<StoryComposer>
         await widget.api.post('/posts', {
           'kind': 'story',
           // Caption and mentions are rendered into the media, not repeated by viewers.
-          'body': '',
+          'body': caption,
+          'mention_ids': jsonEncode(
+            mentions.map((u) => number(u['id'])).toList(),
+          ),
           'media_id': '${media['id']}',
         });
         if (mounted) Navigator.pop(context, true);
@@ -387,9 +404,45 @@ class _StoryComposerState extends State<StoryComposer>
         } catch (_) {}
       }
       if (mounted) {
-        setState(() => busy = false);
+        setState(() {
+          busy = false;
+          exportingMetadata = false;
+        });
         player?.play();
       }
+    }
+  }
+
+  Future<void> addPhoto() async {
+    await player?.pause();
+    final item = await showModalBottomSheet<Json>(
+      context: context,
+      isScrollControlled: true,
+      builder: (c) => SizedBox(
+        height: MediaQuery.sizeOf(c).height * .65,
+        child: GridView.count(
+          crossAxisCount: 3,
+          children: [
+            for (final photo in gallery.where((p) => p['video'] != true))
+              StoryGalleryTile(
+                bridge: bridge,
+                item: photo,
+                onTap: () => Navigator.pop(c, photo),
+              ),
+          ],
+        ),
+      ),
+    );
+    try {
+      if (item != null) {
+        final bytes = await bridge.thumbnail(item, size: 1440);
+        if (bytes != null && mounted)
+          setState(() => photos.add(StoryPhotoLayer(bytes)));
+      }
+    } catch (_) {
+      if (mounted) showError();
+    } finally {
+      if (mounted) player?.play();
     }
   }
 
@@ -420,6 +473,36 @@ class _StoryComposerState extends State<StoryComposer>
     child: SizedBox.expand(
       child: Stack(
         children: [
+          for (final photo in photos)
+            Positioned(
+              left: photo.offset.dx * frame.width,
+              top: photo.offset.dy * frame.height,
+              width: frame.width * .5,
+              child: GestureDetector(
+                onScaleStart: (d) {
+                  gestureStart = d.focalPoint;
+                  photo.startOffset = photo.offset;
+                  gestureScale = photo.scale;
+                },
+                onScaleUpdate: busy
+                    ? null
+                    : (d) => setState(() {
+                        photo.offset =
+                            photo.startOffset +
+                            Offset(
+                              (d.focalPoint.dx - gestureStart.dx) / frame.width,
+                              (d.focalPoint.dy - gestureStart.dy) /
+                                  frame.height,
+                            );
+                        photo.scale = (gestureScale * d.scale).clamp(.2, 4);
+                      }),
+                child: Transform.scale(
+                  scale: photo.scale,
+                  alignment: Alignment.topLeft,
+                  child: Image.memory(photo.bytes),
+                ),
+              ),
+            ),
           for (var i = 0; i < stickers.length; i++)
             Positioned(
               left: stickers[i].position.dx * frame.width,
@@ -427,94 +510,109 @@ class _StoryComposerState extends State<StoryComposer>
               width: frame.width * .75,
               child: GestureDetector(
                 onTap: busy ? null : () => editText(i),
-                onPanUpdate: busy
+                onScaleStart: (d) {
+                  gestureStart = d.focalPoint;
+                  gestureSticker = stickers[i];
+                },
+                onScaleUpdate: busy
                     ? null
-                    : (d) => setState(
-                        () => stickers[i] = stickers[i].move(d.delta, frame),
-                      ),
-                child: Align(
+                    : (d) => setState(() {
+                        final base = gestureSticker!;
+                        stickers[i] = base
+                            .move(d.focalPoint - gestureStart, frame)
+                            .transform(
+                              base
+                                  .move(d.focalPoint - gestureStart, frame)
+                                  .position,
+                              base.scale * d.scale,
+                            );
+                      }),
+                child: Transform.scale(
+                  scale: stickers[i].scale,
                   alignment: Alignment.topLeft,
-                  child: StoryTextLabel(sticker: stickers[i]),
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: StoryTextLabel(sticker: stickers[i]),
+                  ),
                 ),
               ),
             ),
-          Positioned(
-            left: 16,
-            bottom: 20,
-            right: 76,
-            child: Directionality(
-              textDirection: TextDirection.ltr,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (mentions.isNotEmpty)
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        for (final user in mentions)
-                          Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.black54,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                avatar(user),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '@${socialUserName(user)}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                  ),
+          if (!exportingMetadata)
+            Positioned(
+              left: 16,
+              bottom: 20,
+              right: 76,
+              child: Directionality(
+                textDirection: TextDirection.ltr,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (mentions.isNotEmpty)
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          for (final user in mentions)
+                            TextButton(
+                              onPressed: () => socialPush(
+                                context,
+                                ProfilePage(
+                                  api: widget.api,
+                                  userId: number(user['id']),
                                 ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                  if (caption.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 10),
-                      child: GestureDetector(
-                        onTap: busy ? null : editCaption,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            avatar(me),
-                            const SizedBox(width: 8),
-                            Expanded(
+                              ),
                               child: Text(
-                                caption,
-                                textAlign: TextAlign.left,
-                                textDirection:
-                                    Localizations.localeOf(
-                                          context,
-                                        ).languageCode ==
-                                        'fa'
-                                    ? TextDirection.rtl
-                                    : TextDirection.ltr,
+                                '@${socialUserName(user)}',
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 14,
-                                  shadows: [
-                                    Shadow(blurRadius: 3, color: Colors.black),
-                                  ],
+                                  fontSize: 12,
                                 ),
                               ),
                             ),
-                          ],
+                        ],
+                      ),
+                    if (caption.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: GestureDetector(
+                          onTap: busy ? null : editCaption,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              avatar(me),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  caption,
+                                  textAlign: TextAlign.left,
+                                  textDirection:
+                                      Localizations.localeOf(
+                                            context,
+                                          ).languageCode ==
+                                          'fa'
+                                      ? TextDirection.rtl
+                                      : TextDirection.ltr,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    shadows: [
+                                      Shadow(
+                                        blurRadius: 3,
+                                        color: Colors.black,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     ),
@@ -550,19 +648,49 @@ class _StoryComposerState extends State<StoryComposer>
                       ),
                     )
                   else
-                    Image.memory(
-                      preview!,
-                      fit: cover ? BoxFit.cover : BoxFit.contain,
-                      alignment: Alignment.center,
+                    GestureDetector(
+                      onScaleStart: (d) {
+                        gestureStart = d.localFocalPoint;
+                        gestureImageOffset = imageOffset;
+                        gestureScale = imageScale;
+                      },
+                      onScaleUpdate: busy
+                          ? null
+                          : (d) => setState(() {
+                              imageScale = (gestureScale * d.scale).clamp(
+                                .2,
+                                5,
+                              );
+                              final center = Offset(
+                                frame.width / 2,
+                                frame.height / 2,
+                              );
+                              imageOffset =
+                                  d.localFocalPoint -
+                                  center -
+                                  (gestureStart - center - gestureImageOffset) *
+                                      (imageScale / gestureScale);
+                            }),
+                      child: Transform.translate(
+                        offset: imageOffset,
+                        child: Transform.scale(
+                          scale: imageScale,
+                          child: Image.memory(
+                            preview!,
+                            fit: cover ? BoxFit.cover : BoxFit.contain,
+                            alignment: Alignment.center,
+                          ),
+                        ),
+                      ),
                     ),
                   overlay(),
                 ],
               ),
             ),
           ),
-          Positioned(
+          PositionedDirectional(
             top: 8,
-            left: 8,
+            start: 8,
             child: IconButton(
               onPressed: busy ? null : backToGallery,
               icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -573,6 +701,11 @@ class _StoryComposerState extends State<StoryComposer>
             right: 8,
             child: Column(
               children: [
+                action(
+                  Icons.add_photo_alternate_outlined,
+                  t('عکس جدید', 'Add photo'),
+                  addPhoto,
+                ),
                 action(Icons.text_fields, t('متن', 'Text'), editText),
                 action(
                   Icons.alternate_email,
@@ -631,7 +764,9 @@ class _StoryComposerState extends State<StoryComposer>
     child: Scaffold(
       backgroundColor: Colors.black,
       appBar: selected == null
-          ? AppBar(title: Text(t('استوری جدید', 'New story')))
+          ? AppTopBarDirection(
+              child: AppBar(title: Text(t('استوری جدید', 'New story'))),
+            )
           : null,
       body: SafeArea(
         child: selected != null
@@ -706,6 +841,11 @@ class _StoryComposerState extends State<StoryComposer>
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
                   onPressed: busy ? null : () => finish(save: false),
                   child: Text(t('انتشار', 'Publish')),
                 ),
@@ -884,11 +1024,19 @@ class _StoryMentionPickerState extends State<StoryMentionPicker> {
             ),
             Padding(
               padding: const EdgeInsets.all(16),
-              child: FilledButton(
-                onPressed: selected.isEmpty
-                    ? null
-                    : () => Navigator.pop(context, selected.values.toList()),
-                child: Text(socialText(context, 'افزودن', 'Add')),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  onPressed: selected.isEmpty
+                      ? null
+                      : () => Navigator.pop(context, selected.values.toList()),
+                  child: Text(socialText(context, 'افزودن', 'Add')),
+                ),
               ),
             ),
           ],
@@ -896,4 +1044,11 @@ class _StoryMentionPickerState extends State<StoryMentionPicker> {
       ),
     ),
   );
+}
+
+class StoryPhotoLayer {
+  StoryPhotoLayer(this.bytes);
+  final Uint8List bytes;
+  Offset offset = const Offset(.2, .2), startOffset = Offset.zero;
+  double scale = 1;
 }

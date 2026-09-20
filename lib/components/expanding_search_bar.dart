@@ -35,9 +35,9 @@ class _ExpandingSearchBarState extends State<ExpandingSearchBar> {
 
   @override
   Widget build(BuildContext context) => Directionality(
-    textDirection: Directionality.of(context) == TextDirection.rtl
-        ? TextDirection.ltr
-        : TextDirection.rtl,
+    textDirection: Localizations.localeOf(context).languageCode == 'fa'
+        ? TextDirection.rtl
+        : TextDirection.ltr,
     child: SafeArea(
       bottom: false,
       child: SizedBox(

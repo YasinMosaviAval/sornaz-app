@@ -1,3 +1,4 @@
+import 'app_top_bar_direction.dart';
 import 'package:flutter/material.dart';
 
 /// Hides only toolbar chrome for downward vertical scrolling. Horizontal
@@ -53,6 +54,9 @@ class ScrollAwareScaffold extends StatefulWidget {
 }
 
 class _ScrollAwareScaffoldState extends State<ScrollAwareScaffold> {
+  PreferredSizeWidget? get normalizedBar => widget.appBar is AppBar
+      ? AppTopBarDirection(child: widget.appBar!)
+      : widget.appBar;
   final nestedKey = GlobalKey<NestedScrollViewState>();
   bool get contentOverflows {
     final state = nestedKey.currentState;
@@ -67,7 +71,7 @@ class _ScrollAwareScaffoldState extends State<ScrollAwareScaffold> {
   @override
   Widget build(BuildContext context) => Scaffold(
     key: widget.scaffoldKey,
-    appBar: widget.pinTopBar ? widget.appBar : null,
+    appBar: widget.pinTopBar ? normalizedBar : null,
     body: widget.appBar == null || widget.pinTopBar
         ? widget.body
         : SafeArea(
@@ -84,7 +88,7 @@ class _ScrollAwareScaffoldState extends State<ScrollAwareScaffold> {
                     child: MediaQuery.removePadding(
                       context: context,
                       removeTop: true,
-                      child: widget.appBar!,
+                      child: normalizedBar!,
                     ),
                   ),
                 ),

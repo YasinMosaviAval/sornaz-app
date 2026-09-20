@@ -1,3 +1,4 @@
+import 'panel_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/home_top_bar.dart';
@@ -50,6 +51,20 @@ class _NativePanelState extends State<NativePanel> {
   bool loading = true;
   Object? error;
   String query = '';
+  bool contentOverflows = false;
+  bool measure(ScrollMetricsNotification n) {
+    if (n.depth == 0) {
+      final overflow =
+          n.metrics.maxScrollExtent > n.metrics.minScrollExtent + 1;
+      if (overflow != contentOverflows)
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && contentOverflows != overflow)
+            setState(() => contentOverflows = overflow);
+        });
+    }
+    return false;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -98,11 +113,57 @@ class _NativePanelState extends State<NativePanel> {
     'roles' || 'permissions' || 'users' => Icons.admin_panel_settings_outlined,
     _ => Icons.view_list_outlined,
   };
+  bool matches(Json section) =>
+      query.isEmpty ||
+      ('${section['label']} ${section['en']}').toLowerCase().contains(
+        query.toLowerCase(),
+      ) ||
+      (section['children'] is List &&
+          objects(section['children']).any(matches));
+  Widget menuItem(Json section) {
+    final children = section['children'];
+    if (children is List)
+      return ExpansionTile(
+        key: PageStorageKey('${section['key']}-${query.isNotEmpty}'),
+        tilePadding: const EdgeInsetsDirectional.only(start: 24, end: 8),
+        title: Text(panelLabel(context, section)),
+        leading: Icon(icon('${section['key']}')),
+        initiallyExpanded: query.isNotEmpty,
+        children: [
+          for (final child in objects(children))
+            if (query.isEmpty ||
+                matches(child) ||
+                ('${section['label']} ${section['en']}').toLowerCase().contains(
+                  query.toLowerCase(),
+                ))
+              menuItem(child),
+        ],
+      );
+    return ListTile(
+      contentPadding: const EdgeInsetsDirectional.only(start: 24, end: 8),
+      leading: Icon(icon('${section['key']}')),
+      title: Text(panelLabel(context, section)),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => PanelResourcePage(
+            api: api,
+            section: section,
+            params: optionalObject(
+              section['initialParams'],
+            ).map((k, v) => MapEntry(k, '$v')),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => MainTabScaffold(
     index: 1,
     appBar: HomeTopBar(
-      onSearch: (v) => setState(() => query = v),
+      onSearch: contentOverflows || query.isNotEmpty
+          ? (v) => setState(() => query = v)
+          : null,
       hint: socialText(context, 'جستجو در پنل کاربری', 'Search user panel'),
     ),
     body: loading
@@ -118,30 +179,15 @@ class _NativePanelState extends State<NativePanel> {
           )
         : RefreshIndicator(
             onRefresh: () => load(refresh: true),
-            child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              children: [
-                for (final section in sections.where(
-                  (s) => '${s['label']} ${s['en']}'.toLowerCase().contains(
-                    query.toLowerCase(),
-                  ),
-                ))
-                  ListTile(
-                    contentPadding: const EdgeInsetsDirectional.only(
-                      start: 24,
-                      end: 8,
-                    ),
-                    leading: Icon(icon('${section['key']}')),
-                    title: Text(panelLabel(context, section)),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            PanelResourcePage(api: api, section: section),
-                      ),
-                    ),
-                  ),
-              ],
+            child: NotificationListener<ScrollMetricsNotification>(
+              onNotification: measure,
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                children: [
+                  for (final section in panelNavigation(sections))
+                    if (matches(section)) menuItem(section),
+                ],
+              ),
             ),
           ),
   );
