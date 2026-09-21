@@ -168,6 +168,38 @@ void main() {
       expect(find.byIcon(Icons.save_alt), findsOneWidget);
       expect(api.uploads, isEmpty);
       expect(calls.where((c) => c.method == 'save'), isEmpty);
+      await tester.tap(find.byIcon(Icons.text_fields));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Pinch this text');
+      await tester.tap(find.text('تأیید'));
+      await tester.pumpAndSettle();
+      final center = tester.getCenter(find.byType(StoryTextLabel));
+      final finger1 = await tester.startGesture(center, pointer: 1);
+      final finger2 = await tester.startGesture(
+        center + const Offset(0, 80),
+        pointer: 2,
+      );
+      await finger2.moveTo(center + const Offset(0, 150));
+      await tester.pump();
+      expect(
+        tester
+            .widget<StoryTextLabel>(find.byType(StoryTextLabel))
+            .sticker
+            .scale,
+        greaterThan(1),
+      );
+      await finger2.moveTo(center + const Offset(0, 40));
+      await tester.pump();
+      expect(
+        tester
+            .widget<StoryTextLabel>(find.byType(StoryTextLabel))
+            .sticker
+            .scale,
+        lessThan(1),
+      );
+      await finger2.up();
+      await finger1.up();
+      await tester.pumpAndSettle();
       await tester.tap(find.text('یک عنوان اضافه کنید'));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), 'A music moment');

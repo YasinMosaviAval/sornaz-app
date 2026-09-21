@@ -284,6 +284,7 @@ class _StoryTextEditorState extends State<StoryTextEditor> {
                           text: input.text.trim(),
                           color: color,
                           mode: mode,
+                          scale: widget.initial?.scale ?? 1,
                           position:
                               widget.initial?.position ?? const Offset(.12, .3),
                         ),

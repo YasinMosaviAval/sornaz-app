@@ -1,3 +1,4 @@
+import 'player_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -23,15 +24,20 @@ Future<void> audioAction(
         );
         final name = await showDialog<String>(
           context: context,
-          builder: (c) => AlertDialog(
+          builder: (c) => PlayerDialog(
             title: const Text('تغییر نام'),
-            content: TextField(controller: input, maxLength: 100),
+            content: TextField(
+              style: const TextStyle(fontSize: 14),
+              controller: input,
+              maxLength: 100,
+            ),
             actions: [
-              TextButton(
+              PlayerDialogButton(
+                primary: false,
                 onPressed: () => Navigator.pop(c),
                 child: const Text('انصراف'),
               ),
-              TextButton(
+              PlayerDialogButton(
                 onPressed: () => Navigator.pop(c, input.text.trim()),
                 child: const Text('ذخیره'),
               ),
@@ -49,19 +55,25 @@ Future<void> audioAction(
     }
     if (action == 'share')
       await Share.shareXFiles(files.map((f) => XFile(f.file.path)).toList());
-    if (action == 'favorite') await MusicPlaylists.instance.add(MusicPlaylists.favorite, files.map((f)=>f.file.path));
-    if (action == 'playlist' && context.mounted) await chooseMusicPlaylist(context, files);
+    if (action == 'favorite')
+      await MusicPlaylists.instance.add(
+        MusicPlaylists.favorite,
+        files.map((f) => f.file.path),
+      );
+    if (action == 'playlist' && context.mounted)
+      await chooseMusicPlaylist(context, files);
     if (action == 'delete' && context.mounted) {
       final yes = await showDialog<bool>(
         context: context,
-        builder: (c) => AlertDialog(
+        builder: (c) => PlayerDialog(
           title: Text('حذف ${files.length} فایل؟'),
           actions: [
-            TextButton(
+            PlayerDialogButton(
+              primary: false,
               onPressed: () => Navigator.pop(c, false),
               child: const Text('انصراف'),
             ),
-            TextButton(
+            PlayerDialogButton(
               onPressed: () => Navigator.pop(c, true),
               child: const Text('حذف'),
             ),
@@ -107,7 +119,6 @@ class AudioActionsMenu extends StatelessWidget {
       itemBuilder: (_) => [
         for (final action in [
           ('rename', 'تغییر نام'),
-          ('favorite', 'افزودن به علاقه‌مندی‌ها'),
           ('playlist', 'افزودن به پلی‌لیست'),
           ('share', 'اشتراک‌گذاری'),
           ('delete', 'حذف'),

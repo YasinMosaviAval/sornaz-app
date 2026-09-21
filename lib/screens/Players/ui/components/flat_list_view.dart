@@ -4,7 +4,7 @@ import '../../providers/audio_player_provider.dart';
 import '../../providers/folder_navigator_provider.dart';
 import 'audio_item.dart';
 import 'audio_selection.dart';
-import 'search_bar.dart';
+import 'breadcrumb.dart';
 
 class FlatListView extends StatefulWidget {
   const FlatListView({super.key, this.scrollController, this.folders = false});
@@ -60,7 +60,7 @@ class _FlatListViewState extends State<FlatListView> {
     }
     return Column(
       children: [
-        const SearchBarWidget(),
+        if (widget.folders) const BreadcrumbWidget(),
         if (widget.folders && nav.isLoading) const LinearProgressIndicator(),
         if (widget.folders &&
             !nav.isLoading &&

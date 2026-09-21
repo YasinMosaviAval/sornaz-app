@@ -56,6 +56,51 @@ class _StoryComposerState extends State<StoryComposer>
       gestureStart = Offset.zero;
   double imageScale = 1, gestureScale = 1;
   StorySticker? gestureSticker;
+  final textPointers = <int, Offset>{};
+  int? activeText;
+  bool textWasPinched = false;
+  StorySticker? pinchText;
+  double pinchDistance = 0;
+  Offset pinchCenter = Offset.zero;
+  void textPointerDown(PointerDownEvent event) {
+    if (textPointers.isEmpty) textWasPinched = false;
+    textPointers[event.pointer] = event.position;
+    if (activeText != null && textPointers.length == 2) {
+      textWasPinched = true;
+      final points = textPointers.values.toList();
+      pinchText = stickers[activeText!];
+      pinchDistance = (points[0] - points[1]).distance;
+      pinchCenter = (points[0] + points[1]) / 2;
+    }
+  }
+
+  void textPointerMove(PointerMoveEvent event) {
+    textPointers[event.pointer] = event.position;
+    if (busy ||
+        activeText == null ||
+        pinchText == null ||
+        textPointers.length != 2 ||
+        pinchDistance == 0)
+      return;
+    final points = textPointers.values.toList();
+    final base = pinchText!;
+    final center = (points[0] + points[1]) / 2;
+    setState(
+      () => stickers[activeText!] = base.transform(
+        base.move(center - pinchCenter, frame).position,
+        base.scale * (points[0] - points[1]).distance / pinchDistance,
+      ),
+    );
+  }
+
+  void textPointerUp(PointerEvent event) {
+    textPointers.remove(event.pointer);
+    if (textPointers.isEmpty) {
+      activeText = null;
+      pinchText = null;
+    }
+  }
+
   final photos = <StoryPhotoLayer>[];
   Json? selected;
   Uint8List? preview;
@@ -508,31 +553,43 @@ class _StoryComposerState extends State<StoryComposer>
               left: stickers[i].position.dx * frame.width,
               top: stickers[i].position.dy * frame.height,
               width: frame.width * .75,
-              child: GestureDetector(
-                onTap: busy ? null : () => editText(i),
-                onScaleStart: (d) {
-                  gestureStart = d.focalPoint;
-                  gestureSticker = stickers[i];
+              child: Listener(
+                behavior: HitTestBehavior.translucent,
+                onPointerDown: (_) {
+                  if (textPointers.isEmpty) activeText = i;
                 },
-                onScaleUpdate: busy
-                    ? null
-                    : (d) => setState(() {
-                        final base = gestureSticker!;
-                        stickers[i] = base
-                            .move(d.focalPoint - gestureStart, frame)
-                            .transform(
-                              base
-                                  .move(d.focalPoint - gestureStart, frame)
-                                  .position,
-                              base.scale * d.scale,
-                            );
-                      }),
-                child: Transform.scale(
-                  scale: stickers[i].scale,
-                  alignment: Alignment.topLeft,
-                  child: Align(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: busy
+                      ? null
+                      : () {
+                          if (!textWasPinched) editText(i);
+                        },
+                  onScaleStart: (d) {
+                    gestureStart = d.focalPoint;
+                    gestureSticker = stickers[i];
+                  },
+                  onScaleUpdate: busy
+                      ? null
+                      : (d) => setState(() {
+                          if (pinchText != null || d.pointerCount > 1) return;
+                          final base = gestureSticker!;
+                          stickers[i] = base
+                              .move(d.focalPoint - gestureStart, frame)
+                              .transform(
+                                base
+                                    .move(d.focalPoint - gestureStart, frame)
+                                    .position,
+                                base.scale * d.scale,
+                              );
+                        }),
+                  child: Transform.scale(
+                    scale: stickers[i].scale,
                     alignment: Alignment.topLeft,
-                    child: StoryTextLabel(sticker: stickers[i]),
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      child: StoryTextLabel(sticker: stickers[i]),
+                    ),
                   ),
                 ),
               ),
@@ -622,124 +679,133 @@ class _StoryComposerState extends State<StoryComposer>
       frame = Size(box.maxWidth, box.maxHeight);
       final size = player?.value.size ?? imageSize;
       cover = (size.width >= frame.width && size.height >= frame.height);
-      return Stack(
-        fit: StackFit.expand,
-        children: [
-          RepaintBoundary(
-            key: canvasKey,
-            child: ColoredBox(
-              color: Colors.black,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  if (player != null)
-                    Center(
-                      child: ClipRect(
-                        child: SizedBox.expand(
-                          child: FittedBox(
-                            fit: cover ? BoxFit.cover : BoxFit.contain,
-                            child: SizedBox(
-                              width: size.width,
-                              height: size.height,
-                              child: VideoPlayer(player!),
+      return Listener(
+        onPointerDown: textPointerDown,
+        onPointerMove: textPointerMove,
+        onPointerUp: textPointerUp,
+        onPointerCancel: textPointerUp,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            RepaintBoundary(
+              key: canvasKey,
+              child: ColoredBox(
+                color: Colors.black,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (player != null)
+                      Center(
+                        child: ClipRect(
+                          child: SizedBox.expand(
+                            child: FittedBox(
+                              fit: cover ? BoxFit.cover : BoxFit.contain,
+                              child: SizedBox(
+                                width: size.width,
+                                height: size.height,
+                                child: VideoPlayer(player!),
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      GestureDetector(
+                        onScaleStart: (d) {
+                          gestureStart = d.localFocalPoint;
+                          gestureImageOffset = imageOffset;
+                          gestureScale = imageScale;
+                        },
+                        onScaleUpdate: busy
+                            ? null
+                            : (d) => setState(() {
+                                if (activeText != null) return;
+                                imageScale = (gestureScale * d.scale).clamp(
+                                  .2,
+                                  5,
+                                );
+                                final center = Offset(
+                                  frame.width / 2,
+                                  frame.height / 2,
+                                );
+                                imageOffset =
+                                    d.localFocalPoint -
+                                    center -
+                                    (gestureStart -
+                                            center -
+                                            gestureImageOffset) *
+                                        (imageScale / gestureScale);
+                              }),
+                        child: Transform.translate(
+                          offset: imageOffset,
+                          child: Transform.scale(
+                            scale: imageScale,
+                            child: Image.memory(
+                              preview!,
+                              fit: cover ? BoxFit.cover : BoxFit.contain,
+                              alignment: Alignment.center,
                             ),
                           ),
                         ),
                       ),
-                    )
-                  else
-                    GestureDetector(
-                      onScaleStart: (d) {
-                        gestureStart = d.localFocalPoint;
-                        gestureImageOffset = imageOffset;
-                        gestureScale = imageScale;
-                      },
-                      onScaleUpdate: busy
-                          ? null
-                          : (d) => setState(() {
-                              imageScale = (gestureScale * d.scale).clamp(
-                                .2,
-                                5,
-                              );
-                              final center = Offset(
-                                frame.width / 2,
-                                frame.height / 2,
-                              );
-                              imageOffset =
-                                  d.localFocalPoint -
-                                  center -
-                                  (gestureStart - center - gestureImageOffset) *
-                                      (imageScale / gestureScale);
-                            }),
-                      child: Transform.translate(
-                        offset: imageOffset,
-                        child: Transform.scale(
-                          scale: imageScale,
-                          child: Image.memory(
-                            preview!,
-                            fit: cover ? BoxFit.cover : BoxFit.contain,
-                            alignment: Alignment.center,
-                          ),
-                        ),
-                      ),
-                    ),
-                  overlay(),
+                    overlay(),
+                  ],
+                ),
+              ),
+            ),
+            PositionedDirectional(
+              top: 8,
+              start: 8,
+              child: IconButton(
+                onPressed: busy ? null : backToGallery,
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+              ),
+            ),
+            Positioned(
+              top: 55,
+              right: 8,
+              child: Column(
+                children: [
+                  action(
+                    Icons.add_photo_alternate_outlined,
+                    t('عکس جدید', 'Add photo'),
+                    addPhoto,
+                  ),
+                  action(Icons.text_fields, t('متن', 'Text'), editText),
+                  action(
+                    Icons.alternate_email,
+                    t('منشن', 'Mention'),
+                    editMentions,
+                  ),
+                  action(
+                    Icons.save_alt,
+                    t('ذخیره', 'Save'),
+                    () => finish(save: true),
+                  ),
                 ],
               ),
             ),
-          ),
-          PositionedDirectional(
-            top: 8,
-            start: 8,
-            child: IconButton(
-              onPressed: busy ? null : backToGallery,
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-            ),
-          ),
-          Positioned(
-            top: 55,
-            right: 8,
-            child: Column(
-              children: [
-                action(
-                  Icons.add_photo_alternate_outlined,
-                  t('عکس جدید', 'Add photo'),
-                  addPhoto,
-                ),
-                action(Icons.text_fields, t('متن', 'Text'), editText),
-                action(
-                  Icons.alternate_email,
-                  t('منشن', 'Mention'),
-                  editMentions,
-                ),
-                action(
-                  Icons.save_alt,
-                  t('ذخیره', 'Save'),
-                  () => finish(save: true),
-                ),
-              ],
-            ),
-          ),
-          if (caption.isEmpty)
-            Positioned(
-              left: 16,
-              bottom: 20,
-              child: TextButton(
-                onPressed: busy ? null : editCaption,
-                child: Text(
-                  t('یک عنوان اضافه کنید', 'Add a caption'),
-                  style: const TextStyle(color: Colors.white),
+            if (caption.isEmpty)
+              Positioned(
+                left: 16,
+                bottom: 20,
+                child: TextButton(
+                  onPressed: busy ? null : editCaption,
+                  child: Text(
+                    t('یک عنوان اضافه کنید', 'Add a caption'),
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 ),
               ),
-            ),
-          if (busy)
-            const Positioned.fill(
-              child: ColoredBox(
-                color: Colors.black54,
-                child: Center(child: CircularProgressIndicator()),
+            if (busy)
+              const Positioned.fill(
+                child: ColoredBox(
+                  color: Colors.black54,
+                  child: Center(child: CircularProgressIndicator()),
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       );
     },
   );

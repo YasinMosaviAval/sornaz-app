@@ -44,6 +44,8 @@ void main() {
                       'username': 'user',
                       'name': 'Name',
                       'bio': 'Biography with room below the cover',
+                      'shortIntro': 'Short introduction',
+                      'articles': 7,
                       'isMe': true,
                       'posts': 6,
                       'courses': 0,
@@ -62,6 +64,9 @@ void main() {
       expect(find.text('ویرایش پروفایل'), findsNothing);
       expect(find.text('مدیریت دوره‌ها'), findsNothing);
       expect(find.text('ذخیره‌شده‌ها'), findsNothing);
+      expect(find.text('Short introduction'), findsOneWidget);
+      expect(find.text('Biography with room below the cover'), findsNothing);
+      expect(find.text('مقاله‌ها (7)'), findsOneWidget);
       final bio = tester.getRect(find.byKey(const ValueKey('profile-bio')));
       final name = tester.getRect(
         find.byKey(const ValueKey('profile-username')),

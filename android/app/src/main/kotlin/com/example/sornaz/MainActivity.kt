@@ -17,7 +17,7 @@ class MainActivity : AudioServiceActivity() {
     private var notationStorage: NotationStorage? = null
     private var recordingWorkspace: RecordingWorkspace? = null
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (storyMedia?.onResult(requestCode, resultCode) == true) return
+        if (storyMedia?.onResult(requestCode, resultCode, data) == true) return
         if (notationStorage?.onResult(requestCode, resultCode, data) == true) return
         if (recordingWorkspace?.onResult(requestCode, resultCode, data) == true) return
         super.onActivityResult(requestCode, resultCode, data)
@@ -30,6 +30,7 @@ class MainActivity : AudioServiceActivity() {
         practiceMetronome = PracticeMetronome(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         notationStorage = NotationStorage(this, flutterEngine.dartExecutor.binaryMessenger)
         MusicMetadata(flutterEngine.dartExecutor.binaryMessenger)
+        MusicEqualizer(flutterEngine.dartExecutor.binaryMessenger)
         PublicRecordings(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         recordingWorkspace = RecordingWorkspace(this, flutterEngine.dartExecutor.binaryMessenger)
         PrivatePdf(applicationContext, flutterEngine.dartExecutor.binaryMessenger)

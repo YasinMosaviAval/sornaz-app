@@ -2,26 +2,18 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart' as just;
-import 'package:shared_preferences/shared_preferences.dart';
+import '../services/equalizer_settings.dart';
 
 class AudioPlayerController {
   final bool _useAndroid =
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
   late final AudioPlayer _player = AudioPlayer();
-  late final just.AndroidEqualizer _equalizer = just.AndroidEqualizer();
-  late final just.AudioPlayer _android = just.AudioPlayer(
-    audioPipeline: just.AudioPipeline(androidAudioEffects: [_equalizer]),
-  );
-  just.AndroidEqualizer? get equalizer =>
-      _useAndroid && !_eqFailed ? _equalizer : null;
+  late final just.AudioPlayer _android = just.AudioPlayer();
+  final equalizer = EqualizerSettings();
   final List<StreamSubscription> _subscriptions = [];
   Duration duration = Duration.zero, position = Duration.zero;
   double playbackSpeed = 1;
-  bool _eqFailed = false;
-  bool isPlaying = false,
-      _disposed = false,
-      _completed = false,
-      _restored = false;
+  bool isPlaying = false, _disposed = false, _completed = false;
   String? _path;
   final _stateChanged = StreamController<void>.broadcast(),
       _completeChanged = StreamController<void>.broadcast();
@@ -33,6 +25,11 @@ class AudioPlayerController {
 
   AudioPlayerController() {
     if (_useAndroid) {
+      _subscriptions.add(
+        _android.androidAudioSessionIdStream.listen((id) {
+          unawaited(equalizer.attach(id));
+        }),
+      );
       _subscriptions.add(
         _android.playerStateStream.listen((s) {
           isPlaying =
@@ -84,38 +81,6 @@ class AudioPlayerController {
       _player.setReleaseMode(ReleaseMode.stop);
     }
   }
-  Future<void> _restoreEqualizer() async {
-    if (_restored) return;
-    try {
-      final p = await _equalizer.parameters.timeout(const Duration(seconds: 3));
-      final prefs = await SharedPreferences.getInstance();
-      await _equalizer.setEnabled(prefs.getBool('music_eq_enabled') ?? true);
-      for (final band in p.bands) {
-        await band.setGain(
-          (prefs.getDouble('music_eq_${band.centerFrequency.round()}') ?? 0)
-              .clamp(p.minDecibels, p.maxDecibels),
-        );
-      }
-      _restored = true;
-    } catch (_) {
-      _restored = true;
-      _eqFailed = true;
-    }
-  }
-
-  Future<void> saveEqualizer() async {
-    if (!_useAndroid) return;
-    final p = await _equalizer.parameters;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('music_eq_enabled', _equalizer.enabled);
-    for (final band in p.bands) {
-      await prefs.setDouble(
-        'music_eq_${band.centerFrequency.round()}',
-        band.gain,
-      );
-    }
-  }
-
   Future<void> playFile(String path) async {
     await pause();
     if (_path != path) duration = Duration.zero;
@@ -126,7 +91,7 @@ class AudioPlayerController {
       final d = await _android.setFilePath(path);
       if (d != null && d > Duration.zero) duration = d;
       await _android.setSpeed(playbackSpeed);
-      await _restoreEqualizer();
+      await equalizer.attach(_android.androidAudioSessionId);
       unawaited(_android.play());
     } else {
       await _player.stop();
@@ -201,6 +166,7 @@ class AudioPlayerController {
 
   void dispose() {
     _disposed = true;
+    equalizer.dispose();
     for (final s in _subscriptions) {
       s.cancel();
     }

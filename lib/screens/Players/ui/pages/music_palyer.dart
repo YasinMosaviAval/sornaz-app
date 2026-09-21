@@ -1,3 +1,5 @@
+import '../components/player_dialog.dart';
+import '../components/search_bar.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:flutter/foundation.dart';
 import 'browser_music_player.dart';
@@ -106,7 +108,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
+      builder: (context) => PlayerDialog(
         title: Text(AppStrings.need_permission.translate(context)),
         content: Text(
           AppStrings.need_permission_for_scanning_audio_files.translate(
@@ -114,11 +116,12 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
           ),
         ),
         actions: [
-          TextButton(
+          PlayerDialogButton(
+            primary: false,
             onPressed: () => Navigator.pop(context),
             child: Text(AppStrings.later.translate(context)),
           ),
-          ElevatedButton(
+          PlayerDialogButton(
             onPressed: () {
               openAppSettings();
               Navigator.pop(context);
@@ -141,6 +144,8 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: ScrollAwareScaffold(
+        appBar: const SearchBarWidget(),
+        pinTopBar: true,
         body: Consumer<AudioLibraryManager>(
           builder: (_, library, _) {
             if (library.isScanning) {

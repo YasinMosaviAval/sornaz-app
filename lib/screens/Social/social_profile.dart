@@ -152,7 +152,7 @@ class _ProfileBodyState extends State<ProfileBody> {
             child: Padding(
               padding: const EdgeInsetsDirectional.fromSTEB(130, 4, 20, 0),
               child: AppText(
-                '${u['bio'] ?? ''}',
+                '${u['shortIntro'] ?? ''}',
                 key: const ValueKey('profile-bio'),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -284,7 +284,10 @@ class _ProfileBodyState extends State<ProfileBody> {
                         ),
                         child: AppText(
                           i == 2
-                              ? socialText(context, 'مقاله‌ها', 'Articles')
+                              ? socialText(context, 'مقاله‌ها', 'Articles') +
+                                    ' (' +
+                                    number(u['articles']).toString() +
+                                    ')'
                               : (i == 0
                                         ? socialText(context, 'پست‌ها', 'Posts')
                                         : socialText(

@@ -292,15 +292,17 @@ class _PanelState extends State<_Panel> {
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    SocialAvatar(
-                                      api: api,
-                                      user: {
-                                        ...object(group.first['author']),
-                                        'stories': group,
-                                      },
-                                      story: true,
-                                      seen: groupSeen(group),
-                                      size: 52,
+                                    IgnorePointer(
+                                      child: SocialAvatar(
+                                        api: api,
+                                        user: {
+                                          ...object(group.first['author']),
+                                          'stories': group,
+                                        },
+                                        story: true,
+                                        seen: groupSeen(group),
+                                        size: 52,
+                                      ),
                                     ),
                                     const SizedBox(height: 6),
                                     AppText(

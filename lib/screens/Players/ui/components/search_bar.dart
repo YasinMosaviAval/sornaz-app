@@ -8,7 +8,7 @@ import 'package:sornaz/components/expanding_search_bar.dart';
 import 'package:sornaz/components/settings_section_header.dart';
 import '../../providers/audio_player_provider.dart';
 import '../../providers/folder_navigator_provider.dart';
-import 'breadcrumb.dart';
+import 'package:sornaz/screens/Social/social_widgets.dart';
 
 class SearchBarWidget extends StatelessWidget implements PreferredSizeWidget {
   const SearchBarWidget({super.key});
@@ -16,7 +16,17 @@ class SearchBarWidget extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(56);
   @override
   Widget build(BuildContext context) => ExpandingSearchBar(
-    title: const BreadcrumbWidget(),
+    title: Row(
+      children: [
+        const BackButton(),
+        Expanded(
+          child: Text(
+            socialText(context, 'موزیک پلیر', 'Music player'),
+            style: const TextStyle(fontSize: 16),
+          ),
+        ),
+      ],
+    ),
     searchIconSize: 32,
     searchIconColor: AppColors.sornaz_app_bar_text_color(
       isDark: context.watch<AppData>().isDark,

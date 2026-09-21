@@ -1,3 +1,4 @@
+import 'player_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
 
@@ -15,7 +16,7 @@ Future<void> showPlaybackSpeedDialog(
         onChanged(v);
       }
 
-      return AlertDialog(
+      return PlayerDialog(
         title: Text(socialText(context, 'سرعت پخش', 'Playback speed')),
         content: SizedBox(
           width: 400,

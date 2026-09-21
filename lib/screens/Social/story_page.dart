@@ -419,7 +419,7 @@ class _StoryPageState extends State<StoryPage>
               final velocity = d.primaryVelocity ?? 0;
               if (swipeDistance.abs() > 45 || velocity.abs() > 100)
                 authorNext(
-                  (swipeDistance.abs() > 45 ? swipeDistance : velocity) < 0
+                  (swipeDistance.abs() > 45 ? swipeDistance : velocity) > 0
                       ? 1
                       : -1,
                 );
@@ -515,9 +515,39 @@ class _StoryPageState extends State<StoryPage>
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: Text(
-                            '${socialUserName(object(story['author']))}  ${storyAge(context, story)}',
-                            style: const TextStyle(color: Colors.white),
+                          child: Row(
+                            children: [
+                              Flexible(
+                                child: InkWell(
+                                  key: const ValueKey('story-author-name'),
+                                  onTap: () =>
+                                      openUser(object(story['author'])),
+                                  child: Text(
+                                    socialUserName(object(story['author'])),
+                                    textDirection: TextDirection.ltr,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                storyAge(context, story),
+                                key: const ValueKey('story-age'),
+                                textDirection:
+                                    Localizations.localeOf(
+                                          context,
+                                        ).languageCode ==
+                                        'fa'
+                                    ? TextDirection.rtl
+                                    : TextDirection.ltr,
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         IconButton(

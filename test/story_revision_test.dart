@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sornaz/screens/Social/story_page.dart';
+import 'package:sornaz/screens/Social/social_profile.dart';
 
 import 'package:sornaz/screens/Social/social_api.dart';
 import 'story_playback_test.dart' show FakeVideo;
@@ -37,14 +38,23 @@ void main() {
     await tester.pump();
     await tester.pump();
     expect(seen.last, 2);
-    await tester.drag(find.byType(StoryPage), const Offset(-200, 0));
-    await tester.pump();
-    await tester.pump();
-    expect(seen.last, 4);
+    final name = tester.getRect(
+      find.byKey(const ValueKey('story-author-name')),
+    );
+    final age = tester.getRect(find.byKey(const ValueKey('story-age')));
+    expect(name.left - age.right, closeTo(4, .01));
     await tester.drag(find.byType(StoryPage), const Offset(200, 0));
     await tester.pump();
     await tester.pump();
+    expect(seen.last, 4);
+    await tester.drag(find.byType(StoryPage), const Offset(-200, 0));
+    await tester.pump();
+    await tester.pump();
     expect(seen.last, 2);
+    await tester.tap(find.byKey(const ValueKey('story-author-name')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byType(ProfilePage), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
     api.dispose();

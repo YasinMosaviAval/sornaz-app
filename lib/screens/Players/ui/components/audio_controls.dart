@@ -1,3 +1,4 @@
+import '../pages/song_information.dart';
 import 'playback_speed_dialog.dart';
 import 'player_slide_navigation.dart';
 import 'package:flutter/material.dart' hide RepeatMode;
@@ -8,7 +9,6 @@ import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
-
 
 import 'package:sornaz/screens/Players/playback/playback_queue_manager.dart';
 import 'package:sornaz/screens/Players/providers/audio_player_provider.dart';
@@ -43,7 +43,7 @@ class AudioControls extends StatelessWidget {
                 color: AppColors.music_player_audio_controls_main_icon_color(
                   isDark: isDark,
                 ),
-                onPressed: rtl ? slides?.right : slides?.left,
+                onPressed: slides?.left,
               ),
               IconButton(
                 icon: const Icon(Icons.forward_10),
@@ -95,7 +95,7 @@ class AudioControls extends StatelessWidget {
                 color: AppColors.music_player_audio_controls_main_icon_color(
                   isDark: isDark,
                 ),
-                onPressed: rtl ? slides?.left : slides?.right,
+                onPressed: slides?.right,
               ),
             ],
           ),
@@ -108,14 +108,18 @@ class AudioControls extends StatelessWidget {
             children: [
               IconButton(
                 icon: Icon(
-                  provider.folderMode ? Icons.list : Icons.folder,
+                  Icons.info_outline,
                   color:
                       AppColors.music_player_audio_controls_sub_level_icon_color(
                         isDark: isDark,
                       ),
                 ),
                 iconSize: AppSpacing.space_24,
-                onPressed: () => provider.toggleFolderMode(),
+                tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SongDetailsPage()),
+                ),
               ),
               AbRepeatButton(
                 repeat: provider.abRepeat,

@@ -13,6 +13,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.provider.DocumentsContract
+import android.media.MediaScannerConnection
 import androidx.core.content.FileProvider
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
@@ -30,7 +32,7 @@ import java.io.File
 import java.util.UUID
 import java.util.concurrent.Executors
 
-/** All drafts are private cache files. Only save explicitly writes to MediaStore. */
+/** Drafts remain private; explicit saves go to Sornaz/Media/Stories. */
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 class StoryMedia(private val activity: Activity, messenger: BinaryMessenger) {
     private val root = File(activity.cacheDir, "story-drafts").apply { mkdirs() }
@@ -45,7 +47,7 @@ class StoryMedia(private val activity: Activity, messenger: BinaryMessenger) {
         MethodChannel(messenger, "sornaz/story_media").setMethodCallHandler { call, result ->
             when(call.method) {
                 "permission" -> permission(result)
-                "savePermission" -> { if(Build.VERSION.SDK_INT>=29 || activity.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)==PackageManager.PERMISSION_GRANTED)result.success(true) else if(pending==null){pending=result;activity.requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),7424)}else result.error("BUSY","An operation is pending",null) }
+                "savePermission" -> savePermission(result)
                 "camera" -> camera(result)
                 "exportVideo" -> exportVideo(call,result)
                 else -> worker.execute {
@@ -142,21 +144,79 @@ class StoryMedia(private val activity: Activity, messenger: BinaryMessenger) {
             activity.startActivityForResult(intent,7423)
         }catch(_:Exception){pending=null;cameraFile=null;file.delete();result.error("CAMERA","Camera unavailable",null)}
     }
-    fun onResult(code:Int,resultCode:Int):Boolean {
+    fun onResult(code:Int,resultCode:Int,data:Intent? = null):Boolean {
+        if (code == 7425) {
+            val result = pending; pending = null
+            val uri = data?.data
+            if (resultCode != Activity.RESULT_OK || uri == null) { result?.success(false); return true }
+            try {
+                require(DocumentsContract.getTreeDocumentId(uri) == "primary:Sornaz") { "Select the Sornaz folder in internal storage" }
+                activity.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                activity.getSharedPreferences("story_storage", 0).edit().putString("tree", uri.toString()).apply()
+                result?.success(true)
+            } catch (e: Exception) { result?.error("STORY_FOLDER", e.message, null) }
+            return true
+        }
         if(code!=7423)return false
         val f=cameraFile;val r=pending;pending=null;cameraFile=null
         if(resultCode==Activity.RESULT_OK && f!=null && f.length()>0)r?.success(info(f,false)) else {f?.delete();r?.success(null)}
         return true
     }
-    private fun save(file:File,video:Boolean):String {
-        val resolver=activity.contentResolver
-        val values=ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME,"Sornaz-${System.currentTimeMillis()}.${if(video)"mp4" else "png"}")
-            put(MediaStore.MediaColumns.MIME_TYPE,if(video)"video/mp4" else "image/png")
-            if(Build.VERSION.SDK_INT>=29){put(MediaStore.MediaColumns.RELATIVE_PATH,"${if(video)Environment.DIRECTORY_MOVIES else Environment.DIRECTORY_PICTURES}/Sornaz");put(MediaStore.MediaColumns.IS_PENDING,1)}
+    private fun directStorage(): Boolean = if (Build.VERSION.SDK_INT >= 30) Environment.isExternalStorageManager()
+        else if (Build.VERSION.SDK_INT == 29) Environment.isExternalStorageLegacy() && activity.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+        else activity.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+
+    private fun savedTree(): Uri? {
+        val value = activity.getSharedPreferences("story_storage", 0).getString("tree", null) ?: return null
+        val uri = Uri.parse(value)
+        return if (activity.contentResolver.persistedUriPermissions.any { it.uri == uri && it.isWritePermission }) uri else null
+    }
+    private fun savePermission(result: MethodChannel.Result) {
+        if (directStorage() || savedTree() != null) { result.success(true); return }
+        if (pending != null) { result.error("BUSY", "An operation is pending", null); return }
+        pending = result
+        if (Build.VERSION.SDK_INT < 29) {
+            activity.requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 7424)
+        } else {
+            try {
+                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or Intent.FLAG_GRANT_PREFIX_URI_PERMISSION)
+                    putExtra(DocumentsContract.EXTRA_INITIAL_URI, Uri.parse("content://com.android.externalstorage.documents/document/primary%3ASornaz"))
+                }
+                activity.startActivityForResult(intent, 7425)
+            } catch (e: Exception) { pending = null; result.error("STORY_FOLDER", e.message, null) }
         }
-        val uri=resolver.insert(if(video)MediaStore.Video.Media.EXTERNAL_CONTENT_URI else MediaStore.Images.Media.EXTERNAL_CONTENT_URI,values) ?: error("Cannot save")
-        try {resolver.openOutputStream(uri)!!.use {out->file.inputStream().use {it.copyTo(out)}};if(Build.VERSION.SDK_INT>=29)resolver.update(uri,ContentValues().apply{put(MediaStore.MediaColumns.IS_PENDING,0)},null,null)}catch(e:Exception){resolver.delete(uri,null,null);throw e}
+    }
+    private fun directory(tree: Uri, parent: Uri, name: String): Uri {
+        val resolver = activity.contentResolver
+        val children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, DocumentsContract.getDocumentId(parent))
+        resolver.query(children, arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE), null, null, null)?.use { cursor ->
+            while (cursor.moveToNext()) if (cursor.getString(1) == name && cursor.getString(2) == DocumentsContract.Document.MIME_TYPE_DIR) {
+                return DocumentsContract.buildDocumentUriUsingTree(tree, cursor.getString(0))
+            }
+        }
+        return DocumentsContract.createDocument(resolver, parent, DocumentsContract.Document.MIME_TYPE_DIR, name) ?: error("Cannot create story folder")
+    }
+    private fun save(file: File, video: Boolean): String {
+        val extension = if (video) "mp4" else "png"
+        val mime = if (video) "video/mp4" else "image/png"
+        val name = "Sornaz-" + UUID.randomUUID().toString() + "." + extension
+        if (directStorage()) {
+            val folder = File(Environment.getExternalStorageDirectory(), "Sornaz/Media/Stories")
+            check(folder.isDirectory || folder.mkdirs()) { "Cannot create story folder" }
+            val output = File(folder, name)
+            try { file.inputStream().use { input -> output.outputStream().use { input.copyTo(it) } } }
+            catch (e: Exception) { output.delete(); throw e }
+            MediaScannerConnection.scanFile(activity, arrayOf(output.absolutePath), arrayOf(mime), null)
+            return Uri.fromFile(output).toString()
+        }
+        val tree = savedTree() ?: error("Choose the Sornaz folder before saving")
+        val parent = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree))
+        val folder = directory(tree, directory(tree, parent, "Media"), "Stories")
+        val resolver = activity.contentResolver
+        val uri = DocumentsContract.createDocument(resolver, folder, mime, name) ?: error("Cannot save story")
+        try { resolver.openOutputStream(uri, "w")!!.use { out -> file.inputStream().use { it.copyTo(out) } } }
+        catch (e: Exception) { DocumentsContract.deleteDocument(resolver, uri); throw e }
         return uri.toString()
     }
     private fun exportVideo(call:MethodCall,result:MethodChannel.Result) {

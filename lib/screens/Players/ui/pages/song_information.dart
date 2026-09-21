@@ -1,12 +1,12 @@
 import 'package:sornaz/screens/Social/social_widgets.dart';
-import 'package:sornaz/components/app_logo.dart';
+import 'lyrics.dart';
+import 'package:sornaz/components/app_top_bar_direction.dart';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_data.dart';
-import 'package:sornaz/helpers/app_functions.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
@@ -47,9 +47,6 @@ class NowPlayingInfoTab extends StatelessWidget {
     final genre = meta?.genre ?? AppStrings.unknown.translate(context);
     final year =
         meta?.year?.toString() ?? AppStrings.unknown.translate(context);
-    final durationStr =
-        meta?.duration?.toString().split('.').first ??
-        formatDuration(audio.duration);
     final bitrate = meta?.bitrate != null
         ? '${meta?.bitrate} ${AppConstants.BITRATE_UNIT}'
         : AppStrings.unknown.translate(context);
@@ -76,10 +73,11 @@ class NowPlayingInfoTab extends StatelessWidget {
                         width: 260,
                         height: 260,
                         fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => const DefaultSongCover(),
                       ),
                     )
                   // : const Icon(Icons.music_note, size: 200),
-                  : AppLogo(size: 200, withBackground: true),
+                  : const DefaultSongCover(),
             ),
             AppSpacing.sizedBoxH32(),
             _info(
@@ -118,13 +116,6 @@ class NowPlayingInfoTab extends StatelessWidget {
               context,
             ),
             _info(
-              AppStrings.song_information_duration.translate(context),
-              durationStr,
-              AppStrings.unknown.translate(context),
-              isDark,
-              context,
-            ),
-            _info(
               AppStrings.song_information_bitrate.translate(context),
               bitrate,
               AppStrings.unknown.translate(context),
@@ -132,8 +123,6 @@ class NowPlayingInfoTab extends StatelessWidget {
               context,
             ),
             for (final entry in <String, String>{
-              'filename': audio.currentAudio!.fileName,
-              'folder': audio.currentAudio!.folderName,
               'path': audio.currentAudio!.file.path,
               ...?meta?.details,
             }.entries)
@@ -144,6 +133,9 @@ class NowPlayingInfoTab extends StatelessWidget {
                 'genre',
                 'year',
                 'durationMs',
+                'duration',
+                'filename',
+                'folder',
                 'bitrate',
               ].contains(entry.key))
                 _info(
@@ -205,16 +197,69 @@ class NowPlayingInfoTab extends StatelessWidget {
       return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: AppTypography.songInformationLabel(context)),
-          SelectableText(
-            value,
-            style: AppTypography.songInformationValue(context),
+          Flexible(
+            child: Text(
+              '$label:',
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: SelectableText(
+              value,
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
+}
+
+class DefaultSongCover extends StatelessWidget {
+  const DefaultSongCover({super.key});
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 260,
+    height: 260,
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Icon(
+      Icons.album,
+      size: 140,
+      color: Theme.of(context).colorScheme.primary,
+    ),
+  );
+}
+
+class SongDetailsPage extends StatelessWidget {
+  const SongDetailsPage({super.key});
+  @override
+  Widget build(BuildContext context) => DefaultTabController(
+    length: 2,
+    child: Scaffold(
+      appBar: AppTopBarDirection(
+        child: AppBar(
+          title: Text(socialText(context, 'اطلاعات ترانه', 'Song details')),
+          bottom: TabBar(
+            tabs: [
+              Tab(text: socialText(context, 'متن', 'Lyrics')),
+              Tab(text: socialText(context, 'اطلاعات', 'Information')),
+            ],
+          ),
+        ),
+      ),
+      body: TabBarView(
+        children: [const SongLyricsTab(), const NowPlayingInfoTab()],
+      ),
+    ),
+  );
 }

@@ -85,11 +85,15 @@ void main() {
     await tester.enterText(find.byType(TextField), 'New Mix');
     await tester.tap(find.text('ایجاد'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.add));
+    expect(find.byIcon(Icons.add), findsNothing);
+    final choose = chooseMusicPlaylist(
+      tester.element(find.byType(PlaylistsTab)),
+      audio.allFiles,
+    );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('one.mp3'));
-    await tester.tap(find.text('two.mp3'));
-    await tester.tap(find.text('افزودن'));
+    await tester.tap(find.text('New Mix').last);
+    await tester.pumpAndSettle();
+    await choose;
     await tester.pumpAndSettle();
     expect(MusicPlaylists.instance.lists['New Mix'], ['/one.mp3', '/two.mp3']);
     await tester.tap(find.byIcon(Icons.play_circle_filled).first);

@@ -1,3 +1,4 @@
+import '../components/player_dialog.dart';
 import '../components/audio_item.dart';
 import '../components/file_actions.dart';
 import 'package:sornaz/helpers/app_data.dart';
@@ -17,9 +18,10 @@ Future<String?> createMusicPlaylist(BuildContext context) async {
   var draft = '';
   final name = await showDialog<String>(
     context: context,
-    builder: (c) => AlertDialog(
+    builder: (c) => PlayerDialog(
       title: Text(socialText(c, 'پلی‌لیست جدید', 'New playlist')),
       content: TextField(
+        style: const TextStyle(fontSize: 14),
         onChanged: (value) => draft = value,
         autofocus: true,
         maxLength: 80,
@@ -28,11 +30,12 @@ Future<String?> createMusicPlaylist(BuildContext context) async {
         ),
       ),
       actions: [
-        TextButton(
+        PlayerDialogButton(
+          primary: false,
           onPressed: () => Navigator.pop(c),
           child: Text(socialText(c, 'انصراف', 'Cancel')),
         ),
-        TextButton(
+        PlayerDialogButton(
           onPressed: () => Navigator.pop(c, draft.trim()),
           child: Text(socialText(c, 'ایجاد', 'Create')),
         ),
@@ -97,56 +100,6 @@ class _PlaylistsTabState extends State<PlaylistsTab> {
     store.load();
   }
 
-  Future<void> addFiles(AudioPlayerProvider provider) async {
-    final chosen = <String>{};
-    final existing = store.lists[selected] ?? [];
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (c) => StatefulBuilder(
-        builder: (c, update) => AlertDialog(
-          title: Text(socialText(c, 'افزودن فایل‌ها', 'Add audio files')),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView(
-              shrinkWrap: true,
-              children: [
-                for (final file in provider.allFiles)
-                  CheckboxListTile(
-                    value:
-                        existing.contains(file.file.path) ||
-                        chosen.contains(file.file.path),
-                    title: Text(
-                      file.fileName,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    onChanged: existing.contains(file.file.path)
-                        ? null
-                        : (v) => update(
-                            () => v == true
-                                ? chosen.add(file.file.path)
-                                : chosen.remove(file.file.path),
-                          ),
-                  ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(c, false),
-              child: Text(socialText(c, 'انصراف', 'Cancel')),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(c, true),
-              child: Text(socialText(c, 'افزودن', 'Add')),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (result == true && selected != null) await store.add(selected!, chosen);
-  }
-
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AudioPlayerProvider>();
@@ -164,35 +117,39 @@ class _PlaylistsTabState extends State<PlaylistsTab> {
         ];
         return Column(
           children: [
-            Row(
-              children: [
-                if (selected != null)
-                  IconButton(
-                    onPressed: () => setState(() => selected = null),
-                    icon: const Icon(Icons.arrow_back),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  if (selected != null)
+                    IconButton(
+                      onPressed: () => setState(() => selected = null),
+                      icon: const Icon(Icons.arrow_back),
+                    ),
+                  Expanded(
+                    child: Text(
+                      selected == null
+                          ? socialText(c, 'پلی‌لیست‌ها', 'Playlists')
+                          : playlistLabel(c, selected!),
+                      style: Theme.of(c).textTheme.titleMedium,
+                    ),
                   ),
-                Expanded(
-                  child: Text(
-                    selected == null
-                        ? socialText(c, 'پلی‌لیست‌ها', 'Playlists')
-                        : playlistLabel(c, selected!),
-                    style: Theme.of(c).textTheme.titleMedium,
-                  ),
-                ),
-                IconButton(
-                  tooltip: socialText(c, 'افزودن', 'Add'),
-                  icon: Icon(selected == null ? Icons.playlist_add : Icons.add),
-                  onPressed: () async {
-                    if (selected == null) {
-                      final key = await createMusicPlaylist(c);
-                      if (key != null && mounted)
-                        setState(() => selected = key);
-                    } else {
-                      await addFiles(provider);
-                    }
-                  },
-                ),
-              ],
+                  if (selected == null)
+                    IconButton(
+                      tooltip: socialText(c, 'افزودن', 'Add'),
+                      icon: Icon(
+                        selected == null ? Icons.playlist_add : Icons.add,
+                      ),
+                      onPressed: () async {
+                        if (selected == null) {
+                          final key = await createMusicPlaylist(c);
+                          if (key != null && mounted)
+                            setState(() => selected = key);
+                        }
+                      },
+                    ),
+                ],
+              ),
             ),
             Expanded(
               child: ListView(
@@ -233,8 +190,8 @@ class _PlaylistsTabState extends State<PlaylistsTab> {
                             child: Text(
                               socialText(
                                 c,
-                                'با دکمه + فایل اضافه کنید.',
-                                'Use + to add audio files.',
+                                'از صفحه آهنگ‌ها یا پوشه‌ها فایل اضافه کنید.',
+                                'Add audio files from Songs or Folders.',
                               ),
                             ),
                           ),

@@ -1,5 +1,5 @@
 import '../services/music_playlists.dart';
-import 'package:just_audio/just_audio.dart' show AndroidEqualizer;
+import '../services/equalizer_settings.dart';
 import 'package:sornaz/screens/Players/services/music_audio_handler.dart';
 import 'dart:async';
 
@@ -38,8 +38,7 @@ class AudioPlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  AndroidEqualizer? get equalizer=>_controller.equalizer;
-  Future<void> saveEqualizer()=>_controller.saveEqualizer();
+  EqualizerSettings get equalizer => _controller.equalizer;
   bool get isPlaying => _controller.isPlaying;
   Duration get duration => _controller.duration;
   Duration get position => _controller.position;
