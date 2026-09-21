@@ -99,9 +99,9 @@ class _EqualizerTabState extends State<EqualizerTab> {
             initialIndex: eq.bands == 5 ? 0 : 1,
             child: TabBar(
               onTap: (index) => eq.setBands(index == 0 ? 5 : 10),
-              tabs: const [
-                Tab(text: '5 Bands'),
-                Tab(text: '10 Bands'),
+              tabs: [
+                Tab(text: socialText(context, '5 فیلتر', '5 Bands')),
+                Tab(text: socialText(context, '10 فیلتر', '10 Bands')),
               ],
             ),
           ),
@@ -111,10 +111,11 @@ class _EqualizerTabState extends State<EqualizerTab> {
             child: LayoutBuilder(
               builder: (context, constraints) => SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
+                physics: eq.bands == 5
+                    ? const NeverScrollableScrollPhysics()
+                    : null,
                 child: SizedBox(
-                  width: constraints.maxWidth < eq.bands * 80
-                      ? eq.bands * 80.0
-                      : constraints.maxWidth,
+                  width: constraints.maxWidth * eq.bands / 5,
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
