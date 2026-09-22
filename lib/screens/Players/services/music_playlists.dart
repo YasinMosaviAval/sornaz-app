@@ -3,8 +3,10 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MusicPlaylists extends ChangeNotifier {
-  MusicPlaylists();
+  MusicPlaylists({this.storagePrefix = 'music'});
+  final String storagePrefix;
   static final instance = MusicPlaylists();
+  static final recordings = MusicPlaylists(storagePrefix: 'recording');
   final Map<String, List<String>> _lists = {};
   static const favorite = 'favorite';
   Future<void>? _loading;
@@ -17,7 +19,7 @@ class MusicPlaylists extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     try {
       final value =
-          jsonDecode(prefs.getString('music.playlists') ?? '{}')
+          jsonDecode(prefs.getString('$storagePrefix.playlists') ?? '{}')
               as Map<String, dynamic>;
       for (final e in value.entries) {
         if (e.value is List)
@@ -27,7 +29,7 @@ class MusicPlaylists extends ChangeNotifier {
               .toList();
       }
     } catch (_) {}
-    _lists[favorite] = (prefs.getStringList('music.favorites') ?? [])
+    _lists[favorite] = (prefs.getStringList('$storagePrefix.favorites') ?? [])
         .toSet()
         .toList();
     notifyListeners();
@@ -41,8 +43,8 @@ class MusicPlaylists extends ChangeNotifier {
     final favorites = List<String>.from(_lists[favorite] ?? []);
     final next = _writes.catchError((Object _) {}).then((_) async {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('music.playlists', custom);
-      await prefs.setStringList('music.favorites', favorites);
+      await prefs.setString('$storagePrefix.playlists', custom);
+      await prefs.setStringList('$storagePrefix.favorites', favorites);
     });
     _writes = next;
     notifyListeners();

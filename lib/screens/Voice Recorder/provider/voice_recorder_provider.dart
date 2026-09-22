@@ -1,7 +1,7 @@
 import 'package:sornaz/helpers/app_platform.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:sornaz/helpers/app_constants.dart';
+
 import 'package:sornaz/helpers/app_functions.dart';
 import '../services/file_service.dart';
 import '../services/recording_service.dart';
@@ -47,7 +47,15 @@ class VoiceRecorderProvider extends ChangeNotifier {
   }
 
   int seconds = 0;
-  String timer = AppConstants.TIMER_00_00;
+  String timer = '00:00.00';
+  bool get hasDraft => currentFilePath != null;
+  String? _stoppedOutput;
+  final Map<String, Future<Map<String, String>>> _details = {};
+  Future<Map<String, String>> details(SavedRecording file) =>
+      _details.putIfAbsent(
+        '${file.uri}|${file.modified}',
+        () => fileService.describe(file),
+      );
   List<SavedRecording> files = [];
   List<double> amplitudes = [];
   int totalSamples = 0;
@@ -75,9 +83,18 @@ class VoiceRecorderProvider extends ChangeNotifier {
 
   Future<void> init() => _initialization ??= _initialize();
   Future<void> refreshFiles() async {
-    if (isRecording || isPaused) return;
+    if (hasDraft) return;
     await init();
     files = await fileService.loadFiles();
+    _details.clear();
+    final existing = files.map((f) => f.uri).toSet();
+    final current = playbackService.currentPath;
+    if (current != null) {
+      playbackService.setQueue(
+        playbackService.paths.where(existing.contains),
+        current,
+      );
+    }
     _notify();
   }
 
@@ -129,8 +146,14 @@ class VoiceRecorderProvider extends ChangeNotifier {
     await playbackService.seek(Duration(milliseconds: milliseconds));
   }
 
-  Future<void> playSaved(SavedRecording file) async {
+  Future<void> playSaved(
+    SavedRecording file, {
+    List<SavedRecording>? queue,
+  }) async {
     if (isRecording || isPaused) return;
+    if (queue != null || !playbackService.paths.contains(file.uri)) {
+      playbackService.setQueue((queue ?? files).map((f) => f.uri), file.uri);
+    }
     playbackBookmarks = await fileService.bookmarks.load(file.uri);
     await playbackService.play(file.uri);
   }
@@ -160,10 +183,10 @@ class VoiceRecorderProvider extends ChangeNotifier {
 
   void _startTimer() {
     _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+    _timer = Timer.periodic(const Duration(milliseconds: 50), (_) {
       if (!isRecording || _disposed) return;
       seconds = recordingMilliseconds ~/ 1000;
-      timer = formatSeconds(seconds);
+      timer = recordingTime(recordingMilliseconds);
       _notify();
     });
   }
@@ -194,6 +217,7 @@ class VoiceRecorderProvider extends ChangeNotifier {
       final path = fileService.newPath();
       await recordingService.start(path: path, onAmplitude: _onAmplitude);
       currentFilePath = path;
+      _stoppedOutput = null;
       _segmentPath = null;
       _offsetMilliseconds = 0;
       amplitudes.clear();
@@ -203,7 +227,7 @@ class VoiceRecorderProvider extends ChangeNotifier {
         ..reset()
         ..start();
       seconds = 0;
-      timer = AppConstants.TIMER_00_00;
+      timer = '00:00.00';
       isRecording = true;
       isPaused = false;
       _startTimer();
@@ -233,6 +257,7 @@ class VoiceRecorderProvider extends ChangeNotifier {
       isRecording = false;
       isPaused = true;
       _timer?.cancel();
+      timer = recordingTime(recordingMilliseconds);
       if (AppPlatform.isAndroid) {
         await playbackService.stop();
         await playbackService.play(currentFilePath!, autoplay: false);
@@ -288,9 +313,12 @@ class VoiceRecorderProvider extends ChangeNotifier {
   Future<void> stopRecording() async {
     if (!isRecording && !isPaused) return;
     await _run(() async {
-      final outputUri = AppPlatform.isAndroid && isPaused
-          ? null
-          : await recordingService.stop();
+      final outputUri =
+          _stoppedOutput ??
+          (AppPlatform.isAndroid && isPaused
+              ? null
+              : await recordingService.stop());
+      _stoppedOutput = outputUri;
       await playbackService.stop();
       if (_segmentPath != null) {
         await fileService.spliceDraft(
@@ -303,9 +331,7 @@ class VoiceRecorderProvider extends ChangeNotifier {
       _recordingClock.stop();
       _timer?.cancel();
       isRecording = false;
-      isPaused = false;
-      seconds = 0;
-      timer = AppConstants.TIMER_00_00;
+      isPaused = true;
       final savedPath = currentFilePath;
       if (savedPath != null) {
         if (overwriteTarget != null) {
@@ -315,9 +341,45 @@ class VoiceRecorderProvider extends ChangeNotifier {
           await fileService.publish(savedPath, sourceUri: outputUri);
         }
       }
+      isPaused = false;
+      seconds = 0;
+      timer = '00:00.00';
+      _stoppedOutput = null;
       currentFilePath = null;
       _offsetMilliseconds = 0;
       _recordingClock.reset();
+      amplitudes.clear();
+      totalSamples = 0;
+      recordingBookmarks = [];
+      files = await fileService.loadFiles();
+    });
+  }
+
+  Future<void> discardRecording() async {
+    if (!hasDraft) return;
+    await _run(() async {
+      if (isRecording ||
+          (isPaused && !AppPlatform.isAndroid && _stoppedOutput == null)) {
+        _stoppedOutput = await recordingService.stop();
+      }
+      _recordingClock.stop();
+      _timer?.cancel();
+      isRecording = false;
+      isPaused = true;
+      await playbackService.stop();
+      if (_segmentPath != null) {
+        await fileService.discardDraft(_segmentPath!);
+        _segmentPath = null;
+      }
+      await fileService.discardDraft(currentFilePath!);
+      currentFilePath = null;
+      _stoppedOutput = null;
+      overwriteTarget = null;
+      isPaused = false;
+      _offsetMilliseconds = 0;
+      _recordingClock.reset();
+      seconds = 0;
+      timer = '00:00.00';
       amplitudes.clear();
       totalSamples = 0;
       recordingBookmarks = [];
@@ -348,3 +410,6 @@ class VoiceRecorderProvider extends ChangeNotifier {
     super.dispose();
   }
 }
+
+String recordingTime(int milliseconds) =>
+    '${formatSeconds(milliseconds ~/ 1000)}.${((milliseconds % 1000) ~/ 10).toString().padLeft(2, '0')}';

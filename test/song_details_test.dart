@@ -102,7 +102,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('اطلاعات'));
+    await tester.tap(find.widgetWithText(Tab, 'اطلاعات'));
     await tester.pumpAndSettle();
     expect(find.byType(DefaultSongCover), findsOneWidget);
     expect(find.text('one.mp3'), findsNothing);

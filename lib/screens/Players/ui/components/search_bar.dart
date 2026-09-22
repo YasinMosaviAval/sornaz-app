@@ -27,7 +27,7 @@ class SearchBarWidget extends StatelessWidget implements PreferredSizeWidget {
         ),
       ],
     ),
-    searchIconSize: 32,
+    searchIconSize: 24,
     searchIconColor: AppColors.sornaz_app_bar_text_color(
       isDark: context.watch<AppData>().isDark,
     ),

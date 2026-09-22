@@ -1,64 +1,170 @@
-import 'package:sornaz/components/scroll_aware_scaffold.dart';
-import 'package:sornaz/components/app_top_bar_direction.dart';
-import '../components/seekable_waveform.dart';
 import 'dart:io';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:just_waveform/just_waveform.dart';
+import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:sornaz/components/ab_repeat.dart';
+import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_functions.dart';
-import 'package:sornaz/helpers/app_platform.dart';
+import 'package:sornaz/helpers/app_typography.dart';
+import 'package:sornaz/screens/Players/metadata/audio_metadata.dart';
+import 'package:sornaz/screens/Players/ui/pages/song_information.dart';
+import 'package:sornaz/screens/Players/ui/pages/lyrics.dart';
+import 'package:sornaz/screens/Players/ui/components/audio_controls.dart';
 import '../../provider/voice_recorder_provider.dart';
 import '../../services/file_service.dart';
-import '../components/basic_waveform.dart';
+import '../../services/playback_service.dart';
+import '../components/seekable_waveform.dart';
+import 'recordings_list.dart';
+
+class RecordingInformationPage extends StatelessWidget {
+  const RecordingInformationPage({super.key, required this.file});
+  final SavedRecording file;
+  @override
+  Widget build(BuildContext context) {
+    final vm = context.watch<VoiceRecorderProvider>();
+    final current =
+        vm.files
+            .where((f) => f.uri == vm.playbackService.currentPath)
+            .firstOrNull ??
+        file;
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppTopBarDirection(
+          child: AppBar(
+            title: const Text('اطلاعات'),
+            bottom: const TabBar(
+              labelStyle: TextStyle(fontSize: 12),
+              tabs: [
+                Tab(text: 'نمایش موج صدا'),
+                Tab(text: 'متن'),
+                Tab(text: 'اطلاعات'),
+              ],
+            ),
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            RecordingPlaybackPage(
+              key: ValueKey('wave:${current.uri}'),
+              file: current,
+              embedded: true,
+            ),
+            AudioLyricsEditor(
+              key: ValueKey('lyrics:${current.uri}'),
+              path: current.uri,
+              initialTitle: withoutAudioExtension(current.name),
+            ),
+            FutureBuilder<Map<String, String>>(
+              future: vm.details(current),
+              builder: (c, snapshot) {
+                final data = snapshot.data ?? {};
+                return NowPlayingInfoTab(
+                  fileName: current.name,
+                  filePath: current.uri,
+                  metadata: AudioMetadata(
+                    title: data['title'] ?? current.name,
+                    artist: data['artist'],
+                    album: data['album'],
+                    bitrate: int.tryParse(data['bitrate'] ?? '') == null
+                        ? null
+                        : (int.parse(data['bitrate']!) / 1000).round(),
+                    details: data,
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class RecordingPlaybackPage extends StatefulWidget {
-  const RecordingPlaybackPage({super.key, required this.file});
+  const RecordingPlaybackPage({
+    super.key,
+    required this.file,
+    this.embedded = false,
+  });
   final SavedRecording file;
+  final bool embedded;
   @override
   State<RecordingPlaybackPage> createState() => _RecordingPlaybackPageState();
 }
 
 class _RecordingPlaybackPageState extends State<RecordingPlaybackPage> {
-  bool showBookmarks = false;
-  List<int> samples = [];
+  bool showBookmarks = false, loading = true;
+  List<double> samples = [];
+  List<int> markers = [];
   Map<int, String> names = {};
   String? error;
-  File? temporary, wave;
+  int revision = -1;
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => load());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) load();
+    });
+  }
+
+  Future<void> loadMarkers(VoiceRecorderProvider vm) async {
+    final items = await vm.fileService.bookmarks.load(widget.file.uri);
+    final labels = <int, String>{};
+    for (final at in items) {
+      labels[at] = await vm.fileService.bookmarks.name(widget.file.uri, at);
+    }
+    if (mounted)
+      setState(() {
+        markers = items;
+        names = labels;
+      });
   }
 
   Future<void> load() async {
     final vm = context.read<VoiceRecorderProvider>();
+    File? temporary, wave;
+    setState(() {
+      loading = true;
+      error = null;
+    });
     try {
-      if (vm.playbackService.currentPath != widget.file.uri ||
-          !vm.playbackService.isPlaying)
-        await vm.playSaved(widget.file);
-      if (temporary != null && await temporary!.exists())
-        await temporary!.delete();
-      if (wave != null && await wave!.exists()) await wave!.delete();
-      names.clear();
-      for (final t in vm.playbackBookmarks) {
-        names[t] = await vm.fileService.bookmarks.name(widget.file.uri, t);
+      if (vm.playbackService.currentPath != widget.file.uri) {
+        vm.playbackService.setQueue(
+          vm.files.map((f) => f.uri),
+          widget.file.uri,
+        );
+        await vm.playbackService.play(widget.file.uri, autoplay: false);
       }
+      vm.playbackBookmarks = await vm.fileService.bookmarks.load(
+        widget.file.uri,
+      );
+      await loadMarkers(vm);
       final path = await vm.fileService.materialize(widget.file);
       temporary = widget.file.isPublic ? File(path) : null;
-      wave = File('$path.waveform');
+      wave = File('$path.${DateTime.now().microsecondsSinceEpoch}.waveform');
       final result = await JustWaveform.extract(
         audioInFile: File(path),
-        waveOutFile: wave!,
+        waveOutFile: wave,
       ).last;
+      final waveform = result.waveform;
+      if (waveform == null) throw StateError('No waveform');
+      final scale = waveform.flags & 1 == 1 ? 128.0 : 32768.0;
       if (mounted)
-        setState(() {
-          samples = result.waveform?.data ?? [];
-          error = null;
-        });
+        setState(
+          () => samples = waveform.data
+              .map((v) => (v / scale).abs().clamp(0.0, 1.0))
+              .toList(),
+        );
     } catch (_) {
       if (mounted) setState(() => error = 'نمایش موج صدا ممکن نشد.');
+    } finally {
+      if (wave != null && await wave.exists()) await wave.delete();
+      if (temporary != null && await temporary.exists())
+        await temporary.delete();
+      if (mounted) setState(() => loading = false);
     }
   }
 
@@ -73,29 +179,12 @@ class _RecordingPlaybackPageState extends State<RecordingPlaybackPage> {
     }
   }
 
-  @override
-  void dispose() {
-    temporary?.delete().catchError((_) => temporary!);
-    wave?.delete().catchError((_) => wave!);
-    super.dispose();
-  }
-
   Future<void> rename(int at) async {
-    final input = TextEditingController(text: names[at] ?? '');
-    final name = await showDialog<String>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: const Text('نام نشانه'),
-        content: TextField(controller: input, maxLength: 100),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(c, input.text),
-            child: const Text('ذخیره'),
-          ),
-        ],
-      ),
+    final name = await recordingNameDialog(
+      context,
+      'نام نشانه',
+      names[at] ?? '',
     );
-    input.dispose();
     if (name != null && mounted)
       await action(() async {
         await context
@@ -107,220 +196,280 @@ class _RecordingPlaybackPageState extends State<RecordingPlaybackPage> {
       });
   }
 
+  Future<void> remove(int at) async {
+    if (!await confirmRecordingDelete(context, 'حذف نشانه؟') || !mounted)
+      return;
+    await action(() async {
+      final vm = context.read<VoiceRecorderProvider>();
+      await vm.removeBookmark(widget.file.uri, at);
+      await loadMarkers(vm);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<VoiceRecorderProvider>(),
         player = vm.playbackService;
-    final markers = vm.playbackBookmarks;
+    if (revision != vm.bookmarkRevision) {
+      revision = vm.bookmarkRevision;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) loadMarkers(vm);
+      });
+    }
+    final dark = context.watch<AppData>().isDark;
     final previous = markers
         .where((t) => t <= player.position.inMilliseconds)
         .lastOrNull;
-    final recording =
-        vm.overwriteTarget != null && (vm.isRecording || vm.isPaused);
-    return PopScope(
-      canPop: !recording,
-      child: ScrollAwareScaffold(
-        appBar: AppTopBarDirection(
-          child: AppBar(
-            title: Text(widget.file.name, style: const TextStyle(fontSize: 14)),
-          ),
-        ),
-        body: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            SizedBox(
-              height: 250,
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 250),
-                child: recording
-                    ? BasicWaveformWidget(
-                        amplitudes: vm.amplitudes,
-                        totalSamples: vm.totalSamples,
-                        isRecording: vm.isRecording,
-                        isPaused: vm.isPaused,
-                        bookmarks: vm.recordingBookmarks,
-                        elapsedMilliseconds: vm.recordingMilliseconds,
-                      )
-                    : showBookmarks
-                    ? ListView(
-                        key: const ValueKey('bookmarks'),
-                        children: [
-                          if (markers.isEmpty)
-                            const Center(
-                              child: Text('هنوز نشانه‌ای اضافه نشده است.'),
-                            ),
-                          for (final at in markers)
-                            ListTile(
-                              selected: previous == at,
-                              selectedTileColor: Theme.of(
-                                context,
-                              ).colorScheme.primary.withValues(alpha: .12),
-                              leading: Text(formatSeconds(at ~/ 1000)),
-                              title: Text(
-                                names[at]?.isNotEmpty == true
-                                    ? names[at]!
-                                    : 'نشانه',
-                              ),
-                              onTap: () => action(
-                                () => vm.seekBookmark(widget.file, at),
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.edit_outlined),
-                                    onPressed: () => rename(at),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete_outline),
-                                    onPressed: () => action(
-                                      () => vm.removeBookmark(
-                                        widget.file.uri,
-                                        at,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      )
-                    : SeekableWaveform(
-                        key: const ValueKey('wave'),
-                        samples: samples.map((v) => v / 32768).toList(),
-                        duration: player.duration.inMilliseconds,
-                        position: player.position.inMilliseconds,
-                        markers: markers,
-                        onSeek: (at) => player.seek(Duration(milliseconds: at)),
-                      ),
-              ),
-            ),
-            Row(
+    final body = LayoutBuilder(
+      builder: (c, box) => SingleChildScrollView(
+        child: SizedBox(
+          height: box.maxHeight < 550 ? 550 : box.maxHeight,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 32),
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                TextButton.icon(
-                  onPressed: recording
-                      ? (vm.canBookmarkRecording
-                            ? () => action(vm.addRecordingBookmark)
-                            : null)
-                      : (vm.canBookmarkPlayback
-                            ? () => action(
-                                () => vm.addPlaybackBookmark(widget.file),
+                Column(
+                  children: [
+                    SizedBox(
+                      height: 110,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Text(
+                            recordingTime(player.position.inMilliseconds),
+                            textDirection: TextDirection.ltr,
+                            style: AppTypography.voiceRecorderRecordingTimer(
+                              context,
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            child: Text(
+                              formatSeconds(player.duration.inSeconds),
+                              textDirection: TextDirection.ltr,
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      height: 250,
+                      child: ColoredBox(
+                        color:
+                            AppColors.voice_recorder_basic_waveform_decoration_color(
+                              isDark: dark,
+                            ),
+                        child: showBookmarks
+                            ? ListView.builder(
+                                padding: EdgeInsets.zero,
+                                itemExtent: 36,
+                                itemCount: markers.isEmpty ? 1 : markers.length,
+                                itemBuilder: (c, i) {
+                                  if (markers.isEmpty)
+                                    return const Center(
+                                      child: Text(
+                                        'هنوز نشانه‌ای اضافه نشده است.',
+                                        style: TextStyle(fontSize: 10),
+                                      ),
+                                    );
+                                  final at = markers[i];
+                                  return Material(
+                                    color: previous == at
+                                        ? Theme.of(context).colorScheme.primary
+                                              .withValues(alpha: .12)
+                                        : Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () => action(
+                                        () => vm.seekBookmark(widget.file, at),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Text(
+                                              recordingTime(at),
+                                              textDirection: TextDirection.ltr,
+                                              style: const TextStyle(
+                                                fontSize: 10,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                names[at]?.isNotEmpty == true
+                                                    ? names[at]!
+                                                    : 'نشانه',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                  fontSize: 10,
+                                                ),
+                                              ),
+                                            ),
+                                            IconButton(
+                                              iconSize: 16,
+                                              padding: EdgeInsets.zero,
+                                              constraints:
+                                                  const BoxConstraints.tightFor(
+                                                    width: 36,
+                                                    height: 36,
+                                                  ),
+                                              tooltip: 'ویرایش نشانه',
+                                              onPressed: () => rename(at),
+                                              icon: const Icon(
+                                                Icons.edit_outlined,
+                                              ),
+                                            ),
+                                            IconButton(
+                                              iconSize: 16,
+                                              padding: EdgeInsets.zero,
+                                              constraints:
+                                                  const BoxConstraints.tightFor(
+                                                    width: 36,
+                                                    height: 36,
+                                                  ),
+                                              tooltip: 'حذف نشانه',
+                                              onPressed: () => remove(at),
+                                              icon: const Icon(
+                                                Icons.delete_outline,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
                               )
-                            : null),
-                  icon: const Icon(Icons.bookmark_add_outlined),
-                  label: const Text('نشانه‌گذاری'),
-                ),
-                IconButton(
-                  onPressed: recording
-                      ? null
-                      : () => setState(() => showBookmarks = !showBookmarks),
-                  icon: showBookmarks
-                      ? const Icon(Icons.graphic_eq)
-                      : Badge(
-                          isLabelVisible: markers.isNotEmpty,
-                          label: Text('${markers.length}'),
-                          child: const Icon(Icons.bookmark_border),
+                            : loading
+                            ? const Center(child: CircularProgressIndicator())
+                            : error != null
+                            ? Center(
+                                child: TextButton(
+                                  onPressed: load,
+                                  child: Text('$error تلاش مجدد'),
+                                ),
+                              )
+                            : SeekableWaveform(
+                                samples: samples,
+                                duration: player.duration.inMilliseconds,
+                                position: player.position.inMilliseconds,
+                                markers: markers,
+                                repeat: player.abRepeat,
+                                onSeek: (at) => action(
+                                  () => player.seek(Duration(milliseconds: at)),
+                                ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton.icon(
+                          onPressed: vm.canBookmarkPlayback
+                              ? () => action(() async {
+                                  await vm.addPlaybackBookmark(widget.file);
+                                  await loadMarkers(vm);
+                                })
+                              : null,
+                          icon: const Icon(Icons.bookmark_add_outlined),
+                          label: const Text('نشانه‌گذاری'),
                         ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: IconButton(
+                            onPressed: () =>
+                                setState(() => showBookmarks = !showBookmarks),
+                            tooltip: showBookmarks
+                                ? 'نمایش موج صدا'
+                                : 'لیست نشانه‌ها',
+                            icon: showBookmarks
+                                ? const Icon(Icons.graphic_eq)
+                                : Badge(
+                                    isLabelVisible: markers.isNotEmpty,
+                                    label: Text('${markers.length}'),
+                                    child: const Icon(Icons.bookmark_border),
+                                  ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    PlaybackSpeedButton(
+                      speed: player.speed,
+                      presets: PlaybackService.speedOptions,
+                      onChanged: (value) =>
+                          action(() => player.setSpeed(value)),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          width: 2,
+                          color:
+                              AppColors.voice_recorder_record_button_border_color(
+                                isDark: dark,
+                              ),
+                        ),
+                      ),
+                      child: SizedBox(
+                        width: 48,
+                        height: 48,
+                        child: FloatingActionButton(
+                          heroTag: 'recording-wave-play',
+                          elevation: 0,
+                          shape: const CircleBorder(),
+                          backgroundColor:
+                              AppColors.voice_recorder_play_icon_background_color(
+                                isDark: dark,
+                              ),
+                          onPressed: () =>
+                              action(() => vm.playSaved(widget.file)),
+                          child: Icon(
+                            player.isPlaying
+                                ? Icons.pause_rounded
+                                : Icons.play_arrow_rounded,
+                            size: 36,
+                            color:
+                                AppColors.voice_recorder_play_icon_active_color(
+                                  isDark: dark,
+                                ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    AbRepeatButton(
+                      repeat: player.abRepeat,
+                      onPressed: player.duration > Duration.zero
+                          ? player.cycleAbRepeat
+                          : null,
+                    ),
+                  ],
                 ),
               ],
             ),
-            if (!recording) ...[
-              Text(
-                '${formatSeconds(player.position.inSeconds)} / ${formatSeconds(player.duration.inSeconds)}',
-                textAlign: TextAlign.center,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.replay_10),
-                    onPressed: () => player.seek(
-                      Duration(
-                        milliseconds: math.max(
-                          0,
-                          player.position.inMilliseconds - 10000,
-                        ),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      player.isPlaying ? Icons.pause_circle : Icons.play_circle,
-                    ),
-                    iconSize: 48,
-                    onPressed: () => action(() => vm.playSaved(widget.file)),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.forward_10),
-                    onPressed: () => player.seek(
-                      Duration(
-                        milliseconds: math.min(
-                          player.duration.inMilliseconds,
-                          player.position.inMilliseconds + 10000,
-                        ),
-                      ),
-                    ),
-                  ),
-                  AbRepeatButton(
-                    repeat: player.abRepeat,
-                    onPressed: player.cycleAbRepeat,
-                  ),
-                ],
-              ),
-              if (AppPlatform.isAndroid && widget.file.isPublic)
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.mic),
-                  label: const Text('ضبط جایگزین از این نقطه'),
-                  onPressed: () async {
-                    final yes = await showDialog<bool>(
-                      context: context,
-                      builder: (c) => AlertDialog(
-                        title: const Text('جایگزینی صدا از محل فعلی؟'),
-                        content: const Text(
-                          'صدای جدید روی این قسمت از فایل نوشته می‌شود.',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(c, false),
-                            child: const Text('انصراف'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(c, true),
-                            child: const Text('شروع'),
-                          ),
-                        ],
-                      ),
-                    );
-                    if (yes == true)
-                      await action(() => vm.startOverwrite(widget.file));
-                  },
-                ),
-            ] else
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(vm.timer),
-                  IconButton(
-                    icon: Icon(vm.isPaused ? Icons.mic : Icons.pause),
-                    onPressed: () => action(
-                      vm.isPaused ? vm.resumeRecording : vm.pauseRecording,
-                    ),
-                  ),
-                  FilledButton(
-                    onPressed: vm.isBusy
-                        ? null
-                        : () => action(() async {
-                            await vm.stopRecording();
-                            await load();
-                          }),
-                    child: const Text('پایان و ذخیره'),
-                  ),
-                ],
-              ),
-          ],
+          ),
         ),
       ),
+    );
+    if (widget.embedded) return body;
+    return Scaffold(
+      appBar: AppTopBarDirection(
+        child: AppBar(
+          title: Text(widget.file.name, style: const TextStyle(fontSize: 14)),
+        ),
+      ),
+      body: body,
     );
   }
 }

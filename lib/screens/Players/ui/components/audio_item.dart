@@ -29,13 +29,48 @@ class AudioItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final app = context.watch<AppData>();
     final dot = audio.fileName.lastIndexOf('.');
     final title = dot > 0 ? audio.fileName.substring(0, dot) : audio.fileName;
     final action =
         onTap ?? () => context.read<AudioPlayerProvider>().play(index);
-    return Container(
+    return AudioRow(
       key: ValueKey(audio.file.path),
+      title: title,
+      location: audio.folderName,
+      duration: audio.duration,
+      isPlaying: isPlaying,
+      selected: selected,
+      onTap: action,
+      onLongPress: onLongPress ?? () => showFileOptions(context, audio),
+      trailing: trailing ?? AudioActionsMenu(files: [audio]),
+    );
+  }
+}
+
+/// Shared song/recording card, with playback and file actions supplied by its owner.
+class AudioRow extends StatelessWidget {
+  const AudioRow({
+    super.key,
+    required this.title,
+    required this.location,
+    required this.duration,
+    required this.isPlaying,
+    required this.onTap,
+    required this.trailing,
+    this.selected = false,
+    this.onLongPress,
+  });
+  final String title, location;
+  final Duration duration;
+  final bool isPlaying, selected;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+  final Widget trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final app = context.watch<AppData>();
+    return Container(
       decoration: BoxDecoration(
         border: Border.all(
           width: .2,
@@ -54,8 +89,8 @@ class AudioItem extends StatelessWidget {
               ),
       ),
       child: InkWell(
-        onTap: action,
-        onLongPress: onLongPress ?? () => showFileOptions(context, audio),
+        onTap: onTap,
+        onLongPress: onLongPress,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
           child: Row(
@@ -66,11 +101,12 @@ class AudioItem extends StatelessWidget {
                 height: 48,
                 child: IconButton(
                   padding: EdgeInsets.zero,
-                  onPressed: action,
+                  onPressed: onTap,
                   iconSize: 32,
                   color: isPlaying
                       ? app.accent
-                      : Theme.of(context).colorScheme.onSurface,
+                      : Theme.of(context).tabBarTheme.unselectedLabelColor ??
+                            Theme.of(context).colorScheme.onSurfaceVariant,
                   icon: Icon(
                     isPlaying
                         ? Icons.pause_circle_filled
@@ -108,7 +144,7 @@ class AudioItem extends StatelessWidget {
                         children: [
                           Expanded(
                             child: Text(
-                              audio.folderName,
+                              location,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppTypography.musicPlayerAudioItemAddress(
@@ -118,7 +154,7 @@ class AudioItem extends StatelessWidget {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            formatDuration(audio.duration),
+                            formatDuration(duration),
                             style:
                                 AppTypography.musicPlayerAudioItemDurationTime(
                                   context,
@@ -133,11 +169,7 @@ class AudioItem extends StatelessWidget {
               // const SizedBox(width: 8),
               Padding(
                 padding: const EdgeInsetsDirectional.only(end: 8),
-                child: SizedBox(
-                  width: 32,
-                  height: 32,
-                  child: trailing ?? AudioActionsMenu(files: [audio]),
-                ),
+                child: SizedBox(width: 32, height: 32, child: trailing),
               ),
             ],
           ),

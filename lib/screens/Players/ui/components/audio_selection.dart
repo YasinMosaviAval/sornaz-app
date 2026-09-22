@@ -118,7 +118,7 @@ class AudioActionsMenu extends StatelessWidget {
       },
       itemBuilder: (_) => [
         for (final action in [
-          ('rename', 'تغییر نام'),
+          if (files.length == 1) ('rename', 'تغییر نام'),
           ('playlist', 'افزودن به پلی‌لیست'),
           ('share', 'اشتراک‌گذاری'),
           ('delete', 'حذف'),

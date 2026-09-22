@@ -1,5 +1,9 @@
 import 'package:sornaz/helpers/app_platform.dart';
 import 'recording_bookmarks.dart';
+import 'recording_text.dart';
+import '../../Players/services/music_playlists.dart';
+import '../../Players/metadata/metadata_service.dart';
+import 'package:share_plus/share_plus.dart';
 import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -18,6 +22,28 @@ class SavedRecording {
 }
 
 class FileService {
+  Future<void> discardDraft(String path) async {
+    final file = File(path);
+    if (await file.exists()) await file.delete();
+    await bookmarks.delete(path);
+  }
+
+  Future<Map<String, String>> describe(SavedRecording item) async {
+    if (item.isPublic) {
+      return await channel.invokeMapMethod<String, String>('describe', {
+            'uri': item.uri,
+          }) ??
+          {};
+    }
+    final metadata = await MetadataService.extract(item.uri);
+    return {
+      ...metadata.details,
+      'location': File(item.uri).parent.path,
+      if (metadata.duration != null)
+        'durationMs': '${metadata.duration!.inMilliseconds}',
+    };
+  }
+
   Future<void> spliceDraft(String original, String segment, int at) =>
       const MethodChannel('sornaz/recordings').invokeMethod<void>(
         'spliceDraft',
@@ -49,6 +75,8 @@ class FileService {
     final uri = await channel.invokeMethod<String>('save', {'path': path});
     if (uri == null) throw StateError('Missing public recording URI');
     await bookmarks.move(path, uri);
+    await MusicPlaylists.recordings.replacePath(path, uri);
+    await moveRecordingText(path, uri);
     // Delete staging only after MediaStore has committed the complete file.
     await File(path).delete();
   }
@@ -109,6 +137,8 @@ class FileService {
       await File(item.uri).delete();
     }
     await bookmarks.delete(item.uri);
+    await MusicPlaylists.recordings.replacePath(item.uri, null);
+    await moveRecordingText(item.uri, null);
   }
 
   Future<void> rename(SavedRecording item, String name) async {
@@ -121,18 +151,27 @@ class FileService {
         'uri': item.uri,
         'name': name,
       });
-      if (uri != null) await bookmarks.move(item.uri, uri);
+      if (uri != null) {
+        await bookmarks.move(item.uri, uri);
+        await MusicPlaylists.recordings.replacePath(item.uri, uri);
+        await moveRecordingText(item.uri, uri);
+      }
     } else {
       final renamed = await File(
         item.uri,
       ).rename('${File(item.uri).parent.path}/$name.m4a');
       await bookmarks.move(item.uri, renamed.path);
+      await MusicPlaylists.recordings.replacePath(item.uri, renamed.path);
+      await moveRecordingText(item.uri, renamed.path);
     }
   }
 
   Future<void> share(SavedRecording item) async {
-    if (item.isPublic)
+    if (item.isPublic) {
       await channel.invokeMethod<void>('share', {'uri': item.uri});
+    } else {
+      await Share.shareXFiles([XFile(item.uri)]);
+    }
   }
 
   String newPath() =>

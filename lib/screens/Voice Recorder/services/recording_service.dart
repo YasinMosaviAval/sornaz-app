@@ -1,6 +1,14 @@
+import 'package:record/record.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:async';
-import 'package:record/record.dart';
+import 'dart:math' as math;
+
+/// Gate room noise and map logarithmic dB measurements to visible amplitude.
+double recordingAmplitude(double db) {
+  if (!db.isFinite || db <= -50) return 0;
+  final floor = math.pow(10, -50 / 30).toDouble();
+  return ((math.pow(10, db / 30) - floor) / (1 - floor)).clamp(0.0, 1.0);
+}
 
 class RecordingService {
   final AudioRecorder _recorder = AudioRecorder();
@@ -29,10 +37,8 @@ class RecordingService {
     _ampSub = _recorder
         .onAmplitudeChanged(const Duration(milliseconds: 100))
         .listen((amp) {
-      final db = amp.current;
-      final normalized = db < -60 ? 0.0 : (db + 60) / 60;
-      onAmplitude(normalized.clamp(0.0, 1.0));
-    });
+          onAmplitude(recordingAmplitude(amp.current));
+        });
   }
 
   Future<void> pause() async {

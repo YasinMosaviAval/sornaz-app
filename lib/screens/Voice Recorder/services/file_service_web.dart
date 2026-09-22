@@ -1,5 +1,7 @@
 import 'package:sornaz/helpers/browser_bridge.dart';
 import 'recording_bookmarks.dart';
+import 'recording_text.dart';
+import '../../Players/services/music_playlists.dart';
 
 class SavedRecording {
   const SavedRecording({
@@ -14,6 +16,10 @@ class SavedRecording {
 }
 
 class FileService {
+  Future<void> discardDraft(String path) => bookmarks.delete(path);
+  Future<Map<String, String>> describe(SavedRecording item) async => {
+    'location': 'Browser storage',
+  };
   Future<void> spliceDraft(String original, String segment, int at) async =>
       throw UnsupportedError('Draft splicing requires Android');
   Future<String> location() async => 'Browser storage';
@@ -50,6 +56,8 @@ class FileService {
   Future<void> delete(SavedRecording item) async {
     await browserCall('recordingsDelete', {'id': item.uri});
     await bookmarks.delete(item.uri);
+    await MusicPlaylists.recordings.replacePath(item.uri, null);
+    await moveRecordingText(item.uri, null);
   }
 
   Future<void> rename(SavedRecording item, String name) async {

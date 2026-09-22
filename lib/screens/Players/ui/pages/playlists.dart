@@ -14,7 +14,10 @@ String playlistLabel(BuildContext c, String key) =>
     key == MusicPlaylists.favorite
     ? socialText(c, 'علاقه‌مندی', 'Favorite')
     : key;
-Future<String?> createMusicPlaylist(BuildContext context) async {
+Future<String?> createMusicPlaylist(
+  BuildContext context, {
+  MusicPlaylists? collection,
+}) async {
   var draft = '';
   final name = await showDialog<String>(
     context: context,
@@ -43,14 +46,27 @@ Future<String?> createMusicPlaylist(BuildContext context) async {
     ),
   );
 
-  return name == null ? null : MusicPlaylists.instance.create(name);
+  return name == null
+      ? null
+      : (collection ?? MusicPlaylists.instance).create(name);
 }
 
 Future<void> chooseMusicPlaylist(
   BuildContext context,
   List<AudioFile> files,
 ) async {
-  final store = MusicPlaylists.instance;
+  await chooseAudioPlaylist(
+    context,
+    files.map((f) => f.file.path),
+    MusicPlaylists.instance,
+  );
+}
+
+Future<void> chooseAudioPlaylist(
+  BuildContext context,
+  Iterable<String> paths,
+  MusicPlaylists store,
+) async {
   await store.load();
   if (!context.mounted) return;
   var key = await showModalBottomSheet<String>(
@@ -79,9 +95,9 @@ Future<void> chooseMusicPlaylist(
     ),
   );
   if (key == '__new__' && context.mounted)
-    key = await createMusicPlaylist(context);
+    key = await createMusicPlaylist(context, collection: store);
   if (key != null) {
-    await store.add(key, files.map((f) => f.file.path));
+    await store.add(key, paths);
   }
 }
 

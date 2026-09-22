@@ -102,7 +102,11 @@ class _ExpandingSearchBarState extends State<ExpandingSearchBar> {
                       : IconButton(
                           key: const ValueKey('open-search'),
                           tooltip: widget.hint,
-                          icon: const Icon(Icons.search),
+                          icon: Icon(
+                            Icons.search,
+                            size: widget.searchIconSize,
+                            color: widget.searchIconColor,
+                          ),
                           onPressed: () => setState(() => open = true),
                         ),
                 ),

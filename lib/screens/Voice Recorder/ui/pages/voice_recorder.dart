@@ -18,8 +18,93 @@ import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/screens/Voice%20Recorder/provider/voice_recorder_provider.dart';
 import 'package:sornaz/screens/Voice%20Recorder/ui/pages/recordings_list.dart';
 
-class VoiceRecorderPage extends StatelessWidget {
+class VoiceRecorderPage extends StatefulWidget {
   const VoiceRecorderPage({super.key});
+
+  @override
+  State<VoiceRecorderPage> createState() => _VoiceRecorderPageState();
+}
+
+class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
+  bool leaving = false, allowPop = false;
+  Future<void> leave() async {
+    if (leaving) return;
+    final vm = context.read<VoiceRecorderProvider>();
+    if (vm.isBusy) return;
+    leaving = true;
+    try {
+      if (vm.hasDraft) {
+        if (vm.isRecording) await vm.pauseRecording();
+        await vm.playbackService.pause();
+        if (!mounted) return;
+        final choice = await showDialog<String>(
+          context: context,
+          builder: (c) {
+            final colors = Theme.of(c).colorScheme;
+            return AlertDialog(
+              title: const Text(
+                'صدای ضبط شده را ذخیره می کنید یا حذف؟',
+                style: TextStyle(fontSize: 14),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(c, 'cancel'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.grey,
+                    textStyle: const TextStyle(fontSize: 12),
+                  ),
+                  child: const Text('انصراف'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(c, 'delete'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: colors.onSurface,
+                    textStyle: const TextStyle(fontSize: 12),
+                  ),
+                  child: const Text('حذف'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(c, 'save'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: colors.onPrimary,
+                    backgroundColor: colors.primary,
+                    textStyle: const TextStyle(fontSize: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  child: const Text('ذخیره'),
+                ),
+              ],
+            );
+          },
+        );
+        if (choice == 'save') {
+          await vm.stopRecording();
+        } else if (choice == 'delete') {
+          await vm.discardRecording();
+        } else {
+          return;
+        }
+        if (vm.hasDraft) return;
+      }
+      if (mounted) {
+        setState(() => allowPop = true);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) Navigator.pop(context);
+        });
+      }
+    } catch (_) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('عملیات انجام نشد؛ فایل ضبط شده حفظ شده است.'),
+          ),
+        );
+    } finally {
+      leaving = false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,54 +113,45 @@ class VoiceRecorderPage extends StatelessWidget {
 
     return Consumer<VoiceRecorderProvider>(
       builder: (context, vm, _) {
-        return ScrollAwareScaffold(
-          appBar: AppTopBarDirection(
-            child: AppBar(
-              automaticallyImplyLeading: false,
-              actions: [
-                if (vm.isRecording || vm.isPaused)
-                  IconButton(
-                    icon: Icon(
-                      vm.isFavorite
-                          ? Icons.favorite_rounded
-                          : Icons.favorite_outline_rounded,
-                      size: AppSpacing.space_32,
-                      color: vm.isFavorite
-                          ? AppColors.voice_recorder_favorite_icon_active_color(
-                              isDark: isDark,
-                            )
-                          : AppColors.voice_recorder_icon_color(isDark: isDark),
-                    ),
-                    onPressed: vm.toggleFavorite,
-                  ),
-
-                if (!vm.isRecording && !vm.isPaused)
-                  IconButton(
-                    icon: Icon(
-                      Icons.folder_open,
-                      color: AppColors.voice_recorder_icon_color(
-                        isDark: isDark,
+        return PopScope(
+          canPop: allowPop,
+          onPopInvokedWithResult: (didPop, result) {
+            if (!didPop) leave();
+          },
+          child: ScrollAwareScaffold(
+            appBar: AppTopBarDirection(
+              child: AppBar(
+                automaticallyImplyLeading: false,
+                leading: BackButton(onPressed: leave),
+                actions: [
+                  if (!vm.isRecording && !vm.isPaused)
+                    IconButton(
+                      icon: Icon(
+                        Icons.folder_open,
+                        color: AppColors.voice_recorder_icon_color(
+                          isDark: isDark,
+                        ),
                       ),
+                      tooltip: AppStrings
+                          .voice_recorder_recording_icon_button_tooltip
+                          .translate(context),
+                      onPressed: () {
+                        navigateWithFade(context, RecordedFilesPage());
+                      },
                     ),
-                    tooltip: AppStrings
-                        .voice_recorder_recording_icon_button_tooltip
-                        .translate(context),
-                    onPressed: () {
-                      navigateWithFade(context, RecordedFilesPage());
-                    },
-                  ),
-              ],
-              backgroundColor:
-                  AppColors.voice_recorder_app_bar_background_color(
-                    isDark: isDark,
-                  ),
+                ],
+                backgroundColor:
+                    AppColors.voice_recorder_app_bar_background_color(
+                      isDark: isDark,
+                    ),
+              ),
             ),
-          ),
-          backgroundColor: AppColors.voice_recorder_body_background_color(
-            isDark: isDark,
-          ),
-          body: Column(
-            children: [_RecorderSection(vm: vm, isDark: isDark)],
+            backgroundColor: AppColors.voice_recorder_body_background_color(
+              isDark: isDark,
+            ),
+            body: Column(
+              children: [_RecorderSection(vm: vm, isDark: isDark)],
+            ),
           ),
         );
       },
@@ -83,9 +159,6 @@ class VoiceRecorderPage extends StatelessWidget {
   }
 }
 
-/// ------------------------------------------------------------
-/// 🎙️ Recorder Section Widget (UI unchanged)
-/// ------------------------------------------------------------
 class _RecorderSection extends StatelessWidget {
   final VoiceRecorderProvider vm;
   final bool isDark;
@@ -103,15 +176,16 @@ class _RecorderSection extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: AppSpacing.space_24,
-                  ),
+                SizedBox(
+                  height: 110,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        vm.timer,
+                        vm.isPaused
+                            ? recordingTime(vm.bookmarkPosition)
+                            : vm.timer,
+                        textDirection: TextDirection.ltr,
                         style: AppTypography.voiceRecorderRecordingTimer(
                           context,
                         ),
@@ -185,7 +259,7 @@ class _RecorderSection extends StatelessWidget {
                         ),
                     onPressed: vm.isBusy
                         ? null
-                        : () => _recordAction(context, vm.stopRecording),
+                        : () => _recordAction(context, vm.pauseRecording),
                     child: Icon(
                       Icons.stop_rounded,
                       size: AppSpacing.space_36,

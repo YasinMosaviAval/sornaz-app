@@ -31,6 +31,7 @@ class PublicRecordings(private val context: Context, messenger: BinaryMessenger)
                     val value: Any? = when (call.method) {
                         "save" -> save(call.argument<String>("path") ?: "")
                         "list" -> list()
+                        "describe" -> describe(owned(call.argument<String>("uri") ?: ""))
                         "spliceDraft" -> {
                             val original = File(call.argument<String>("original") ?: "").canonicalFile
                             val segment = File(call.argument<String>("segment") ?: "").canonicalFile
@@ -103,6 +104,29 @@ class PublicRecordings(private val context: Context, messenger: BinaryMessenger)
         }
         results.addAll(RecordingWorkspace.list(context))
         return results
+    }
+    private fun describe(uri: Uri): Map<String, String> {
+        val details = linkedMapOf<String, String>("path" to uri.toString())
+        val retriever = android.media.MediaMetadataRetriever()
+        try {
+            retriever.setDataSource(context, uri)
+            for ((name, key) in mapOf("durationMs" to 9, "bitrate" to 20, "mime" to 12,
+                "sampleRate" to 38, "title" to 7, "artist" to 2, "album" to 1)) {
+                try { retriever.extractMetadata(key)?.let { details[name] = it } } catch (_: Exception) {}
+            }
+        } finally { retriever.release() }
+        if (DocumentsContract.isDocumentUri(context, uri)) {
+            details["location"] = DocumentsContract.getDocumentId(uri).substringBeforeLast('/')
+        } else {
+            val column = if (Build.VERSION.SDK_INT >= 29) MediaStore.Audio.Media.RELATIVE_PATH else MediaStore.Audio.Media.DATA
+            resolver.query(uri, arrayOf(column), null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val path = cursor.getString(0) ?: ""
+                    details["location"] = if (Build.VERSION.SDK_INT >= 29) path else File(path).parent.orEmpty()
+                }
+            }
+        }
+        return details
     }
     private fun save(path: String): String {
         val source = File(path).canonicalFile

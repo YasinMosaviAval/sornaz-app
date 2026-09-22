@@ -19,7 +19,7 @@ class SongLyricsTab extends StatelessWidget {
         ),
       );
     }
-    return _LyricsEditor(
+    return AudioLyricsEditor(
       key: ValueKey(track.file.path),
       path: track.file.path,
       initialTitle: withoutAudioExtension(
@@ -31,18 +31,18 @@ class SongLyricsTab extends StatelessWidget {
   }
 }
 
-class _LyricsEditor extends StatefulWidget {
-  const _LyricsEditor({
+class AudioLyricsEditor extends StatefulWidget {
+  const AudioLyricsEditor({
     super.key,
     required this.path,
     required this.initialTitle,
   });
   final String path, initialTitle;
   @override
-  State<_LyricsEditor> createState() => _LyricsEditorState();
+  State<AudioLyricsEditor> createState() => AudioLyricsEditorState();
 }
 
-class _LyricsEditorState extends State<_LyricsEditor> {
+class AudioLyricsEditorState extends State<AudioLyricsEditor> {
   final title = TextEditingController(), lyrics = TextEditingController();
   SharedPreferences? prefs;
   Future<void> pending = Future.value();

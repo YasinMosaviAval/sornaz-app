@@ -1,5 +1,6 @@
 import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'lyrics.dart';
+import '../../metadata/audio_metadata.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 
 import 'package:flutter/material.dart';
@@ -14,15 +15,24 @@ import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/screens/Players/providers/audio_player_provider.dart';
 
 class NowPlayingInfoTab extends StatelessWidget {
-  const NowPlayingInfoTab({super.key});
+  const NowPlayingInfoTab({
+    super.key,
+    this.fileName,
+    this.filePath,
+    this.metadata,
+  });
+  final String? fileName, filePath;
+  final AudioMetadata? metadata;
   @override
   Widget build(BuildContext context) {
     // final appData = context.watch<AppData>();
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
-    final audio = context.watch<AudioPlayerProvider>();
+    final audio = fileName == null
+        ? context.watch<AudioPlayerProvider>()
+        : null;
 
-    if (audio.currentAudio == null) {
+    if (fileName == null && audio?.currentAudio == null) {
       return Container(
         decoration: BoxDecoration(
           color: AppColors.music_player_song_information_background_color(
@@ -38,10 +48,10 @@ class NowPlayingInfoTab extends StatelessWidget {
       );
     }
 
-    final meta = audio.currentMetadata;
+    final meta = metadata ?? audio?.currentMetadata;
     final title = meta?.title?.isNotEmpty == true
         ? meta!.title!
-        : audio.currentAudio!.fileName;
+        : fileName ?? audio!.currentAudio!.fileName;
     final artist = meta?.artist ?? AppStrings.unknown.translate(context);
     final album = meta?.album ?? AppStrings.unknown.translate(context);
     final genre = meta?.genre ?? AppStrings.unknown.translate(context);
@@ -123,7 +133,7 @@ class NowPlayingInfoTab extends StatelessWidget {
               context,
             ),
             for (final entry in <String, String>{
-              'path': audio.currentAudio!.file.path,
+              'path': filePath ?? audio!.currentAudio!.file.path,
               ...?meta?.details,
             }.entries)
               if (![
@@ -248,7 +258,7 @@ class SongDetailsPage extends StatelessWidget {
     child: Scaffold(
       appBar: AppTopBarDirection(
         child: AppBar(
-          title: Text(socialText(context, 'اطلاعات ترانه', 'Song details')),
+          title: Text(socialText(context, 'اطلاعات', 'Information')),
           bottom: TabBar(
             tabs: [
               Tab(text: socialText(context, 'متن', 'Lyrics')),

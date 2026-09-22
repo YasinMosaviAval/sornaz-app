@@ -63,10 +63,12 @@ class AbTrack extends StatelessWidget {
     required this.repeat,
     required this.duration,
     required this.child,
+    this.horizontalPadding = 24,
   });
   final AbRepeat repeat;
   final Duration duration;
   final Widget child;
+  final double horizontalPadding;
   @override
   Widget build(BuildContext context) => Stack(
     alignment: Alignment.center,
@@ -76,7 +78,7 @@ class AbTrack extends StatelessWidget {
         Positioned.fill(
           child: IgnorePointer(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
               child: CustomPaint(
                 painter: _RangePainter(
                   repeat.start!,

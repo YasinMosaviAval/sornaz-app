@@ -1,15 +1,23 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:sornaz/components/expanding_search_bar.dart';
-import 'recorder_settings.dart';
-import 'recording_playback.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sornaz/helpers/app_functions.dart';
-import 'package:sornaz/screens/Social/social_widgets.dart';
+import 'package:sornaz/helpers/app_colors.dart';
+import 'package:sornaz/helpers/app_data.dart';
+import 'package:sornaz/screens/Players/providers/audio_player_provider.dart';
+import 'package:sornaz/screens/Players/services/music_playlists.dart';
+import 'package:sornaz/screens/Players/ui/components/audio_item.dart';
+import 'package:sornaz/screens/Players/ui/components/audio_controls.dart';
+import 'package:sornaz/screens/Players/ui/components/audio_slider.dart';
+import 'package:sornaz/screens/Players/ui/components/player_dialog.dart';
+import 'package:sornaz/screens/Players/ui/components/player_slide_navigation.dart';
+import 'package:sornaz/screens/Players/ui/pages/playlists.dart';
 import '../../provider/voice_recorder_provider.dart';
 import '../../services/file_service.dart';
+import '../../services/playback_service.dart';
+import 'recorder_settings.dart';
+import 'recording_playback.dart';
 
 class RecordedFilesPage extends StatefulWidget {
   const RecordedFilesPage({super.key});
@@ -17,115 +25,194 @@ class RecordedFilesPage extends StatefulWidget {
   State<RecordedFilesPage> createState() => _RecordedFilesPageState();
 }
 
-class _RecordedFilesPageState extends State<RecordedFilesPage> {
-  String query = '';
+class _RecordedFilesPageState extends State<RecordedFilesPage>
+    with TickerProviderStateMixin {
+  final store = MusicPlaylists.recordings;
   final selected = <String>{};
-  final favorites = <String>{};
+  String query = '';
+  List<String> keys = [MusicPlaylists.favorite];
+  late TabController tabs;
   @override
   void initState() {
     super.initState();
+    tabs = TabController(length: 2, vsync: this)..addListener(changed);
+    store.addListener(collectionChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted)
-        _run(() => context.read<VoiceRecorderProvider>().refreshFiles());
-    });
-    SharedPreferences.getInstance().then((prefs) {
-      if (mounted)
-        setState(
-          () => favorites.addAll(
-            prefs.getStringList('recording.favorites') ?? [],
-          ),
-        );
+        run(() async {
+          await store.load();
+          if (mounted)
+            await context.read<VoiceRecorderProvider>().refreshFiles();
+        });
     });
   }
 
-  Future<void> _run(Future<void> Function() action) async {
+  void changed() {
+    if (mounted) setState(() {});
+  }
+
+  void collectionChanged() {
+    if (!mounted) return;
+    final next = [
+      MusicPlaylists.favorite,
+      ...store.lists.keys.where((k) => k != MusicPlaylists.favorite),
+    ];
+    if (next.length != keys.length) {
+      final index = tabs.index.clamp(0, next.length);
+      tabs.removeListener(changed);
+      tabs.dispose();
+      tabs = TabController(
+        length: next.length + 1,
+        initialIndex: index,
+        vsync: this,
+      )..addListener(changed);
+    }
+    setState(() => keys = next);
+  }
+
+  @override
+  void dispose() {
+    store.removeListener(collectionChanged);
+    tabs.removeListener(changed);
+    tabs.dispose();
+    super.dispose();
+  }
+
+  Future<void> run(Future<void> Function() action) async {
     try {
       await action();
     } catch (_) {
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text(
-              socialText(
-                context,
-                'عملیات انجام نشد؛ دسترسی فایل یا فضای خالی گوشی را بررسی کنید.',
-                'Could not complete the action. Check file access and available storage.',
-              ),
+              'عملیات انجام نشد؛ دسترسی فایل و فضای خالی را بررسی کنید.',
             ),
           ),
         );
     }
   }
 
-  Future<void> _delete(List<SavedRecording> files) async {
-    final yes = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          socialText(context, 'حذف فایل ضبط‌شده؟', 'Delete recording?'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(socialText(context, 'انصراف', 'Cancel')),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(socialText(context, 'حذف', 'Delete')),
-          ),
-        ],
-      ),
-    );
-    if (yes != true || !mounted) return;
+  Future<void> act(String action, List<SavedRecording> files) async {
+    if (files.isEmpty) return;
     final vm = context.read<VoiceRecorderProvider>();
-    await _run(() async {
-      await vm.playbackService.stop();
-      for (final file in files) {
-        await vm.fileService.delete(file);
+    await run(() async {
+      if (action == 'playlist') {
+        await chooseAudioPlaylist(context, files.map((f) => f.uri), store);
+      } else if (action == 'rename' && files.length == 1) {
+        final file = files.single;
+        final name = await recordingNameDialog(
+          context,
+          'تغییر نام',
+          file.name.replaceFirst(RegExp(r'\.[^.]+$'), ''),
+        );
+        if (name == null || name.trim().isEmpty) return;
+        if (vm.playbackService.currentPath == file.uri)
+          await vm.playbackService.stop();
+        await vm.fileService.rename(file, name.trim());
+        await vm.refreshFiles();
+      } else if (action == 'delete') {
+        final yes = await confirmRecordingDelete(
+          context,
+          'حذف ${files.length} فایل؟',
+        );
+        if (!yes) return;
+        if (files.any((f) => f.uri == vm.playbackService.currentPath))
+          await vm.playbackService.stop();
+        for (final file in files) {
+          await vm.fileService.delete(file);
+        }
+        await vm.refreshFiles();
+      } else if (action == 'share') {
+        for (final file in files) {
+          await vm.fileService.share(file);
+        }
       }
-      await vm.refreshFiles();
       if (mounted) setState(selected.clear);
     });
   }
 
-  Future<void> _rename(SavedRecording file) async {
-    final field = TextEditingController(
-      text: file.name.replaceFirst(RegExp(r'\.m4a$'), ''),
-    );
-    final name = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(socialText(context, 'تغییر نام', 'Rename')),
-        content: TextField(controller: field, autofocus: true, maxLength: 100),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(socialText(context, 'انصراف', 'Cancel')),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, field.text.trim()),
-            child: Text(socialText(context, 'ذخیره', 'Save')),
-          ),
-        ],
+  Widget menu(List<SavedRecording> files) => SizedBox(
+    width: 32,
+    height: 32,
+    child: PopupMenuButton<String>(
+      padding: EdgeInsets.zero,
+      icon: const Icon(Icons.more_vert, size: 24),
+      onSelected: (value) => act(value, files),
+      itemBuilder: (_) => [
+        if (files.length == 1)
+          const PopupMenuItem(value: 'rename', child: Text('تغییر نام')),
+        const PopupMenuItem(
+          value: 'playlist',
+          child: Text('افزودن به پلی‌لیست'),
+        ),
+        const PopupMenuItem(value: 'share', child: Text('اشتراک‌گذاری')),
+        const PopupMenuItem(value: 'delete', child: Text('حذف')),
+      ],
+    ),
+  );
+  Widget list(VoiceRecorderProvider vm, String? key) {
+    final members = key == null ? null : (store.lists[key] ?? []).toSet();
+    final files = vm.files
+        .where(
+          (f) =>
+              (members == null || members.contains(f.uri)) &&
+              f.name.toLowerCase().contains(query),
+        )
+        .toList();
+    return RefreshIndicator(
+      onRefresh: vm.refreshFiles,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: files.isEmpty ? 1 : files.length,
+        itemBuilder: (c, i) {
+          if (files.isEmpty)
+            return const Padding(
+              padding: EdgeInsets.all(32),
+              child: Text(
+                'فایل ضبط‌شده‌ای وجود ندارد.',
+                textAlign: TextAlign.center,
+              ),
+            );
+          final file = files[i];
+          return FutureBuilder<Map<String, String>>(
+            future: vm.details(file),
+            builder: (c, snapshot) {
+              final details = snapshot.data ?? {};
+              return AudioRow(
+                title: file.name,
+                location: details['location'] ?? file.uri,
+                duration: Duration(
+                  milliseconds: int.tryParse(details['durationMs'] ?? '') ?? 0,
+                ),
+                isPlaying:
+                    vm.playbackService.currentPath == file.uri && vm.isPlaying,
+                selected: selected.contains(file.uri),
+                onLongPress: () => setState(() => selected.add(file.uri)),
+                onTap: () {
+                  if (selected.isNotEmpty) {
+                    setState(() {
+                      if (!selected.remove(file.uri)) selected.add(file.uri);
+                    });
+                  } else {
+                    run(() async {
+                      await context.read<AudioPlayerProvider>().pause();
+                      await vm.playSaved(file, queue: files);
+                    });
+                  }
+                },
+                trailing: menu([file]),
+              );
+            },
+          );
+        },
       ),
     );
-    field.dispose();
-    if (name == null || name.isEmpty || !mounted) return;
-    final vm = context.read<VoiceRecorderProvider>();
-    await _run(() async {
-      await vm.playbackService.stop();
-      await vm.fileService.rename(file, name);
-      await vm.refreshFiles();
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<VoiceRecorderProvider>();
-    final files = vm.files
-        .where((f) => f.name.toLowerCase().contains(query))
-        .toList();
-    final player = vm.playbackService;
     return ScrollAwareScaffold(
       appBar: ExpandingSearchBar(
         title: Row(
@@ -133,7 +220,9 @@ class _RecordedFilesPageState extends State<RecordedFilesPage> {
             const BackButton(),
             Expanded(
               child: Text(
-                socialText(context, 'صداهای ضبط‌شده', 'Recordings'),
+                'صداهای ضبط‌شده',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: AppTopBarDirection.titleSize(context),
                 ),
@@ -146,242 +235,185 @@ class _RecordedFilesPageState extends State<RecordedFilesPage> {
           context,
           MaterialPageRoute(builder: (_) => const RecorderSettingsPage()),
         ),
+        actions: [
+          IconButton(
+            tooltip: 'دسته‌بندی جدید',
+            icon: const Icon(Icons.playlist_add),
+            onPressed: () => run(() async {
+              final key = await createMusicPlaylist(context, collection: store);
+              if (mounted && key != null && keys.contains(key))
+                tabs.animateTo(keys.indexOf(key) + 1);
+            }),
+          ),
+        ],
       ),
-      body: Column(
+      body: PlayerSlideNavigation(
+        page: tabs.index,
+        count: keys.length + 1,
+        go: tabs.animateTo,
+        child: Column(
+          children: [
+            TabBar(
+              controller: tabs,
+              isScrollable: keys.length > 1,
+              tabAlignment: keys.length > 1
+                  ? TabAlignment.start
+                  : TabAlignment.fill,
+              labelPadding: keys.length > 1
+                  ? const EdgeInsets.symmetric(horizontal: 20)
+                  : EdgeInsets.zero,
+              labelStyle: const TextStyle(fontSize: 12),
+              tabs: [
+                const Tab(text: 'همه'),
+                ...keys.map((k) => Tab(text: playlistLabel(context, k))),
+              ],
+            ),
+            Expanded(
+              child: TabBarView(
+                controller: tabs,
+                children: [list(vm, null), ...keys.map((k) => list(vm, k))],
+              ),
+            ),
+            if (selected.isNotEmpty)
+              Row(
+                children: [
+                  TextButton(
+                    onPressed: () => setState(selected.clear),
+                    child: const Text('انصراف'),
+                  ),
+                  Text('${selected.length}'),
+                  const Spacer(),
+                  menu(
+                    vm.files.where((f) => selected.contains(f.uri)).toList(),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+              ),
+            const RecordingsPlayer(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class RecordingsPlayer extends StatelessWidget {
+  const RecordingsPlayer({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final vm = context.watch<VoiceRecorderProvider>(), p = vm.playbackService;
+    final current = vm.files.where((f) => f.uri == p.currentPath).firstOrNull;
+    if (current == null) return const SizedBox.shrink();
+    Future<void> run(Future<void> Function() action) async {
+      try {
+        await action();
+      } catch (_) {
+        if (context.mounted)
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'پخش فایل انجام نشد؛ دسترسی به فایل را بررسی کنید.',
+              ),
+            ),
+          );
+      }
+    }
+
+    return Container(
+      color: AppColors.music_player_bottom_player_background_color(
+        isDark: context.watch<AppData>().isDark,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: vm.refreshFiles,
-              child: files.isEmpty
-                  ? ListView(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(32),
-                          child: Text(
-                            socialText(
-                              context,
-                              'فایل ضبط‌شده‌ای وجود ندارد.',
-                              'No recordings yet.',
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ],
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(12),
-                      itemCount: files.length,
-                      itemBuilder: (context, index) {
-                        final file = files[index];
-                        final active = player.currentPath == file.uri;
-                        return Card(
-                          margin: EdgeInsets.zero,
-                          shape: RoundedRectangleBorder(
-                            side: BorderSide(
-                              width: .4,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withValues(alpha: .12),
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              ListTile(
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                ),
-                                selected: selected.contains(file.uri),
-                                onLongPress: () =>
-                                    setState(() => selected.add(file.uri)),
-                                onTap: () {
-                                  if (selected.isNotEmpty) {
-                                    setState(
-                                      () => selected.contains(file.uri)
-                                          ? selected.remove(file.uri)
-                                          : selected.add(file.uri),
-                                    );
-                                  } else {
-                                    _run(() => vm.playSaved(file));
-                                  }
-                                },
-                                leading: IconButton(
-                                  icon: Icon(
-                                    active && player.isPlaying
-                                        ? Icons.pause
-                                        : Icons.play_arrow,
-                                  ),
-                                  onPressed: () =>
-                                      _run(() => vm.playSaved(file)),
-                                ),
-                                title: Text(file.name),
-                                subtitle: Text(
-                                  file.isPublic
-                                      ? formatJalali(file.modified)
-                                      : socialText(
-                                          context,
-                                          'ذخیره در گوشی در انتظار تلاش مجدد',
-                                          'Pending save to phone',
-                                        ),
-                                ),
-                                trailing: PopupMenuButton<String>(
-                                  onSelected: (action) async {
-                                    if (action == 'wave')
-                                      await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) =>
-                                              RecordingPlaybackPage(file: file),
-                                        ),
-                                      );
-                                    if (action == 'delete')
-                                      await _delete([file]);
-                                    if (action == 'rename') await _rename(file);
-                                    if (action == 'share')
-                                      await _run(
-                                        () => vm.fileService.share(file),
-                                      );
-                                    if (action == 'favorite') {
-                                      setState(
-                                        () => favorites.contains(file.uri)
-                                            ? favorites.remove(file.uri)
-                                            : favorites.add(file.uri),
-                                      );
-                                      final prefs =
-                                          await SharedPreferences.getInstance();
-                                      await prefs.setStringList(
-                                        'recording.favorites',
-                                        favorites.toList(),
-                                      );
-                                    }
-                                  },
-                                  itemBuilder: (_) => [
-                                    const PopupMenuItem(
-                                      value: 'wave',
-                                      child: Text('پخش با نمایش موج صدا'),
-                                    ),
-                                    PopupMenuItem(
-                                      value: 'rename',
-                                      child: Text(
-                                        socialText(
-                                          context,
-                                          'تغییر نام',
-                                          'Rename',
-                                        ),
-                                      ),
-                                    ),
-                                    if (file.isPublic)
-                                      PopupMenuItem(
-                                        value: 'share',
-                                        child: Text(
-                                          socialText(
-                                            context,
-                                            'اشتراک‌گذاری',
-                                            'Share',
-                                          ),
-                                        ),
-                                      ),
-                                    PopupMenuItem(
-                                      value: 'favorite',
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            favorites.contains(file.uri)
-                                                ? Icons.favorite
-                                                : Icons.favorite_border,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            socialText(
-                                              context,
-                                              'علاقه‌مندی',
-                                              'Favorite',
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    PopupMenuItem(
-                                      value: 'delete',
-                                      child: Text(
-                                        socialText(context, 'حذف', 'Delete'),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (active)
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Text(
-                                        formatSeconds(
-                                          player.position.inSeconds,
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: Slider(
-                                          value: player.position.inMilliseconds
-                                              .toDouble()
-                                              .clamp(
-                                                0,
-                                                player.duration.inMilliseconds
-                                                    .toDouble(),
-                                              ),
-                                          max:
-                                              player.duration.inMilliseconds > 0
-                                              ? player.duration.inMilliseconds
-                                                    .toDouble()
-                                              : 1,
-                                          onChanged:
-                                              player.duration.inMilliseconds > 0
-                                              ? (value) => player.seek(
-                                                  Duration(
-                                                    milliseconds: value.round(),
-                                                  ),
-                                                )
-                                              : null,
-                                        ),
-                                      ),
-                                      Text(
-                                        formatSeconds(
-                                          player.duration.inSeconds,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
+          PlaybackProgress(
+            position: p.position,
+            duration: p.duration,
+            repeat: p.abRepeat,
+            onStart: p.rememberPosition,
+            onSeek: (at) => run(() => p.seek(at)),
+            toggleTime: p.toggleTime,
+            remaining: p.showRemaining,
+          ),
+          PlaybackControls(
+            playing: p.isPlaying,
+            undo: p.isUndoMode,
+            shuffle: p.queue.isShuffle,
+            repeatMode: p.queue.repeatMode,
+            repeat: p.abRepeat,
+            speed: p.speed,
+            speedOptions: PlaybackService.speedOptions,
+            onPlayPause: () => run(p.toggleCurrent),
+            onNext: () => run(p.nextWithUndo),
+            onPrevious: () => run(p.previousOrUndo),
+            onForward: () => run(() => p.skip(const Duration(seconds: 10))),
+            onBackward: () => run(() => p.skip(const Duration(seconds: -10))),
+            onShuffle: p.toggleShuffle,
+            onRepeat: p.toggleRepeat,
+            onAbRepeat: p.cycleAbRepeat,
+            onSpeed: (value) => run(() => p.setSpeed(value)),
+            onInfo: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => RecordingInformationPage(file: current),
+              ),
             ),
           ),
         ],
       ),
-      bottomNavigationBar: selected.isEmpty
-          ? null
-          : SafeArea(
-              child: Row(
-                children: [
-                  TextButton(
-                    onPressed: () => setState(selected.clear),
-                    child: Text(socialText(context, 'انصراف', 'Cancel')),
-                  ),
-                  Text('${selected.length}'),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => _delete(
-                      vm.files.where((f) => selected.contains(f.uri)).toList(),
-                    ),
-                    icon: const Icon(Icons.delete),
-                  ),
-                ],
-              ),
-            ),
     );
   }
 }
+
+Future<String?> recordingNameDialog(
+  BuildContext context,
+  String title,
+  String initial,
+) async {
+  var value = initial;
+  return showDialog<String>(
+    context: context,
+    builder: (c) => PlayerDialog(
+      title: Text(title),
+      content: TextFormField(
+        initialValue: initial,
+        autofocus: true,
+        maxLength: 100,
+        style: const TextStyle(fontSize: 14),
+        onChanged: (text) => value = text,
+      ),
+      actions: [
+        PlayerDialogButton(
+          primary: false,
+          onPressed: () => Navigator.pop(c),
+          child: const Text('انصراف'),
+        ),
+        PlayerDialogButton(
+          onPressed: () => Navigator.pop(c, value.trim()),
+          child: const Text('ذخیره'),
+        ),
+      ],
+    ),
+  );
+}
+
+Future<bool> confirmRecordingDelete(BuildContext context, String title) async =>
+    await showDialog<bool>(
+      context: context,
+      builder: (c) => PlayerDialog(
+        title: Text(title),
+        actions: [
+          PlayerDialogButton(
+            primary: false,
+            onPressed: () => Navigator.pop(c, false),
+            child: const Text('انصراف'),
+          ),
+          PlayerDialogButton(
+            onPressed: () => Navigator.pop(c, true),
+            child: const Text('حذف'),
+          ),
+        ],
+      ),
+    ) ??
+    false;
