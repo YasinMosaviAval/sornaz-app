@@ -68,6 +68,8 @@ class Player implements PlaybackService {
   @override
   Duration position = Duration.zero;
   @override
+  Duration get displayPosition => position;
+  @override
   void Function()? onChanged;
   @override
   Future<void> stop() async {

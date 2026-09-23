@@ -1,5 +1,8 @@
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'bottom_nav.dart';
+import 'package:sornaz/screens/Players/providers/audio_player_provider.dart';
+import 'package:sornaz/screens/Players/services/player_settings.dart';
+import 'package:sornaz/screens/Players/services/music_audio_handler.dart';
 import 'home_top_bar.dart';
 import 'package:sornaz/screens/Home/ui/components/app_drawer.dart';
 import 'package:flutter/material.dart';
@@ -106,7 +109,7 @@ class _MainTabsState extends State<MainTabs> {
     setChrome: setChrome,
     child: PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
+      onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
         // An editor's own PopScope gets first responsibility for unsaved changes.
         final route = ModalRoute.of(context);
@@ -118,7 +121,12 @@ class _MainTabsState extends State<MainTabs> {
         if (index != 0) {
           select(0);
         } else {
-          SystemNavigator.pop();
+          await context.read<AudioPlayerProvider?>()?.interrupt(
+            PlaybackInterruption.exitApp,
+          );
+          if (PlayerSettings.instance.stopsFor(PlaybackInterruption.exitApp))
+            await musicAudioHandler?.stop();
+          await SystemNavigator.pop();
         }
       },
       child: ScrollAwareScaffold(

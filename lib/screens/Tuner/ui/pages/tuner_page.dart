@@ -2,6 +2,8 @@ import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sornaz/screens/Players/providers/audio_player_provider.dart';
+import 'package:sornaz/screens/Players/services/player_settings.dart';
 import 'package:sornaz/components/app_bar.dart';
 
 import 'package:sornaz/helpers/app_colors.dart';
@@ -28,7 +30,14 @@ class _TunerPageState extends State<TunerPage> with WidgetsBindingObserver {
     super.initState();
     tuner = context.read<TunerProvider>();
     WidgetsBinding.instance.addObserver(this);
-    tuner.start();
+    final music = context.read<AudioPlayerProvider?>();
+    if (music == null) {
+      tuner.start();
+    } else {
+      music.interrupt(PlaybackInterruption.tuner).then((_) {
+        if (mounted) tuner.start();
+      });
+    }
   }
 
   @override

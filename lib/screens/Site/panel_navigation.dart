@@ -4,7 +4,7 @@ import '../Social/social_api.dart';
 List<Json> panelNavigation(List<Json> sections) {
   final remaining = {
     for (final s in sections)
-      if (!['account', 'chat'].contains(s['key']))
+      if (!['account', 'chat', 'settings', 'site-settings'].contains(s['key']))
         '${s['key']}': Map<String, dynamic>.of(s),
   };
   Json? group(String key, String fa, String en, List<String> keys) {

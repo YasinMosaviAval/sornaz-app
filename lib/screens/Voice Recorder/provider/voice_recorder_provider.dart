@@ -6,6 +6,7 @@ import 'package:sornaz/helpers/app_functions.dart';
 import '../services/file_service.dart';
 import '../services/recording_service.dart';
 import '../services/playback_service.dart';
+import '../services/recording_waveforms.dart';
 
 class MicrophonePermissionDenied implements Exception {}
 
@@ -86,6 +87,7 @@ class VoiceRecorderProvider extends ChangeNotifier {
     if (hasDraft) return;
     await init();
     files = await fileService.loadFiles();
+    unawaited(RecordingWaveforms.warm(files, fileService));
     _details.clear();
     final existing = files.map((f) => f.uri).toSet();
     final current = playbackService.currentPath;
@@ -151,6 +153,9 @@ class VoiceRecorderProvider extends ChangeNotifier {
     List<SavedRecording>? queue,
   }) async {
     if (isRecording || isPaused) return;
+    if (playbackService.currentPath != null &&
+        playbackService.currentPath != file.uri)
+      playbackService.rememberPosition();
     if (queue != null || !playbackService.paths.contains(file.uri)) {
       playbackService.setQueue((queue ?? files).map((f) => f.uri), file.uri);
     }
@@ -162,6 +167,7 @@ class VoiceRecorderProvider extends ChangeNotifier {
     try {
       await fileService.init();
       files = await fileService.loadFiles();
+      unawaited(RecordingWaveforms.warm(files, fileService));
       _notify();
     } catch (_) {
       _initialization = null;
@@ -170,6 +176,9 @@ class VoiceRecorderProvider extends ChangeNotifier {
   }
 
   void _notify() {
+    for (final file in files) {
+      PlaybackService.titles[file.uri] = file.name;
+    }
     if (!_disposed) notifyListeners();
   }
 
@@ -334,6 +343,7 @@ class VoiceRecorderProvider extends ChangeNotifier {
       isPaused = true;
       final savedPath = currentFilePath;
       if (savedPath != null) {
+        await RecordingWaveforms.save(savedPath, amplitudes);
         if (overwriteTarget != null) {
           await fileService.overwrite(overwriteTarget!, savedPath, overwriteAt);
           overwriteTarget = null;

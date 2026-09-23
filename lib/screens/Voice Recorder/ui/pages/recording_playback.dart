@@ -1,13 +1,14 @@
-import 'dart:io';
+import '../../services/recording_waveforms.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:just_waveform/just_waveform.dart';
+
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:sornaz/components/ab_repeat.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_functions.dart';
-import 'package:sornaz/helpers/app_typography.dart';
+
 import 'package:sornaz/screens/Players/metadata/audio_metadata.dart';
 import 'package:sornaz/screens/Players/ui/pages/song_information.dart';
 import 'package:sornaz/screens/Players/ui/pages/lyrics.dart';
@@ -16,6 +17,7 @@ import '../../provider/voice_recorder_provider.dart';
 import '../../services/file_service.dart';
 import '../../services/playback_service.dart';
 import '../components/seekable_waveform.dart';
+import '../components/recording_timer.dart';
 import 'recordings_list.dart';
 
 class RecordingInformationPage extends StatelessWidget {
@@ -30,7 +32,7 @@ class RecordingInformationPage extends StatelessWidget {
             .firstOrNull ??
         file;
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppTopBarDirection(
           child: AppBar(
@@ -38,7 +40,8 @@ class RecordingInformationPage extends StatelessWidget {
             bottom: const TabBar(
               labelStyle: TextStyle(fontSize: 12),
               tabs: [
-                Tab(text: 'نمایش موج صدا'),
+                Tab(text: 'موج صدا'),
+                Tab(text: 'یادداشت ها'),
                 Tab(text: 'متن'),
                 Tab(text: 'اطلاعات'),
               ],
@@ -51,6 +54,12 @@ class RecordingInformationPage extends StatelessWidget {
               key: ValueKey('wave:${current.uri}'),
               file: current,
               embedded: true,
+            ),
+            AudioLyricsEditor(
+              key: ValueKey('notes:${current.uri}'),
+              path: current.uri,
+              initialTitle: withoutAudioExtension(current.name),
+              notes: true,
             ),
             AudioLyricsEditor(
               key: ValueKey('lyrics:${current.uri}'),
@@ -105,6 +114,8 @@ class _RecordingPlaybackPageState extends State<RecordingPlaybackPage> {
   @override
   void initState() {
     super.initState();
+    samples = RecordingWaveforms.memory[widget.file.uri] ?? [];
+    loading = samples.isEmpty;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) load();
     });
@@ -125,12 +136,19 @@ class _RecordingPlaybackPageState extends State<RecordingPlaybackPage> {
 
   Future<void> load() async {
     final vm = context.read<VoiceRecorderProvider>();
-    File? temporary, wave;
+
     setState(() {
-      loading = true;
+      loading = samples.isEmpty;
       error = null;
     });
     try {
+      final cached = await RecordingWaveforms.cached(widget.file.uri);
+      if (mounted && cached != null) {
+        setState(() {
+          samples = cached;
+          loading = false;
+        });
+      }
       if (vm.playbackService.currentPath != widget.file.uri) {
         vm.playbackService.setQueue(
           vm.files.map((f) => f.uri),
@@ -142,28 +160,11 @@ class _RecordingPlaybackPageState extends State<RecordingPlaybackPage> {
         widget.file.uri,
       );
       await loadMarkers(vm);
-      final path = await vm.fileService.materialize(widget.file);
-      temporary = widget.file.isPublic ? File(path) : null;
-      wave = File('$path.${DateTime.now().microsecondsSinceEpoch}.waveform');
-      final result = await JustWaveform.extract(
-        audioInFile: File(path),
-        waveOutFile: wave,
-      ).last;
-      final waveform = result.waveform;
-      if (waveform == null) throw StateError('No waveform');
-      final scale = waveform.flags & 1 == 1 ? 128.0 : 32768.0;
-      if (mounted)
-        setState(
-          () => samples = waveform.data
-              .map((v) => (v / scale).abs().clamp(0.0, 1.0))
-              .toList(),
-        );
+      final loaded = await RecordingWaveforms.load(widget.file, vm.fileService);
+      if (mounted) setState(() => samples = loaded);
     } catch (_) {
       if (mounted) setState(() => error = 'نمایش موج صدا ممکن نشد.');
     } finally {
-      if (wave != null && await wave.exists()) await wave.delete();
-      if (temporary != null && await temporary.exists())
-        await temporary.delete();
       if (mounted) setState(() => loading = false);
     }
   }
@@ -233,27 +234,23 @@ class _RecordingPlaybackPageState extends State<RecordingPlaybackPage> {
                   children: [
                     SizedBox(
                       height: 110,
-                      child: Stack(
-                        alignment: Alignment.center,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            recordingTime(player.position.inMilliseconds),
-                            textDirection: TextDirection.ltr,
-                            style: AppTypography.voiceRecorderRecordingTimer(
-                              context,
-                            ),
+                          SmoothRecordingTimer(
+                            running: player.isPlaying,
+                            position: () =>
+                                player.displayPosition.inMilliseconds,
                           ),
-                          Positioned(
-                            bottom: 0,
-                            child: Text(
-                              formatSeconds(player.duration.inSeconds),
-                              textDirection: TextDirection.ltr,
-                              style: const TextStyle(fontSize: 14),
-                            ),
+                          Text(
+                            formatSeconds(player.duration.inSeconds),
+                            textDirection: TextDirection.ltr,
+                            style: const TextStyle(fontSize: 14),
                           ),
                         ],
                       ),
                     ),
+                    const SizedBox(height: 16),
                     SizedBox(
                       height: 250,
                       child: ColoredBox(
@@ -356,10 +353,13 @@ class _RecordingPlaybackPageState extends State<RecordingPlaybackPage> {
                               )
                             : SeekableWaveform(
                                 samples: samples,
-                                duration: player.duration.inMilliseconds,
+                                duration: player.duration > Duration.zero
+                                    ? player.duration.inMilliseconds
+                                    : samples.length * 100,
                                 position: player.position.inMilliseconds,
                                 markers: markers,
                                 repeat: player.abRepeat,
+                                onSeekStart: player.rememberPosition,
                                 onSeek: (at) => action(
                                   () => player.seek(Duration(milliseconds: at)),
                                 ),
@@ -386,7 +386,7 @@ class _RecordingPlaybackPageState extends State<RecordingPlaybackPage> {
                             onPressed: () =>
                                 setState(() => showBookmarks = !showBookmarks),
                             tooltip: showBookmarks
-                                ? 'نمایش موج صدا'
+                                ? 'موج صدا'
                                 : 'لیست نشانه‌ها',
                             icon: showBookmarks
                                 ? const Icon(Icons.graphic_eq)

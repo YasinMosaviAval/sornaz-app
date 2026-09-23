@@ -1,6 +1,7 @@
 import 'package:sornaz/helpers/app_platform.dart';
 import 'recording_bookmarks.dart';
 import 'recording_text.dart';
+import 'recording_waveforms.dart';
 import '../../Players/services/music_playlists.dart';
 import '../../Players/metadata/metadata_service.dart';
 import 'package:share_plus/share_plus.dart';
@@ -26,6 +27,7 @@ class FileService {
     final file = File(path);
     if (await file.exists()) await file.delete();
     await bookmarks.delete(path);
+    await RecordingWaveforms.move(path, null);
   }
 
   Future<Map<String, String>> describe(SavedRecording item) async {
@@ -77,6 +79,7 @@ class FileService {
     await bookmarks.move(path, uri);
     await MusicPlaylists.recordings.replacePath(path, uri);
     await moveRecordingText(path, uri);
+    await RecordingWaveforms.move(path, uri);
     // Delete staging only after MediaStore has committed the complete file.
     await File(path).delete();
   }
@@ -139,6 +142,7 @@ class FileService {
     await bookmarks.delete(item.uri);
     await MusicPlaylists.recordings.replacePath(item.uri, null);
     await moveRecordingText(item.uri, null);
+    await RecordingWaveforms.move(item.uri, null);
   }
 
   Future<void> rename(SavedRecording item, String name) async {
@@ -155,6 +159,7 @@ class FileService {
         await bookmarks.move(item.uri, uri);
         await MusicPlaylists.recordings.replacePath(item.uri, uri);
         await moveRecordingText(item.uri, uri);
+        await RecordingWaveforms.move(item.uri, uri);
       }
     } else {
       final renamed = await File(
@@ -163,6 +168,7 @@ class FileService {
       await bookmarks.move(item.uri, renamed.path);
       await MusicPlaylists.recordings.replacePath(item.uri, renamed.path);
       await moveRecordingText(item.uri, renamed.path);
+      await RecordingWaveforms.move(item.uri, renamed.path);
     }
   }
 
@@ -186,6 +192,7 @@ class FileService {
       'at': at,
     });
     await File(path).delete();
+    await RecordingWaveforms.move(item.uri, null);
   }
 
   Future<String> location() async => AppPlatform.isAndroid

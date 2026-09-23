@@ -30,6 +30,8 @@ class MainActivity : AudioServiceActivity() {
         practiceMetronome = PracticeMetronome(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         notationStorage = NotationStorage(this, flutterEngine.dartExecutor.binaryMessenger)
         MusicMetadata(flutterEngine.dartExecutor.binaryMessenger)
+        AudioCrop(this, flutterEngine.dartExecutor.binaryMessenger)
+        DeviceVideos(this, flutterEngine.dartExecutor.binaryMessenger)
         MusicEqualizer(flutterEngine.dartExecutor.binaryMessenger)
         PublicRecordings(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         recordingWorkspace = RecordingWorkspace(this, flutterEngine.dartExecutor.binaryMessenger)

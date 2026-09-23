@@ -1,3 +1,4 @@
+import 'sleep_timer_chrome.dart';
 import 'package:flutter/material.dart';
 import 'app_text.dart';
 import 'package:provider/provider.dart';
@@ -42,47 +43,49 @@ class AppTopBarDirection extends StatelessWidget
   @override
   Widget build(BuildContext context) {
     final bar = child;
-    return Directionality(
-      textDirection: Localizations.localeOf(context).languageCode == 'fa'
-          ? TextDirection.rtl
-          : TextDirection.ltr,
-      child: bar is AppBar
-          ? AppBar(
-              key: bar.key,
-              leading: bar.leading,
-              automaticallyImplyLeading: bar.automaticallyImplyLeading,
-              title: title(context, bar.title),
-              actions: bar.actions,
-              flexibleSpace: bar.flexibleSpace,
-              bottom: bar.bottom,
-              elevation: bar.elevation,
-              scrolledUnderElevation: bar.scrolledUnderElevation,
-              shadowColor: bar.shadowColor,
-              surfaceTintColor: bar.surfaceTintColor,
-              shape: bar.shape,
-              backgroundColor: bar.backgroundColor,
-              foregroundColor: bar.foregroundColor,
-              iconTheme: bar.iconTheme,
-              actionsIconTheme: bar.actionsIconTheme,
-              excludeHeaderSemantics: bar.excludeHeaderSemantics,
-              clipBehavior: bar.clipBehavior,
-              actionsPadding: bar.actionsPadding,
-              primary: bar.primary,
-              centerTitle: false,
-              titleSpacing: 0,
-              toolbarHeight: bar.toolbarHeight,
-              leadingWidth: bar.leadingWidth,
-              toolbarOpacity: bar.toolbarOpacity,
-              bottomOpacity: bar.bottomOpacity,
-              toolbarTextStyle: bar.toolbarTextStyle,
-              titleTextStyle: bar.titleTextStyle?.copyWith(
-                fontSize: titleSize(context),
-              ),
-              systemOverlayStyle: bar.systemOverlayStyle,
-              notificationPredicate: bar.notificationPredicate,
-              forceMaterialTransparency: bar.forceMaterialTransparency,
-            )
-          : bar,
+    return SleepTimerChrome(
+      child: Directionality(
+        textDirection: Localizations.localeOf(context).languageCode == 'fa'
+            ? TextDirection.rtl
+            : TextDirection.ltr,
+        child: bar is AppBar
+            ? AppBar(
+                key: bar.key,
+                leading: bar.leading,
+                automaticallyImplyLeading: bar.automaticallyImplyLeading,
+                title: title(context, bar.title),
+                actions: bar.actions,
+                flexibleSpace: bar.flexibleSpace,
+                bottom: bar.bottom,
+                elevation: bar.elevation,
+                scrolledUnderElevation: bar.scrolledUnderElevation,
+                shadowColor: bar.shadowColor,
+                surfaceTintColor: bar.surfaceTintColor,
+                shape: bar.shape,
+                backgroundColor: bar.backgroundColor,
+                foregroundColor: bar.foregroundColor,
+                iconTheme: bar.iconTheme,
+                actionsIconTheme: bar.actionsIconTheme,
+                excludeHeaderSemantics: bar.excludeHeaderSemantics,
+                clipBehavior: bar.clipBehavior,
+                actionsPadding: bar.actionsPadding,
+                primary: bar.primary,
+                centerTitle: false,
+                titleSpacing: 0,
+                toolbarHeight: bar.toolbarHeight,
+                leadingWidth: bar.leadingWidth,
+                toolbarOpacity: bar.toolbarOpacity,
+                bottomOpacity: bar.bottomOpacity,
+                toolbarTextStyle: bar.toolbarTextStyle,
+                titleTextStyle: bar.titleTextStyle?.copyWith(
+                  fontSize: titleSize(context),
+                ),
+                systemOverlayStyle: bar.systemOverlayStyle,
+                notificationPredicate: bar.notificationPredicate,
+                forceMaterialTransparency: bar.forceMaterialTransparency,
+              )
+            : bar,
+      ),
     );
   }
 }

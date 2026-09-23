@@ -7,7 +7,8 @@ import '../../providers/audio_player_provider.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
 
 class SongLyricsTab extends StatelessWidget {
-  const SongLyricsTab({super.key});
+  const SongLyricsTab({super.key, this.notes = false});
+  final bool notes;
   @override
   Widget build(BuildContext context) {
     final audio = context.watch<AudioPlayerProvider>();
@@ -22,6 +23,7 @@ class SongLyricsTab extends StatelessWidget {
     return AudioLyricsEditor(
       key: ValueKey(track.file.path),
       path: track.file.path,
+      notes: notes,
       initialTitle: withoutAudioExtension(
         audio.currentMetadata?.title?.trim().isNotEmpty == true
             ? audio.currentMetadata!.title!
@@ -36,8 +38,10 @@ class AudioLyricsEditor extends StatefulWidget {
     super.key,
     required this.path,
     required this.initialTitle,
+    this.notes = false,
   });
   final String path, initialTitle;
+  final bool notes;
   @override
   State<AudioLyricsEditor> createState() => AudioLyricsEditorState();
 }
@@ -48,7 +52,8 @@ class AudioLyricsEditorState extends State<AudioLyricsEditor> {
   Future<void> pending = Future.value();
   bool loaded = false;
   String? error;
-  String get storageKey => 'music_lyrics_${widget.path}';
+  String get storageKey =>
+      '${widget.notes ? 'audio_notes' : 'music_lyrics'}_${widget.path}';
   @override
   void initState() {
     super.initState();
@@ -104,13 +109,14 @@ class AudioLyricsEditorState extends State<AudioLyricsEditor> {
       : ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            TextField(
-              controller: title,
-              onChanged: save,
-              decoration: InputDecoration(
-                labelText: socialText(context, 'عنوان ترانه', 'Song title'),
+            if (!widget.notes)
+              TextField(
+                controller: title,
+                onChanged: save,
+                decoration: InputDecoration(
+                  labelText: socialText(context, 'عنوان ترانه', 'Song title'),
+                ),
               ),
-            ),
             const SizedBox(height: 20),
             TextField(
               controller: lyrics,
@@ -119,7 +125,9 @@ class AudioLyricsEditorState extends State<AudioLyricsEditor> {
               maxLines: null,
               keyboardType: TextInputType.multiline,
               decoration: InputDecoration(
-                labelText: socialText(context, 'متن ترانه', 'Lyrics'),
+                labelText: widget.notes
+                    ? socialText(context, 'یادداشت ها', 'Notes')
+                    : socialText(context, 'متن ترانه', 'Lyrics'),
                 alignLabelWithHint: true,
               ),
             ),

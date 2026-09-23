@@ -1,3 +1,5 @@
+import '../../providers/audio_player_provider.dart';
+import '../../services/player_settings.dart';
 import '../components/player_dialog.dart';
 import '../components/search_bar.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
@@ -29,6 +31,20 @@ class MusicPlayerPage extends StatefulWidget {
 }
 
 class _MusicPlayerPageState extends State<MusicPlayerPage> {
+  int activeTab = 0;
+  AudioPlayerProvider? player;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    player = context.read<AudioPlayerProvider>();
+  }
+
+  @override
+  void dispose() {
+    player?.interrupt(PlaybackInterruption.leavePlayer);
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -144,7 +160,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: ScrollAwareScaffold(
-        appBar: const SearchBarWidget(),
+        appBar: SearchBarWidget(tab: activeTab),
         pinTopBar: true,
         body: Consumer<AudioLibraryManager>(
           builder: (_, library, _) {
@@ -192,7 +208,11 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                 ),
               );
             }
-            return MusicPlayerTabs();
+            return MusicPlayerTabs(
+              onTabChanged: (tab) {
+                if (activeTab != tab) setState(() => activeTab = tab);
+              },
+            );
             // return Expanded(child: MusicPlayerTabs());
           },
         ),

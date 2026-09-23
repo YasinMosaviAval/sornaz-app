@@ -3,6 +3,8 @@ import 'package:sornaz/components/scroll_aware_scaffold.dart';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sornaz/screens/Players/providers/audio_player_provider.dart';
+import 'package:sornaz/screens/Players/services/player_settings.dart';
 import 'package:sornaz/components/app_bar.dart';
 
 import 'package:sornaz/helpers/app_colors.dart';
@@ -64,6 +66,9 @@ class _MetronomePageState extends State<MetronomePage>
   @override
   void initState() {
     super.initState();
+    context.read<AudioPlayerProvider?>()?.interrupt(
+      PlaybackInterruption.metronome,
+    );
 
     _pulseController = AnimationController(
       vsync: this,

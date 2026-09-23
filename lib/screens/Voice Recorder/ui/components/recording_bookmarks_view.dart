@@ -1,3 +1,4 @@
+import '../../provider/voice_recorder_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
 import '../../services/recording_bookmarks.dart';
@@ -58,10 +59,7 @@ class _RecordingBookmarksViewState extends State<RecordingBookmarksView> {
     }
   }
 
-  String _time(int milliseconds) {
-    final seconds = milliseconds ~/ 1000;
-    return '${(seconds ~/ 60).toString().padLeft(2, '0')}:${(seconds % 60).toString().padLeft(2, '0')}.${((milliseconds % 1000) ~/ 100)}';
-  }
+  String _time(int milliseconds) => recordingTime(milliseconds);
 
   @override
   Widget build(BuildContext context) => FutureBuilder<List<int>>(

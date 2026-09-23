@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/audio_player_provider.dart';
-import '../../providers/folder_navigator_provider.dart';
+import '../../scan/audio_file.dart';
 import 'audio_item.dart';
 import 'audio_selection.dart';
-import 'breadcrumb.dart';
 
 class FlatListView extends StatefulWidget {
   const FlatListView({super.key, this.scrollController, this.folders = false});
@@ -18,6 +17,7 @@ class _FlatListViewState extends State<FlatListView> {
   late final controller = widget.scrollController ?? ScrollController();
   final selected = <String>{};
   String? lastPlaying;
+  final expanded = <String>{};
   @override
   void dispose() {
     if (widget.scrollController == null) controller.dispose();
@@ -26,30 +26,44 @@ class _FlatListViewState extends State<FlatListView> {
 
   @override
   Widget build(BuildContext context) {
-    final controller =
-        PrimaryScrollController.maybeOf(context) ?? this.controller;
+    final controller = this.controller;
     final player = context.watch<AudioPlayerProvider>();
-    final nav = context.watch<FolderNavigatorProvider>();
-    final knownFiles = {for (final f in player.allFiles) f.file.path: f};
-    final files = widget.folders
-        ? nav.audioFiles
-              .where(
-                (f) => f.fileName.toLowerCase().contains(player.searchQuery),
-              )
-              .map((f) => knownFiles[f.file.path] ?? f)
-              .toList()
-        : player.filteredFiles;
-    final folders = widget.folders ? nav.subFolders : <dynamic>[];
     final path = player.currentAudio?.file.path;
+    final changedTrack = path != lastPlaying;
+    if (widget.folders && changedTrack && player.currentAudio != null) {
+      expanded.add(player.currentAudio!.file.parent.path);
+    }
+    final groups = <String, List<AudioFile>>{};
+    for (final file in player.allFiles) {
+      groups.putIfAbsent(file.file.parent.path, () => []).add(file);
+    }
+    final folderNames = groups.keys.toList()..sort();
+    final files = player.allFiles
+        .where((f) => f.fileName.toLowerCase().contains(player.searchQuery))
+        .toList();
+    final rows = <Object>[];
+    if (widget.folders) {
+      for (final folder in folderNames) {
+        final matches = groups[folder]!
+            .where((f) => f.fileName.toLowerCase().contains(player.searchQuery))
+            .toList();
+        if (matches.isEmpty &&
+            !folder.toLowerCase().contains(player.searchQuery))
+          continue;
+        rows.add(folder);
+        if (expanded.contains(folder)) rows.addAll(matches);
+      }
+    } else {
+      rows.addAll(files);
+    }
     if (path != lastPlaying) {
       lastPlaying = path;
-      final at = files.indexWhere((f) => f.file.path == path);
+      final at = rows.indexWhere((f) => f is AudioFile && f.file.path == path);
       if (at >= 0)
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted || !controller.hasClients) return;
           final target =
-              ((at + folders.length) * 64 -
-                      (controller.position.viewportDimension - 64) / 2)
+              (at * 64 - (controller.position.viewportDimension - 64) / 2)
                   .clamp(0.0, controller.position.maxScrollExtent);
           controller.animateTo(
             target,
@@ -60,18 +74,6 @@ class _FlatListViewState extends State<FlatListView> {
     }
     return Column(
       children: [
-        if (widget.folders) const BreadcrumbWidget(),
-        if (widget.folders && nav.isLoading) const LinearProgressIndicator(),
-        if (widget.folders &&
-            !nav.isLoading &&
-            (nav.error != null || nav.rootDir == null))
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              nav.error ??
-                  'پوشه‌ای در دسترس نیست. دسترسی به حافظه را بررسی کنید.',
-            ),
-          ),
         if (selected.isNotEmpty)
           Row(
             children: [
@@ -102,15 +104,35 @@ class _FlatListViewState extends State<FlatListView> {
             controller: controller,
             padding: EdgeInsets.zero,
             itemExtent: 64,
-            itemCount: folders.length + files.length,
+            itemCount: rows.length,
             itemBuilder: (context, i) {
-              if (i < folders.length)
-                return ListTile(
-                  leading: const Icon(Icons.folder_outlined),
-                  title: Text(folders[i].path.split('/').last),
-                  onTap: () => nav.enterRealFolder(folders[i]),
+              final row = rows[i];
+              if (row is String) {
+                return AudioRow(
+                  title: row.split(RegExp(r'[/\\]')).last,
+                  location: row,
+                  duration: Duration.zero,
+                  count: groups[row]!.length,
+                  leadingIcon: player.currentAudio?.file.parent.path == row
+                      ? Icons.folder
+                      : Icons.folder_outlined,
+                  isPlaying: player.currentAudio?.file.parent.path == row,
+                  onTap: () => setState(() {
+                    if (!expanded.remove(row)) expanded.add(row);
+                  }),
+                  trailing: Icon(
+                    expanded.contains(row)
+                        ? Icons.expand_less
+                        : Icons.expand_more,
+                    size: 24,
+                  ),
                 );
-              final at = i - folders.length, file = files[at];
+              }
+              final file = row as AudioFile;
+              final queue = widget.folders
+                  ? groups[file.file.parent.path]!
+                  : files;
+              final at = queue.indexOf(file);
               return AudioItem(
                 audio: file,
                 index: at,
@@ -127,7 +149,17 @@ class _FlatListViewState extends State<FlatListView> {
                   } else if (player.currentAudio?.file.path == file.file.path) {
                     player.isPlaying ? player.pause() : player.resume();
                   } else {
-                    player.playFromFolder(files, at);
+                    player.playFromFolder(
+                      queue,
+                      at,
+                      listKey: widget.folders ? file.file.parent.path : null,
+                      lists: widget.folders
+                          ? [
+                              for (final name in folderNames)
+                                MapEntry(name, groups[name]!),
+                            ]
+                          : null,
+                    );
                   }
                 },
               );

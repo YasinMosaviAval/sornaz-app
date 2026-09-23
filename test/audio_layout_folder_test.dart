@@ -47,7 +47,7 @@ void main() {
         );
         await tester.pump();
         final row = tester.getRect(find.byType(AudioItem));
-        final play = tester.getRect(find.byIcon(Icons.play_circle_filled));
+        final play = tester.getRect(find.byIcon(Icons.play_circle_outline));
         final menu = tester.getRect(find.byIcon(Icons.more_vert));
         expect(play.center.dy, closeTo(row.center.dy, .1));
         expect(menu.center.dy, closeTo(row.center.dy, .1));

@@ -1,3 +1,6 @@
+import '../components/recording_timer.dart';
+import 'package:sornaz/screens/Players/providers/audio_player_provider.dart';
+import 'package:sornaz/screens/Players/services/player_settings.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import '../components/seekable_waveform.dart';
@@ -14,7 +17,7 @@ import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_navigation.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
-import 'package:sornaz/helpers/app_typography.dart';
+
 import 'package:sornaz/screens/Voice%20Recorder/provider/voice_recorder_provider.dart';
 import 'package:sornaz/screens/Voice%20Recorder/ui/pages/recordings_list.dart';
 
@@ -26,15 +29,24 @@ class VoiceRecorderPage extends StatefulWidget {
 }
 
 class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<AudioPlayerProvider?>()?.interrupt(
+      PlaybackInterruption.recording,
+    );
+  }
+
   bool leaving = false, allowPop = false;
-  Future<void> leave() async {
+  Future<void> leave({bool popPage = true}) async {
     if (leaving) return;
     final vm = context.read<VoiceRecorderProvider>();
     if (vm.isBusy) return;
     leaving = true;
     try {
       if (vm.hasDraft) {
-        if (vm.isRecording) await vm.pauseRecording();
+        final wasRecording = vm.isRecording;
+        if (wasRecording) await vm.pauseRecording();
         await vm.playbackService.pause();
         if (!mounted) return;
         final choice = await showDialog<String>(
@@ -53,7 +65,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
                     foregroundColor: Colors.grey,
                     textStyle: const TextStyle(fontSize: 12),
                   ),
-                  child: const Text('انصراف'),
+                  child: const Text('ادامه ضبط'),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(c, 'delete'),
@@ -84,11 +96,12 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
         } else if (choice == 'delete') {
           await vm.discardRecording();
         } else {
+          if (wasRecording || choice == 'cancel') await vm.resumeRecording();
           return;
         }
         if (vm.hasDraft) return;
       }
-      if (mounted) {
+      if (mounted && popPage) {
         setState(() => allowPop = true);
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) Navigator.pop(context);
@@ -123,6 +136,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
               child: AppBar(
                 automaticallyImplyLeading: false,
                 leading: BackButton(onPressed: leave),
+                leadingWidth: 48,
                 actions: [
                   if (!vm.isRecording && !vm.isPaused)
                     IconButton(
@@ -150,7 +164,13 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
               isDark: isDark,
             ),
             body: Column(
-              children: [_RecorderSection(vm: vm, isDark: isDark)],
+              children: [
+                _RecorderSection(
+                  vm: vm,
+                  isDark: isDark,
+                  onStop: () => leave(popPage: false),
+                ),
+              ],
             ),
           ),
         );
@@ -163,7 +183,12 @@ class _RecorderSection extends StatelessWidget {
   final VoiceRecorderProvider vm;
   final bool isDark;
 
-  const _RecorderSection({required this.vm, required this.isDark});
+  final VoidCallback onStop;
+  const _RecorderSection({
+    required this.vm,
+    required this.isDark,
+    required this.onStop,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -181,14 +206,12 @@ class _RecorderSection extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        vm.isPaused
-                            ? recordingTime(vm.bookmarkPosition)
-                            : vm.timer,
-                        textDirection: TextDirection.ltr,
-                        style: AppTypography.voiceRecorderRecordingTimer(
-                          context,
-                        ),
+                      SmoothRecordingTimer(
+                        running:
+                            vm.isRecording || (vm.isPaused && vm.isPlaying),
+                        position: () => vm.isPaused
+                            ? vm.playbackService.displayPosition.inMilliseconds
+                            : vm.recordingMilliseconds,
                       ),
                     ],
                   ),
@@ -201,6 +224,7 @@ class _RecorderSection extends StatelessWidget {
                       duration: vm.recordingMilliseconds,
                       position: vm.playbackService.position.inMilliseconds,
                       markers: vm.recordingBookmarks,
+                      onSeekStart: vm.playbackService.rememberPosition,
                       onSeek: (at) =>
                           vm.playbackService.seek(Duration(milliseconds: at)),
                     ),
@@ -257,9 +281,7 @@ class _RecorderSection extends StatelessWidget {
                         AppColors.voice_recorder_stop_icon_background_color(
                           isDark: isDark,
                         ),
-                    onPressed: vm.isBusy
-                        ? null
-                        : () => _recordAction(context, vm.pauseRecording),
+                    onPressed: vm.isBusy ? null : onStop,
                     child: Icon(
                       Icons.stop_rounded,
                       size: AppSpacing.space_36,

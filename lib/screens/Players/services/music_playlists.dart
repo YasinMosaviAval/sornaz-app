@@ -72,6 +72,34 @@ class MusicPlaylists extends ChangeNotifier {
     await _save();
   }
 
+  Future<bool> rename(String key, String name) async {
+    await load();
+    name = name.trim();
+    if (key == favorite ||
+        !_lists.containsKey(key) ||
+        name.isEmpty ||
+        name.length > 80 ||
+        name == 'علاقه‌مندی' ||
+        _lists.keys.any(
+          (k) => k != key && k.toLowerCase() == name.toLowerCase(),
+        ))
+      return false;
+    final entries = _lists.entries.toList();
+    _lists.clear();
+    for (final entry in entries) {
+      _lists[entry.key == key ? name : entry.key] = entry.value;
+    }
+    await _save();
+    return true;
+  }
+
+  Future<void> delete(String key) async {
+    await load();
+    if (key == favorite) return;
+    _lists.remove(key);
+    await _save();
+  }
+
   Future<void> remove(String key, String path) async {
     await load();
     _lists[key]?.remove(path);

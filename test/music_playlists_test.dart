@@ -13,6 +13,8 @@ import 'social_widget_test.dart' as fixture;
 
 class PlaylistAudio extends audio_fixture.Audio {
   @override
+  String get searchQuery => '';
+  @override
   List<AudioFile> allFiles = [
     AudioFile(
       file: File('/one.mp3'),
@@ -29,7 +31,13 @@ class PlaylistAudio extends audio_fixture.Audio {
   ];
   List<AudioFile>? queue;
   @override
-  Future<void> playFromFolder(List<AudioFile> files, int index) async {
+  Future<void> playFromFolder(
+    List<AudioFile> files,
+    int index, {
+    String? listKey,
+    List<MapEntry<String, List<AudioFile>>>? lists,
+    bool remember = true,
+  }) async {
     queue = files;
   }
 }
@@ -75,7 +83,19 @@ void main() {
       fixture.host(
         ChangeNotifierProvider<AudioPlayerProvider>.value(
           value: audio,
-          child: const Scaffold(body: PlaylistsTab()),
+          child: Builder(
+            builder: (c) => Scaffold(
+              appBar: AppBar(
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.playlist_add),
+                    onPressed: () => createMusicPlaylist(c),
+                  ),
+                ],
+              ),
+              body: const PlaylistsTab(),
+            ),
+          ),
         ),
       ),
     );
@@ -96,7 +116,9 @@ void main() {
     await choose;
     await tester.pumpAndSettle();
     expect(MusicPlaylists.instance.lists['New Mix'], ['/one.mp3', '/two.mp3']);
-    await tester.tap(find.byIcon(Icons.play_circle_filled).first);
+    await tester.tap(find.text('New Mix'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.play_circle_outline).first);
     await tester.pumpAndSettle();
     expect(audio.queue?.length, 2);
     expect(tester.takeException(), isNull);

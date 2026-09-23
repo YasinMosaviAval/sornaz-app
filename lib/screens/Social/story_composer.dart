@@ -13,6 +13,7 @@ import '../Authentication/providers/auth_session.dart';
 import 'social_api.dart';
 import 'social_widgets.dart';
 import 'story_text_editor.dart';
+import 'story_snap.dart';
 
 class StoryMediaBridge {
   static const channel = MethodChannel('sornaz/story_media');
@@ -46,9 +47,60 @@ class _StoryComposerState extends State<StoryComposer>
   final bridge = StoryMediaBridge();
   final galleryScroll = ScrollController();
   final canvasKey = GlobalKey(), overlayKey = GlobalKey();
+  final backgroundKey = GlobalKey();
+  bool baseRemoved = false;
+  void removeBaseMedia() {
+    final old = player;
+    player = null;
+    if (old != null) unawaited(old.dispose());
+    setState(() => baseRemoved = true);
+  }
+
   final drafts = <String>{};
   final gallery = <Json>[];
   final stickers = <StorySticker>[];
+  final snap = StorySnapController();
+  final photoKeys = <StoryPhotoLayer, GlobalKey>{};
+  final stickerKeys = <int, GlobalKey>{};
+  bool draggingLayer = false, overTrash = false;
+  void beginLayerDrag() {
+    snap.reset();
+    setState(() {
+      draggingLayer = true;
+      overTrash = false;
+    });
+  }
+
+  Offset layerPosition(
+    Offset raw,
+    GlobalKey key,
+    double scale,
+    Offset focalPoint,
+  ) {
+    final canvas = canvasKey.currentContext?.findRenderObject() as RenderBox?;
+    final local = canvas?.globalToLocal(focalPoint) ?? focalPoint;
+    overTrash = Rect.fromCenter(
+      center: Offset(frame.width / 2, frame.height - 48),
+      width: 88,
+      height: 80,
+    ).contains(local);
+    final object = key.currentContext?.findRenderObject() as RenderBox?;
+    final size = object?.size ?? const Size(80, 40);
+    return snap.snap(raw, size * scale, frame);
+  }
+
+  void endLayerDrag(VoidCallback remove) {
+    setState(() {
+      if (overTrash) remove();
+      draggingLayer = false;
+      overTrash = false;
+      activeText = null;
+      pinchText = null;
+      textPointers.clear();
+    });
+    snap.reset();
+  }
+
   List<Json> mentions = [];
   bool exportingMetadata = false;
   Offset imageOffset = Offset.zero,
@@ -241,6 +293,7 @@ class _StoryComposerState extends State<StoryComposer>
       player = next;
       setState(() {
         selected = chosen;
+        baseRemoved = false;
         preview = image;
         caption = '';
         mentions = [];
@@ -396,7 +449,7 @@ class _StoryComposerState extends State<StoryComposer>
     Json? output;
     try {
       if (save && await bridge.call<bool>('savePermission') != true) return;
-      final video = selected!['video'] == true;
+      final video = !baseRemoved && selected!['video'] == true;
       setState(() => exportingMetadata = !save);
       final bytes = await capture(video ? overlayKey : canvasKey);
       output = object(
@@ -525,6 +578,7 @@ class _StoryComposerState extends State<StoryComposer>
               width: frame.width * .5,
               child: GestureDetector(
                 onScaleStart: (d) {
+                  beginLayerDrag();
                   gestureStart = d.focalPoint;
                   photo.startOffset = photo.offset;
                   gestureScale = photo.scale;
@@ -532,19 +586,36 @@ class _StoryComposerState extends State<StoryComposer>
                 onScaleUpdate: busy
                     ? null
                     : (d) => setState(() {
-                        photo.offset =
-                            photo.startOffset +
-                            Offset(
-                              (d.focalPoint.dx - gestureStart.dx) / frame.width,
-                              (d.focalPoint.dy - gestureStart.dy) /
-                                  frame.height,
-                            );
                         photo.scale = (gestureScale * d.scale).clamp(.2, 4);
+                        final raw =
+                            Offset(
+                              photo.startOffset.dx * frame.width,
+                              photo.startOffset.dy * frame.height,
+                            ) +
+                            d.focalPoint -
+                            gestureStart;
+                        final at = layerPosition(
+                          raw,
+                          photoKeys[photo]!,
+                          photo.scale,
+                          d.focalPoint,
+                        );
+                        photo.offset = Offset(
+                          at.dx / frame.width,
+                          at.dy / frame.height,
+                        );
                       }),
+                onScaleEnd: (_) => endLayerDrag(() {
+                  photos.remove(photo);
+                  photoKeys.remove(photo);
+                }),
                 child: Transform.scale(
                   scale: photo.scale,
                   alignment: Alignment.topLeft,
-                  child: Image.memory(photo.bytes),
+                  child: Image.memory(
+                    photo.bytes,
+                    key: photoKeys.putIfAbsent(photo, GlobalKey.new),
+                  ),
                 ),
               ),
             ),
@@ -566,6 +637,7 @@ class _StoryComposerState extends State<StoryComposer>
                           if (!textWasPinched) editText(i);
                         },
                   onScaleStart: (d) {
+                    beginLayerDrag();
                     gestureStart = d.focalPoint;
                     gestureSticker = stickers[i];
                   },
@@ -574,21 +646,38 @@ class _StoryComposerState extends State<StoryComposer>
                       : (d) => setState(() {
                           if (pinchText != null || d.pointerCount > 1) return;
                           final base = gestureSticker!;
-                          stickers[i] = base
-                              .move(d.focalPoint - gestureStart, frame)
-                              .transform(
-                                base
-                                    .move(d.focalPoint - gestureStart, frame)
-                                    .position,
-                                base.scale * d.scale,
-                              );
+                          final scale = (base.scale * d.scale).clamp(.3, 4.0);
+                          final raw =
+                              Offset(
+                                base.position.dx * frame.width,
+                                base.position.dy * frame.height,
+                              ) +
+                              d.focalPoint -
+                              gestureStart;
+                          final at = layerPosition(
+                            raw,
+                            stickerKeys[i]!,
+                            scale,
+                            d.focalPoint,
+                          );
+                          stickers[i] = base.transform(
+                            Offset(at.dx / frame.width, at.dy / frame.height),
+                            scale,
+                          );
                         }),
+                  onScaleEnd: (_) => endLayerDrag(() {
+                    stickers.removeAt(i);
+                    stickerKeys.clear();
+                  }),
                   child: Transform.scale(
                     scale: stickers[i].scale,
                     alignment: Alignment.topLeft,
                     child: Align(
                       alignment: Alignment.topLeft,
-                      child: StoryTextLabel(sticker: stickers[i]),
+                      child: StoryTextLabel(
+                        key: stickerKeys.putIfAbsent(i, GlobalKey.new),
+                        sticker: stickers[i],
+                      ),
                     ),
                   ),
                 ),
@@ -694,7 +783,7 @@ class _StoryComposerState extends State<StoryComposer>
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    if (player != null)
+                    if (!baseRemoved && player != null)
                       Center(
                         child: ClipRect(
                           child: SizedBox.expand(
@@ -709,9 +798,10 @@ class _StoryComposerState extends State<StoryComposer>
                           ),
                         ),
                       )
-                    else
+                    else if (!baseRemoved)
                       GestureDetector(
                         onScaleStart: (d) {
+                          beginLayerDrag();
                           gestureStart = d.localFocalPoint;
                           gestureImageOffset = imageOffset;
                           gestureScale = imageScale;
@@ -735,13 +825,49 @@ class _StoryComposerState extends State<StoryComposer>
                                             center -
                                             gestureImageOffset) *
                                         (imageScale / gestureScale);
+                                final actual =
+                                    applyBoxFit(
+                                      cover ? BoxFit.cover : BoxFit.contain,
+                                      imageSize,
+                                      frame,
+                                    ).destination *
+                                    imageScale;
+                                final raw =
+                                    Offset(
+                                      (frame.width - actual.width) / 2,
+                                      (frame.height - actual.height) / 2,
+                                    ) +
+                                    imageOffset;
+                                final canvas =
+                                    canvasKey.currentContext?.findRenderObject()
+                                        as RenderBox?;
+                                final point =
+                                    canvas?.globalToLocal(d.focalPoint) ??
+                                    d.localFocalPoint;
+                                overTrash = Rect.fromCenter(
+                                  center: Offset(
+                                    frame.width / 2,
+                                    frame.height - 48,
+                                  ),
+                                  width: 88,
+                                  height: 80,
+                                ).contains(point);
+                                final snapped = snap.snap(raw, actual, frame);
+                                imageOffset =
+                                    snapped -
+                                    Offset(
+                                      (frame.width - actual.width) / 2,
+                                      (frame.height - actual.height) / 2,
+                                    );
                               }),
+                        onScaleEnd: (_) => endLayerDrag(removeBaseMedia),
                         child: Transform.translate(
                           offset: imageOffset,
                           child: Transform.scale(
                             scale: imageScale,
                             child: Image.memory(
                               preview!,
+                              key: backgroundKey,
                               fit: cover ? BoxFit.cover : BoxFit.contain,
                               alignment: Alignment.center,
                             ),
@@ -753,6 +879,32 @@ class _StoryComposerState extends State<StoryComposer>
                 ),
               ),
             ),
+            if (draggingLayer) ...[
+              IgnorePointer(child: CustomPaint(painter: StoryGuidesPainter())),
+              Positioned(
+                bottom: 16,
+                left: frame.width / 2 - 32,
+                child: IgnorePointer(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 100),
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: overTrash
+                          ? Colors.red.withValues(alpha: .2)
+                          : Colors.black54,
+                    ),
+                    child: Icon(
+                      key: const ValueKey('story-drag-trash'),
+                      Icons.delete_outline,
+                      color: overTrash ? Colors.red : Colors.grey,
+                      size: 32,
+                    ),
+                  ),
+                ),
+              ),
+            ],
             PositionedDirectional(
               top: 8,
               start: 8,
@@ -766,6 +918,16 @@ class _StoryComposerState extends State<StoryComposer>
               right: 8,
               child: Column(
                 children: [
+                  if (!baseRemoved)
+                    action(
+                      Icons.delete_outline,
+                      t(
+                        'حذف عکس یا ویدیوی اولیه',
+                        'Remove original photo or video',
+                      ),
+                      removeBaseMedia,
+                      label: false,
+                    ),
                   action(
                     Icons.add_photo_alternate_outlined,
                     t('عکس جدید', 'Add photo'),
@@ -809,15 +971,22 @@ class _StoryComposerState extends State<StoryComposer>
       );
     },
   );
-  Widget action(IconData icon, String text, VoidCallback tap) => Padding(
+  Widget action(
+    IconData icon,
+    String text,
+    VoidCallback tap, {
+    bool label = true,
+  }) => Padding(
     padding: const EdgeInsets.only(bottom: 14),
     child: Column(
       children: [
         IconButton(
+          tooltip: text,
           onPressed: busy ? null : tap,
           icon: Icon(icon, color: Colors.white),
         ),
-        Text(text, style: const TextStyle(color: Colors.white, fontSize: 11)),
+        if (label)
+          Text(text, style: const TextStyle(color: Colors.white, fontSize: 11)),
       ],
     ),
   );

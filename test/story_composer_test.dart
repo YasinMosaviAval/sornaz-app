@@ -200,6 +200,23 @@ void main() {
       await finger2.up();
       await finger1.up();
       await tester.pumpAndSettle();
+      final drag = await tester.startGesture(
+        tester.getCenter(find.byType(StoryTextLabel)),
+      );
+      await drag.moveBy(const Offset(24, 24));
+      await tester.pump();
+      final trash = find.byKey(const ValueKey('story-drag-trash'));
+      expect(tester.widget<Icon>(trash).color, Colors.grey);
+      await drag.moveTo(tester.getCenter(trash));
+      await tester.pump();
+      expect(tester.widget<Icon>(trash).color, Colors.red);
+      await drag.up();
+      await tester.pumpAndSettle();
+      expect(find.byType(StoryTextLabel), findsNothing);
+      await tester.tap(find.byTooltip('حذف عکس یا ویدیوی اولیه'));
+      await tester.pumpAndSettle();
+      expect(find.byTooltip('حذف عکس یا ویدیوی اولیه'), findsNothing);
+      expect(find.text('انتشار'), findsOneWidget);
       await tester.tap(find.text('یک عنوان اضافه کنید'));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), 'A music moment');

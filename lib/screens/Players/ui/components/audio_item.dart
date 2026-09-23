@@ -39,6 +39,7 @@ class AudioItem extends StatelessWidget {
       location: audio.folderName,
       duration: audio.duration,
       isPlaying: isPlaying,
+      paused: isPlaying && !context.watch<AudioPlayerProvider>().isPlaying,
       selected: selected,
       onTap: action,
       onLongPress: onLongPress ?? () => showFileOptions(context, audio),
@@ -59,6 +60,9 @@ class AudioRow extends StatelessWidget {
     required this.trailing,
     this.selected = false,
     this.onLongPress,
+    this.paused = false,
+    this.leadingIcon,
+    this.count,
   });
   final String title, location;
   final Duration duration;
@@ -66,6 +70,9 @@ class AudioRow extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
   final Widget trailing;
+  final bool paused;
+  final IconData? leadingIcon;
+  final int? count;
 
   @override
   Widget build(BuildContext context) {
@@ -102,15 +109,19 @@ class AudioRow extends StatelessWidget {
                 child: IconButton(
                   padding: EdgeInsets.zero,
                   onPressed: onTap,
-                  iconSize: 32,
+                  iconSize: 28,
                   color: isPlaying
                       ? app.accent
-                      : Theme.of(context).tabBarTheme.unselectedLabelColor ??
-                            Theme.of(context).colorScheme.onSurfaceVariant,
+                      : Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: .38),
                   icon: Icon(
-                    isPlaying
-                        ? Icons.pause_circle_filled
-                        : Icons.play_circle_filled,
+                    leadingIcon ??
+                        (isPlaying && !paused
+                            ? Icons.pause_circle_filled
+                            : isPlaying
+                            ? Icons.play_circle_filled
+                            : Icons.play_circle_outline),
                   ),
                 ),
               ),
@@ -154,7 +165,7 @@ class AudioRow extends StatelessWidget {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            formatDuration(duration),
+                            count?.toString() ?? formatDuration(duration),
                             style:
                                 AppTypography.musicPlayerAudioItemDurationTime(
                                   context,

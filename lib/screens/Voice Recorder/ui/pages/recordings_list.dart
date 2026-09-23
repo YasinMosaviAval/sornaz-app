@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:sornaz/components/audio_crop_page.dart';
+import '../../services/recording_waveforms.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
@@ -32,6 +35,8 @@ class _RecordedFilesPageState extends State<RecordedFilesPage>
   String query = '';
   List<String> keys = [MusicPlaylists.favorite];
   late TabController tabs;
+  final scrollControllers = <String, ScrollController>{};
+  final lastPlaying = <String, String?>{};
   @override
   void initState() {
     super.initState();
@@ -41,6 +46,7 @@ class _RecordedFilesPageState extends State<RecordedFilesPage>
       if (mounted)
         run(() async {
           await store.load();
+          collectionChanged();
           if (mounted)
             await context.read<VoiceRecorderProvider>().refreshFiles();
         });
@@ -72,6 +78,9 @@ class _RecordedFilesPageState extends State<RecordedFilesPage>
 
   @override
   void dispose() {
+    for (final controller in scrollControllers.values) {
+      controller.dispose();
+    }
     store.removeListener(collectionChanged);
     tabs.removeListener(changed);
     tabs.dispose();
@@ -93,12 +102,56 @@ class _RecordedFilesPageState extends State<RecordedFilesPage>
     }
   }
 
-  Future<void> act(String action, List<SavedRecording> files) async {
+  Future<void> act(
+    String action,
+    List<SavedRecording> files, {
+    String? collection,
+  }) async {
     if (files.isEmpty) return;
     final vm = context.read<VoiceRecorderProvider>();
     await run(() async {
-      if (action == 'playlist') {
-        await chooseAudioPlaylist(context, files.map((f) => f.uri), store);
+      if (action == 'crop' && files.length == 1) {
+        final file = files.single;
+        await vm.playbackService.pause();
+        if (!mounted) return;
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => AudioCropPage(
+              source: file.uri,
+              name: file.name,
+              onSave: (staged, replace, start, end) async {
+                if (replace) {
+                  if (vm.playbackService.currentPath == file.uri)
+                    await vm.playbackService.stop();
+                  await commitAudioCrop(staged, file.uri, true);
+                  await RecordingWaveforms.move(file.uri, null);
+                  await vm.fileService.bookmarks.crop(
+                    file.uri,
+                    start.inMilliseconds,
+                    end.inMilliseconds,
+                  );
+                } else {
+                  final path = vm.fileService.newPath();
+                  await File(staged).copy(path);
+                  await vm.fileService.publish(path);
+                }
+                await vm.refreshFiles();
+              },
+            ),
+          ),
+        );
+      } else if (action == 'playlist') {
+        await chooseAudioPlaylist(
+          context,
+          files.map((f) => f.uri),
+          store,
+          excludeKey: collection,
+        );
+      } else if (action == 'remove' && collection != null) {
+        for (final file in files) {
+          await store.remove(collection, file.uri);
+        }
       } else if (action == 'rename' && files.length == 1) {
         final file = files.single;
         final name = await recordingNameDialog(
@@ -132,20 +185,24 @@ class _RecordedFilesPageState extends State<RecordedFilesPage>
     });
   }
 
-  Widget menu(List<SavedRecording> files) => SizedBox(
+  Widget menu(List<SavedRecording> files, {String? collection}) => SizedBox(
     width: 32,
     height: 32,
     child: PopupMenuButton<String>(
       padding: EdgeInsets.zero,
       icon: const Icon(Icons.more_vert, size: 24),
-      onSelected: (value) => act(value, files),
+      onSelected: (value) => act(value, files, collection: collection),
       itemBuilder: (_) => [
         if (files.length == 1)
           const PopupMenuItem(value: 'rename', child: Text('تغییر نام')),
+        if (files.length == 1)
+          const PopupMenuItem(value: 'crop', child: Text('برش صدا')),
         const PopupMenuItem(
           value: 'playlist',
-          child: Text('افزودن به پلی‌لیست'),
+          child: Text('افزودن به لیست پخش'),
         ),
+        if (collection != null)
+          const PopupMenuItem(value: 'remove', child: Text('حذف از لیست پخش')),
         const PopupMenuItem(value: 'share', child: Text('اشتراک‌گذاری')),
         const PopupMenuItem(value: 'delete', child: Text('حذف')),
       ],
@@ -160,9 +217,31 @@ class _RecordedFilesPageState extends State<RecordedFilesPage>
               f.name.toLowerCase().contains(query),
         )
         .toList();
+    final controller = scrollControllers.putIfAbsent(
+      key ?? '__all__',
+      ScrollController.new,
+    );
+    final current = vm.playbackService.currentPath;
+    final active = (tabs.index == 0 ? null : keys[tabs.index - 1]) == key;
+    if (active && lastPlaying[key ?? '__all__'] != current) {
+      lastPlaying[key ?? '__all__'] = current;
+      final index = files.indexWhere((f) => f.uri == current);
+      if (index >= 0)
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted || !controller.hasClients) return;
+          controller.animateTo(
+            (index * 64 - (controller.position.viewportDimension - 64) / 2)
+                .clamp(0.0, controller.position.maxScrollExtent),
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeInOutCubic,
+          );
+        });
+    }
     return RefreshIndicator(
       onRefresh: vm.refreshFiles,
       child: ListView.builder(
+        controller: controller,
+        itemExtent: 64,
         physics: const AlwaysScrollableScrollPhysics(),
         itemCount: files.isEmpty ? 1 : files.length,
         itemBuilder: (c, i) {
@@ -185,8 +264,8 @@ class _RecordedFilesPageState extends State<RecordedFilesPage>
                 duration: Duration(
                   milliseconds: int.tryParse(details['durationMs'] ?? '') ?? 0,
                 ),
-                isPlaying:
-                    vm.playbackService.currentPath == file.uri && vm.isPlaying,
+                isPlaying: vm.playbackService.currentPath == file.uri,
+                paused: !vm.isPlaying,
                 selected: selected.contains(file.uri),
                 onLongPress: () => setState(() => selected.add(file.uri)),
                 onTap: () {
@@ -201,7 +280,7 @@ class _RecordedFilesPageState extends State<RecordedFilesPage>
                     });
                   }
                 },
-                trailing: menu([file]),
+                trailing: menu([file], collection: key),
               );
             },
           );
@@ -236,6 +315,28 @@ class _RecordedFilesPageState extends State<RecordedFilesPage>
           MaterialPageRoute(builder: (_) => const RecorderSettingsPage()),
         ),
         actions: [
+          if (tabs.index > 0 &&
+              keys[tabs.index - 1] != MusicPlaylists.favorite) ...[
+            IconButton(
+              tooltip: 'تغییر نام دسته‌بندی',
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () => run(() async {
+                await editAudioCollection(context, store, keys[tabs.index - 1]);
+              }),
+            ),
+            IconButton(
+              tooltip: 'حذف دسته‌بندی',
+              icon: const Icon(Icons.delete_outline),
+              onPressed: () => run(() async {
+                await editAudioCollection(
+                  context,
+                  store,
+                  keys[tabs.index - 1],
+                  delete: true,
+                );
+              }),
+            ),
+          ],
           IconButton(
             tooltip: 'دسته‌بندی جدید',
             icon: const Icon(Icons.playlist_add),
@@ -255,40 +356,62 @@ class _RecordedFilesPageState extends State<RecordedFilesPage>
           children: [
             TabBar(
               controller: tabs,
-              isScrollable: keys.length > 1,
-              tabAlignment: keys.length > 1
-                  ? TabAlignment.start
-                  : TabAlignment.fill,
-              labelPadding: keys.length > 1
-                  ? const EdgeInsets.symmetric(horizontal: 20)
-                  : EdgeInsets.zero,
+              isScrollable: false,
+              tabAlignment: TabAlignment.fill,
+              labelPadding: EdgeInsets.zero,
               labelStyle: const TextStyle(fontSize: 12),
               tabs: [
                 const Tab(text: 'همه'),
-                ...keys.map((k) => Tab(text: playlistLabel(context, k))),
+                ...keys.map(
+                  (k) => Tab(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(playlistLabel(context, k)),
+                    ),
+                  ),
+                ),
               ],
             ),
+            if (selected.isNotEmpty)
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: () => setState(selected.clear),
+                    icon: const Icon(Icons.close),
+                  ),
+                  Text('${selected.length}'),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.select_all),
+                    onPressed: () => setState(() {
+                      final members = tabs.index == 0
+                          ? null
+                          : store.lists[keys[tabs.index - 1]];
+                      selected.addAll(
+                        vm.files
+                            .where(
+                              (f) =>
+                                  (members == null ||
+                                      members.contains(f.uri)) &&
+                                  f.name.toLowerCase().contains(query),
+                            )
+                            .map((f) => f.uri),
+                      );
+                    }),
+                  ),
+                  menu(
+                    vm.files.where((f) => selected.contains(f.uri)).toList(),
+                    collection: tabs.index == 0 ? null : keys[tabs.index - 1],
+                  ),
+                  const SizedBox(width: 12),
+                ],
+              ),
             Expanded(
               child: TabBarView(
                 controller: tabs,
                 children: [list(vm, null), ...keys.map((k) => list(vm, k))],
               ),
             ),
-            if (selected.isNotEmpty)
-              Row(
-                children: [
-                  TextButton(
-                    onPressed: () => setState(selected.clear),
-                    child: const Text('انصراف'),
-                  ),
-                  Text('${selected.length}'),
-                  const Spacer(),
-                  menu(
-                    vm.files.where((f) => selected.contains(f.uri)).toList(),
-                  ),
-                  const SizedBox(width: 12),
-                ],
-              ),
             const RecordingsPlayer(),
           ],
         ),

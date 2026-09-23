@@ -1,4 +1,5 @@
 import 'player_dialog.dart';
+import 'package:sornaz/components/audio_crop_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -15,6 +16,35 @@ Future<void> audioAction(
   if (files.isEmpty) return;
   final provider = context.read<AudioPlayerProvider>();
   try {
+    if (action == 'crop' && files.length == 1) {
+      final file = files.single;
+      await provider.pause();
+      if (!context.mounted) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => AudioCropPage(
+            source: file.file.path,
+            name: file.fileName,
+            onSave: (staged, replace, start, end) async {
+              if (replace && provider.currentAudio == file)
+                await provider.stop();
+              final path = await commitAudioCrop(
+                staged,
+                file.file.path,
+                replace,
+              );
+              await provider.registerCroppedAudio(
+                file,
+                path,
+                end - start,
+                replace,
+              );
+            },
+          ),
+        ),
+      );
+    }
     if (action == 'rename') {
       for (final file in files) {
         if (!context.mounted) break;
@@ -119,7 +149,8 @@ class AudioActionsMenu extends StatelessWidget {
       itemBuilder: (_) => [
         for (final action in [
           if (files.length == 1) ('rename', 'تغییر نام'),
-          ('playlist', 'افزودن به پلی‌لیست'),
+          if (files.length == 1) ('crop', 'برش صدا'),
+          ('playlist', 'افزودن به لیست پخش'),
           ('share', 'اشتراک‌گذاری'),
           ('delete', 'حذف'),
         ])

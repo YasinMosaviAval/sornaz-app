@@ -1,4 +1,6 @@
 import 'player_dialog.dart';
+import 'audio_selection.dart';
+import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_strings.dart';
@@ -16,6 +18,14 @@ void showFileOptions(BuildContext context, AudioFile file) {
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          ListTile(
+            leading: const Icon(Icons.content_cut),
+            title: Text(socialText(context, 'برش صدا', 'Crop audio')),
+            onTap: () {
+              Navigator.pop(sheetCtx);
+              audioAction(context, [file], 'crop');
+            },
+          ),
           ListTile(
             leading: const Icon(Icons.edit),
             title: Text(

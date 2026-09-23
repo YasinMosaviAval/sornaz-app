@@ -1,7 +1,10 @@
 import '../services/music_playlists.dart';
+import '../services/sleep_timer_status.dart';
+import '../../Voice Recorder/services/recording_text.dart';
 import '../services/equalizer_settings.dart';
 import 'package:sornaz/screens/Players/services/music_audio_handler.dart';
 import 'dart:async';
+import 'dart:io';
 
 import 'package:sornaz/screens/Players/cache/audio_cache_factory.dart';
 import 'package:sornaz/components/ab_repeat.dart';
@@ -13,10 +16,10 @@ import 'package:sornaz/screens/Players/metadata/audio_metadata.dart';
 import 'package:sornaz/screens/Players/metadata/metadata_service.dart';
 import 'package:sornaz/screens/Players/playback/playback_history.dart';
 import 'package:sornaz/screens/Players/playback/playback_queue_manager.dart';
-import 'package:sornaz/screens/Players/playback/playback_undo.dart';
+import '../services/player_settings.dart';
 import 'package:sornaz/screens/Players/scan/audio_file.dart';
 
-class AudioPlayerProvider extends ChangeNotifier {
+class AudioPlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
   late final AudioPlayerController _controller;
   late final PlaybackHistoryManager _history;
   late final PlaybackQueueManager _queue;
@@ -49,8 +52,14 @@ class AudioPlayerProvider extends ChangeNotifier {
   StreamSubscription<void>? _stateSubscription, _completeSubscription;
   late final VoidCallback _libraryListener;
   void _publishMedia() {
+    if (sleepAtTrackEnd)
+      SleepTimerStatus.instance.update(trackRemaining: duration - position);
     final audio = _playingAudio;
-    if (!_mediaActive || audio == null) return;
+    if (!_mediaActive ||
+        audio == null ||
+        (musicAudioHandler != null &&
+            !identical(musicAudioHandler!.owner, this)))
+      return;
     final metadata = audio.metadata;
     musicAudioHandler?.publish(
       id: audio.file.path,
@@ -63,13 +72,15 @@ class AudioPlayerProvider extends ChangeNotifier {
       playing: isPlaying,
       loading: isLoading,
       speed: playbackSpeed,
+      undo: isUndoMode,
     );
   }
 
   Future<void> stop() async {
+    setSleepTimer();
     _mediaActive = false;
     await _controller.stop();
-    musicAudioHandler?.clear();
+    musicAudioHandler?.release(this);
     notifyListeners();
   }
 
@@ -84,7 +95,97 @@ class AudioPlayerProvider extends ChangeNotifier {
 
   List<Duration> history = [];
   Timer? undoTimer;
-  final List<PlaybackUndo> _undoStack = [];
+  final PlayerSettings settings;
+  Timer? _sleepTimer;
+  DateTime? sleepDeadline;
+  Duration? sleepDuration;
+  bool sleepAtTrackEnd = false;
+  String? _listKey;
+  List<MapEntry<String, List<AudioFile>>>? _lists;
+
+  Future<void> interrupt(PlaybackInterruption reason) async {
+    await settings.load();
+    if (settings.stopsFor(reason)) await stop();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.detached)
+      interrupt(PlaybackInterruption.exitApp);
+  }
+
+  void setSleepTimer({Duration? duration, bool atTrackEnd = false}) {
+    _sleepTimer?.cancel();
+    sleepAtTrackEnd = atTrackEnd;
+    sleepDuration = duration;
+    sleepDeadline = duration == null ? null : DateTime.now().add(duration);
+    SleepTimerStatus.instance.update(
+      deadline: sleepDeadline,
+      trackRemaining: atTrackEnd ? this.duration - position : null,
+    );
+    if (duration != null)
+      _sleepTimer = Timer(duration, () {
+        stop();
+      });
+    notifyListeners();
+  }
+
+  void _remember() {
+    if (_playingAudio == null || currentIndex < 0) return;
+    _history.push(
+      index: currentIndex,
+      position: position,
+      files: filteredFiles,
+      listKey: _listKey,
+      lists: _lists,
+    );
+    isUndoMode = true;
+    _restartUndoTimer();
+    _publishMedia();
+  }
+
+  Future<void> _completed() async {
+    if (sleepAtTrackEnd) {
+      await stop();
+      return;
+    }
+    if (abRepeat.active) {
+      await seek(abRepeat.start!);
+      await resume();
+      return;
+    }
+    final next = _queue.next();
+    if (next != null) {
+      await play(next, remember: false);
+      return;
+    }
+    switch (settings.listEnd) {
+      case ListEndAction.restart:
+        if (filteredFiles.isNotEmpty)
+          await play(0, remember: false);
+        else
+          await stop();
+      case ListEndAction.nextList:
+        final lists = _lists;
+        final at = lists?.indexWhere((e) => e.key == _listKey) ?? -1;
+        if (lists != null && at >= 0) {
+          for (var i = at + 1; i < lists.length; i++) {
+            if (lists[i].value.isEmpty) continue;
+            await playFromFolder(
+              lists[i].value,
+              0,
+              listKey: lists[i].key,
+              lists: lists,
+              remember: false,
+            );
+            return;
+          }
+        }
+        await stop();
+      case ListEndAction.stop:
+        await stop();
+    }
+  }
 
   bool get isShuffle => _queue.isShuffle;
   RepeatMode get repeatMode => _queue.repeatMode;
@@ -123,14 +224,10 @@ class AudioPlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> play(int index) async {
+  Future<void> play(int index, {bool remember = true}) async {
     if (index < 0 || index >= filteredFiles.length || isLoading) return;
-    if (currentIndex != -1 && currentIndex != index) {
-      _history.push(index: currentIndex, position: position);
-      isUndoMode = true;
-      _restartUndoTimer();
-      notifyListeners();
-    }
+    if (remember && _playingAudio?.file.path != filteredFiles[index].file.path)
+      _remember();
 
     try {
       isLoading = true;
@@ -145,6 +242,7 @@ class AudioPlayerProvider extends ChangeNotifier {
 
       _queue.setCurrentIndex(index);
 
+      await _activateMedia();
       await _controller.playFile(filteredFiles[index].file.path);
       loadCurrentMetadata();
     } catch (_) {
@@ -157,24 +255,18 @@ class AudioPlayerProvider extends ChangeNotifier {
     }
   }
 
-  AudioPlayerProvider({required this.libraryManager}) {
-    _controller = AudioPlayerController();
+  AudioPlayerProvider({
+    required this.libraryManager,
+    AudioPlayerController? controller,
+    PlayerSettings? playbackSettings,
+  }) : settings = playbackSettings ?? PlayerSettings.instance {
+    WidgetsBinding.instance.addObserver(this);
+    _controller = controller ?? AudioPlayerController();
     _history = PlaybackHistoryManager();
+    settings.load();
     _queue = PlaybackQueueManager();
 
     isHiveLoading = true;
-    final handler = musicAudioHandler;
-    if (handler != null) {
-      handler.onPlay = resume;
-      handler.onPause = pause;
-      handler.onStop = stop;
-      handler.onSeek = seek;
-      handler.onNext = playNext;
-      handler.onPrevious = skipPrevious;
-      handler.onRewind = seekBackward10;
-      handler.onForward = seekForward10;
-    }
-
     _libraryListener = () {
       final replaced = !identical(allFiles, libraryManager.allFiles);
       allFiles = libraryManager.allFiles;
@@ -192,18 +284,10 @@ class AudioPlayerProvider extends ChangeNotifier {
       notifyListeners();
     };
     libraryManager.addListener(_libraryListener);
+    _libraryListener();
 
     _completeSubscription = _controller.onComplete.listen((_) {
-      if (abRepeat.active) {
-        seek(abRepeat.start!).then((_) => resume());
-        return;
-      }
-      final nextIndex = _queue.next();
-      if (nextIndex != null) {
-        play(nextIndex);
-      } else {
-        stop();
-      }
+      _completed();
     });
 
     _stateSubscription = _controller.onStateChanged.listen((_) {
@@ -225,10 +309,26 @@ class AudioPlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> _activateMedia() async {
+    await musicAudioHandler?.activate(
+      this,
+      play: resume,
+      pause: pause,
+      stop: stop,
+      previous: previousOrUndo,
+      next: playNext,
+      seek: (at) async {
+        startSliding();
+        await seek(at);
+      },
+    );
+  }
+
   Future<void> pause() async => await _controller.pause();
   Future<void> resume() async {
     if (_playingAudio == null) return;
     _mediaActive = true;
+    await _activateMedia();
     await _controller.resume();
     _publishMedia();
   }
@@ -242,30 +342,31 @@ class AudioPlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void onTrackComplete() {
-    if (repeatMode == RepeatMode.one) {
-      seek(Duration.zero);
-      resume();
-    } else {
-      playNext();
-    }
-  }
+  Future<void> onTrackComplete() => _completed();
 
   Future<void> previousOrUndo() async {
     final undo = _history.pop();
     if (undo != null) {
-      if (currentIndex != undo.index) {
-        currentIndex = undo.index;
-        _playingAudio = filteredFiles[undo.index];
+      final restored = undo.files;
+      if (restored == null || undo.index < 0 || undo.index >= restored.length)
+        return;
+      final track = restored[undo.index];
+      final changed = _playingAudio?.file.path != track.file.path;
+      filteredFiles = List.of(restored);
+      _lists = undo.lists;
+      _listKey = undo.listKey;
+      currentIndex = undo.index;
+      _queue.setQueue(filteredFiles.length);
+      _queue.setCurrentIndex(currentIndex);
+      _playingAudio = track;
+      if (changed) {
+        abRepeat.clear();
         _mediaActive = true;
-        _queue.setCurrentIndex(undo.index);
+        await _activateMedia();
+        await _controller.playFile(track.file.path);
         unawaited(loadCurrentMetadata());
-        await _controller.playFile(filteredFiles[undo.index].file.path);
-        await Future.delayed(const Duration(milliseconds: 100));
-        await _controller.seek(undo.position);
-      } else {
-        await _controller.seek(undo.position);
       }
+      await _controller.seek(undo.position);
       if (_history.hasUndo == false) {
         isUndoMode = false;
         undoTimer?.cancel();
@@ -273,6 +374,7 @@ class AudioPlayerProvider extends ChangeNotifier {
         _restartUndoTimer();
       }
 
+      _publishMedia();
       notifyListeners();
       return;
     }
@@ -332,70 +434,57 @@ class AudioPlayerProvider extends ChangeNotifier {
     return _playingAudio;
   }
 
-  Future<void> playFromFolder(List<AudioFile> files, int index) async {
-    filteredFiles = files;
+  Future<void> playFromFolder(
+    List<AudioFile> files,
+    int index, {
+    String? listKey,
+    List<MapEntry<String, List<AudioFile>>>? lists,
+    bool remember = true,
+  }) async {
+    if (isLoading || index < 0 || index >= files.length) return;
+    if (remember) _remember();
+    filteredFiles = List.of(files);
+    _listKey = listKey;
+    _lists = lists;
     _queue.setQueue(files.length);
-    if (index < files.length) {
-      _queue.setCurrentIndex(index);
-    }
-    await play(index);
+    await play(index, remember: false);
   }
 
   Future<void> seekForward10() async {
+    _remember();
     final newPos = position + const Duration(seconds: 10);
     await _controller.seek(newPos < duration ? newPos : duration);
     notifyListeners();
   }
 
   Future<void> seekBackward10() async {
+    _remember();
     final newPos = position - const Duration(seconds: 10);
     await _controller.seek(newPos > Duration.zero ? newPos : Duration.zero);
     notifyListeners();
   }
 
   void startSliding() {
-    // if (history.isEmpty || history.last != position) history.add(position);
-    _history.push(index: currentIndex, position: position);
-    isUndoMode = true;
-    _restartUndoTimer();
+    _remember();
     notifyListeners();
   }
 
   void _restartUndoTimer() {
     undoTimer?.cancel();
-    undoTimer = Timer(const Duration(seconds: 10), () {
-      _cleanupUndoStack();
-      notifyListeners();
+    undoTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      final active = _history.hasUndo;
+      if (active != isUndoMode) {
+        isUndoMode = active;
+        _publishMedia();
+        notifyListeners();
+      }
+      if (!active) undoTimer?.cancel();
     });
   }
 
   void restartUndoTimer() => _restartUndoTimer();
-
-  void _cleanupUndoStack() {
-    final now = DateTime.now();
-    _undoStack.removeWhere((u) => now.difference(u.createdAt).inSeconds > 10);
-    if (_undoStack.isEmpty) {
-      isUndoMode = false;
-      undoTimer?.cancel();
-    }
-  }
-
   void filter(String query) {
     searchQuery = query.toLowerCase();
-    filteredFiles = allFiles
-        .where(
-          (audio) => audio.fileName.toLowerCase().contains(query.toLowerCase()),
-        )
-        .toList();
-    currentIndex = filteredFiles.indexWhere(
-      (f) => f.file.path == _playingAudio?.file.path,
-    );
-    _queue.setCurrentIndex(currentIndex);
-    _queue.rebuildOrder(queueLength: filteredFiles.length);
-    if (currentIndex >= filteredFiles.length) {
-      currentIndex = filteredFiles.isEmpty ? -1 : 0;
-      _queue.setCurrentIndex(currentIndex);
-    }
     notifyListeners();
   }
 
@@ -416,10 +505,46 @@ class AudioPlayerProvider extends ChangeNotifier {
     file.file = newFile;
     file.fileName = newName;
     await MusicPlaylists.instance.replacePath(oldPath, newFile.path);
+    await moveRecordingText(oldPath, newFile.path);
     await (await AudioCacheFactory.getCache()).saveFiles(allFiles);
+    _buildFolderTree();
     notifyListeners();
     _showSnackBar(message);
     return true;
+  }
+
+  Future<void> registerCroppedAudio(
+    AudioFile original,
+    String path,
+    Duration length,
+    bool replace,
+  ) async {
+    final previousPath = original.file.path;
+    if (replace) {
+      original.file = File(path);
+      original.fileName = File(path).uri.pathSegments.last;
+      original.duration = length;
+      original.metadata = null;
+      if (_playingAudio == original) {
+        _playingAudio = null;
+        currentIndex = -1;
+        _queue.setCurrentIndex(-1);
+      }
+      await MusicPlaylists.instance.replacePath(previousPath, path);
+      await moveRecordingText(previousPath, path);
+    } else {
+      allFiles.add(
+        AudioFile(
+          file: File(path),
+          fileName: File(path).uri.pathSegments.last,
+          folderName: original.folderName,
+          duration: length,
+        ),
+      );
+    }
+    await (await AudioCacheFactory.getCache()).saveFiles(allFiles);
+    _buildFolderTree();
+    notifyListeners();
   }
 
   bool removeFromList(AudioFile file, String message) {
@@ -445,6 +570,7 @@ class AudioPlayerProvider extends ChangeNotifier {
     _queue.setCurrentIndex(currentIndex);
     await (await AudioCacheFactory.getCache()).saveFiles(allFiles);
     await MusicPlaylists.instance.replacePath(file.file.path, null);
+    await moveRecordingText(file.file.path, null);
     notifyListeners();
     _showSnackBar(message);
     return true;
@@ -463,22 +589,14 @@ class AudioPlayerProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     undoTimer?.cancel();
+    _history.dispose();
+    _sleepTimer?.cancel();
     _stateSubscription?.cancel();
     _completeSubscription?.cancel();
     libraryManager.removeListener(_libraryListener);
-    final handler = musicAudioHandler;
-    if (handler != null) {
-      handler.onPlay = null;
-      handler.onPause = null;
-      handler.onStop = null;
-      handler.onSeek = null;
-      handler.onNext = null;
-      handler.onPrevious = null;
-      handler.onRewind = null;
-      handler.onForward = null;
-      handler.clear();
-    }
+    musicAudioHandler?.release(this);
     _controller.dispose();
     super.dispose();
   }

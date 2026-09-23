@@ -176,28 +176,33 @@ class _StoryTextEditorState extends State<StoryTextEditor> {
             ),
             if (!picking) const ColoredBox(color: Colors.black38),
             if (!picking)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 30),
-                  child: TextField(
-                    controller: input,
-                    autofocus: true,
-                    maxLength: 300,
-                    maxLines: 5,
-                    minLines: 1,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: mode == 1 ? Colors.white : color,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    decoration: InputDecoration(
-                      counterText: '',
-                      filled: mode != 0,
-                      fillColor: mode == 1 ? color : Colors.white,
-                      border: InputBorder.none,
-                      hintText: socialText(context, 'متن شما', 'Your text'),
-                      hintStyle: const TextStyle(color: Colors.grey),
+              Positioned(
+                top: 60,
+                bottom: MediaQuery.viewInsetsOf(context).bottom + 80,
+                left: 30,
+                right: 30,
+                child: Center(
+                  child: SingleChildScrollView(
+                    child: TextField(
+                      controller: input,
+                      autofocus: true,
+                      maxLength: 300,
+                      maxLines: 5,
+                      minLines: 1,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: mode == 1 ? Colors.white : color,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      decoration: InputDecoration(
+                        counterText: '',
+                        filled: mode != 0,
+                        fillColor: mode == 1 ? color : Colors.white,
+                        border: InputBorder.none,
+                        hintText: socialText(context, 'متن شما', 'Your text'),
+                        hintStyle: const TextStyle(color: Colors.grey),
+                      ),
                     ),
                   ),
                 ),

@@ -1,8 +1,10 @@
 import 'package:sornaz/helpers/app_platform.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:sornaz/screens/Players/services/music_audio_handler.dart';
+import 'package:sornaz/screens/Players/services/player_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:sornaz/classes/my_app.dart';
@@ -26,10 +28,16 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await PlayerSettings.instance.load();
 
   if (AppPlatform.isAndroid) {
+    final sdk =
+        await const MethodChannel(
+          'sornaz/recordings',
+        ).invokeMethod<int>('sdk') ??
+        0;
     musicAudioHandler = await AudioService.init<MusicAudioHandler>(
-      builder: MusicAudioHandler.new,
+      builder: () => MusicAudioHandler(customUndo: sdk >= 33),
       config: const AudioServiceConfig(
         androidNotificationChannelId: 'com.example.sornaz.music',
         androidNotificationChannelName: 'Sornaz music',

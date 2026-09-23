@@ -173,7 +173,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.widgetWithText(Tab, 'نمایش موج صدا'), findsOneWidget);
+      expect(find.widgetWithText(Tab, 'موج صدا'), findsOneWidget);
       expect(find.widgetWithText(Tab, 'متن'), findsOneWidget);
       expect(find.widgetWithText(Tab, 'اطلاعات'), findsOneWidget);
       expect(find.byIcon(Icons.replay_10), findsNothing);
@@ -269,6 +269,41 @@ void main() {
   });
   for (final choice in ['ذخیره', 'حذف']) {
     testWidgets(
+      'stop offers the same draft choices and $choice stays on recorder',
+      (tester) async {
+        final files = Files(), recorder = draft.Recorder(), player = Player();
+        final vm = VoiceRecorderProvider(files, recorder, player);
+        await tester.pumpWidget(
+          fixture.host(
+            ChangeNotifierProvider<VoiceRecorderProvider>.value(
+              value: vm,
+              child: const VoiceRecorderPage(),
+            ),
+          ),
+        );
+        await vm.startRecording();
+        await tester.pump();
+        await tester.tap(find.byTooltip('پایان ضبط'));
+        await tester.pumpAndSettle();
+        expect(
+          find.text('صدای ضبط شده را ذخیره می کنید یا حذف؟'),
+          findsOneWidget,
+        );
+        await tester.tap(find.text('ادامه ضبط'));
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(vm.isRecording, true);
+        await tester.tap(find.byTooltip('پایان ضبط'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(choice));
+        await tester.pumpAndSettle();
+        expect(vm.hasDraft, false);
+        expect(find.byType(VoiceRecorderPage), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox());
+        vm.dispose();
+      },
+    );
+    testWidgets(
       'back pauses immediately; cancel keeps draft; $choice completes exit',
       (tester) async {
         final files = Files(), recorder = draft.Recorder(), player = Player();
@@ -319,8 +354,8 @@ void main() {
           findsOneWidget,
         );
         expect(find.byIcon(Icons.favorite_outline_rounded), findsNothing);
-        await tester.tap(find.text('انصراف'));
-        await tester.pumpAndSettle();
+        await tester.tap(find.text('ادامه ضبط'));
+        await tester.pump(const Duration(milliseconds: 300));
         expect(vm.currentFilePath, path);
         expect(tester.getRect(find.byType(SeekableWaveform)), wave);
         await tester.tap(find.byType(BackButton));
@@ -381,6 +416,22 @@ void main() {
     expect(find.text('Voice'), findsOneWidget);
     expect(find.byType(Slider), findsNothing);
     expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpWidget(
+      fixture.host(
+        ChangeNotifierProvider<VoiceRecorderProvider>.value(
+          value: vm,
+          child: const RecordedFilesPage(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(Tab, 'Session'), findsOneWidget);
+    await tester.tap(find.widgetWithText(Tab, 'Session'));
+    await tester.pumpAndSettle();
+    expect(find.text('Voice'), findsOneWidget);
+    expect(find.byTooltip('تغییر نام دسته‌بندی'), findsOneWidget);
+    expect(find.byTooltip('حذف دسته‌بندی'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
     vm.dispose();
   });

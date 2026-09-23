@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:sornaz/components/bottom_nav.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'package:sornaz/screens/Players/ui/pages/music_palyer.dart';
+import 'package:sornaz/screens/Players/ui/pages/video_player_page.dart';
 import 'package:sornaz/screens/Metronome/ui/pages/metronome_page.dart';
 import 'package:sornaz/screens/Tuner/ui/pages/tuner_page.dart';
 import 'package:sornaz/screens/Voice%20Recorder/ui/pages/voice_recorder.dart';
@@ -33,9 +34,15 @@ class MusicToolsPage extends StatelessWidget {
                 ),
                 (
                   Icons.library_music_outlined,
-                  'پخش‌کننده',
+                  'پخش‌کننده موسیقی',
                   'Music player',
                   const MusicPlayerPage(),
+                ),
+                (
+                  Icons.video_library_outlined,
+                  'پخش‌کننده ویدیو',
+                  'Video player',
+                  const VideoLibraryPage(),
                 ),
                 (
                   Icons.punch_clock_outlined,

@@ -98,4 +98,14 @@ class RecordingBookmarks {
       await prefs.remove(key);
     }
   }
+
+  Future<void> crop(String uri, int start, int end) async {
+    final times = await load(uri);
+    final names = <int, String>{for (final t in times) t: await name(uri, t)};
+    await delete(uri);
+    for (final t in times.where((t) => t >= start && t <= end)) {
+      await add(uri, t - start);
+      await rename(uri, t - start, names[t]!);
+    }
+  }
 }

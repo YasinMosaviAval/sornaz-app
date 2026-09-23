@@ -17,9 +17,11 @@ class MusicPlayerTabs extends StatefulWidget {
       EqualizerTab(),
     ],
     this.controls = const BottomPlayerWidget(),
+    this.onTabChanged,
   });
   final List<Widget> pages;
   final Widget controls;
+  final ValueChanged<int>? onTabChanged;
   @override
   State<MusicPlayerTabs> createState() => _MusicPlayerTabsState();
 }
@@ -35,6 +37,7 @@ class _MusicPlayerTabsState extends State<MusicPlayerTabs>
 
   void changed() {
     if (mounted) setState(() {});
+    widget.onTabChanged?.call(tabs.index);
   }
 
   @override
@@ -58,7 +61,7 @@ class _MusicPlayerTabsState extends State<MusicPlayerTabs>
           tabs: [
             Tab(text: socialText(context, 'آهنگ‌ها', 'Songs')),
             Tab(text: socialText(context, 'پوشه‌ها', 'Folders')),
-            Tab(text: socialText(context, 'پلی‌لیست‌ها', 'Playlists')),
+            Tab(text: socialText(context, 'لیست پخش‌ها', 'Playlists')),
             Tab(text: socialText(context, 'اکولایزر', 'Equalizer')),
           ],
         ),

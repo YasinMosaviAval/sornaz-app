@@ -254,21 +254,26 @@ class SongDetailsPage extends StatelessWidget {
   const SongDetailsPage({super.key});
   @override
   Widget build(BuildContext context) => DefaultTabController(
-    length: 2,
+    length: 3,
     child: Scaffold(
       appBar: AppTopBarDirection(
         child: AppBar(
           title: Text(socialText(context, 'اطلاعات', 'Information')),
           bottom: TabBar(
             tabs: [
-              Tab(text: socialText(context, 'متن', 'Lyrics')),
               Tab(text: socialText(context, 'اطلاعات', 'Information')),
+              Tab(text: socialText(context, 'یادداشت ها', 'Notes')),
+              Tab(text: socialText(context, 'متن', 'Lyrics')),
             ],
           ),
         ),
       ),
       body: TabBarView(
-        children: [const SongLyricsTab(), const NowPlayingInfoTab()],
+        children: [
+          const NowPlayingInfoTab(),
+          const SongLyricsTab(notes: true),
+          const SongLyricsTab(),
+        ],
       ),
     ),
   );
