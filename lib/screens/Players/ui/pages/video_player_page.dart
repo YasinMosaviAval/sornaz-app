@@ -9,6 +9,7 @@ import '../../services/music_audio_handler.dart';
 import '../../services/music_playlists.dart';
 import 'playlists.dart';
 import 'video_crop_page.dart';
+import 'package:sornaz/components/media_dialogs.dart';
 import 'package:sornaz/components/expanding_search_bar.dart';
 
 class DeviceVideo {
@@ -194,9 +195,11 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
         key: ValueKey('video-item-${video.uri}'),
         dense: true,
         minVerticalPadding: 10,
-        leading: selected.contains(video.uri)
-            ? const Icon(Icons.check_box, size: 24)
-            : VideoThumbnail(uri: video.uri),
+        contentPadding: const EdgeInsetsDirectional.only(start: 16, end: 0),
+        tileColor: selected.contains(video.uri)
+            ? Theme.of(context).colorScheme.primary.withValues(alpha: .12)
+            : null,
+        leading: VideoThumbnail(uri: video.uri),
         title: Text(
           video.name,
           style: const TextStyle(fontSize: 13),
@@ -216,6 +219,7 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
                 if (!selected.remove(video.uri)) selected.add(video.uri);
               }),
         trailing: PopupMenuButton<String>(
+          padding: EdgeInsets.zero,
           enabled: !busy,
           onSelected: (action) async {
             if (['rename', 'crop', 'share', 'delete'].contains(action)) {
@@ -310,23 +314,9 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
           name += current.substring(current.lastIndexOf('.'));
       }
       if (action == 'delete') {
-        final yes = await showDialog<bool>(
-          context: context,
-          builder: (c) => AlertDialog(
-            title: Text(
-              t('ویدیوهای انتخاب‌شده حذف شوند؟', 'Delete selected videos?'),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(c, false),
-                child: Text(t('انصراف', 'Cancel')),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(c, true),
-                child: Text(t('حذف', 'Delete')),
-              ),
-            ],
-          ),
+        final yes = await confirmMediaDelete(
+          context,
+          t('ویدیوهای انتخاب‌شده حذف شوند؟', 'Delete selected videos?'),
         );
         if (yes != true) return;
       }
@@ -391,6 +381,7 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
               }),
               trailing: playlists && e.key != MusicPlaylists.favorite
                   ? PopupMenuButton<String>(
+                      padding: EdgeInsets.zero,
                       onSelected: (action) => editAudioCollection(
                         context,
                         store,

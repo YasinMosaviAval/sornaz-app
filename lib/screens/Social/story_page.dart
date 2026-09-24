@@ -1,3 +1,4 @@
+import 'package:url_launcher/url_launcher.dart';
 import 'social_profile.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'dart:async';
@@ -339,17 +340,11 @@ class _StoryPageState extends State<StoryPage>
 
   Future<void> sendReply() async {
     if (reply.text.trim().isEmpty || sending) return;
-    final body = reply.text.trim(),
-        owner = story['owner_id'] ?? story['author']['id'];
+    final body = reply.text.trim();
     setState(() => sending = true);
     sync();
     try {
-      final c = object(
-        await widget.api.post('/conversations', {'user_id': '$owner'}),
-      );
-      await widget.api.post('/conversations/${c['id']}/messages', {
-        'body': 'پاسخ به استوری: $body',
-      });
+      await widget.api.post('/stories/${story['id']}/reply', {'body': body});
       if (mounted) {
         reply.clear();
         focus.unfocus();
@@ -604,6 +599,33 @@ class _StoryPageState extends State<StoryPage>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      if (Uri.tryParse('${story['link_url'] ?? ''}')
+                          case final Uri uri
+                          when ['http', 'https'].contains(uri.scheme) &&
+                              uri.host.isNotEmpty)
+                        FilledButton.icon(
+                          onPressed: () async {
+                            holding = true;
+                            sync();
+                            try {
+                              await launchUrl(
+                                uri,
+                                mode: LaunchMode.externalApplication,
+                              );
+                            } finally {
+                              if (mounted) {
+                                holding = false;
+                                sync();
+                              }
+                            }
+                          },
+                          icon: const Icon(Icons.link),
+                          label: Text(
+                            '${story['link_title'] ?? ''}'.isEmpty
+                                ? uri.host
+                                : '${story['link_title']}',
+                          ),
+                        ),
                       if (story['mentions'] is List)
                         Wrap(
                           children: [

@@ -295,6 +295,7 @@ class _ChatMediaState extends State<ChatMedia> {
     if (file.isEmpty) return const SizedBox.shrink();
     if (chatAudio(file))
       return PanelVoicePlayback(
+        mine: widget.message['mine'] == true,
         key: ValueKey(widget.message['id']),
         api: widget.api,
         messageId: '${widget.message['id']}',

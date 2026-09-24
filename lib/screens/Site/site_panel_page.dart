@@ -1,4 +1,5 @@
 import 'panel_navigation.dart';
+import 'panel_list_item.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/home_top_bar.dart';
@@ -120,37 +121,49 @@ class _NativePanelState extends State<NativePanel> {
       ) ||
       (section['children'] is List &&
           objects(section['children']).any(matches));
-  Widget menuItem(Json section) {
+  Widget menuItem(Json section, [int depth = 0]) {
     final children = section['children'];
     if (children is List)
-      return ExpansionTile(
-        key: PageStorageKey('${section['key']}-${query.isNotEmpty}'),
-        tilePadding: const EdgeInsetsDirectional.only(start: 24, end: 8),
-        title: Text(panelLabel(context, section)),
-        leading: Icon(icon('${section['key']}')),
-        initiallyExpanded: query.isNotEmpty,
-        children: [
-          for (final child in objects(children))
-            if (query.isEmpty ||
-                matches(child) ||
-                ('${section['label']} ${section['en']}').toLowerCase().contains(
-                  query.toLowerCase(),
-                ))
-              menuItem(child),
-        ],
+      return PanelListItem(
+        child: ExpansionTile(
+          key: PageStorageKey('${section['key']}-${query.isNotEmpty}'),
+          tilePadding: EdgeInsetsDirectional.only(
+            start: 24 + depth * 20.0,
+            end: 8,
+          ),
+          title: Text(panelLabel(context, section)),
+          leading: Icon(icon('${section['key']}')),
+          initiallyExpanded: query.isNotEmpty,
+          shape: const Border(),
+          collapsedShape: const Border(),
+          children: [
+            for (final child in objects(children))
+              if (query.isEmpty ||
+                  matches(child) ||
+                  ('${section['label']} ${section['en']}')
+                      .toLowerCase()
+                      .contains(query.toLowerCase()))
+                menuItem(child, depth + 1),
+          ],
+        ),
       );
-    return ListTile(
-      contentPadding: const EdgeInsetsDirectional.only(start: 24, end: 8),
-      leading: Icon(icon('${section['key']}')),
-      title: Text(panelLabel(context, section)),
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => PanelResourcePage(
-            api: api,
-            section: section,
-            params: optionalObject(
-              section['initialParams'],
-            ).map((k, v) => MapEntry(k, '$v')),
+    return PanelListItem(
+      child: ListTile(
+        contentPadding: EdgeInsetsDirectional.only(
+          start: 24 + depth * 20.0,
+          end: 8,
+        ),
+        leading: Icon(icon('${section['key']}')),
+        title: Text(panelLabel(context, section)),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => PanelResourcePage(
+              api: api,
+              section: section,
+              params: optionalObject(
+                section['initialParams'],
+              ).map((k, v) => MapEntry(k, '$v')),
+            ),
           ),
         ),
       ),

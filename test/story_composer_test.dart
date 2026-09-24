@@ -237,6 +237,15 @@ void main() {
           calls.firstWhere((c) => c.method == 'writeImage').arguments['bytes']
               as Uint8List;
       expect(pngOutput.take(4), [137, 80, 78, 71]);
+      await tester.tap(find.byTooltip('لینک'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byType(TextFormField).first,
+        'https://example.com/lesson',
+      );
+      await tester.enterText(find.byType(TextFormField).last, 'My lesson');
+      await tester.tap(find.widgetWithText(FilledButton, 'ذخیره'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('انتشار'));
       for (var i = 0; i < 8; i++) {
         await tester.pump(const Duration(milliseconds: 100));
@@ -248,6 +257,8 @@ void main() {
       expect(api.uploads.single.name, 'designed.png');
       expect(api.posts.single, {
         'kind': 'story',
+        'link_url': 'https://example.com/lesson',
+        'link_title': 'My lesson',
         'body': 'A music moment',
         'media_id': '41',
         'mention_ids': '[]',

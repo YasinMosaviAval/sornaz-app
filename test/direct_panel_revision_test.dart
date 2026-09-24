@@ -287,7 +287,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('پاک کردن پیام'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('بلی'));
+      await tester.tap(find.text('حذف'));
       await tester.pumpAndSettle();
       expect(posts.last, endsWith('/chat/delete-message'));
       expect(find.text('Edited message'), findsNothing);

@@ -102,6 +102,84 @@ class _StoryComposerState extends State<StoryComposer>
   }
 
   List<Json> mentions = [];
+  String linkUrl = '', linkTitle = '';
+  Future<void> editLink() async {
+    var url = linkUrl, title = linkTitle;
+    final form = GlobalKey<FormState>();
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          t('لینک استوری', 'Story link'),
+          style: const TextStyle(fontSize: 14),
+        ),
+        content: Form(
+          key: form,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                initialValue: url,
+                keyboardType: TextInputType.url,
+                decoration: InputDecoration(labelText: t('لینک', 'Link')),
+                onChanged: (v) => url = v.trim(),
+                validator: (v) {
+                  final uri = Uri.tryParse((v ?? '').trim());
+                  return (v ?? '').trim().isEmpty ||
+                          (uri != null &&
+                              ['https', 'http'].contains(uri.scheme) &&
+                              uri.host.isNotEmpty)
+                      ? null
+                      : t('لینک معتبر وارد کنید', 'Enter a valid link');
+                },
+              ),
+              TextFormField(
+                initialValue: title,
+                maxLength: 180,
+                decoration: InputDecoration(
+                  labelText: t('عنوان لینک', 'Link title'),
+                ),
+                onChanged: (v) => title = v.trim(),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(foregroundColor: Colors.grey),
+            child: Text(t('انصراف', 'Cancel')),
+          ),
+          if (linkUrl.isNotEmpty)
+            TextButton(
+              onPressed: () {
+                url = '';
+                title = '';
+                Navigator.pop(context, true);
+              },
+              child: Text(t('حذف', 'Remove')),
+            ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            onPressed: () {
+              if (form.currentState!.validate()) Navigator.pop(context, true);
+            },
+            child: Text(t('ذخیره', 'Save')),
+          ),
+        ],
+      ),
+    );
+    if (mounted && result == true)
+      setState(() {
+        linkUrl = url;
+        linkTitle = title;
+      });
+  }
+
   bool exportingMetadata = false;
   Offset imageOffset = Offset.zero,
       gestureImageOffset = Offset.zero,
@@ -297,6 +375,8 @@ class _StoryComposerState extends State<StoryComposer>
         preview = image;
         caption = '';
         mentions = [];
+        linkUrl = '';
+        linkTitle = '';
         stickers.clear();
         photos.clear();
         imageScale = 1;
@@ -481,6 +561,8 @@ class _StoryComposerState extends State<StoryComposer>
         );
         await widget.api.post('/posts', {
           'kind': 'story',
+          'link_url': linkUrl,
+          'link_title': linkTitle,
           // Caption and mentions are rendered into the media, not repeated by viewers.
           'body': caption,
           'mention_ids': jsonEncode(
@@ -694,6 +776,16 @@ class _StoryComposerState extends State<StoryComposer>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    if (linkUrl.isNotEmpty)
+                      TextButton.icon(
+                        onPressed: editLink,
+                        icon: const Icon(Icons.link),
+                        label: Text(
+                          linkTitle.isEmpty
+                              ? Uri.parse(linkUrl).host
+                              : linkTitle,
+                        ),
+                      ),
                     if (mentions.isNotEmpty)
                       Wrap(
                         spacing: 6,
@@ -934,6 +1026,7 @@ class _StoryComposerState extends State<StoryComposer>
                     addPhoto,
                   ),
                   action(Icons.text_fields, t('متن', 'Text'), editText),
+                  action(Icons.link, t('لینک', 'Link'), editLink),
                   action(
                     Icons.alternate_email,
                     t('منشن', 'Mention'),
@@ -975,7 +1068,7 @@ class _StoryComposerState extends State<StoryComposer>
     IconData icon,
     String text,
     VoidCallback tap, {
-    bool label = true,
+    bool label = false,
   }) => Padding(
     padding: const EdgeInsets.only(bottom: 14),
     child: Column(

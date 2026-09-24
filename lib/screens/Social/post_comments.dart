@@ -1,3 +1,5 @@
+import 'member_grid.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:flutter/material.dart';
 import 'social_api.dart';
 import 'social_widgets.dart';
@@ -293,17 +295,28 @@ class PostCommentsState extends State<PostComments> {
   }
 }
 
-Future<void> sharePost(BuildContext context, SocialApi api, int id) =>
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => SharePostSheet(api: api, postId: id),
-    );
+Future<void> sharePost(
+  BuildContext context,
+  SocialApi api,
+  int id, {
+  VoidCallback? onStoryShared,
+}) => showModalBottomSheet<void>(
+  context: context,
+  isScrollControlled: true,
+  builder: (_) =>
+      SharePostSheet(api: api, postId: id, onStoryShared: onStoryShared),
+);
 
 class SharePostSheet extends StatefulWidget {
-  const SharePostSheet({super.key, required this.api, required this.postId});
+  const SharePostSheet({
+    super.key,
+    required this.api,
+    required this.postId,
+    this.onStoryShared,
+  });
   final SocialApi api;
   final int postId;
+  final VoidCallback? onStoryShared;
   @override
   State<SharePostSheet> createState() => _SharePostSheetState();
 }
@@ -397,30 +410,61 @@ class _SharePostSheetState extends State<SharePostSheet> {
             if (loading) const LinearProgressIndicator(),
             if (error != null) Text(error!),
             Expanded(
-              child: ListView(
-                children: [
-                  for (final u in users)
-                    CheckboxListTile(
-                      value: selected.contains(number(u['id'])),
-                      title: Text(socialUserName(u)),
-                      secondary: SocialAvatar(
-                        api: widget.api,
-                        user: u,
-                        size: 32,
-                      ),
-                      onChanged: sending
-                          ? null
-                          : (v) {
-                              setState(() {
-                                if (v == true && selected.length < 10)
-                                  selected.add(number(u['id']));
-                                else if (v == false)
-                                  selected.remove(number(u['id']));
-                              });
-                            },
-                    ),
-                ],
+              child: MemberGrid(
+                users: users,
+                selected: selected.map((v) => '$v').toSet(),
+                token: widget.api.token,
+                enabled: !sending,
+                onToggle: (id) => setState(() {
+                  final key = number(id);
+                  if (!selected.remove(key) && selected.length < 10)
+                    selected.add(key);
+                }),
               ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  tooltip: socialText(
+                    context,
+                    'اضافه کردن به استوری',
+                    'Add to story',
+                  ),
+                  icon: const Icon(Icons.add_circle_outline),
+                  onPressed: sending
+                      ? null
+                      : () async {
+                          setState(() => sending = true);
+                          try {
+                            await widget.api.post(
+                              '/posts/${widget.postId}/story',
+                            );
+                            widget.onStoryShared?.call();
+                            if (context.mounted) Navigator.pop(context);
+                          } catch (e) {
+                            if (context.mounted) socialError(context, e);
+                          } finally {
+                            if (mounted) setState(() => sending = false);
+                          }
+                        },
+                ),
+                IconButton(
+                  tooltip: socialText(context, 'ارسال لینک', 'Share link'),
+                  icon: const Icon(Icons.link),
+                  onPressed: () {
+                    final box = context.findRenderObject() as RenderBox?;
+                    Share.share(
+                      Uri.parse(
+                        SocialApi.base,
+                      ).resolve('/community/posts/${widget.postId}').toString(),
+                      sharePositionOrigin: box == null
+                          ? null
+                          : box.localToGlobal(Offset.zero) & box.size,
+                    );
+                  },
+                ),
+              ],
             ),
             FilledButton(
               onPressed: sending || selected.isEmpty ? null : send,

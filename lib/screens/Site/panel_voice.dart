@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui' show FontFeature;
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:record/record.dart';
@@ -155,51 +156,96 @@ class PanelVoicePlayback extends StatefulWidget {
     super.key,
     required this.api,
     required this.messageId,
+    this.mine = false,
+    this.playerFactory,
   });
   final PanelApi api;
   final String messageId;
+  final bool mine;
+  final AudioPlayer Function()? playerFactory;
   @override
   State<PanelVoicePlayback> createState() => _PanelVoicePlaybackState();
 }
 
 class _PanelVoicePlaybackState extends State<PanelVoicePlayback> {
   AudioPlayer? player;
-  StreamSubscription<PlayerState>? subscription;
-  bool playing = false, busy = false;
+  StreamSubscription<PlayerState>? stateSub;
+  StreamSubscription<Duration>? positionSub;
+  Duration position = Duration.zero, duration = Duration.zero;
+  bool playing = false, loading = true, failed = false;
+  Future<void>? preparing;
+  @override
+  void initState() {
+    super.initState();
+    prepare();
+  }
+
+  Future<void> prepare() => preparing ??= load();
+  Future<void> load() async {
+    try {
+      final file = await ChatFiles.open(widget.api, widget.messageId);
+      if (!mounted) return;
+      final audio = widget.playerFactory?.call() ?? AudioPlayer();
+      player = audio;
+      stateSub = audio.playerStateStream.listen((state) {
+        if (mounted)
+          setState(() {
+            playing =
+                state.playing &&
+                state.processingState != ProcessingState.completed;
+            if (state.processingState == ProcessingState.completed)
+              position = duration;
+          });
+      });
+      positionSub = audio.positionStream.listen((value) {
+        if (mounted) setState(() => position = value);
+      });
+      final length = await audio.setFilePath(file.path);
+      if (mounted)
+        setState(() {
+          duration = length ?? Duration.zero;
+          loading = false;
+          failed = false;
+        });
+    } catch (_) {
+      await stateSub?.cancel();
+      await positionSub?.cancel();
+      await player?.dispose();
+      player = null;
+      if (mounted)
+        setState(() {
+          loading = false;
+          failed = true;
+        });
+    }
+  }
+
   @override
   void dispose() {
-    subscription?.cancel();
+    stateSub?.cancel();
+    positionSub?.cancel();
     player?.dispose();
     super.dispose();
   }
 
   Future<void> toggle() async {
-    if (busy) return;
-    setState(() => busy = true);
+    if (loading) return;
     try {
       widget.api.checkAccount();
-      if (player == null) {
-        player = AudioPlayer();
-        subscription = player!.playerStateStream.listen((state) {
-          if (mounted) {
-            setState(
-              () => playing =
-                  state.playing &&
-                  state.processingState != ProcessingState.completed,
-            );
-          }
+      if (failed) {
+        setState(() {
+          loading = true;
+          failed = false;
         });
-        final file = await ChatFiles.open(widget.api, widget.messageId);
-        await player!.setFilePath(file.path);
+        preparing = null;
+        await prepare();
       }
-      if (!mounted) return;
-      widget.api.checkAccount();
+      if (!mounted || player == null || failed) return;
       if (playing) {
         await player!.pause();
       } else {
-        if (player!.processingState == ProcessingState.completed) {
+        if (player!.processingState == ProcessingState.completed)
           await player!.seek(Duration.zero);
-        }
         unawaited(
           player!.play().catchError((Object e) {
             if (mounted) socialError(context, e);
@@ -207,27 +253,157 @@ class _PanelVoicePlaybackState extends State<PanelVoicePlayback> {
         );
       }
     } catch (e) {
-      await subscription?.cancel();
-      subscription = null;
-      await player?.dispose();
-      player = null;
-      playing = false;
       if (mounted) socialError(context, e);
-    } finally {
-      if (mounted) setState(() => busy = false);
     }
   }
 
+  String clock(Duration value) =>
+      '${value.inMinutes}:${(value.inSeconds % 60).toString().padLeft(2, '0')}';
   @override
-  Widget build(BuildContext context) => TextButton.icon(
-    onPressed: busy ? null : toggle,
-    icon: Icon(playing ? Icons.pause : Icons.play_arrow),
-    label: Text(
-      socialText(
-        context,
-        playing ? 'توقف صدا' : 'پخش صدا',
-        playing ? 'Pause audio' : 'Play audio',
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      width: 250,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      decoration: BoxDecoration(
+        color: widget.mine
+            ? colors.primaryContainer
+            : colors.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(16),
       ),
-    ),
-  );
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              IconButton(
+                tooltip: socialText(
+                  context,
+                  failed
+                      ? 'تلاش دوباره'
+                      : playing
+                      ? 'توقف صدا'
+                      : 'پخش صدا',
+                  failed
+                      ? 'Retry'
+                      : playing
+                      ? 'Pause audio'
+                      : 'Play audio',
+                ),
+                onPressed: loading ? null : toggle,
+                icon: loading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(
+                        failed
+                            ? Icons.refresh
+                            : playing
+                            ? Icons.pause
+                            : Icons.play_arrow,
+                      ),
+              ),
+              Expanded(
+                child: SizedBox(
+                  height: 32,
+                  child: CustomPaint(
+                    painter: MessageAudioWaveform(
+                      progress: duration.inMilliseconds == 0
+                          ? 0
+                          : (position.inMilliseconds / duration.inMilliseconds)
+                                .clamp(0, 1),
+                      active: colors.primary,
+                      inactive: colors.onSurface.withValues(alpha: .22),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  clock(position),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
+                Text(
+                  clock(duration),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class MessageAudioWaveform extends CustomPainter {
+  MessageAudioWaveform({
+    required this.progress,
+    required this.active,
+    required this.inactive,
+  });
+  final double progress;
+  final Color active, inactive;
+  static const pattern = [
+    .2,
+    .35,
+    .65,
+    .4,
+    .8,
+    .95,
+    .55,
+    .35,
+    .7,
+    .5,
+    .25,
+    .6,
+    .85,
+    .45,
+    .7,
+    .3,
+  ];
+  @override
+  void paint(Canvas canvas, Size size) {
+    void draw(Color color) {
+      final pen = Paint()
+        ..color = color
+        ..strokeWidth = 2
+        ..strokeCap = StrokeCap.round;
+      for (var i = 0; i < 48; i++) {
+        final x = (i + .5) * size.width / 48,
+            h = pattern[i % pattern.length] * size.height;
+        canvas.drawLine(
+          Offset(x, (size.height - h) / 2),
+          Offset(x, (size.height + h) / 2),
+          pen,
+        );
+      }
+    }
+
+    draw(inactive);
+    canvas.save();
+    canvas.clipRect(Rect.fromLTWH(0, 0, size.width * progress, size.height));
+    draw(active);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(MessageAudioWaveform old) =>
+      old.progress != progress ||
+      old.active != active ||
+      old.inactive != inactive;
 }

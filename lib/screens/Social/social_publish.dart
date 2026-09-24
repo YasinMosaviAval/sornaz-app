@@ -1,9 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'story_composer.dart';
+import 'media_picker.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
+
 import 'social_api.dart';
 import 'social_widgets.dart';
 
@@ -27,22 +28,20 @@ class _PublishPageState extends State<PublishPage> {
   }
 
   Future<void> pick() async {
-    final files = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'mp4', 'webm'],
-    );
-    if (files == null || !mounted) return;
+    final file = await pickGalleryMedia(context);
+    if (file == null || !mounted) return;
     setState(() => busy = true);
     try {
-      final data = await widget.api.upload(files.files.single);
+      final data = await widget.api.upload(file);
       if (mounted)
         setState(() {
           media = data;
-          filename = files.files.single.name;
+          filename = file.name;
         });
     } catch (e) {
       if (mounted) socialError(context, e);
     } finally {
+      await releasePickedMedia(file);
       if (mounted) setState(() => busy = false);
     }
   }

@@ -1,3 +1,4 @@
+import '../Social/media_picker.dart';
 import 'chat_message_bubble.dart';
 import 'chat_cache.dart';
 import 'chat_media.dart';
@@ -16,6 +17,9 @@ import 'panel_api.dart';
 import 'panel_form.dart';
 import 'panel_presentation.dart';
 import 'panel_voice.dart';
+import 'panel_list_item.dart';
+import 'panel_gallery.dart';
+import 'package:sornaz/components/media_dialogs.dart';
 
 String panelLabel(BuildContext context, Json item) =>
     Localizations.localeOf(context).languageCode == 'fa'
@@ -43,10 +47,13 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
   bool loading = true, busy = false;
   Object? error;
   String query = '';
+  bool searchOpen = false;
+  final searchInput = TextEditingController();
   int page = 1, generation = 0;
   Timer? searchTimer;
   @override
   void dispose() {
+    searchInput.dispose();
     searchTimer?.cancel();
     generation++;
     super.dispose();
@@ -246,7 +253,16 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                         widget.params.containsKey('collection') &&
                         f['key'] == 'collection'),
               ))
-                if (field['key'] == 'founded' &&
+                if (section == 'gallery' && field['type'] == 'file')
+                  {
+                    ...field,
+                    'mediaPicker': true,
+                    'imagesOnly': [
+                      'cover',
+                      'logo',
+                    ].contains(widget.params['collection']),
+                  }
+                else if (field['key'] == 'founded' &&
                     optionalObject(data['profile'])['accountType'] == 'human')
                   {...field, 'label': 'تاریخ تولد', 'en': 'Date of birth'}
                 else
@@ -301,7 +317,7 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                   child: AppBar(title: Text('${action['label']}')),
                 ),
                 body: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   child: PanelDataView(value: detail),
                 ),
               ),
@@ -331,11 +347,24 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
     } catch (e) {
       if (mounted) socialError(context, e);
     } finally {
+      if (result != null)
+        for (final file in result.files.values) {
+          await releasePickedMedia(file);
+        }
       if (mounted) setState(() => busy = false);
     }
   }
 
-  Widget recordCard(
+  void searchChanged(String value) {
+    setState(() {
+      query = value;
+      page = 1;
+    });
+    searchTimer?.cancel();
+    searchTimer = Timer(const Duration(milliseconds: 400), load);
+  }
+
+  Widget recordRow(
     Json row, {
     List<String>? only,
     Map<String, String> extra = const {},
@@ -343,7 +372,7 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
     final rowActions =
         only ?? actions.keys.where((key) => available(key, row)).toList();
     final id = '${row['id']}';
-    return Card(
+    return PanelListItem(
       color: selected.contains(id)
           ? Theme.of(context).colorScheme.primaryContainer
           : null,
@@ -351,6 +380,12 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ListTile(
+            contentPadding: const EdgeInsetsDirectional.only(start: 24, end: 8),
+            leading: Icon(
+              selected.contains(id)
+                  ? Icons.check_circle
+                  : Icons.view_list_outlined,
+            ),
             title: Text(panelTitle(row)),
             subtitle: Text(
               [
@@ -435,7 +470,7 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                             in (row['sessions'] is List
                                 ? objects(row['sessions'])
                                 : <Json>[]))
-                          Card(
+                          PanelListItem(
                             child: Column(
                               children: [
                                 PanelDataView(value: session),
@@ -470,7 +505,7 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                             in (row['installments'] is List
                                 ? objects(row['installments'])
                                 : <Json>[]))
-                          Card(
+                          PanelListItem(
                             child: Column(
                               children: [
                                 PanelDataView(value: installment),
@@ -535,90 +570,199 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                   .contains(query.toLowerCase()),
         )
         .toList();
+    final pageActions = actions.entries
+        .where(
+          (entry) =>
+              entry.key != 'list' &&
+              entry.value['row'] == false &&
+              entry.value['hidden'] != true &&
+              !(section == 'account' &&
+                  ['document', 'backup'].contains(entry.key) &&
+                  optionalObject(data['profile'])['accountType'] !=
+                      'academy') &&
+              !(section == 'account' &&
+                  entry.key == 'merge' &&
+                  optionalObject(data['merges'])['eligible'] == false) &&
+              !(section == 'classroom-categories' &&
+                  entry.key == 'create' &&
+                  optionalObject(data['permissions'])['canSetType'] == false) &&
+              !(entry.key == 'create' &&
+                  (data['can_create_branch'] == false ||
+                      section == 'classroom-types' &&
+                          optionalObject(data['permissions'])['canCreate'] ==
+                              false)),
+        )
+        .toList();
+    bool isAdd(MapEntry<String, dynamic> e) =>
+        ['create', 'add', 'document', 'upload'].contains(e.key) ||
+        '${e.value['label']}'.startsWith('افزودن');
+    final additions = pageActions.where(isAdd).toList();
+    final toolbar = <IconButton>[
+      for (final e in pageActions.where((e) => !isAdd(e)))
+        IconButton(
+          tooltip: '${e.value['label']}',
+          icon: const Icon(Icons.tune),
+          onPressed: busy ? null : () => perform(e.key),
+        ),
+      if (filtered.isNotEmpty)
+        IconButton(
+          tooltip: socialText(
+            context,
+            'خروجی فهرست نمایش‌داده‌شده',
+            'Export displayed records',
+          ),
+          icon: const Icon(Icons.file_download_outlined),
+          onPressed: () async {
+            try {
+              await exportPanelRows(section, filtered);
+            } catch (e) {
+              if (mounted) socialError(this.context, e);
+            }
+          },
+        ),
+      if (filtered.isNotEmpty || data['stats'] is Map)
+        IconButton(
+          tooltip: 'PDF',
+          icon: const Icon(Icons.picture_as_pdf_outlined),
+          onPressed: () async {
+            final exportRows = filtered.isEmpty
+                ? [optionalObject(data['stats'])]
+                : filtered;
+            final labels = {
+              for (final key in exportRows.expand((row) => row.keys))
+                key: panelDataLabel(context, key),
+            };
+            final title = panelLabel(context, widget.section);
+            final rtl = Directionality.of(context) == TextDirection.rtl;
+            try {
+              await exportPanelPdf(title, exportRows, rtl: rtl, labels: labels);
+            } catch (e) {
+              if (mounted) socialError(this.context, e);
+            }
+          },
+        ),
+      if (widget.section['filters'] is List)
+        IconButton(
+          tooltip: socialText(context, 'فیلترها', 'Filters'),
+          icon: const Icon(Icons.filter_list),
+          onPressed: () async {
+            final result = await Navigator.of(context).push<PanelFormResult>(
+              MaterialPageRoute(
+                builder: (_) => PanelFormPage(
+                  title: socialText(context, 'فیلترها', 'Filters'),
+                  fields: objects(widget.section['filters']),
+                  data: data,
+                  initial: filters,
+                ),
+              ),
+            );
+            if (result != null && mounted) {
+              setState(() {
+                filters = result.values;
+                page = 1;
+              });
+              await load();
+            }
+          },
+        ),
+      if (filters.isNotEmpty)
+        IconButton(
+          tooltip: socialText(context, 'حذف فیلترها', 'Clear filters'),
+          icon: const Icon(Icons.filter_alt_off),
+          onPressed: () {
+            setState(() {
+              filters = {};
+              page = 1;
+            });
+            load();
+          },
+        ),
+      IconButton(
+        tooltip: socialText(context, 'به‌روزرسانی', 'Refresh'),
+        onPressed: load,
+        icon: const Icon(Icons.refresh),
+      ),
+    ];
     return ScrollAwareScaffold(
       appBar: AppTopBarDirection(
         child: AppBar(
-          title: Text(panelLabel(context, widget.section)),
+          title: searchOpen
+              ? TextField(
+                  controller: searchInput,
+                  autofocus: true,
+                  onChanged: searchChanged,
+                  decoration: InputDecoration(
+                    hintText: socialText(context, 'جستجو', 'Search'),
+                    border: InputBorder.none,
+                  ),
+                )
+              : Text(
+                  panelLabel(context, widget.section),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
           actions: [
-            if (filtered.isNotEmpty)
+            if (!searchOpen &&
+                !loading &&
+                error == null &&
+                additions.length == 1)
+              IconButton(
+                tooltip: '${additions.single.value['label']}',
+                icon: const Icon(Icons.add),
+                onPressed: busy ? null : () => perform(additions.single.key),
+              ),
+            if (!searchOpen &&
+                !loading &&
+                error == null &&
+                additions.length > 1)
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.add),
+                tooltip: socialText(context, 'افزودن', 'Add'),
+                onSelected: perform,
+                enabled: !busy,
+                itemBuilder: (_) => [
+                  for (final e in additions)
+                    PopupMenuItem(
+                      value: e.key,
+                      child: Text('${e.value['label']}'),
+                    ),
+                ],
+              ),
+            if (collection is List || data['items'] is List || query.isNotEmpty)
               IconButton(
                 tooltip: socialText(
                   context,
-                  'خروجی فهرست نمایش‌داده‌شده',
-                  'Export displayed records',
+                  searchOpen ? 'بستن جستجو' : 'جستجو',
+                  searchOpen ? 'Close search' : 'Search',
                 ),
-                icon: const Icon(Icons.file_download_outlined),
-                onPressed: () async {
-                  try {
-                    await exportPanelRows(section, filtered);
-                  } catch (e) {
-                    if (mounted) socialError(this.context, e);
-                  }
-                },
-              ),
-            if (filtered.isNotEmpty || data['stats'] is Map)
-              IconButton(
-                tooltip: 'PDF',
-                icon: const Icon(Icons.picture_as_pdf_outlined),
-                onPressed: () async {
-                  final exportRows = filtered.isEmpty
-                      ? [optionalObject(data['stats'])]
-                      : filtered;
-                  final labels = {
-                    for (final key in exportRows.expand((row) => row.keys))
-                      key: panelDataLabel(context, key),
-                  };
-                  final title = panelLabel(context, widget.section);
-                  final rtl = Directionality.of(context) == TextDirection.rtl;
-                  try {
-                    await exportPanelPdf(
-                      title,
-                      exportRows,
-                      rtl: rtl,
-                      labels: labels,
-                    );
-                  } catch (e) {
-                    if (mounted) socialError(this.context, e);
-                  }
-                },
-              ),
-            if (widget.section['filters'] is List)
-              IconButton(
-                icon: const Icon(Icons.filter_list),
-                onPressed: () async {
-                  final result = await Navigator.of(context)
-                      .push<PanelFormResult>(
-                        MaterialPageRoute(
-                          builder: (_) => PanelFormPage(
-                            title: socialText(context, 'فیلترها', 'Filters'),
-                            fields: objects(widget.section['filters']),
-                            data: data,
-                            initial: filters,
-                          ),
-                        ),
-                      );
-                  if (result != null && mounted) {
-                    setState(() {
-                      filters = result.values;
-                      page = 1;
-                    });
-                    await load();
-                  }
-                },
-              ),
-            if (filters.isNotEmpty)
-              IconButton(
-                tooltip: socialText(context, 'حذف فیلترها', 'Clear filters'),
-                icon: const Icon(Icons.filter_alt_off),
+                icon: Icon(searchOpen ? Icons.close : Icons.search),
                 onPressed: () {
-                  setState(() {
-                    filters = {};
-                    page = 1;
-                  });
-                  load();
+                  setState(() => searchOpen = !searchOpen);
+                  if (!searchOpen && query.isNotEmpty) {
+                    searchInput.clear();
+                    searchChanged('');
+                  }
                 },
               ),
-            IconButton(onPressed: load, icon: const Icon(Icons.refresh)),
+            if (!searchOpen)
+              PopupMenuButton<VoidCallback>(
+                tooltip: socialText(context, 'گزینه‌های بیشتر', 'More options'),
+                onSelected: (action) => action(),
+                itemBuilder: (_) => [
+                  for (final button in toolbar)
+                    PopupMenuItem(
+                      value: button.onPressed,
+                      enabled: button.onPressed != null,
+                      child: Row(
+                        children: [
+                          button.icon,
+                          const SizedBox(width: 12),
+                          Flexible(child: Text(button.tooltip ?? '')),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
           ],
         ),
       ),
@@ -636,63 +780,9 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
           : RefreshIndicator(
               onRefresh: () => load(refresh: true),
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 children: [
                   if (busy) const LinearProgressIndicator(),
-                  if (collection is List)
-                    TextField(
-                      decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.search),
-                        hintText: socialText(context, 'جستجو', 'Search'),
-                      ),
-                      onChanged: (v) {
-                        setState(() {
-                          query = v;
-                          page = 1;
-                        });
-                        searchTimer?.cancel();
-                        searchTimer = Timer(
-                          const Duration(milliseconds: 400),
-                          load,
-                        );
-                      },
-                    ),
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      for (final entry in actions.entries)
-                        if (entry.key != 'list' &&
-                            entry.value['row'] == false &&
-                            entry.value['hidden'] != true &&
-                            !(section == 'account' &&
-                                ['document', 'backup'].contains(entry.key) &&
-                                optionalObject(
-                                      data['profile'],
-                                    )['accountType'] !=
-                                    'academy') &&
-                            !(section == 'account' &&
-                                entry.key == 'merge' &&
-                                optionalObject(data['merges'])['eligible'] ==
-                                    false) &&
-                            !(section == 'classroom-categories' &&
-                                entry.key == 'create' &&
-                                optionalObject(
-                                      data['permissions'],
-                                    )['canSetType'] ==
-                                    false) &&
-                            !(entry.key == 'create' &&
-                                (data['can_create_branch'] == false ||
-                                    section == 'classroom-types' &&
-                                        optionalObject(
-                                              data['permissions'],
-                                            )['canCreate'] ==
-                                            false)))
-                          ActionChip(
-                            label: Text('${entry.value['label']}'),
-                            onPressed: busy ? null : () => perform(entry.key),
-                          ),
-                    ],
-                  ),
                   if (page > 1 ||
                       (num.tryParse('${data['total'] ?? 0}') ?? 0) >
                           page *
@@ -754,7 +844,19 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                           ),
                       ],
                     ),
-                  if (section == 'account') ...[
+                  if (section == 'gallery' && filtered.isNotEmpty)
+                    PanelGallery(
+                      api: widget.api,
+                      rows: filtered,
+                      fields: objects(
+                        optionalObject(actions['update'])['fields'] ?? [],
+                      ),
+                      data: data,
+                      canEdit: actions.containsKey('update'),
+                      canDelete: actions.containsKey('delete'),
+                      onChanged: () => load(refresh: true),
+                    )
+                  else if (section == 'account') ...[
                     if (widget.accountArea == null) ...[
                       PanelProfileHeader(
                         profile: optionalObject(data['profile']),
@@ -776,7 +878,7 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                             in (panelValue(data, pair.$1) is List
                                 ? objects(panelValue(data, pair.$1))
                                 : <Json>[]))
-                          recordCard(row, only: pair.$2),
+                          recordRow(row, only: pair.$2),
                         if (panelValue(data, pair.$1) is! List ||
                             (panelValue(data, pair.$1) as List).isEmpty)
                           Padding(
@@ -793,7 +895,7 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                     if ((widget.accountArea == null ||
                             widget.accountArea == 'documents') &&
                         data['backup'] is Map)
-                      recordCard(
+                      recordRow(
                         optionalObject(data['backup']),
                         only: ['download-backup'],
                       ),
@@ -812,7 +914,7 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                         ..remove('branches'),
                     ),
                   ] else if (rows.isNotEmpty) ...[
-                    for (final row in filtered) recordCard(row),
+                    for (final row in filtered) recordRow(row),
                   ] else if (collection is List)
                     Padding(
                       padding: const EdgeInsets.all(24),
@@ -927,7 +1029,7 @@ class PanelDataView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           for (final row in value)
-            Card(
+            PanelListItem(
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: PanelDataView(value: row),
@@ -1213,23 +1315,9 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
         if (result == null || !mounted) return;
         values = result.values;
       } else if (action == 'delete-message') {
-        final confirmed = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text(
-              socialText(context, 'پیام حذف شود؟', 'Delete message?'),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text(socialText(context, 'خیر', 'No')),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: Text(socialText(context, 'بلی', 'Yes')),
-              ),
-            ],
-          ),
+        final confirmed = await confirmMediaDelete(
+          context,
+          socialText(context, 'پیام حذف شود؟', 'Delete message?'),
         );
         if (confirmed != true || !mounted) return;
       }
@@ -1283,26 +1371,12 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
         values = result.values;
       } else {
         if (rows.any((r) => r['mine'] != true)) return;
-        final yes = await showDialog<bool>(
-          context: context,
-          builder: (c) => AlertDialog(
-            title: Text(
-              socialText(
-                c,
-                'پیام‌های انتخاب‌شده حذف شوند؟',
-                'Delete selected messages?',
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(c, false),
-                child: Text(socialText(c, 'انصراف', 'Cancel')),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(c, true),
-                child: Text(socialText(c, 'حذف', 'Delete')),
-              ),
-            ],
+        final yes = await confirmMediaDelete(
+          context,
+          socialText(
+            context,
+            'پیام‌های انتخاب‌شده حذف شوند؟',
+            'Delete selected messages?',
           ),
         );
         if (yes != true) return;

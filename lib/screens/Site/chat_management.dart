@@ -4,6 +4,8 @@ import '../Social/social_widgets.dart';
 import 'panel_api.dart';
 import 'panel_form.dart';
 import 'chat_cache.dart';
+import '../Social/media_picker.dart';
+import 'package:sornaz/components/media_dialogs.dart';
 
 Future<bool> conversationMenu(
   BuildContext context,
@@ -49,7 +51,22 @@ Future<bool> conversationMenu(
     final definition = optionalObject(actions[key]);
     final fields = objects(definition['fields'] ?? []);
     PanelFormResult? result;
-    if (fields.isNotEmpty) {
+    if (key == 'avatar') {
+      final file = await pickGalleryMedia(
+        context,
+        imagesOnly: true,
+        crop: true,
+      );
+      if (file == null) return false;
+      result = PanelFormResult({}, {'file': file});
+    } else if (key == 'rename') {
+      final name = await renameMediaDialog(
+        context,
+        '${details['title'] ?? ''}',
+      );
+      if (name == null) return false;
+      result = PanelFormResult({'title': name}, {});
+    } else if (fields.isNotEmpty) {
       final available = details['availableUsers'] ?? [];
       result = await Navigator.push<PanelFormResult>(
         context,
@@ -64,22 +81,7 @@ Future<bool> conversationMenu(
       );
       if (result == null) return false;
     } else {
-      final yes = await showDialog<bool>(
-        context: context,
-        builder: (c) => AlertDialog(
-          title: Text('${definition['label']}؟'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(c, false),
-              child: Text(socialText(c, 'انصراف', 'Cancel')),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(c, true),
-              child: Text(socialText(c, 'تأیید', 'Confirm')),
-            ),
-          ],
-        ),
-      );
+      final yes = await confirmMediaDelete(context, '${definition['label']}؟');
       if (yes != true) return false;
     }
     await api.act(

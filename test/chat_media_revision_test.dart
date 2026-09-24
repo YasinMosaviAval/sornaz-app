@@ -233,7 +233,7 @@ void main() {
     );
     final text = tester.widget<Text>(find.text('Member joined  12:34'));
     expect(text.textAlign, TextAlign.center);
-    expect(text.maxLines, 1);
+    expect(text.maxLines, 2);
     expect(find.byType(IconButton), findsNothing);
     expect(find.byKey(const ValueKey('message-body-1')), findsNothing);
   });

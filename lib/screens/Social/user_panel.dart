@@ -504,71 +504,15 @@ class _PostCardState extends State<PostCard> {
                 ),
                 IconButton(
                   tooltip: socialText(context, 'ارسال پست', 'Share post'),
-                  onPressed: () =>
-                      sharePost(context, widget.api, number(post['id'])),
+                  onPressed: () => sharePost(
+                    context,
+                    widget.api,
+                    number(post['id']),
+                    onStoryShared: widget.onChanged,
+                  ),
                   icon: const Icon(Icons.send_outlined),
                 ),
                 const Spacer(),
-                IconButton(
-                  tooltip: socialText(
-                    context,
-                    'افزودن پست به استوری',
-                    'Share to story',
-                  ),
-                  icon: const Icon(Icons.add_circle_outline),
-                  onPressed: busy
-                      ? null
-                      : () async {
-                          final yes = await showDialog<bool>(
-                            context: context,
-                            builder: (c) => AlertDialog(
-                              title: Text(
-                                socialText(
-                                  c,
-                                  'این پست به استوری شما اضافه شود؟',
-                                  'Share this post to your story?',
-                                ),
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(c, false),
-                                  child: Text(
-                                    socialText(c, 'انصراف', 'Cancel'),
-                                  ),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(c, true),
-                                  child: Text(
-                                    socialText(c, 'انتشار', 'Publish'),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                          if (yes != true || !context.mounted) return;
-                          setState(() => busy = true);
-                          try {
-                            await widget.api.post('/posts/${post['id']}/story');
-                            widget.onChanged?.call();
-                            if (context.mounted)
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    socialText(
-                                      context,
-                                      'به استوری اضافه شد',
-                                      'Shared to your story',
-                                    ),
-                                  ),
-                                ),
-                              );
-                          } catch (e) {
-                            if (context.mounted) socialError(context, e);
-                          } finally {
-                            if (mounted) setState(() => busy = false);
-                          }
-                        },
-                ),
                 IconButton(
                   onPressed: busy ? null : () => react('save'),
                   tooltip: 'ذخیره'.translate(context),

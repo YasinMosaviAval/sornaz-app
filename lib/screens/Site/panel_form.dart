@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
@@ -7,6 +8,10 @@ import 'package:file_picker/file_picker.dart';
 import '../Social/social_api.dart';
 import '../Social/social_widgets.dart';
 import 'panel_api.dart';
+import '../Social/member_grid.dart';
+import '../Social/media_picker.dart';
+import 'package:provider/provider.dart';
+import '../Authentication/providers/auth_session.dart';
 
 class PanelFormResult {
   PanelFormResult(this.values, this.files);
@@ -35,7 +40,7 @@ class PanelFormPage extends StatefulWidget {
 
 class _PanelFormPageState extends State<PanelFormPage> {
   final form = GlobalKey<FormState>();
-  bool submitting = false;
+  bool submitting = false, handedOff = false;
   late final Json values = {
     ...widget.initial,
     for (final field in widget.fields)
@@ -43,6 +48,15 @@ class _PanelFormPageState extends State<PanelFormPage> {
         '${field['key']}': panelValue(widget.initial, '${field['initial']}'),
   };
   final files = <String, PlatformFile>{};
+  @override
+  void dispose() {
+    if (!handedOff)
+      for (final file in files.values) {
+        unawaited(releasePickedMedia(file));
+      }
+    super.dispose();
+  }
+
   void change(Json field, dynamic value) {
     setState(() {
       values['${field['key']}'] = value;
@@ -83,6 +97,7 @@ class _PanelFormPageState extends State<PanelFormPage> {
                         Map.of(files),
                       );
                       if (widget.onSubmit == null) {
+                        handedOff = true;
                         Navigator.pop(context, result);
                         return;
                       }
@@ -125,6 +140,9 @@ class _PanelFormPageState extends State<PanelFormPage> {
                   data: {...widget.data, '_form': values},
                   changed: (value) => change(field, value),
                   onFile: (file) {
+                    final previous = files['${field['key']}'];
+                    if (previous != null)
+                      unawaited(releasePickedMedia(previous));
                     files['${field['key']}'] = file;
                     setState(() => values['${field['key']}'] = file.name);
                   },
@@ -198,6 +216,15 @@ class _PanelFieldState extends State<PanelField> {
         icon: const Icon(Icons.attach_file),
         label: Text(widget.value == null ? label : '$label: ${widget.value}'),
         onPressed: () async {
+          if (field['mediaPicker'] == true) {
+            final file = await pickGalleryMedia(
+              context,
+              imagesOnly: field['imagesOnly'] == true,
+              crop: true,
+            );
+            if (file != null && mounted) widget.onFile?.call(file);
+            return;
+          }
           final result = await FilePicker.platform.pickFiles(withData: true);
           if (result != null && mounted) {
             widget.onFile?.call(result.files.single);
@@ -241,6 +268,29 @@ class _PanelFieldState extends State<PanelField> {
         final selected = (widget.value is List ? widget.value as List : [])
             .map((v) => v is Map ? '${v['id']}' : '$v')
             .toSet();
+        if (field['key'] == 'userIds' && source is List) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label),
+              const SizedBox(height: 12),
+              MemberGrid(
+                users: objects(
+                  source,
+                ).where((u) => options.containsKey('${u['id']}')).toList(),
+                selected: selected,
+                token: context.read<AuthSession?>()?.token ?? '',
+                shrinkWrap: true,
+                onToggle: (id) {
+                  if (!selected.remove(id)) selected.add(id);
+                  widget.changed(
+                    selected.map((v) => int.tryParse(v) ?? v).toList(),
+                  );
+                },
+              ),
+            ],
+          );
+        }
         return InputDecorator(
           decoration: InputDecoration(
             labelText: label,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../Social/social_api.dart';
+import 'chat_media.dart';
 import '../Social/social_widgets.dart';
 
 String messageDay(Json message) {
@@ -63,7 +64,7 @@ class ChatMessageBubble extends StatelessWidget {
         child: Text(
           '${message['body'] ?? ''}  ${messageTime(message)}',
           textAlign: TextAlign.center,
-          maxLines: 1,
+          maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.labelSmall,
         ),
@@ -160,7 +161,9 @@ class ChatMessageBubble extends StatelessWidget {
                             '${message['likes']}',
                             style: Theme.of(context).textTheme.labelSmall,
                           ),
-                        if (mine && actions.containsKey('edit-message'))
+                        if (mine &&
+                            !chatAudio(optionalObject(message['file'])) &&
+                            actions.containsKey('edit-message'))
                           button(
                             'edit-message',
                             Icons.edit_outlined,
