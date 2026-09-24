@@ -62,7 +62,15 @@ void main() {
       );
       expect(
         menus.map((i) => i['key']),
-        containsAll(['achievements-menu', 'branches-menu', 'access-menu', 'gallery-menu', 'lessons-menu', 'classes-menu', 'schedule-menu']),
+        containsAll([
+          'achievements-menu',
+          'branches-menu',
+          'access-menu',
+          'gallery-menu',
+          'lessons-menu',
+          'classes-menu',
+          'schedule-menu',
+        ]),
       );
       final cover = items.firstWhere((i) => i['label'] == 'کاور');
       expect(cover['where'], {'category': 'cover'});
@@ -261,8 +269,12 @@ void main() {
         find.descendant(of: bubble, matching: find.byTooltip('ویرایش پیام')),
       );
       await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextFormField), 'Edited message');
-      await tester.tap(find.byIcon(Icons.save_outlined));
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).controller!.text,
+        'Second message',
+      );
+      await tester.enterText(find.byType(TextField), 'Edited message');
+      await tester.tap(find.byIcon(Icons.send));
       await tester.pumpAndSettle();
       expect(find.text('Edited message'), findsOneWidget);
       expect(payloads.last['body'], 'Edited message');

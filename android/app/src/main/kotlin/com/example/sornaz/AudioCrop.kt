@@ -24,11 +24,12 @@ class AudioCrop(private val activity: Activity, messenger: BinaryMessenger) {
                         val end = call.argument<Number>("end")!!.toLong()
                         require(start >= 0 && end > start)
                         val uri = if (source.startsWith("content:")) Uri.parse(source) else Uri.fromFile(File(source))
-                        val out = File(activity.cacheDir, "crop-${System.nanoTime()}.m4a")
+                        val video = call.argument<Boolean>("video") == true
+                        val out = File(activity.cacheDir, "crop-${System.nanoTime()}.${if(video) "mp4" else "m4a"}")
                         val media = MediaItem.Builder().setUri(uri).setClippingConfiguration(
                             MediaItem.ClippingConfiguration.Builder().setStartPositionMs(start).setEndPositionMs(end).build()
                         ).build()
-                        transformer = Transformer.Builder(activity).setAudioMimeType(MimeTypes.AUDIO_AAC)
+                        transformer = Transformer.Builder(activity).setAudioMimeType(MimeTypes.AUDIO_AAC).setVideoMimeType(MimeTypes.VIDEO_H264)
                             .addListener(object : Transformer.Listener {
                                 override fun onCompleted(composition: Composition, exportResult: ExportResult) {
                                     transformer = null
@@ -39,7 +40,12 @@ class AudioCrop(private val activity: Activity, messenger: BinaryMessenger) {
                                     result.error("CROP_FAILED", exception.message, null)
                                 }
                             }).build()
-                        transformer!!.start(EditedMediaItem.Builder(media).setRemoveVideo(true).build(), out.path)
+                        try {
+                            transformer!!.start(EditedMediaItem.Builder(media).setRemoveVideo(!video).build(), out.path)
+                        } catch (e: Exception) {
+                            transformer?.cancel(); transformer = null; out.delete()
+                            throw e
+                        }
                     }
                     "commit" -> Thread {
                         try {

@@ -8,15 +8,20 @@ import 'package:path_provider/path_provider.dart';
 import '../Social/social_widgets.dart';
 import '../Social/social_api.dart';
 import 'panel_api.dart';
+import 'chat_media.dart';
 
 class PanelVoiceButton extends StatefulWidget {
   const PanelVoiceButton({
     super.key,
     required this.enabled,
     required this.onRecorded,
+    this.onRecording,
+    this.onAmplitude,
   });
   final bool enabled;
   final ValueChanged<PlatformFile> onRecorded;
+  final ValueChanged<bool>? onRecording;
+  final ValueChanged<double>? onAmplitude;
   @override
   State<PanelVoiceButton> createState() => _PanelVoiceButtonState();
 }
@@ -25,8 +30,10 @@ class _PanelVoiceButtonState extends State<PanelVoiceButton> {
   AudioRecorder? recorder;
   bool recording = false, busy = false;
   final temporaryFiles = <String>[];
+  StreamSubscription<Amplitude>? levels;
   @override
   void dispose() {
+    levels?.cancel();
     final active = recorder;
     unawaited(() async {
       try {
@@ -50,6 +57,8 @@ class _PanelVoiceButtonState extends State<PanelVoiceButton> {
         final path = await recorder!.stop();
         if (!mounted) return;
         setState(() => recording = false);
+        await levels?.cancel();
+        widget.onRecording?.call(false);
         if (path != null) {
           final size = await File(path).length();
           if (!mounted) return;
@@ -80,6 +89,17 @@ class _PanelVoiceButtonState extends State<PanelVoiceButton> {
           path: path,
         );
         if (mounted) setState(() => recording = true);
+        if (mounted) {
+          widget.onRecording?.call(true);
+          levels = recorder!
+              .onAmplitudeChanged(const Duration(milliseconds: 80))
+              .listen((sample) {
+                if (mounted)
+                  widget.onAmplitude?.call(
+                    ((sample.current + 60) / 60).clamp(0.03, 1),
+                  );
+              });
+        }
       }
     } catch (e) {
       if (mounted) socialError(context, e);
@@ -101,6 +121,33 @@ class _PanelVoiceButtonState extends State<PanelVoiceButton> {
       color: recording ? Theme.of(context).colorScheme.error : null,
     ),
   );
+}
+
+class VoiceMessageWaveform extends CustomPainter {
+  VoiceMessageWaveform(this.levels, this.color);
+  final List<double> levels;
+  final Color color;
+  @override
+  void paint(Canvas canvas, Size size) {
+    final pen = Paint()
+      ..color = color
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+    for (var i = 0; i < levels.length; i++) {
+      final x = size.width - (levels.length - i) * 4;
+      if (x < 0) continue;
+      final height = levels[i] * size.height;
+      canvas.drawLine(
+        Offset(x, (size.height - height) / 2),
+        Offset(x, (size.height + height) / 2),
+        pen,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(VoiceMessageWaveform old) =>
+      old.levels != levels || old.color != color;
 }
 
 class PanelVoicePlayback extends StatefulWidget {
@@ -142,10 +189,8 @@ class _PanelVoicePlaybackState extends State<PanelVoicePlayback> {
             );
           }
         });
-        await player!.setUrl(
-          widget.api.uri('/chat/file', {'id': widget.messageId}).toString(),
-          headers: widget.api.headers,
-        );
+        final file = await ChatFiles.open(widget.api, widget.messageId);
+        await player!.setFilePath(file.path);
       }
       if (!mounted) return;
       widget.api.checkAccount();
@@ -162,6 +207,11 @@ class _PanelVoicePlaybackState extends State<PanelVoicePlayback> {
         );
       }
     } catch (e) {
+      await subscription?.cancel();
+      subscription = null;
+      await player?.dispose();
+      player = null;
+      playing = false;
       if (mounted) socialError(context, e);
     } finally {
       if (mounted) setState(() => busy = false);

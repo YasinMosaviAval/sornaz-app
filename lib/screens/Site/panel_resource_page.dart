@@ -1,4 +1,6 @@
 import 'chat_message_bubble.dart';
+import 'chat_cache.dart';
+import 'chat_media.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'dart:async';
@@ -996,6 +998,13 @@ class PanelConversationPage extends StatefulWidget {
 
 class _PanelConversationPageState extends State<PanelConversationPage> {
   final text = TextEditingController();
+  final composerFocus = FocusNode();
+  Json? editing, replying;
+  final selectedMessages = <int>{};
+  List<double> voiceLevels = [];
+  bool recordingVoice = false;
+  Future<void> persist() =>
+      ChatCache.write(widget.api.token, 'conversation:$id', messages);
   final scroll = ScrollController();
   void scrollToEnd() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1021,6 +1030,7 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
 
   @override
   void dispose() {
+    composerFocus.dispose();
     scroll.dispose();
     text.dispose();
     super.dispose();
@@ -1029,7 +1039,21 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
   Future<void> load({bool nextPage = false, bool refresh = false}) async {
     if (fetching) return;
     fetching = true;
+    var haveSnapshot = messages.isNotEmpty;
     try {
+      if (messages.isEmpty) {
+        final saved = await ChatCache.read(
+          widget.api.token,
+          'conversation:$id',
+        );
+        if (mounted && saved is List) {
+          haveSnapshot = true;
+          setState(() {
+            messages = objects(saved);
+            loading = false;
+          });
+        }
+      }
       // One batch per explicit action; never drain the entire history automatically.
       final after = nextPage ? historyCursor : 0;
       final data = await (refresh ? widget.api.refresh : widget.api.get)(
@@ -1037,10 +1061,21 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
         {'id': id, 'after': '$after'},
       );
       final batch = objects(data['messages'] ?? []);
+      // The aggregate includes local successful edits/deletions and later pages.
+      // A stale response snapshot must never overwrite it while offline.
+      if (data['_offline'] == true && haveSnapshot) {
+        error = null;
+        hasMore = false;
+        return;
+      }
       final result =
           <int, Json>{
-              if (nextPage)
-                for (final message in messages) number(message['id']): message,
+              if (nextPage || data['_offline'] == true || batch.length == 200)
+                for (final message in messages)
+                  if (nextPage ||
+                      data['_offline'] == true ||
+                      number(message['id']) > number(batch.last['id']))
+                    number(message['id']): message,
               for (final message in batch) number(message['id']): message,
             }.values.toList()
             ..sort((a, b) => number(a['id']).compareTo(number(b['id'])));
@@ -1055,6 +1090,7 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
           error = null;
         });
       }
+      await persist();
     } catch (e) {
       if (mounted) setState(() => error = e);
     } finally {
@@ -1067,18 +1103,43 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
     if (sending || text.text.trim().isEmpty && attachment == null) return;
     setState(() => sending = true);
     try {
-      final sent = attachment == null && widget.sendText != null
+      if (editing != null) {
+        final target = editing!;
+        await widget.api.act(
+          'chat',
+          'edit-message',
+          params: {'id': '${target['id']}'},
+          values: {'body': text.text.trim()},
+        );
+        if (!mounted) return;
+        setState(() {
+          target['body'] = text.text.trim();
+          target['edited'] = true;
+          editing = null;
+          text.clear();
+        });
+        await persist();
+        return;
+      }
+      final sent =
+          attachment == null && replying == null && widget.sendText != null
           ? await widget.sendText!(text.text.trim())
           : await widget.api.act(
               'chat',
               'send',
               params: {'id': id},
-              values: {'body': text.text.trim()},
+              values: {
+                'body': text.text.trim(),
+                if (replying != null) 'replyTo': replying!['id'],
+              },
               files: {'file': ?attachment},
             );
       if (!mounted) return;
       text.clear();
-      setState(() => attachment = null);
+      setState(() {
+        attachment = null;
+        replying = null;
+      });
       final sentId = number(sent['id']);
       if (sentId > 0) {
         final result = await widget.api.get('/chat/messages', {
@@ -1097,6 +1158,7 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
               ..sort((a, b) => number(a['id']).compareTo(number(b['id'])));
           });
       }
+      await persist();
     } catch (e) {
       if (mounted) socialError(context, e);
     } finally {
@@ -1105,6 +1167,19 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
   }
 
   Future<void> messageAction(String action, Json row) async {
+    if (action == 'edit-message' || action == 'reply') {
+      setState(() {
+        editing = action == 'edit-message' ? row : null;
+        replying = action == 'reply' ? row : null;
+        attachment = null;
+        if (editing != null) {
+          text.text = '${row['body'] ?? ''}';
+          text.selection = TextSelection.collapsed(offset: text.text.length);
+        }
+      });
+      composerFocus.requestFocus();
+      return;
+    }
     final messageId = number(row['id']);
     if (pendingMessages.contains(messageId)) return;
     setState(() => pendingMessages.add(messageId));
@@ -1174,10 +1249,84 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
           }
           if (action == 'like') row.addAll(updated);
         });
+      await persist();
     } catch (e) {
       if (mounted) socialError(context, e);
     } finally {
       if (mounted) setState(() => pendingMessages.remove(messageId));
+    }
+  }
+
+  Future<void> bulkAction(String action) async {
+    if (sending) return;
+    final rows = messages
+        .where((m) => selectedMessages.contains(number(m['id'])))
+        .toList();
+    Json values = {};
+    try {
+      if (action == 'forward') {
+        final options = await widget.api.get('/chat/list');
+        if (!mounted) return;
+        final result = await Navigator.push<PanelFormResult>(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PanelFormPage(
+              title: socialText(context, 'ارسال پیام‌ها', 'Forward messages'),
+              fields: objects(
+                optionalObject(actions['forward'])['fields'] ?? [],
+              ),
+              data: options,
+            ),
+          ),
+        );
+        if (result == null) return;
+        values = result.values;
+      } else {
+        if (rows.any((r) => r['mine'] != true)) return;
+        final yes = await showDialog<bool>(
+          context: context,
+          builder: (c) => AlertDialog(
+            title: Text(
+              socialText(
+                c,
+                'پیام‌های انتخاب‌شده حذف شوند؟',
+                'Delete selected messages?',
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(c, false),
+                child: Text(socialText(c, 'انصراف', 'Cancel')),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(c, true),
+                child: Text(socialText(c, 'حذف', 'Delete')),
+              ),
+            ],
+          ),
+        );
+        if (yes != true) return;
+      }
+      if (!mounted) return;
+      setState(() => sending = true);
+      for (final row in rows) {
+        await widget.api.act(
+          'chat',
+          action,
+          params: {'id': '${row['id']}'},
+          values: values,
+        );
+        if (!mounted) return;
+        setState(() {
+          selectedMessages.remove(number(row['id']));
+          if (action == 'delete-message') messages.remove(row);
+        });
+        await persist();
+      }
+    } catch (e) {
+      if (mounted) socialError(context, e);
+    } finally {
+      if (mounted) setState(() => sending = false);
     }
   }
 
@@ -1192,14 +1341,35 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
         child: AppBar(
           title: Text(panelTitle(widget.conversation)),
           actions: [
-            if (actions.containsKey('details'))
+            if (selectedMessages.isNotEmpty) ...[
+              Text('${selectedMessages.length}'),
+              if (actions.containsKey('forward'))
+                IconButton(
+                  onPressed: () => bulkAction('forward'),
+                  icon: const Icon(Icons.forward),
+                ),
+              if (actions.containsKey('delete-message') &&
+                  messages
+                      .where((m) => selectedMessages.contains(number(m['id'])))
+                      .every((m) => m['mine'] == true))
+                IconButton(
+                  onPressed: () => bulkAction('delete-message'),
+                  icon: const Icon(Icons.delete_outline),
+                ),
+              IconButton(
+                onPressed: () => setState(selectedMessages.clear),
+                icon: const Icon(Icons.close),
+              ),
+            ],
+            if (widget.conversation['type'] == 'group' &&
+                actions.containsKey('details'))
               IconButton(
                 tooltip: socialText(
                   context,
                   'اطلاعات گفتگو',
                   'Conversation details',
                 ),
-                icon: const Icon(Icons.info_outline),
+                icon: const Icon(Icons.group_outlined),
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => PanelGroupDetails(
@@ -1210,10 +1380,6 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
                   ),
                 ),
               ),
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: fetching ? null : () => load(refresh: true),
-            ),
           ],
         ),
       ),
@@ -1268,29 +1434,24 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
                         ),
                       ),
                     ChatMessageBubble(
+                      showSender: widget.conversation['type'] == 'group',
+                      selected: selectedMessages.contains(number(row['id'])),
+                      selectionMode: selectedMessages.isNotEmpty,
+                      onLongPress: () => setState(() {
+                        final mid = number(row['id']);
+                        if (!selectedMessages.remove(mid))
+                          selectedMessages.add(mid);
+                      }),
                       message: row,
                       actions: actions,
                       busy: pendingMessages.contains(number(row['id'])),
                       onAction: (action) => messageAction(action, row),
-                      attachment: row['file'] == null
-                          ? null
-                          : Column(
-                              children: [
-                                if ('${row['file']?['mime'] ?? ''}'.startsWith(
-                                  'audio/',
-                                ))
-                                  PanelVoicePlayback(
-                                    key: ValueKey(row['id']),
-                                    api: widget.api,
-                                    messageId: '${row['id']}',
-                                  ),
-                                TextButton.icon(
-                                  onPressed: () => messageAction('file', row),
-                                  icon: const Icon(Icons.attach_file),
-                                  label: Text('${row['file']['name']}'),
-                                ),
-                              ],
-                            ),
+                      attachment: ChatMedia(
+                        key: ValueKey('chat-media-${row['id']}'),
+                        api: widget.api,
+                        message: row,
+                        onDownload: () => messageAction('file', row),
+                      ),
                     ),
                   ],
                 );
@@ -1312,41 +1473,95 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
             top: false,
             child: Padding(
               padding: const EdgeInsets.all(8),
-              child: Row(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  IconButton(
-                    tooltip: socialText(context, 'پیوست فایل', 'Attach file'),
-                    icon: const Icon(Icons.attach_file),
-                    onPressed: sending
-                        ? null
-                        : () async {
-                            final picked = await FilePicker.platform.pickFiles(
-                              withData: false,
-                            );
-                            if (mounted && picked != null) {
-                              setState(() => attachment = picked.files.single);
-                            }
-                          },
-                  ),
-                  PanelVoiceButton(
-                    enabled: !sending && attachment == null,
-                    onRecorded: (file) => setState(() => attachment = file),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: text,
-                      minLines: 1,
-                      maxLines: 5,
-                      decoration: InputDecoration(
-                        hintText: socialText(context, 'پیام', 'Message'),
+                  if (editing != null || replying != null)
+                    ListTile(
+                      dense: true,
+                      leading: Icon(
+                        editing != null ? Icons.edit_outlined : Icons.reply,
+                      ),
+                      title: Text(
+                        '${(editing ?? replying)!['body'] ?? ''}',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => setState(() {
+                          if (editing != null) text.clear();
+                          editing = null;
+                          replying = null;
+                        }),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    onPressed: sending ? null : send,
-                    icon: sending
-                        ? const CircularProgressIndicator()
-                        : const Icon(Icons.send),
+                  Row(
+                    children: [
+                      IconButton(
+                        tooltip: socialText(
+                          context,
+                          'پیوست فایل',
+                          'Attach file',
+                        ),
+                        icon: const Icon(Icons.attach_file),
+                        onPressed: sending || editing != null || recordingVoice
+                            ? null
+                            : () async {
+                                final picked = await FilePicker.platform
+                                    .pickFiles(withData: false);
+                                if (mounted && picked != null) {
+                                  setState(
+                                    () => attachment = picked.files.single,
+                                  );
+                                }
+                              },
+                      ),
+                      PanelVoiceButton(
+                        enabled:
+                            !sending && editing == null && attachment == null,
+                        onRecorded: (file) => setState(() => attachment = file),
+                        onRecording: (active) => setState(() {
+                          recordingVoice = active;
+                          if (!active) voiceLevels = [];
+                        }),
+                        onAmplitude: (value) => setState(() {
+                          voiceLevels = [...voiceLevels, value];
+                          if (voiceLevels.length > 45) voiceLevels.removeAt(0);
+                        }),
+                      ),
+                      Expanded(
+                        child: recordingVoice
+                            ? SizedBox(
+                                height: 36,
+                                child: CustomPaint(
+                                  painter: VoiceMessageWaveform(
+                                    voiceLevels,
+                                    Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                              )
+                            : TextField(
+                                controller: text,
+                                focusNode: composerFocus,
+                                minLines: 1,
+                                maxLines: 5,
+                                decoration: InputDecoration(
+                                  hintText: socialText(
+                                    context,
+                                    'پیام',
+                                    'Message',
+                                  ),
+                                ),
+                              ),
+                      ),
+                      IconButton(
+                        onPressed: sending || recordingVoice ? null : send,
+                        icon: sending
+                            ? const CircularProgressIndicator()
+                            : const Icon(Icons.send),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -1410,7 +1625,10 @@ class _PanelGroupDetailsState extends State<PanelGroupDetails> {
           builder: (_) => PanelFormPage(
             title: '${action['label']}',
             fields: fields,
-            data: {'users': data['availableUsers'] ?? []},
+            data: {
+              'users': data['availableUsers'] ?? [],
+              'people': data['availableUsers'] ?? [],
+            },
             initial: key == 'rename' ? {'title': data['title']} : const {},
           ),
         ),
@@ -1471,8 +1689,16 @@ class _PanelGroupDetailsState extends State<PanelGroupDetails> {
       appBar: AppTopBarDirection(
         child: AppBar(
           title: Text(
-            socialText(context, 'اطلاعات گفتگو', 'Conversation details'),
+            socialText(context, 'اعضای گفتگو', 'Conversation members'),
           ),
+          actions: [
+            if (data['canManage'] == true && actions.containsKey('members'))
+              IconButton(
+                tooltip: socialText(context, 'افزودن عضو', 'Add member'),
+                onPressed: busy ? null : () => perform('members'),
+                icon: const Icon(Icons.person_add_alt),
+              ),
+          ],
         ),
       ),
       body: loading
@@ -1490,38 +1716,29 @@ class _PanelGroupDetailsState extends State<PanelGroupDetails> {
               padding: const EdgeInsets.all(16),
               children: [
                 if (busy) const LinearProgressIndicator(),
-                Text(
-                  panelTitle(data),
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    for (final key in [
-                      if (data['canManage'] == true) ...[
-                        'rename',
-                        'avatar',
-                        'members',
-                      ],
-                      if (data['type'] == 'group') 'leave',
-                      if (data['canDelete'] == true) 'delete',
-                    ])
-                      if (actions.containsKey(key))
-                        ActionChip(
-                          label: Text('${actions[key]['label']}'),
-                          onPressed: busy ? null : () => perform(key),
-                        ),
-                  ],
-                ),
                 for (final member in objects(data['members'] ?? []))
-                  Card(
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
                     child: ListTile(
-                      leading: const Icon(Icons.person_outline),
+                      leading: CircleAvatar(
+                        backgroundImage: member['avatar'] == null
+                            ? null
+                            : NetworkImage(
+                                Uri.parse(
+                                  SocialApi.base,
+                                ).resolve('${member['avatar']}').toString(),
+                                headers: widget.api.headers,
+                              ),
+                        child: member['avatar'] == null
+                            ? const Icon(Icons.person_outline)
+                            : null,
+                      ),
                       title: Text(panelTitle(member)),
                       subtitle: Text('${member['roleLabel'] ?? ''}'),
                       trailing:
                           data['canManage'] == true &&
                               member['isMe'] != true &&
+                              member['role'] != 'admin' &&
                               actions.containsKey('remove-member')
                           ? IconButton(
                               tooltip: socialText(

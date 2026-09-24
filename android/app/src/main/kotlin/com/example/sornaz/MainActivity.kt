@@ -10,6 +10,7 @@ import java.io.File
 
 class MainActivity : AudioServiceActivity() {
     private var storyMedia: StoryMedia? = null
+    private var deviceVideos: DeviceVideos? = null
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         if (storyMedia?.permissions(requestCode) == true) return
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
@@ -17,6 +18,7 @@ class MainActivity : AudioServiceActivity() {
     private var notationStorage: NotationStorage? = null
     private var recordingWorkspace: RecordingWorkspace? = null
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (deviceVideos?.onResult(requestCode, resultCode) == true) return
         if (storyMedia?.onResult(requestCode, resultCode, data) == true) return
         if (notationStorage?.onResult(requestCode, resultCode, data) == true) return
         if (recordingWorkspace?.onResult(requestCode, resultCode, data) == true) return
@@ -31,7 +33,7 @@ class MainActivity : AudioServiceActivity() {
         notationStorage = NotationStorage(this, flutterEngine.dartExecutor.binaryMessenger)
         MusicMetadata(flutterEngine.dartExecutor.binaryMessenger)
         AudioCrop(this, flutterEngine.dartExecutor.binaryMessenger)
-        DeviceVideos(this, flutterEngine.dartExecutor.binaryMessenger)
+        deviceVideos = DeviceVideos(this, flutterEngine.dartExecutor.binaryMessenger)
         MusicEqualizer(flutterEngine.dartExecutor.binaryMessenger)
         PublicRecordings(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         recordingWorkspace = RecordingWorkspace(this, flutterEngine.dartExecutor.binaryMessenger)

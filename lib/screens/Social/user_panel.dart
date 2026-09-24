@@ -2,6 +2,7 @@ import 'post_comments.dart';
 import 'create_content_button.dart';
 import 'story_seen.dart';
 import 'dart:async';
+import 'dart:io';
 import 'package:sornaz/components/home_top_bar.dart';
 import 'package:sornaz/screens/Home/ui/components/app_drawer.dart';
 import 'package:sornaz/components/main_tabs.dart';
@@ -360,10 +361,12 @@ class PostCard extends StatefulWidget {
     required this.api,
     required this.post,
     this.onChanged,
+    this.localMedia,
   });
   final SocialApi api;
   final Json post;
   final VoidCallback? onChanged;
+  final File? localMedia;
   @override
   State<PostCard> createState() => _PostCardState();
 }
@@ -456,7 +459,20 @@ class _PostCardState extends State<PostCard> {
           ),
           if (post['media'] != null)
             if ('${post['mime']}'.startsWith('video/'))
-              SocialVideo(api: widget.api, path: post['media'])
+              SocialVideo(
+                postControls: true,
+                api: widget.api,
+                path: post['media'],
+                autoplay: true,
+                localFile: widget.localMedia,
+              )
+            else if (widget.localMedia != null)
+              Image.file(
+                widget.localMedia!,
+                width: double.infinity,
+                height: 300,
+                fit: BoxFit.cover,
+              )
             else
               SocialImage(
                 api: widget.api,
@@ -493,6 +509,66 @@ class _PostCardState extends State<PostCard> {
                   icon: const Icon(Icons.send_outlined),
                 ),
                 const Spacer(),
+                IconButton(
+                  tooltip: socialText(
+                    context,
+                    'افزودن پست به استوری',
+                    'Share to story',
+                  ),
+                  icon: const Icon(Icons.add_circle_outline),
+                  onPressed: busy
+                      ? null
+                      : () async {
+                          final yes = await showDialog<bool>(
+                            context: context,
+                            builder: (c) => AlertDialog(
+                              title: Text(
+                                socialText(
+                                  c,
+                                  'این پست به استوری شما اضافه شود؟',
+                                  'Share this post to your story?',
+                                ),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(c, false),
+                                  child: Text(
+                                    socialText(c, 'انصراف', 'Cancel'),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(c, true),
+                                  child: Text(
+                                    socialText(c, 'انتشار', 'Publish'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (yes != true || !context.mounted) return;
+                          setState(() => busy = true);
+                          try {
+                            await widget.api.post('/posts/${post['id']}/story');
+                            widget.onChanged?.call();
+                            if (context.mounted)
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    socialText(
+                                      context,
+                                      'به استوری اضافه شد',
+                                      'Shared to your story',
+                                    ),
+                                  ),
+                                ),
+                              );
+                          } catch (e) {
+                            if (context.mounted) socialError(context, e);
+                          } finally {
+                            if (mounted) setState(() => busy = false);
+                          }
+                        },
+                ),
                 IconButton(
                   onPressed: busy ? null : () => react('save'),
                   tooltip: 'ذخیره'.translate(context),

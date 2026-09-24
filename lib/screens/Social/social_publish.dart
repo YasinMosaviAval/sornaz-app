@@ -114,6 +114,7 @@ class _PublishPageState extends State<PublishPage> {
                     )
                   else
                     SocialVideo(
+                      postControls: true,
                       key: ValueKey(media!['id']),
                       api: widget.api,
                       path: media!['url'],

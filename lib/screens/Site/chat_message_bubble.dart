@@ -23,11 +23,17 @@ class ChatMessageBubble extends StatelessWidget {
     required this.onAction,
     this.attachment,
     this.busy = false,
+    this.showSender = true,
+    this.selected = false,
+    this.selectionMode = false,
+    this.onLongPress,
   });
   final Json message, actions;
   final ValueChanged<String> onAction;
   final Widget? attachment;
   final bool busy;
+  final bool showSender, selected, selectionMode;
+  final VoidCallback? onLongPress;
   @override
   Widget build(BuildContext context) {
     final mine = message['mine'] == true;
@@ -51,145 +57,194 @@ class ChatMessageBubble extends StatelessWidget {
             onPressed: busy ? null : () => onAction(action),
           ),
         );
-    return Align(
-      alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.sizeOf(context).width * .82,
+    if (message['system'] == true || message['kind'] == 'system') {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Text(
+          '${message['body'] ?? ''}  ${messageTime(message)}',
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.labelSmall,
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Column(
-            crossAxisAlignment:
-                (Directionality.of(context) == TextDirection.rtl) == mine
-                ? CrossAxisAlignment.start
-                : CrossAxisAlignment.end,
-            children: [
-              if (!mine)
-                Text(
-                  '${message['sender'] ?? ''}',
-                  style: Theme.of(context).textTheme.labelSmall,
-                ),
-              if ('${message['body'] ?? ''}'.isNotEmpty)
-                Container(
-                  key: ValueKey('message-body-${message['id']}'),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: mine
-                        ? colors.primaryContainer
-                        : colors.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text(
-                    '${message['body']}',
-                    style: TextStyle(
-                      color: mine
-                          ? colors.onPrimaryContainer
-                          : colors.onSurface,
-                    ),
-                  ),
-                ),
-              if (attachment != null) attachment!,
-              Wrap(
-                textDirection: mine ? TextDirection.rtl : TextDirection.ltr,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 0,
-                children: [
-                  if (actions.containsKey('like'))
-                    button(
-                      'like',
-                      message['liked'] == true
-                          ? Icons.favorite
-                          : Icons.favorite_border,
-                      'پسندیدن پیام',
-                      'Like message',
-                    ),
-                  if (number(message['likes']) > 0)
-                    Text(
-                      '${message['likes']}',
-                      style: Theme.of(context).textTheme.labelSmall,
-                    ),
-                  if (mine && actions.containsKey('edit-message'))
-                    button(
-                      'edit-message',
-                      Icons.edit_outlined,
-                      'ویرایش پیام',
-                      'Edit message',
-                    ),
-                  SizedBox(
-                    width: 26,
-                    height: 32,
-                    child: IconButton(
-                      tooltip: socialText(context, 'کپی پیام', 'Copy message'),
-                      icon: const Icon(Icons.copy, size: 18),
-                      constraints: const BoxConstraints.tightFor(
-                        width: 26,
-                        height: 32,
+      );
+    }
+    return GestureDetector(
+      onLongPress: onLongPress,
+      onTap: selectionMode ? onLongPress : null,
+      child: AbsorbPointer(
+        absorbing: selectionMode,
+        child: ColoredBox(
+          color: selected
+              ? colors.primary.withValues(alpha: .12)
+              : Colors.transparent,
+          child: Align(
+            alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.sizeOf(context).width * .82,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Column(
+                  crossAxisAlignment:
+                      (Directionality.of(context) == TextDirection.rtl) == mine
+                      ? CrossAxisAlignment.start
+                      : CrossAxisAlignment.end,
+                  children: [
+                    if (!mine && showSender)
+                      Text(
+                        '${message['sender'] ?? ''}',
+                        style: Theme.of(context).textTheme.labelSmall,
                       ),
-                      padding: EdgeInsets.zero,
-                      onPressed: () => Clipboard.setData(
-                        ClipboardData(text: '${message['body'] ?? ''}'),
+                    if (message['reply'] is Map)
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        margin: const EdgeInsets.only(bottom: 4),
+                        decoration: BoxDecoration(
+                          color: colors.secondaryContainer,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '${message['reply']['body'] ?? ''}',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colors.onSecondaryContainer,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  SizedBox(
-                    width: 26,
-                    height: 32,
-                    child: PopupMenuButton<String>(
-                      enabled: !busy,
-                      tooltip: socialText(
-                        context,
-                        'گزینه‌های پیام',
-                        'Message options',
+                    if (attachment != null) attachment!,
+                    if ('${message['body'] ?? ''}'.isNotEmpty)
+                      Container(
+                        key: ValueKey('message-body-${message['id']}'),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: mine
+                              ? colors.primaryContainer
+                              : colors.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(
+                          '${message['body']}',
+                          style: TextStyle(
+                            color: mine
+                                ? colors.onPrimaryContainer
+                                : colors.onSurface,
+                          ),
+                        ),
                       ),
-                      icon: const Icon(Icons.more_vert, size: 18),
-                      padding: EdgeInsets.zero,
-                      onSelected: onAction,
-                      itemBuilder: (_) => [
-                        if (actions.containsKey('forward'))
-                          PopupMenuItem(
-                            value: 'forward',
-                            child: Text(
-                              socialText(
-                                context,
-                                'ارسال در چت دیگر',
-                                'Forward to another chat',
-                              ),
+                    Wrap(
+                      textDirection: mine
+                          ? TextDirection.rtl
+                          : TextDirection.ltr,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 0,
+                      children: [
+                        button('reply', Icons.reply, 'پاسخ', 'Reply'),
+                        if (actions.containsKey('like'))
+                          button(
+                            'like',
+                            message['liked'] == true
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            'پسندیدن پیام',
+                            'Like message',
+                          ),
+                        if (number(message['likes']) > 0)
+                          Text(
+                            '${message['likes']}',
+                            style: Theme.of(context).textTheme.labelSmall,
+                          ),
+                        if (mine && actions.containsKey('edit-message'))
+                          button(
+                            'edit-message',
+                            Icons.edit_outlined,
+                            'ویرایش پیام',
+                            'Edit message',
+                          ),
+                        SizedBox(
+                          width: 26,
+                          height: 32,
+                          child: IconButton(
+                            tooltip: socialText(
+                              context,
+                              'کپی پیام',
+                              'Copy message',
+                            ),
+                            icon: const Icon(Icons.copy, size: 18),
+                            constraints: const BoxConstraints.tightFor(
+                              width: 26,
+                              height: 32,
+                            ),
+                            padding: EdgeInsets.zero,
+                            onPressed: () => Clipboard.setData(
+                              ClipboardData(text: '${message['body'] ?? ''}'),
                             ),
                           ),
-                        if (actions.containsKey('delete-message'))
-                          PopupMenuItem(
-                            value: 'delete-message',
-                            enabled: mine,
-                            child: Text(
-                              socialText(
-                                context,
-                                'پاک کردن پیام',
-                                'Delete message',
-                              ),
+                        ),
+                        SizedBox(
+                          width: 26,
+                          height: 32,
+                          child: PopupMenuButton<String>(
+                            enabled: !busy,
+                            tooltip: socialText(
+                              context,
+                              'گزینه‌های پیام',
+                              'Message options',
                             ),
+                            icon: const Icon(Icons.more_vert, size: 18),
+                            padding: EdgeInsets.zero,
+                            onSelected: onAction,
+                            itemBuilder: (_) => [
+                              if (actions.containsKey('forward'))
+                                PopupMenuItem(
+                                  value: 'forward',
+                                  child: Text(
+                                    socialText(
+                                      context,
+                                      'ارسال در چت دیگر',
+                                      'Forward to another chat',
+                                    ),
+                                  ),
+                                ),
+                              if (actions.containsKey('delete-message'))
+                                PopupMenuItem(
+                                  value: 'delete-message',
+                                  enabled: mine,
+                                  child: Text(
+                                    socialText(
+                                      context,
+                                      'پاک کردن پیام',
+                                      'Delete message',
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Text(
+                            messageTime(message),
+                            style: Theme.of(context).textTheme.labelSmall,
+                          ),
+                        ),
+                        if (message['edited'] == true)
+                          Text(
+                            socialText(context, 'ویرایش‌شده', 'Edited'),
+                            style: Theme.of(context).textTheme.labelSmall,
                           ),
                       ],
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Text(
-                      messageTime(message),
-                      style: Theme.of(context).textTheme.labelSmall,
-                    ),
-                  ),
-                  if (message['edited'] == true)
-                    Text(
-                      socialText(context, 'ویرایش‌شده', 'Edited'),
-                      style: Theme.of(context).textTheme.labelSmall,
-                    ),
-                ],
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
         ),
       ),

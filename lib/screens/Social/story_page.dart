@@ -1,6 +1,7 @@
 import 'social_profile.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
@@ -70,6 +71,7 @@ class StoryPage extends StatefulWidget {
     this.authorGroups = const [],
     this.seen = const {},
     this.controllerFactory,
+    this.localMedia = const {},
   });
   final List<List<Json>> authorGroups;
   final Set<String> seen;
@@ -78,6 +80,7 @@ class StoryPage extends StatefulWidget {
   final int initialIndex;
   final ValueChanged<int>? onSeen;
   final VideoPlayerController Function(String)? controllerFactory;
+  final Map<int, File> localMedia;
   @override
   State<StoryPage> createState() => _StoryPageState();
 }
@@ -234,10 +237,14 @@ class _StoryPageState extends State<StoryPage>
     }
     final c =
         widget.controllerFactory?.call('${story['media']}') ??
-        VideoPlayerController.networkUrl(
-          Uri.parse(widget.api.media('${story['media']}')),
-          httpHeaders: widget.api.headers,
-        );
+        (widget.localMedia[number(story['id'])] != null
+            ? VideoPlayerController.file(
+                widget.localMedia[number(story['id'])]!,
+              )
+            : VideoPlayerController.networkUrl(
+                Uri.parse(widget.api.media('${story['media']}')),
+                httpHeaders: widget.api.headers,
+              ));
     player = c;
     try {
       await c.initialize();
@@ -398,14 +405,31 @@ class _StoryPageState extends State<StoryPage>
                 ),
               ),
             )
+          else if (!video && story['media'] == null)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Text(
+                  '${story['body'] ?? ''}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white, fontSize: 24),
+                ),
+              ),
+            )
           else if (!video)
-            SocialImage(
-              api: widget.api,
-              path: story['media'],
-              width: double.infinity,
-              height: double.infinity,
-              fit: BoxFit.contain,
-            ),
+            if (widget.localMedia[number(story['id'])] != null)
+              Image.file(
+                widget.localMedia[number(story['id'])]!,
+                fit: BoxFit.contain,
+              )
+            else
+              SocialImage(
+                api: widget.api,
+                path: story['media'],
+                width: double.infinity,
+                height: double.infinity,
+                fit: BoxFit.contain,
+              ),
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTapUp: (d) => next(
@@ -593,7 +617,8 @@ class _StoryPageState extends State<StoryPage>
                               ),
                           ],
                         ),
-                      if ('${story['body'] ?? ''}'.isNotEmpty)
+                      if (story['media'] != null &&
+                          '${story['body'] ?? ''}'.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: Row(

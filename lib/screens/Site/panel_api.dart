@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'chat_cache.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
@@ -55,6 +56,13 @@ class PanelApi {
     return get(path, query);
   }
 
+  Future<Json?> saved(String path, [Map<String, String>? query]) async {
+    checkAccount();
+    final value = await ChatCache.read(token, _key(path, query));
+    checkAccount();
+    return value is Map ? object(value) : null;
+  }
+
   Future<Json> get(String path, [Map<String, String>? query]) async {
     checkAccount();
     final key = _key(path, query);
@@ -74,10 +82,9 @@ class PanelApi {
     final future = () async {
       await previous;
       checkAccount();
-      if (_blockedUntil != null && DateTime.now().isBefore(_blockedUntil!)) {
-        throw _lastFailure!;
-      }
       try {
+        if (_blockedUntil != null && DateTime.now().isBefore(_blockedUntil!))
+          throw _lastFailure!;
         final request = http.Request('GET', uri(path, query))
           ..followRedirects = false
           ..headers.addAll(headers);
@@ -101,6 +108,8 @@ class PanelApi {
           );
         }
         final value = decode(response);
+        if (path.isEmpty || path.startsWith('/chat/'))
+          await ChatCache.write(token, key, value);
         if (revision == _revision) {
           if (_cache.length >= 64) _cache.remove(_cache.keys.first);
           _cache[key] = (
@@ -114,6 +123,15 @@ class PanelApi {
         }
         return value;
       } catch (error) {
+        if (path.isEmpty || path.startsWith('/chat/')) {
+          if (ChatCache.mayUseOffline(error)) {
+            final saved = await ChatCache.read(token, key);
+            checkAccount();
+            if (saved is Map) return {...object(saved), '_offline': true};
+          } else {
+            await ChatCache.remove(token, key);
+          }
+        }
         _lastFailure = error;
         if (error is SocialException &&
             (error.status == 401 || error.status == 403)) {

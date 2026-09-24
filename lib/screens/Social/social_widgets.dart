@@ -4,6 +4,7 @@ import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:sornaz/components/main_tab_scaffold.dart';
+import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
@@ -278,8 +279,14 @@ class SocialVideo extends StatefulWidget {
     this.localFile,
     this.title = '',
     this.subtitle = '',
+    this.autoplay = false,
+    this.controllerFactory,
+    this.postControls = false,
   });
   final File? localFile;
+  final bool autoplay;
+  final bool postControls;
+  final VideoPlayerController Function()? controllerFactory;
   final String title, subtitle;
   final SocialApi api;
   final String path;
@@ -288,29 +295,62 @@ class SocialVideo extends StatefulWidget {
 }
 
 class _SocialVideoState extends State<SocialVideo> with WidgetsBindingObserver {
+  static final autoplayed = <String>{};
   VideoPlayerController? controller;
-  bool failed = false;
+  Timer? visibility;
+  bool failed = false, fullScreen = false;
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _load();
+    load();
+    if (widget.autoplay)
+      visibility = Timer.periodic(
+        const Duration(milliseconds: 300),
+        (_) => checkVisibility(),
+      );
   }
 
-  Future<void> _load() async {
-    final c = widget.localFile != null
-        ? VideoPlayerController.file(widget.localFile!)
-        : VideoPlayerController.networkUrl(
-            Uri.parse(widget.api.media(widget.path)),
-            httpHeaders: widget.api.headers,
-          );
+  Future<void> load() async {
+    final c =
+        widget.controllerFactory?.call() ??
+        (widget.localFile != null
+            ? VideoPlayerController.file(widget.localFile!)
+            : VideoPlayerController.networkUrl(
+                Uri.parse(widget.api.media(widget.path)),
+                httpHeaders: widget.api.headers,
+              ));
     controller = c;
     try {
       await c.initialize();
-      if (mounted && controller == c) setState(() {});
+      await c.setLooping(false);
+      if (mounted && controller == c) {
+        setState(() {});
+        checkVisibility();
+      }
     } catch (_) {
       if (mounted) setState(() => failed = true);
     }
+  }
+
+  void checkVisibility() {
+    if (!mounted || fullScreen || controller?.value.isInitialized != true)
+      return;
+    final box = context.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return;
+    final rect = box.localToGlobal(Offset.zero) & box.size;
+    final viewport = Offset.zero & MediaQuery.sizeOf(context);
+    final visible =
+        (ModalRoute.of(context)?.isCurrent ?? true) &&
+        rect.overlaps(viewport) &&
+        rect.intersect(viewport).height >= rect.height * .6;
+    if (!visible) {
+      if (controller!.value.isPlaying) controller!.pause();
+      return;
+    }
+    final key = '${CourseCache.account(widget.api.token)}:${widget.path}';
+    if (widget.autoplay && autoplayed.add(key))
+      controller!.play().catchError((Object _) {});
   }
 
   @override
@@ -320,39 +360,72 @@ class _SocialVideoState extends State<SocialVideo> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    visibility?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     controller?.dispose();
     super.dispose();
   }
 
+  String clock(Duration value) =>
+      '${value.inMinutes}:${(value.inSeconds % 60).toString().padLeft(2, '0')}';
   Future<void> note() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    final me = widget.api.token.isEmpty
-        ? <String, dynamic>{}
-        : object(await widget.api.get('/me'));
-    final key = 'video-note:${number(me['id'])}:' + widget.path;
-    final input = TextEditingController(text: prefs.getString(key) ?? '');
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (d) => AlertDialog(
-        title: AppText(socialText(d, 'یادداشت درس', 'Lesson note')),
-        content: TextField(controller: input, maxLines: 5, maxLength: 3000),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(d, true),
-            child: AppText(socialText(d, 'ذخیره', 'Save')),
-          ),
-        ],
-      ),
-    );
-    if (saved == true) await prefs.setString(key, input.text);
-    await Future<void>.delayed(const Duration(milliseconds: 300));
-    input.dispose();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final me = widget.api.token.isEmpty
+          ? <String, dynamic>{}
+          : object(await widget.api.get('/me'));
+      if (!mounted) return;
+      final key = 'video-note:${number(me['id'])}:${widget.path}';
+      final input = TextEditingController(text: prefs.getString(key) ?? '');
+      final saved = await showDialog<bool>(
+        context: context,
+        builder: (d) => AlertDialog(
+          title: Text(socialText(d, 'یادداشت درس', 'Lesson note')),
+          content: TextField(controller: input, maxLines: 5, maxLength: 3000),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(d, true),
+              child: Text(socialText(d, 'ذخیره', 'Save')),
+            ),
+          ],
+        ),
+      );
+      if (saved == true) await prefs.setString(key, input.text);
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      input.dispose();
+    } catch (e) {
+      if (mounted) socialError(context, e);
+    }
   }
 
-  String clock(Duration d) =>
-      '${d.inMinutes}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
+  Future<void> openFull() async {
+    fullScreen = true;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (c) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppTopBarDirection(child: AppBar()),
+          body: LayoutBuilder(
+            builder: (context, bounds) {
+              final aspect = controller!.value.aspectRatio;
+              return Center(
+                child: SizedBox(
+                  width:
+                      ((bounds.maxHeight - (widget.postControls ? 6 : 110)) *
+                              aspect)
+                          .clamp(0.0, bounds.maxWidth),
+                  child: player(c, full: true),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    fullScreen = false;
+    if (mounted) checkVisibility();
+  }
+
   Widget player(BuildContext context, {bool full = false}) {
     final c = controller!;
     return ValueListenableBuilder<VideoPlayerValue>(
@@ -360,97 +433,144 @@ class _SocialVideoState extends State<SocialVideo> with WidgetsBindingObserver {
       builder: (context, v, _) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              AspectRatio(aspectRatio: v.aspectRatio, child: VideoPlayer(c)),
-              PositionedDirectional(
-                top: 12,
-                start: 16,
-                end: 16,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AppText(
-                      widget.title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
-                    AppText(
-                      widget.subtitle,
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ],
-                ),
+          LayoutBuilder(
+            builder: (context, constraints) => GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: full ? () => v.isPlaying ? c.pause() : c.play() : openFull,
+              onLongPressStart: (details) => c.setPlaybackSpeed(
+                details.localPosition.dx >= constraints.maxWidth / 2 ? 2 : .5,
               ),
-              if (!v.isPlaying)
-                IconButton.filled(
-                  onPressed: c.play,
-                  iconSize: 42,
-                  icon: const Icon(Icons.play_arrow),
-                ),
-            ],
-          ),
-          VideoProgressIndicator(
-            c,
-            allowScrubbing: true,
-            colors: VideoProgressColors(
-              playedColor: Theme.of(context).colorScheme.primary,
-            ),
-          ),
-          Wrap(
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              IconButton(
-                tooltip: socialText(
-                  context,
-                  v.isPlaying ? 'توقف' : 'پخش',
-                  v.isPlaying ? 'Pause' : 'Play',
-                ),
-                onPressed: () => v.isPlaying ? c.pause() : c.play(),
-                icon: Icon(v.isPlaying ? Icons.pause : Icons.play_arrow),
-              ),
-              AppText(
-                '${clock(v.position)} / ${clock(v.duration)}',
-                style: const TextStyle(fontSize: 11),
-              ),
-              IconButton(
-                onPressed: () => c.setVolume(v.volume == 0 ? 1 : 0),
-                icon: Icon(v.volume == 0 ? Icons.volume_off : Icons.volume_up),
-              ),
-              IconButton(
-                tooltip: socialText(context, 'یادداشت درس', 'Lesson note'),
-                onPressed: note,
-                icon: const Icon(Icons.note_add_outlined),
-              ),
-              PopupMenuButton<double>(
-                tooltip: socialText(context, 'سرعت پخش', 'Playback speed'),
-                initialValue: v.playbackSpeed,
-                onSelected: c.setPlaybackSpeed,
-                itemBuilder: (_) => [
-                  for (final speed in [.5, .75, 1.0, 1.25, 1.5, 2.0])
-                    PopupMenuItem(value: speed, child: AppText('${speed}x')),
-                ],
-                icon: const Icon(Icons.settings_outlined),
-              ),
-              IconButton(
-                onPressed: () => full
-                    ? Navigator.pop(context)
-                    : Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (ctx) => ScrollAwareScaffold(
-                            appBar: AppTopBarDirection(child: AppBar()),
-                            body: Center(child: player(ctx, full: true)),
+              onLongPressEnd: (_) => c.setPlaybackSpeed(1),
+              onLongPressCancel: () => c.setPlaybackSpeed(1),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  AspectRatio(
+                    aspectRatio: v.aspectRatio > 0 ? v.aspectRatio : 16 / 9,
+                    child: VideoPlayer(c),
+                  ),
+                  if (widget.postControls)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: Text(
+                            clock(v.duration - v.position),
+                            textDirection: TextDirection.ltr,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
-                icon: Icon(full ? Icons.fullscreen_exit : Icons.fullscreen),
+                    ),
+                  if (widget.postControls)
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      child: IconButton(
+                        onPressed: () => c.setVolume(v.volume == 0 ? 1 : 0),
+                        icon: Icon(
+                          v.volume == 0 ? Icons.volume_off : Icons.volume_up,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  if (widget.title.isNotEmpty || widget.subtitle.isNotEmpty)
+                    Positioned(
+                      top: 8,
+                      left: 52,
+                      right: 64,
+                      child: Column(
+                        children: [
+                          Text(
+                            widget.title,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          if (widget.subtitle.isNotEmpty)
+                            Text(
+                              widget.subtitle,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                        ],
+                      ),
+                    ),
+                  if (!v.isPlaying)
+                    IconButton.filled(
+                      onPressed: () async {
+                        if (v.position >= v.duration)
+                          await c.seekTo(Duration.zero);
+                        await c.play();
+                      },
+                      iconSize: 42,
+                      icon: const Icon(Icons.play_arrow),
+                    ),
+                  if (v.playbackSpeed != 1)
+                    Text(
+                      '${v.playbackSpeed}×',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                ],
               ),
-            ],
+            ),
           ),
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: VideoProgressIndicator(
+              c,
+              allowScrubbing: true,
+              padding: EdgeInsets.zero,
+              colors: VideoProgressColors(
+                playedColor: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
+          if (!widget.postControls)
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                IconButton(
+                  onPressed: () => v.isPlaying ? c.pause() : c.play(),
+                  icon: Icon(v.isPlaying ? Icons.pause : Icons.play_arrow),
+                ),
+                Text(
+                  '${clock(v.position)} / ${clock(v.duration)}',
+                  style: const TextStyle(fontSize: 11),
+                ),
+                IconButton(
+                  onPressed: () => c.setVolume(v.volume == 0 ? 1 : 0),
+                  icon: Icon(
+                    v.volume == 0 ? Icons.volume_off : Icons.volume_up,
+                  ),
+                ),
+                IconButton(
+                  tooltip: socialText(context, 'یادداشت درس', 'Lesson note'),
+                  onPressed: note,
+                  icon: const Icon(Icons.note_add_outlined),
+                ),
+                PopupMenuButton<double>(
+                  tooltip: socialText(context, 'سرعت پخش', 'Playback speed'),
+                  initialValue: v.playbackSpeed,
+                  onSelected: c.setPlaybackSpeed,
+                  itemBuilder: (_) => [
+                    for (final speed in [.5, .75, 1.0, 1.25, 1.5, 2.0])
+                      PopupMenuItem(value: speed, child: Text('${speed}x')),
+                  ],
+                  icon: const Icon(Icons.settings_outlined),
+                ),
+                IconButton(
+                  onPressed: () => full ? Navigator.pop(context) : openFull(),
+                  icon: Icon(full ? Icons.fullscreen_exit : Icons.fullscreen),
+                ),
+              ],
+            ),
         ],
       ),
     );
@@ -464,7 +584,7 @@ class _SocialVideoState extends State<SocialVideo> with WidgetsBindingObserver {
         onRetry: () {
           setState(() => failed = false);
           controller?.dispose();
-          _load();
+          load();
         },
       );
     if (controller?.value.isInitialized != true)

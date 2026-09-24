@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'course_cache.dart';
+import '../Site/chat_cache.dart';
 import 'package:sornaz/helpers/user_facing_error.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
@@ -85,6 +86,25 @@ class SocialApi {
   }
 
   Future<dynamic> get(String path, {bool refresh = false}) async {
+    if (path == '/conversations' || RegExp(r'^/posts/\d+$').hasMatch(path)) {
+      try {
+        final value = _decode(
+          await _client
+              .get(uri(path), headers: headers)
+              .timeout(const Duration(seconds: 12)),
+        );
+        await ChatCache.write(token, path, value);
+        return value;
+      } catch (e) {
+        if (!ChatCache.mayUseOffline(e)) {
+          await ChatCache.remove(token, path);
+          rethrow;
+        }
+        final saved = await ChatCache.read(token, path);
+        if (saved != null) return saved;
+        rethrow;
+      }
+    }
     final cacheable =
         path == '/home' ||
         path == '/me' ||

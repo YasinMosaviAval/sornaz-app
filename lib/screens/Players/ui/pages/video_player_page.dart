@@ -8,6 +8,8 @@ import 'package:sornaz/screens/Social/social_widgets.dart';
 import '../../services/music_audio_handler.dart';
 import '../../services/music_playlists.dart';
 import 'playlists.dart';
+import 'video_crop_page.dart';
+import 'package:sornaz/components/expanding_search_bar.dart';
 
 class DeviceVideo {
   const DeviceVideo({
@@ -94,11 +96,16 @@ class VideoLibraryPage extends StatefulWidget {
   State<VideoLibraryPage> createState() => _VideoLibraryPageState();
 }
 
-class _VideoLibraryPageState extends State<VideoLibraryPage> {
+class _VideoLibraryPageState extends State<VideoLibraryPage>
+    with SingleTickerProviderStateMixin {
   static const channel = MethodChannel('sornaz/device_videos');
   final store = MusicPlaylists(storagePrefix: 'video');
   List<DeviceVideo> videos = [];
   final expanded = <String>{};
+  final selected = <String>{};
+  late final tabs = TabController(length: 3, vsync: this);
+  int currentTab = 0;
+  bool busy = false;
   String query = '';
   String? error;
   bool loading = true;
@@ -106,12 +113,21 @@ class _VideoLibraryPageState extends State<VideoLibraryPage> {
   @override
   void initState() {
     super.initState();
+    tabs.addListener(tabChanged);
     store.addListener(changed);
     load();
   }
 
   void changed() {
     if (mounted) setState(() {});
+  }
+
+  void tabChanged() {
+    if (currentTab == tabs.index) return;
+    setState(() {
+      currentTab = tabs.index;
+      selected.clear();
+    });
   }
 
   Future<void> load() async {
@@ -148,6 +164,7 @@ class _VideoLibraryPageState extends State<VideoLibraryPage> {
 
   @override
   void dispose() {
+    tabs.dispose();
     store.removeListener(changed);
     store.dispose();
     super.dispose();
@@ -174,9 +191,12 @@ class _VideoLibraryPageState extends State<VideoLibraryPage> {
   }) => Column(
     children: [
       ListTile(
+        key: ValueKey('video-item-${video.uri}'),
         dense: true,
         minVerticalPadding: 10,
-        leading: VideoThumbnail(uri: video.uri),
+        leading: selected.contains(video.uri)
+            ? const Icon(Icons.check_box, size: 24)
+            : VideoThumbnail(uri: video.uri),
         title: Text(
           video.name,
           style: const TextStyle(fontSize: 13),
@@ -187,9 +207,21 @@ class _VideoLibraryPageState extends State<VideoLibraryPage> {
           '${video.duration.inMinutes}:${(video.duration.inSeconds % 60).toString().padLeft(2, '0')}',
           style: const TextStyle(fontSize: 11),
         ),
-        onTap: () => open(video, list),
+        onLongPress: () => setState(() {
+          if (!selected.remove(video.uri)) selected.add(video.uri);
+        }),
+        onTap: () => selected.isEmpty
+            ? open(video, list)
+            : setState(() {
+                if (!selected.remove(video.uri)) selected.add(video.uri);
+              }),
         trailing: PopupMenuButton<String>(
+          enabled: !busy,
           onSelected: (action) async {
+            if (['rename', 'crop', 'share', 'delete'].contains(action)) {
+              await fileAction(action, [video]);
+              return;
+            }
             if (action == 'add')
               await chooseAudioPlaylist(
                 context,
@@ -201,6 +233,13 @@ class _VideoLibraryPageState extends State<VideoLibraryPage> {
               await store.remove(collection, video.uri);
           },
           itemBuilder: (_) => [
+            for (final action in [
+              ('rename', t('تغییر نام', 'Rename')),
+              ('crop', t('برش ویدیو', 'Trim video')),
+              ('share', t('اشتراک‌گذاری', 'Share')),
+              ('delete', t('حذف', 'Delete')),
+            ])
+              PopupMenuItem(value: action.$1, child: Text(action.$2)),
             PopupMenuItem(
               value: 'add',
               child: Text(t('افزودن به لیست پخش', 'Add to playlist')),
@@ -220,6 +259,95 @@ class _VideoLibraryPageState extends State<VideoLibraryPage> {
       ),
     ],
   );
+  Future<void> fileAction(String action, List<DeviceVideo> items) async {
+    if (items.isEmpty || busy) return;
+    setState(() => busy = true);
+    try {
+      if (action == 'add') {
+        await chooseAudioPlaylist(context, items.map((v) => v.uri), store);
+        return;
+      }
+      if (action == 'crop') {
+        await musicAudioHandler?.pause();
+        if (!mounted) return;
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) =>
+                VideoCropPage(uri: items.single.uri, name: items.single.name),
+          ),
+        );
+        await load();
+        return;
+      }
+      String? name;
+      if (action == 'rename') {
+        final current = items.single.name;
+        var draft = current;
+        name = await showDialog<String>(
+          context: context,
+          builder: (c) => AlertDialog(
+            title: Text(t('تغییر نام', 'Rename')),
+            content: TextFormField(
+              initialValue: current,
+              onChanged: (v) => draft = v,
+              maxLength: 180,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(c),
+                child: Text(t('انصراف', 'Cancel')),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(c, draft.trim()),
+                child: Text(t('ذخیره', 'Save')),
+              ),
+            ],
+          ),
+        );
+        if (name == null || name.isEmpty) return;
+        if (!name.contains('.') && current.contains('.'))
+          name += current.substring(current.lastIndexOf('.'));
+      }
+      if (action == 'delete') {
+        final yes = await showDialog<bool>(
+          context: context,
+          builder: (c) => AlertDialog(
+            title: Text(
+              t('ویدیوهای انتخاب‌شده حذف شوند؟', 'Delete selected videos?'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(c, false),
+                child: Text(t('انصراف', 'Cancel')),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(c, true),
+                child: Text(t('حذف', 'Delete')),
+              ),
+            ],
+          ),
+        );
+        if (yes != true) return;
+      }
+      await channel.invokeMethod(action, {
+        'uris': items.map((v) => v.uri).toList(),
+        if (name != null) 'name': name,
+      });
+      if (action == 'delete')
+        for (final item in items) {
+          await store.replacePath(item.uri, null);
+        }
+      if (!mounted) return;
+      setState(selected.clear);
+      if (action != 'share') await load();
+    } catch (e) {
+      if (mounted) socialError(context, e);
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
   Widget groups(bool playlists) {
     final groups = <String, List<DeviceVideo>>{};
     if (playlists) {
@@ -304,47 +432,100 @@ class _VideoLibraryPageState extends State<VideoLibraryPage> {
     final visible = videos
         .where((v) => v.name.toLowerCase().contains(query))
         .toList();
+    final selectable = visible
+        .where(
+          (v) =>
+              currentTab == 0 ||
+              (currentTab == 1 && expanded.contains('f:${v.folderId}')) ||
+              (currentTab == 2 &&
+                  store.lists.entries.any(
+                    (e) =>
+                        expanded.contains('p:${e.key}') &&
+                        e.value.contains(v.uri),
+                  )),
+        )
+        .toList();
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        appBar: AppTopBarDirection(
-          child: AppBar(
-            title: Text(t('پخش‌کننده ویدیو', 'Video player')),
-            actions: [
-              IconButton(
-                tooltip: t('لیست پخش جدید', 'New playlist'),
-                icon: const Icon(Icons.playlist_add),
-                onPressed: () =>
-                    createMusicPlaylist(context, collection: store),
-              ),
-              IconButton(
-                tooltip: t('بازخوانی', 'Refresh'),
-                onPressed: loading ? null : load,
-                icon: const Icon(Icons.refresh),
+        appBar: ExpandingSearchBar(
+          title: Row(
+            children: [
+              const BackButton(),
+              Expanded(
+                child: Text(
+                  t('پخش‌کننده ویدیو', 'Video player'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 14),
+                ),
               ),
             ],
-            bottom: TabBar(
+          ),
+          hint: t('جستجوی ویدیو', 'Search videos'),
+          onChanged: (v) => setState(() => query = v.trim().toLowerCase()),
+          actions: [
+            IconButton(
+              tooltip: t('لیست پخش جدید', 'New playlist'),
+              icon: const Icon(Icons.playlist_add),
+              onPressed: () => createMusicPlaylist(context, collection: store),
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
+            TabBar(
+              controller: tabs,
               tabs: [
                 Tab(text: t('ویدیوها', 'Videos')),
                 Tab(text: t('پوشه‌ها', 'Folders')),
                 Tab(text: t('لیست پخش‌ها', 'Playlists')),
               ],
             ),
-          ),
-        ),
-        body: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: TextField(
-                onChanged: (v) =>
-                    setState(() => query = v.trim().toLowerCase()),
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.search),
-                  hintText: t('جستجوی ویدیو', 'Search videos'),
-                ),
+            if (selected.isNotEmpty)
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: () => setState(() {
+                      if (selectable.every((v) => selected.contains(v.uri))) {
+                        selected.clear();
+                      } else {
+                        selected.addAll(selectable.map((v) => v.uri));
+                      }
+                    }),
+                    icon: Icon(
+                      selectable.every((v) => selected.contains(v.uri))
+                          ? Icons.check_box
+                          : Icons.check_box_outline_blank,
+                    ),
+                  ),
+                  Text('${selected.length}'),
+                  const Spacer(),
+                  PopupMenuButton<String>(
+                    enabled: !busy,
+                    onSelected: (action) => fileAction(
+                      action,
+                      videos.where((v) => selected.contains(v.uri)).toList(),
+                    ),
+                    itemBuilder: (_) => [
+                      for (final entry in [
+                        if (selected.length == 1) ...[
+                          ('rename', t('تغییر نام', 'Rename')),
+                          ('crop', t('برش ویدیو', 'Trim video')),
+                        ],
+                        ('add', t('افزودن به لیست پخش', 'Add to playlist')),
+                        ('share', t('اشتراک‌گذاری', 'Share')),
+                        ('delete', t('حذف', 'Delete')),
+                      ])
+                        PopupMenuItem(value: entry.$1, child: Text(entry.$2)),
+                    ],
+                  ),
+                  IconButton(
+                    onPressed: () => setState(selected.clear),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
               ),
-            ),
             Expanded(
               child: loading
                   ? const Center(child: CircularProgressIndicator())
@@ -362,6 +543,7 @@ class _VideoLibraryPageState extends State<VideoLibraryPage> {
                       ),
                     )
                   : TabBarView(
+                      controller: tabs,
                       children: [
                         visible.isEmpty
                             ? Center(

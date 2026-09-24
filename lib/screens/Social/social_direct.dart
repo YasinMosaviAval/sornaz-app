@@ -4,6 +4,9 @@ import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:sornaz/helpers/user_facing_error.dart';
 import '../Site/panel_api.dart';
+import '../Site/chat_management.dart';
+import '../Site/chat_cache.dart';
+import '../Site/chat_offline_sync.dart';
 import '../Site/panel_form.dart';
 import '../Site/panel_resource_page.dart';
 import 'social_api.dart';
@@ -31,7 +34,7 @@ Future<void> openDirect(
 }
 
 Future<Json> chatSection(PanelApi api) async => objects(
-  (await api.get(''))['sections'],
+  ((await api.saved('')) ?? await api.get(''))['sections'],
 ).firstWhere((s) => s['key'] == 'chat');
 
 class DirectPage extends StatefulWidget {
@@ -43,6 +46,7 @@ class DirectPage extends StatefulWidget {
 }
 
 class _DirectPageState extends State<DirectPage> {
+  late final offlineSync = ChatOfflineSync(panel);
   late final panel =
       widget.panelApi ??
       PanelApi(
@@ -63,6 +67,7 @@ class _DirectPageState extends State<DirectPage> {
 
   @override
   void dispose() {
+    offlineSync.dispose();
     if (widget.panelApi == null) panel.dispose();
     super.dispose();
   }
@@ -71,7 +76,13 @@ class _DirectPageState extends State<DirectPage> {
     if (fetching) return;
     fetching = true;
     try {
+      if (conversations == null) {
+        final saved = await ChatCache.read(widget.api.token, '/conversations');
+        if (mounted && saved is List)
+          setState(() => conversations = objects(saved));
+      }
       final rows = objects(await widget.api.get('/conversations'));
+      if (mounted) offlineSync.start(rows);
       if (mounted)
         setState(() {
           conversations = rows;
@@ -152,6 +163,13 @@ class _DirectPageState extends State<DirectPage> {
             ),
           for (final c in rows)
             ListTile(
+              onLongPress: () async {
+                final section = await chatSection(panel);
+                if (!mounted) return;
+                if (await conversationMenu(context, panel, section, c) &&
+                    mounted)
+                  await load();
+              },
               leading: ClipOval(
                 child: SocialImage(
                   api: widget.api,
@@ -192,7 +210,7 @@ class _DirectPageState extends State<DirectPage> {
   Widget build(BuildContext context) => DefaultTabController(
     length: 2,
     child: SocialScaffold(
-      title: socialText(context,'گفتگو','Conversations'),
+      title: socialText(context, 'گفتگو', 'Conversations'),
       actions: [
         IconButton(
           tooltip: socialText(context, 'گروه جدید', 'New group'),
