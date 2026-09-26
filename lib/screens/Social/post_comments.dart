@@ -1,3 +1,4 @@
+import 'story_composer.dart';
 import 'member_grid.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter/material.dart';
@@ -422,6 +423,13 @@ class _SharePostSheetState extends State<SharePostSheet> {
                 }),
               ),
             ),
+            FilledButton(
+              onPressed: sending || selected.isEmpty ? null : send,
+              child: Text(
+                socialText(context, 'ارسال', 'Send') +
+                    ' (${selected.length}/10)',
+              ),
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -431,17 +439,25 @@ class _SharePostSheetState extends State<SharePostSheet> {
                     'اضافه کردن به استوری',
                     'Add to story',
                   ),
-                  icon: const Icon(Icons.add_circle_outline),
+                  icon: const Icon(Icons.add_circle_outline, size: 34),
                   onPressed: sending
                       ? null
                       : () async {
                           setState(() => sending = true);
                           try {
-                            await widget.api.post(
-                              '/posts/${widget.postId}/story',
+                            final published = await Navigator.push<bool>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => StoryComposer(
+                                  api: widget.api,
+                                  sourcePostId: widget.postId,
+                                ),
+                              ),
                             );
-                            widget.onStoryShared?.call();
-                            if (context.mounted) Navigator.pop(context);
+                            if (published == true) {
+                              widget.onStoryShared?.call();
+                              if (context.mounted) Navigator.pop(context);
+                            }
                           } catch (e) {
                             if (context.mounted) socialError(context, e);
                           } finally {
@@ -451,7 +467,7 @@ class _SharePostSheetState extends State<SharePostSheet> {
                 ),
                 IconButton(
                   tooltip: socialText(context, 'ارسال لینک', 'Share link'),
-                  icon: const Icon(Icons.link),
+                  icon: const Icon(Icons.link, size: 34),
                   onPressed: () {
                     final box = context.findRenderObject() as RenderBox?;
                     Share.share(
@@ -465,13 +481,6 @@ class _SharePostSheetState extends State<SharePostSheet> {
                   },
                 ),
               ],
-            ),
-            FilledButton(
-              onPressed: sending || selected.isEmpty ? null : send,
-              child: Text(
-                socialText(context, 'ارسال', 'Send') +
-                    ' (${selected.length}/10)',
-              ),
             ),
           ],
         ),

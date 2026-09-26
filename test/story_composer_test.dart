@@ -36,6 +36,67 @@ class PublishingApi extends SocialApi {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
+  testWidgets('text size reflows and alignment survives editing and movement', (
+    tester,
+  ) async {
+    final png = (await tester.runAsync(() async {
+      final recorder = ui.PictureRecorder();
+      Canvas(recorder).drawRect(
+        const Rect.fromLTWH(0, 0, 20, 20),
+        Paint()..color = Colors.blue,
+      );
+      final picture = recorder.endRecording();
+      final image = await picture.toImage(20, 20);
+      final data = await image.toByteData(format: ui.ImageByteFormat.png);
+      image.dispose();
+      picture.dispose();
+      return data!.buffer.asUint8List();
+    }))!;
+    StorySticker? result;
+    await tester.pumpWidget(
+      fixture.host(
+        Builder(
+          builder: (context) => TextButton(
+            onPressed: () async {
+              result = await Navigator.push<StorySticker>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => StoryTextEditor(image: png, cover: true),
+                ),
+              );
+            },
+            child: const Text('edit'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('edit'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'first line\nsecond line');
+    tester.widget<Slider>(find.byType(Slider)).onChanged!(48);
+    await tester.tap(find.byIcon(Icons.format_align_right));
+    await tester.pump();
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.style!.fontSize, 48);
+    expect(field.textAlign, TextAlign.right);
+    expect(field.maxLines, isNull);
+    await tester.tap(
+      find.byWidgetPredicate(
+        (w) =>
+            w is TextButton &&
+            w.child is Text &&
+            (w.child as Text).data != 'edit',
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(result!.fontSize, 48);
+    expect(result!.alignment, TextAlign.right);
+    final moved = result!
+        .move(const Offset(10, 20), const Size(360, 640))
+        .transform(const Offset(.2, .3), 2);
+    expect(moved.fontSize, 48);
+    expect(moved.alignment, TextAlign.right);
+  });
   test('duration labels and all three text color modes', () {
     expect(storyDuration(65000), '1:05');
     expect(storyDuration(3661000), '1:01:01');

@@ -9,16 +9,22 @@ class StorySticker {
     this.color = Colors.white,
     this.mode = 0,
     this.scale = 1,
+    this.fontSize = 28,
+    this.alignment = TextAlign.center,
     this.position = const Offset(.12, .3),
   });
   final String text;
   final Color color;
   final int mode;
   final double scale;
+  final double fontSize;
+  final TextAlign alignment;
   StorySticker transform(Offset position, double scale) => StorySticker(
     text: text,
     color: color,
     mode: mode,
+    fontSize: fontSize,
+    alignment: alignment,
     position: position,
     scale: scale.clamp(.3, 4),
   );
@@ -33,6 +39,8 @@ class StorySticker {
     text: text,
     color: color,
     mode: mode,
+    fontSize: fontSize,
+    alignment: alignment,
     scale: scale,
     position: Offset(
       (position.dx + delta.dx / bounds.width).clamp(-.5, 1),
@@ -53,10 +61,10 @@ class StoryTextLabel extends StatelessWidget {
     ),
     child: Text(
       sticker.text,
-      textAlign: TextAlign.center,
+      textAlign: sticker.alignment,
       style: TextStyle(
         color: sticker.foreground,
-        fontSize: 28,
+        fontSize: sticker.fontSize,
         fontWeight: FontWeight.w600,
       ),
     ),
@@ -108,6 +116,8 @@ class _StoryTextEditorState extends State<StoryTextEditor> {
   late final input = TextEditingController(text: widget.initial?.text ?? '');
   late Color color = widget.initial?.color ?? Colors.white;
   late int mode = widget.initial?.mode ?? 0;
+  late double fontSize = widget.initial?.fontSize ?? 28;
+  late TextAlign alignment = widget.initial?.alignment ?? TextAlign.center;
   bool picking = false;
   Offset point = const Offset(150, 250);
   Uint8List? rgba;
@@ -177,7 +187,7 @@ class _StoryTextEditorState extends State<StoryTextEditor> {
             if (!picking) const ColoredBox(color: Colors.black38),
             if (!picking)
               Positioned(
-                top: 60,
+                top: 110,
                 bottom: MediaQuery.viewInsetsOf(context).bottom + 80,
                 left: 30,
                 right: 30,
@@ -187,12 +197,12 @@ class _StoryTextEditorState extends State<StoryTextEditor> {
                       controller: input,
                       autofocus: true,
                       maxLength: 300,
-                      maxLines: 5,
+                      maxLines: null,
                       minLines: 1,
-                      textAlign: TextAlign.center,
+                      textAlign: alignment,
                       style: TextStyle(
                         color: mode == 1 ? Colors.white : color,
-                        fontSize: 28,
+                        fontSize: fontSize,
                         fontWeight: FontWeight.w600,
                       ),
                       decoration: InputDecoration(
@@ -205,6 +215,52 @@ class _StoryTextEditorState extends State<StoryTextEditor> {
                       ),
                     ),
                   ),
+                ),
+              ),
+            if (!picking)
+              Positioned(
+                top: 56,
+                left: 20,
+                right: 20,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Slider(
+                        value: fontSize,
+                        min: 14,
+                        max: 64,
+                        label: fontSize.round().toString(),
+                        onChanged: (value) => setState(() => fontSize = value),
+                      ),
+                    ),
+                    for (final value in [
+                      TextAlign.left,
+                      TextAlign.center,
+                      TextAlign.right,
+                    ])
+                      IconButton(
+                        tooltip: socialText(
+                          context,
+                          value == TextAlign.left
+                              ? 'چپ‌چین'
+                              : value == TextAlign.right
+                              ? 'راست‌چین'
+                              : 'وسط‌چین',
+                          value.name,
+                        ),
+                        onPressed: () => setState(() => alignment = value),
+                        icon: Icon(
+                          value == TextAlign.left
+                              ? Icons.format_align_left
+                              : value == TextAlign.right
+                              ? Icons.format_align_right
+                              : Icons.format_align_center,
+                          color: alignment == value
+                              ? Colors.amber
+                              : Colors.white,
+                        ),
+                      ),
+                  ],
                 ),
               ),
             if (picking)
@@ -289,6 +345,8 @@ class _StoryTextEditorState extends State<StoryTextEditor> {
                           text: input.text.trim(),
                           color: color,
                           mode: mode,
+                          fontSize: fontSize,
+                          alignment: alignment,
                           scale: widget.initial?.scale ?? 1,
                           position:
                               widget.initial?.position ?? const Offset(.12, .3),

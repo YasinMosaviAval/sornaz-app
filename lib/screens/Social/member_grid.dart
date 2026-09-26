@@ -77,10 +77,18 @@ class MemberGrid extends StatelessWidget {
                       Positioned(
                         bottom: 0,
                         right: 0,
-                        child: Icon(
-                          Icons.check_circle,
-                          size: 22,
-                          color: Theme.of(context).colorScheme.primary,
+                        child: Container(
+                          width: 22,
+                          height: 22,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          child: const Icon(
+                            Icons.check,
+                            size: 16,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                   ],

@@ -1,3 +1,5 @@
+import '../Site/chat_media.dart';
+import '../Site/panel_api.dart';
 import 'dart:convert';
 import 'social_profile.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
@@ -36,8 +38,9 @@ String storyDuration(int milliseconds) {
 }
 
 class StoryComposer extends StatefulWidget {
-  const StoryComposer({super.key, required this.api});
+  const StoryComposer({super.key, required this.api, this.sourcePostId});
   final SocialApi api;
+  final int? sourcePostId;
   @override
   State<StoryComposer> createState() => _StoryComposerState();
 }
@@ -245,7 +248,34 @@ class _StoryComposerState extends State<StoryComposer>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     galleryScroll.addListener(loadNearEnd);
-    requestGallery();
+    initialize();
+  }
+
+  Future<void> initialize() async {
+    if (widget.sourcePostId != null) {
+      setState(() => busy = true);
+      final panel = PanelApi(widget.api.token, isCurrentAccount: () => mounted);
+      try {
+        final post = object(
+          await widget.api.get('/posts/${widget.sourcePostId}', refresh: true),
+        );
+        if (post['media'] != null && post['media'].toString().isNotEmpty) {
+          final file = await ChatFiles.reference(panel, post);
+          if (!mounted) return;
+          setState(() => busy = false);
+          await choose({
+            'uri': file.uri.toString(),
+            'video': post['mime'].toString().startsWith('video/'),
+          });
+        }
+      } catch (e) {
+        if (mounted) socialError(context, e);
+      } finally {
+        panel.dispose();
+        if (mounted) setState(() => busy = false);
+      }
+    }
+    if (mounted) await requestGallery();
   }
 
   @override
