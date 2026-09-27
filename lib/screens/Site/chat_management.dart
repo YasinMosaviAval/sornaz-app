@@ -3,6 +3,7 @@ import '../Social/social_api.dart';
 import '../Social/social_widgets.dart';
 import 'panel_api.dart';
 import 'panel_form.dart';
+import 'panel_ui.dart';
 import 'chat_cache.dart';
 import '../Social/media_picker.dart';
 import 'package:sornaz/components/media_dialogs.dart';
@@ -27,6 +28,7 @@ Future<bool> conversationMenu(
     ].where(actions.containsKey).toList();
     final key = await showModalBottomSheet<String>(
       context: context,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       builder: (c) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -39,7 +41,7 @@ Future<bool> conversationMenu(
                   'members' => Icons.person_add_alt,
                   'leave' => Icons.logout,
                   _ => Icons.delete_outline,
-                }),
+                }, color: key == 'delete' ? Colors.red : null),
                 title: Text('${actions[key]['label']}'),
                 onTap: () => Navigator.pop(c, key),
               ),
@@ -68,20 +70,23 @@ Future<bool> conversationMenu(
       result = PanelFormResult({'title': name}, {});
     } else if (fields.isNotEmpty) {
       final available = details['availableUsers'] ?? [];
-      result = await Navigator.push<PanelFormResult>(
-        context,
-        MaterialPageRoute(
-          builder: (_) => PanelFormPage(
-            title: '${definition['label']}',
-            fields: fields,
-            data: {'users': available, 'people': available},
-            initial: key == 'rename' ? {'title': details['title']} : const {},
-          ),
+      result = await showDialog<PanelFormResult>(
+        context: context,
+        builder: (_) => PanelFormPage(
+          dialog: true,
+          title: '${definition['label']}',
+          fields: fields,
+          data: {'users': available, 'people': available},
+          initial: key == 'rename' ? {'title': details['title']} : const {},
         ),
       );
       if (result == null) return false;
     } else {
-      final yes = await confirmMediaDelete(context, '${definition['label']}؟');
+      final yes = await showPanelConfirmation(
+        context,
+        '${definition['label']}؟',
+        delete: key == 'delete' || key == 'leave',
+      );
       if (yes != true) return false;
     }
     await api.act(

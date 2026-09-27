@@ -1,8 +1,11 @@
 import '../Social/media_picker.dart';
+import 'branches_page.dart';
 import 'chat_message_bubble.dart';
 import 'chat_cache.dart';
 import 'chat_media.dart';
-import 'package:sornaz/components/scroll_aware_scaffold.dart';
+import 'panel_ui.dart';
+import 'branch_style.dart';
+import 'branch_export.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'dart:async';
 import 'package:file_picker/file_picker.dart';
@@ -47,7 +50,7 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
   bool loading = true, busy = false;
   Object? error;
   String query = '';
-  bool searchOpen = false;
+  bool searchOpen = false, tableView = false;
   final searchInput = TextEditingController();
   int page = 1, generation = 0;
   Timer? searchTimer;
@@ -84,7 +87,7 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
   @override
   void initState() {
     super.initState();
-    load();
+    if (!['branches', 'branch-types'].contains(section)) load();
   }
 
   Future<void> load({bool refresh = false}) async {
@@ -242,59 +245,48 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
     }
     PanelFormResult? result;
     if (fields.isNotEmpty) {
-      result = await Navigator.of(context).push<PanelFormResult>(
-        MaterialPageRoute(
-          builder: (_) => PanelFormPage(
-            title: '${action['label']}',
-            fields: [
-              for (final field in fields.where(
-                (f) =>
-                    !(section == 'gallery' &&
-                        widget.params.containsKey('collection') &&
-                        f['key'] == 'collection'),
-              ))
-                if (section == 'gallery' && field['type'] == 'file')
-                  {
-                    ...field,
-                    'mediaPicker': true,
-                    'imagesOnly': [
-                      'cover',
-                      'logo',
-                    ].contains(widget.params['collection']),
-                  }
-                else if (field['key'] == 'founded' &&
-                    optionalObject(data['profile'])['accountType'] == 'human')
-                  {...field, 'label': 'تاریخ تولد', 'en': 'Date of birth'}
-                else
-                  field,
-            ],
-            data: {
-              ...data,
-              if (section == 'polls') 'options': record['options'],
-              if (section == 'schedules') 'attendance': record['attendance'],
-            },
-            initial: key == 'create' ? {...widget.params} : initial,
-          ),
+      result = await showDialog<PanelFormResult>(
+        context: context,
+        builder: (_) => PanelFormPage(
+          dialog: true,
+          title: panelLabel(context, action),
+          fields: [
+            for (final field in fields.where(
+              (f) =>
+                  !(section == 'gallery' &&
+                      widget.params.containsKey('collection') &&
+                      f['key'] == 'collection'),
+            ))
+              if (section == 'gallery' && field['type'] == 'file')
+                {
+                  ...field,
+                  'mediaPicker': true,
+                  'imagesOnly': [
+                    'cover',
+                    'logo',
+                  ].contains(widget.params['collection']),
+                }
+              else if (field['key'] == 'founded' &&
+                  optionalObject(data['profile'])['accountType'] == 'human')
+                {...field, 'label': 'تاریخ تولد', 'en': 'Date of birth'}
+              else
+                field,
+          ],
+          data: {
+            ...data,
+            if (section == 'polls') 'options': record['options'],
+            if (section == 'schedules') 'attendance': record['attendance'],
+          },
+          initial: key == 'create' ? {...widget.params} : initial,
         ),
       );
       if (result == null || !mounted) return;
     } else if (action['method'] != 'GET') {
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('${action['label']}'),
-          content: Text(panelTitle(record)),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(socialText(context, 'خیر', 'No')),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(socialText(context, 'بلی', 'Yes')),
-            ),
-          ],
-        ),
+      final confirmed = await showPanelConfirmation(
+        context,
+        panelLabel(context, action),
+        message: panelTitle(record),
+        delete: key.contains('delete') || key.contains('remove'),
       );
       if (confirmed != true || !mounted) return;
     }
@@ -312,7 +304,7 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
         if (mounted) {
           await Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => ScrollAwareScaffold(
+              builder: (_) => PanelScaffold(
                 appBar: AppTopBarDirection(
                   child: AppBar(title: Text('${action['label']}')),
                 ),
@@ -364,6 +356,212 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
     searchTimer = Timer(const Duration(milliseconds: 400), load);
   }
 
+  Future<void> openRecord(Json row) async {
+    final id = '${row['id']}';
+    if (selected.isNotEmpty) {
+      setState(() {
+        selected.contains(id) ? selected.remove(id) : selected.add(id);
+      });
+      return;
+    }
+    if (widget.section['detail'] is Map) {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => PanelResourcePage(
+            api: widget.api,
+            section: optionalObject(widget.section['detail']),
+            params: {'page': id},
+          ),
+        ),
+      );
+      await load();
+      return;
+    }
+    if (section == 'chat') {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => PanelConversationPage(
+            api: widget.api,
+            section: widget.section,
+            conversation: row,
+          ),
+        ),
+      );
+      await load();
+      return;
+    }
+    await showDialog<void>(
+      context: context,
+      builder: (context) => PanelModal(
+        title: panelTitle(row),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            PanelDataView(value: row),
+            if (section == 'terms')
+              for (final session
+                  in (row['sessions'] is List
+                      ? objects(row['sessions'])
+                      : <Json>[]))
+                PanelListItem(
+                  child: Column(
+                    children: [
+                      PanelDataView(value: session),
+                      Wrap(
+                        children: [
+                          for (final key in [
+                            'cancel',
+                            'cancel-approve',
+                            'cancel-reject',
+                            'restore',
+                          ])
+                            if (actions.containsKey(key))
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  perform(key, row, {
+                                    'sessionId':
+                                        '${session['id'] ?? session['sessionId']}',
+                                  });
+                                },
+                                child: Text('${actions[key]['label']}'),
+                              ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+            if (section == 'finance')
+              for (final installment
+                  in (row['installments'] is List
+                      ? objects(row['installments'])
+                      : <Json>[]))
+                PanelListItem(
+                  child: Column(
+                    children: [
+                      PanelDataView(value: installment),
+                      Wrap(
+                        children: [
+                          for (final key in ['pay', 'offline'])
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                perform(key, row, {
+                                  'invoiceId': '${row['id']}',
+                                  'installmentId': '${installment['id']}',
+                                });
+                              },
+                              child: Text('${actions[key]['label']}'),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget recordTable(List<Json> rows) => SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: DataTable(
+      showCheckboxColumn: false,
+      dividerThickness: .2,
+      border: TableBorder.all(
+        color: const Color(0xffeeeeee),
+        width: .2,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      headingRowHeight: 40,
+      dataRowMinHeight: 48,
+      dataRowMaxHeight: 64,
+      columns: [
+        DataColumn(label: Text(socialText(context, 'عنوان', 'Title'))),
+        DataColumn(label: Text(socialText(context, 'وضعیت', 'Status'))),
+        DataColumn(label: Text(socialText(context, 'عملیات', 'Actions'))),
+      ],
+      rows: [
+        for (final row in rows)
+          DataRow(
+            selected: selected.contains('${row['id']}'),
+            onLongPress: row['id'] == null
+                ? null
+                : () => setState(() {
+                    final id = '${row['id']}';
+                    selected.contains(id)
+                        ? selected.remove(id)
+                        : selected.add(id);
+                  }),
+            cells: [
+              DataCell(
+                SizedBox(
+                  width: 160,
+                  child: Text(
+                    panelTitle(row),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                onTap: () => openRecord(row),
+              ),
+              DataCell(Text('${row['status'] ?? ''}')),
+              DataCell(
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: socialText(context, 'جزئیات', 'Details'),
+                      icon: const Icon(Icons.info_outline, color: branchIndigo),
+                      onPressed: () => openRecord(row),
+                    ),
+                    for (final key in ['update', 'delete'])
+                      if (available(key, row))
+                        IconButton(
+                          tooltip: panelLabel(
+                            context,
+                            optionalObject(actions[key]),
+                          ),
+                          icon: Icon(
+                            key == 'delete'
+                                ? Icons.delete_outline
+                                : Icons.edit_outlined,
+                            color: key == 'delete' ? Colors.red : branchIndigo,
+                          ),
+                          onPressed: busy ? null : () => perform(key, row),
+                        ),
+                    if (actions.keys.any(
+                      (key) =>
+                          !['update', 'delete'].contains(key) &&
+                          available(key, row),
+                    ))
+                      PopupMenuButton<String>(
+                        onSelected: (key) => perform(key, row),
+                        itemBuilder: (_) => [
+                          for (final key in actions.keys)
+                            if (!['update', 'delete'].contains(key) &&
+                                available(key, row))
+                              PopupMenuItem(
+                                value: key,
+                                child: Text(
+                                  panelLabel(
+                                    context,
+                                    optionalObject(actions[key]),
+                                  ),
+                                ),
+                              ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+      ],
+    ),
+  );
+
   Widget recordRow(
     Json row, {
     List<String>? only,
@@ -371,6 +569,11 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
   }) {
     final rowActions =
         only ?? actions.keys.where((key) => available(key, row)).toList();
+    final inlineActions =
+        only == null && !['chat', 'gallery', 'account'].contains(section);
+    final menuActions = rowActions
+        .where((key) => !inlineActions || !['update', 'delete'].contains(key))
+        .toList();
     final id = '${row['id']}';
     return PanelListItem(
       color: selected.contains(id)
@@ -402,12 +605,12 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                         ? selected.remove(id)
                         : selected.add(id);
                   }),
-            trailing: rowActions.isEmpty
+            trailing: menuActions.isEmpty
                 ? null
                 : PopupMenuButton<String>(
                     onSelected: (key) => perform(key, row, extra),
                     itemBuilder: (_) => [
-                      for (final key in rowActions)
+                      for (final key in menuActions)
                         if (actions.containsKey(key))
                           PopupMenuItem(
                             value: key,
@@ -415,125 +618,41 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                           ),
                     ],
                   ),
-            onTap: () async {
-              if (selected.isNotEmpty) {
-                setState(() {
-                  selected.contains(id)
-                      ? selected.remove(id)
-                      : selected.add(id);
-                });
-                return;
-              }
-              if (widget.section['detail'] is Map) {
-                await Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => PanelResourcePage(
-                      api: widget.api,
-                      section: optionalObject(widget.section['detail']),
-                      params: {'page': id},
-                    ),
-                  ),
-                );
-                await load();
-                return;
-              }
-              if (section == 'chat') {
-                await Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => PanelConversationPage(
-                      api: widget.api,
-                      section: widget.section,
-                      conversation: row,
-                    ),
-                  ),
-                );
-                await load();
-                return;
-              }
-              await showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                builder: (context) => DraggableScrollableSheet(
-                  expand: false,
-                  initialChildSize: .7,
-                  builder: (context, scroll) => ListView(
-                    controller: scroll,
-                    padding: const EdgeInsets.all(20),
-                    children: [
-                      Text(
-                        panelTitle(row),
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      PanelDataView(value: row),
-                      if (section == 'terms')
-                        for (final session
-                            in (row['sessions'] is List
-                                ? objects(row['sessions'])
-                                : <Json>[]))
-                          PanelListItem(
-                            child: Column(
-                              children: [
-                                PanelDataView(value: session),
-                                Wrap(
-                                  children: [
-                                    for (final key in [
-                                      'cancel',
-                                      'cancel-approve',
-                                      'cancel-reject',
-                                      'restore',
-                                    ])
-                                      if (actions.containsKey(key))
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                            perform(key, row, {
-                                              'sessionId':
-                                                  '${session['id'] ?? session['sessionId']}',
-                                            });
-                                          },
-                                          child: Text(
-                                            '${actions[key]['label']}',
-                                          ),
-                                        ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                      if (section == 'finance')
-                        for (final installment
-                            in (row['installments'] is List
-                                ? objects(row['installments'])
-                                : <Json>[]))
-                          PanelListItem(
-                            child: Column(
-                              children: [
-                                PanelDataView(value: installment),
-                                Wrap(
-                                  children: [
-                                    for (final key in ['pay', 'offline'])
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                          perform(key, row, {
-                                            'invoiceId': '${row['id']}',
-                                            'installmentId':
-                                                '${installment['id']}',
-                                          });
-                                        },
-                                        child: Text('${actions[key]['label']}'),
-                                      ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                    ],
-                  ),
-                ),
-              );
-            },
+            onTap: () => openRecord(row),
           ),
+          if (inlineActions)
+            Padding(
+              padding: const EdgeInsetsDirectional.only(start: 16, end: 8),
+              child: Wrap(
+                spacing: 4,
+                children: [
+                  TextButton.icon(
+                    onPressed: () => openRecord(row),
+                    icon: const Icon(Icons.info_outline, size: 18),
+                    label: Text(socialText(context, 'جزئیات', 'Details')),
+                  ),
+                  for (final key in ['update', 'delete'])
+                    if (rowActions.contains(key))
+                      TextButton.icon(
+                        style: TextButton.styleFrom(
+                          foregroundColor: key == 'delete'
+                              ? Colors.red
+                              : branchIndigo,
+                        ),
+                        onPressed: busy ? null : () => perform(key, row, extra),
+                        icon: Icon(
+                          key == 'delete'
+                              ? Icons.delete_outline
+                              : Icons.edit_outlined,
+                          size: 18,
+                        ),
+                        label: Text(
+                          panelLabel(context, optionalObject(actions[key])),
+                        ),
+                      ),
+                ],
+              ),
+            ),
         ],
       ),
     );
@@ -543,7 +662,10 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthSession?>();
     if (auth != null && auth.token != widget.api.token) {
-      return const ScrollAwareScaffold(body: JoinCommunity());
+      return const PanelScaffold(body: JoinCommunity());
+    }
+    if (['branches', 'branch-types'].contains(section)) {
+      return BranchesPage(api: widget.api, section: widget.section);
     }
     final dynamic collection = panelValue(
       data,
@@ -633,35 +755,28 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                 key: panelDataLabel(context, key),
             };
             final title = panelLabel(context, widget.section);
-            final rtl = Directionality.of(context) == TextDirection.rtl;
+
             try {
-              await exportPanelPdf(title, exportRows, rtl: rtl, labels: labels);
+              await exportBranchesPdf(
+                context,
+                exportRows,
+                Map.fromEntries(
+                  labels.entries.where(
+                    (e) => ![
+                      'password',
+                      'csrf_token',
+                      'permissions',
+                      'catalog',
+                      'staff_catalog',
+                    ].contains(e.key),
+                  ),
+                ),
+                title: title,
+                subtitle: '',
+                fileName: '$section.pdf',
+              );
             } catch (e) {
               if (mounted) socialError(this.context, e);
-            }
-          },
-        ),
-      if (widget.section['filters'] is List)
-        IconButton(
-          tooltip: socialText(context, 'فیلترها', 'Filters'),
-          icon: const Icon(Icons.filter_list),
-          onPressed: () async {
-            final result = await Navigator.of(context).push<PanelFormResult>(
-              MaterialPageRoute(
-                builder: (_) => PanelFormPage(
-                  title: socialText(context, 'فیلترها', 'Filters'),
-                  fields: objects(widget.section['filters']),
-                  data: data,
-                  initial: filters,
-                ),
-              ),
-            );
-            if (result != null && mounted) {
-              setState(() {
-                filters = result.values;
-                page = 1;
-              });
-              await load();
             }
           },
         ),
@@ -677,13 +792,28 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
             load();
           },
         ),
-      IconButton(
-        tooltip: socialText(context, 'به‌روزرسانی', 'Refresh'),
-        onPressed: load,
-        icon: const Icon(Icons.refresh),
-      ),
     ];
-    return ScrollAwareScaffold(
+    final exportButtons = toolbar
+        .where(
+          (button) =>
+              button.icon is Icon &&
+              [
+                Icons.file_download_outlined,
+                Icons.picture_as_pdf_outlined,
+              ].contains((button.icon as Icon).icon),
+        )
+        .toList();
+    toolbar.removeWhere(exportButtons.contains);
+    final listLayout =
+        ![
+          'chat',
+          'gallery',
+          'account',
+          'dashboard',
+          'reports',
+        ].contains(section) &&
+        collection is List;
+    return PanelScaffold(
       appBar: AppTopBarDirection(
         child: AppBar(
           title: searchOpen
@@ -702,11 +832,16 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                   overflow: TextOverflow.ellipsis,
                 ),
           actions: [
+            if (!searchOpen && !loading && error == null)
+              ...exportButtons.map(
+                (button) => SizedBox(width: 36, child: button),
+              ),
             if (!searchOpen &&
                 !loading &&
                 error == null &&
                 additions.length == 1)
               IconButton(
+                constraints: const BoxConstraints.tightFor(width: 40),
                 tooltip: '${additions.single.value['label']}',
                 icon: const Icon(Icons.add),
                 onPressed: busy ? null : () => perform(additions.single.key),
@@ -730,6 +865,7 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
               ),
             if (collection is List || data['items'] is List || query.isNotEmpty)
               IconButton(
+                constraints: const BoxConstraints.tightFor(width: 40),
                 tooltip: socialText(
                   context,
                   searchOpen ? 'بستن جستجو' : 'جستجو',
@@ -744,7 +880,7 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                   }
                 },
               ),
-            if (!searchOpen)
+            if (!searchOpen && toolbar.isNotEmpty)
               PopupMenuButton<VoidCallback>(
                 tooltip: socialText(context, 'گزینه‌های بیشتر', 'More options'),
                 onSelected: (action) => action(),
@@ -783,6 +919,72 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 children: [
                   if (busy) const LinearProgressIndicator(),
+                  for (final field in objects(widget.section['filters'] ?? []))
+                    PanelField(
+                      field: {...field, 'filter': true},
+                      value: filters['${field['key']}'],
+                      data: {...data, '_form': filters},
+                      changed: (value) {
+                        setState(() {
+                          filters['${field['key']}'] = value;
+                          for (final child in objects(
+                            widget.section['filters'] ?? [],
+                          )) {
+                            if (optionalObject(
+                              optionalObject(child['options'])['match'],
+                            ).values.contains(field['key']))
+                              filters.remove('${child['key']}');
+                          }
+                          page = 1;
+                        });
+                        load();
+                      },
+                    ),
+                  if (listLayout)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              socialText(
+                                context,
+                                '${data['total'] ?? filtered.length} مورد',
+                                '${data['total'] ?? filtered.length} records',
+                              ),
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          SizedBox(
+                            height: 40,
+                            child: OutlinedButton(
+                              onPressed: () =>
+                                  setState(() => tableView = false),
+                              child: Icon(
+                                Icons.view_list_outlined,
+                                color: !tableView ? branchIndigo : branchMuted,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            height: 40,
+                            child: OutlinedButton(
+                              onPressed: () => setState(() => tableView = true),
+                              child: Icon(
+                                Icons.table_rows_outlined,
+                                color: tableView ? branchIndigo : branchMuted,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   if (page > 1 ||
                       (num.tryParse('${data['total'] ?? 0}') ?? 0) >
                           page *
@@ -827,7 +1029,10 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                         ),
                         if (actions.containsKey('delete'))
                           IconButton(
-                            icon: const Icon(Icons.delete_outline),
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.red,
+                            ),
                             onPressed: () async {
                               for (final row
                                   in rows
@@ -914,7 +1119,10 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                         ..remove('branches'),
                     ),
                   ] else if (rows.isNotEmpty) ...[
-                    for (final row in filtered) recordRow(row),
+                    if (listLayout && tableView)
+                      recordTable(filtered)
+                    else
+                      for (final row in filtered) recordRow(row),
                   ] else if (collection is List)
                     Padding(
                       padding: const EdgeInsets.all(24),
@@ -1070,10 +1278,15 @@ class PanelDataView extends StatelessWidget {
                         ),
                       ],
                     )
-                  : Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 5),
-                      child: Text(
-                        '${panelDataLabel(context, '${entry.key}')}: ${entry.value is bool ? (entry.value ? socialText(context, 'بلی', 'Yes') : socialText(context, 'خیر', 'No')) : entry.value}',
+                  : PanelListItem(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 14,
+                        ),
+                        child: Text(
+                          '${panelDataLabel(context, '${entry.key}')}: ${entry.value is bool ? (entry.value ? socialText(context, 'بلی', 'Yes') : socialText(context, 'خیر', 'No')) : entry.value}',
+                        ),
                       ),
                     ),
         ],
@@ -1300,16 +1513,16 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
             ? await widget.api.get('/chat/list')
             : <String, dynamic>{};
         if (!mounted) return;
-        final result = await Navigator.of(context).push<PanelFormResult>(
-          MaterialPageRoute(
-            builder: (_) => PanelFormPage(
-              title: '${definition['label']}',
-              fields: fields,
-              data: options,
-              initial: action == 'edit-message'
-                  ? {'body': row['body']}
-                  : const {},
-            ),
+        final result = await showDialog<PanelFormResult>(
+          context: context,
+          builder: (_) => PanelFormPage(
+            dialog: true,
+            title: '${definition['label']}',
+            fields: fields,
+            data: options,
+            initial: action == 'edit-message'
+                ? {'body': row['body']}
+                : const {},
           ),
         );
         if (result == null || !mounted) return;
@@ -1355,16 +1568,13 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
       if (action == 'forward') {
         final options = await widget.api.get('/chat/list');
         if (!mounted) return;
-        final result = await Navigator.push<PanelFormResult>(
-          context,
-          MaterialPageRoute(
-            builder: (_) => PanelFormPage(
-              title: socialText(context, 'ارسال پیام‌ها', 'Forward messages'),
-              fields: objects(
-                optionalObject(actions['forward'])['fields'] ?? [],
-              ),
-              data: options,
-            ),
+        final result = await showDialog<PanelFormResult>(
+          context: context,
+          builder: (_) => PanelFormPage(
+            dialog: true,
+            title: socialText(context, 'ارسال پیام‌ها', 'Forward messages'),
+            fields: objects(optionalObject(actions['forward'])['fields'] ?? []),
+            data: options,
           ),
         );
         if (result == null) return;
@@ -1408,9 +1618,9 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthSession?>();
     if (auth != null && auth.token != widget.api.token) {
-      return const ScrollAwareScaffold(body: JoinCommunity());
+      return const PanelScaffold(body: JoinCommunity());
     }
-    return ScrollAwareScaffold(
+    return PanelScaffold(
       appBar: AppTopBarDirection(
         child: AppBar(
           title: Text(panelTitle(widget.conversation)),
@@ -1428,7 +1638,7 @@ class _PanelConversationPageState extends State<PanelConversationPage> {
                       .every((m) => m['mine'] == true))
                 IconButton(
                   onPressed: () => bulkAction('delete-message'),
-                  icon: const Icon(Icons.delete_outline),
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
                 ),
               IconButton(
                 onPressed: () => setState(selectedMessages.clear),
@@ -1694,37 +1904,26 @@ class _PanelGroupDetailsState extends State<PanelGroupDetails> {
     final fields = objects(action['fields'] ?? []);
     PanelFormResult? result;
     if (fields.isNotEmpty) {
-      result = await Navigator.of(context).push<PanelFormResult>(
-        MaterialPageRoute(
-          builder: (_) => PanelFormPage(
-            title: '${action['label']}',
-            fields: fields,
-            data: {
-              'users': data['availableUsers'] ?? [],
-              'people': data['availableUsers'] ?? [],
-            },
-            initial: key == 'rename' ? {'title': data['title']} : const {},
-          ),
+      result = await showDialog<PanelFormResult>(
+        context: context,
+        builder: (_) => PanelFormPage(
+          dialog: true,
+          title: '${action['label']}',
+          fields: fields,
+          data: {
+            'users': data['availableUsers'] ?? [],
+            'people': data['availableUsers'] ?? [],
+          },
+          initial: key == 'rename' ? {'title': data['title']} : const {},
         ),
       );
       if (result == null || !mounted) return;
     } else {
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('${action['label']}'),
-          content: Text(panelTitle(member.isEmpty ? data : member)),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(socialText(context, 'خیر', 'No')),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(socialText(context, 'بلی', 'Yes')),
-            ),
-          ],
-        ),
+      final confirmed = await showPanelConfirmation(
+        context,
+        panelLabel(context, action),
+        message: panelTitle(member.isEmpty ? data : member),
+        delete: key == 'delete' || key == 'remove-member' || key == 'leave',
       );
       if (confirmed != true || !mounted) return;
     }
@@ -1757,9 +1956,9 @@ class _PanelGroupDetailsState extends State<PanelGroupDetails> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthSession?>();
     if (auth != null && auth.token != widget.api.token) {
-      return const ScrollAwareScaffold(body: JoinCommunity());
+      return const PanelScaffold(body: JoinCommunity());
     }
-    return ScrollAwareScaffold(
+    return PanelScaffold(
       appBar: AppTopBarDirection(
         child: AppBar(
           title: Text(

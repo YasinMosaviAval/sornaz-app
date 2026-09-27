@@ -121,26 +121,36 @@ class PanelStatistics extends StatelessWidget {
         for (final entry in stats.entries)
           SizedBox(
             width: (size.maxWidth - 8) / 2,
+            height: 40,
             child: Card(
               margin: EdgeInsets.zero,
               child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
                   children: [
-                    Text(
-                      socialText(
-                        context,
-                        labels[entry.key]?.$1 ?? entry.key,
-                        labels[entry.key]?.$2 ?? entry.key,
+                    Expanded(
+                      child: Text(
+                        socialText(
+                          context,
+                          labels[entry.key]?.$1 ?? entry.key,
+                          labels[entry.key]?.$2 ?? entry.key,
+                        ),
+                        maxLines: 2,
+                        style: const TextStyle(fontSize: 11),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 2,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${entry.value}',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          '${entry.value}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
                       ),
                     ),
                   ],

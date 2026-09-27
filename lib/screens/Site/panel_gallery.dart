@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
-import '../../components/media_dialogs.dart';
+import 'panel_ui.dart';
+import '../../components/app_top_bar_direction.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import '../Social/social_api.dart';
@@ -129,9 +130,10 @@ class _GalleryRecordState extends State<GalleryRecord> {
   }
 
   Future<void> remove() async {
-    if (!await confirmMediaDelete(
+    if (!await showPanelConfirmation(
           context,
           socialText(context, 'حذف رسانه؟', 'Delete media?'),
+          delete: true,
         ) ||
         !mounted)
       return;
@@ -171,29 +173,25 @@ class _GalleryRecordState extends State<GalleryRecord> {
         );
         if (file != null) await save(PanelFormResult({...row}, {'file': file}));
       } else {
-        final result = await Navigator.push<PanelFormResult>(
-          context,
-          MaterialPageRoute(
-            builder: (_) => PanelFormPage(
-              title: socialText(context, 'ویرایش', 'Edit'),
-              data: widget.data,
-              initial: {...row, 'collection': row['category']},
-              fields: [
-                for (final field in widget.fields)
-                  if (!['collection', 'ownerId'].contains(field['key']))
-                    {
-                      ...field,
-                      if (field['type'] == 'file') ...{
-                        'mediaPicker': true,
-                        'imagesOnly': [
-                          'cover',
-                          'logo',
-                        ].contains(row['category']),
-                      },
+        final result = await showDialog<PanelFormResult>(
+          context: context,
+          builder: (_) => PanelFormPage(
+            dialog: true,
+            title: socialText(context, 'ویرایش', 'Edit'),
+            data: widget.data,
+            initial: {...row, 'collection': row['category']},
+            fields: [
+              for (final field in widget.fields)
+                if (!['collection', 'ownerId'].contains(field['key']))
+                  {
+                    ...field,
+                    if (field['type'] == 'file') ...{
+                      'mediaPicker': true,
+                      'imagesOnly': ['cover', 'logo'].contains(row['category']),
                     },
-              ],
-              onSubmit: save,
-            ),
+                  },
+            ],
+            onSubmit: save,
           ),
         );
         if (result == null) return;
@@ -212,7 +210,7 @@ class _GalleryRecordState extends State<GalleryRecord> {
         IconButton(
           tooltip: socialText(context, 'حذف', 'Delete'),
           onPressed: busy ? null : remove,
-          icon: const Icon(Icons.delete_outline),
+          icon: const Icon(Icons.delete_outline, color: Colors.red),
         ),
       if (widget.canEdit)
         IconButton(
@@ -253,10 +251,12 @@ class _GalleryRecordState extends State<GalleryRecord> {
       ],
     );
     return widget.standalone
-        ? Scaffold(
-            appBar: AppBar(
-              title: Text('${row['title'] ?? ''}'),
-              actions: actions,
+        ? PanelScaffold(
+            appBar: AppTopBarDirection(
+              child: AppBar(
+                title: Text('${row['title'] ?? ''}'),
+                actions: actions,
+              ),
             ),
             body: SingleChildScrollView(child: body),
           )

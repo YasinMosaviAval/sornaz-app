@@ -1,6 +1,7 @@
+import 'panel_ui.dart';
 import 'dart:async';
 import 'package:sornaz/helpers/app_typography.dart';
-import 'package:sornaz/components/scroll_aware_scaffold.dart';
+
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,9 +29,10 @@ class PanelFormPage extends StatefulWidget {
     this.initial = const {},
     this.onSubmit,
     this.settingsCheckboxes = false,
+    this.dialog = false,
   });
   final Future<void> Function(PanelFormResult result)? onSubmit;
-  final bool settingsCheckboxes;
+  final bool settingsCheckboxes, dialog;
   final String title;
   final List<Json> fields;
   final Json data, initial;
@@ -70,57 +72,44 @@ class _PanelFormPageState extends State<PanelFormPage> {
     });
   }
 
+  Future<void> submit() async {
+    if (submitting) return;
+    for (final field in widget.fields) {
+      if (field['type'] == 'multi' && values[field['key']] is List) {
+        values[field['key']] = (values[field['key']] as List)
+            .map((item) => item is Map ? item['id'] : item)
+            .where((item) => item != null)
+            .toList();
+      }
+    }
+    if (form.currentState!.validate()) {
+      final result = PanelFormResult(Map.of(values), Map.of(files));
+      if (widget.onSubmit == null) {
+        handedOff = true;
+        Navigator.pop(context, result);
+        return;
+      }
+      setState(() => submitting = true);
+      try {
+        await widget.onSubmit!(result);
+        if (mounted) Navigator.pop(context, result);
+      } catch (e) {
+        if (mounted) socialError(context, e);
+      } finally {
+        if (mounted) setState(() => submitting = false);
+      }
+    }
+  }
+
   @override
-  Widget build(BuildContext context) => ScrollAwareScaffold(
-    appBar: AppTopBarDirection(
-      child: AppBar(
-        title: Text(widget.title),
-        actions: [
-          IconButton(
-            tooltip: socialText(context, 'ذخیره', 'Save'),
-            icon: const Icon(Icons.save_outlined),
-            onPressed: submitting
-                ? null
-                : () async {
-                    for (final field in widget.fields) {
-                      if (field['type'] == 'multi' &&
-                          values[field['key']] is List) {
-                        values[field['key']] = (values[field['key']] as List)
-                            .map((item) => item is Map ? item['id'] : item)
-                            .where((item) => item != null)
-                            .toList();
-                      }
-                    }
-                    if (form.currentState!.validate()) {
-                      final result = PanelFormResult(
-                        Map.of(values),
-                        Map.of(files),
-                      );
-                      if (widget.onSubmit == null) {
-                        handedOff = true;
-                        Navigator.pop(context, result);
-                        return;
-                      }
-                      setState(() => submitting = true);
-                      try {
-                        await widget.onSubmit!(result);
-                        if (mounted) Navigator.pop(context, result);
-                      } catch (e) {
-                        if (mounted) socialError(context, e);
-                      } finally {
-                        if (mounted) setState(() => submitting = false);
-                      }
-                    }
-                  },
-          ),
-        ],
-      ),
-    ),
-    body: AbsorbPointer(
+  Widget build(BuildContext context) {
+    final content = AbsorbPointer(
       absorbing: submitting,
       child: Form(
         key: form,
         child: ListView(
+          shrinkWrap: widget.dialog,
+          physics: widget.dialog ? const NeverScrollableScrollPhysics() : null,
           padding: widget.settingsCheckboxes
               ? EdgeInsets.zero
               : const EdgeInsets.all(16),
@@ -151,8 +140,58 @@ class _PanelFormPageState extends State<PanelFormPage> {
           ],
         ),
       ),
-    ),
-  );
+    );
+    if (widget.dialog)
+      return PanelModal(
+        title: widget.title,
+        busy: submitting,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            content,
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.grey,
+                    ),
+                    onPressed: submitting ? null : () => Navigator.pop(context),
+                    child: Text(socialText(context, 'انصراف', 'Cancel')),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: submitting ? null : submit,
+                    icon: const Icon(Icons.save_outlined, size: 18),
+                    label: Text(
+                      socialText(context, 'ذخیره تغییرات', 'Save changes'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    return PanelScaffold(
+      appBar: AppTopBarDirection(
+        child: AppBar(
+          title: Text(widget.title),
+          actions: [
+            IconButton(
+              tooltip: socialText(context, 'ذخیره', 'Save'),
+              onPressed: submitting ? null : submit,
+              icon: const Icon(Icons.save_outlined),
+            ),
+          ],
+        ),
+      ),
+      body: content,
+    );
+  }
 }
 
 class PanelField extends StatefulWidget {
@@ -194,6 +233,30 @@ class _PanelFieldState extends State<PanelField> {
                 (m) => '${m[1]} ${m[2]}',
               );
     final type = '${field['type'] ?? 'text'}';
+    if (field['filter'] == true && type != 'select') {
+      return PanelValueRow(
+        title: label,
+        value: widget.value == null || '${widget.value}'.isEmpty
+            ? socialText(context, 'همه', 'All')
+            : '${widget.value}',
+        onTap: () async {
+          final result = await showDialog<PanelFormResult>(
+            context: context,
+            builder: (_) => PanelFormPage(
+              dialog: true,
+              title: label,
+              fields: [
+                {...field, 'filter': false, 'required': false},
+              ],
+              data: widget.data,
+              initial: {'${field['key']}': widget.value},
+            ),
+          );
+          if (result != null && mounted)
+            widget.changed(result.values['${field['key']}']);
+        },
+      );
+    }
     if (type == 'settingsCheckbox') {
       return CheckboxListTile(
         contentPadding: const EdgeInsetsDirectional.only(start: 24, end: 16),
@@ -294,7 +357,7 @@ class _PanelFieldState extends State<PanelField> {
         return InputDecorator(
           decoration: InputDecoration(
             labelText: label,
-            border: const OutlineInputBorder(),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -327,13 +390,51 @@ class _PanelFieldState extends State<PanelField> {
         );
       }
       final value = widget.value == null ? '' : '${widget.value}';
+      if (field['filter'] == true) {
+        return PanelValueRow(
+          title: label,
+          value: options[value] ?? socialText(context, 'همه', 'All'),
+          onTap: () async {
+            final picked = await showDialog<String>(
+              context: context,
+              builder: (c) => PanelModal(
+                title: label,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final entry in {
+                      '': socialText(context, 'همه', 'All'),
+                      ...options,
+                    }.entries)
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          entry.value,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        trailing: value == entry.key
+                            ? const Icon(Icons.check, size: 18)
+                            : null,
+                        onTap: () => Navigator.pop(c, entry.key),
+                      ),
+                  ],
+                ),
+              ),
+            );
+            if (picked != null && mounted)
+              widget.changed(
+                picked.isEmpty ? null : int.tryParse(picked) ?? picked,
+              );
+          },
+        );
+      }
       return DropdownButtonFormField<String>(
         key: ValueKey('$label:$value:${options.length}'),
         initialValue: options.containsKey(value) ? value : null,
         isExpanded: true,
         decoration: InputDecoration(
           labelText: label,
-          border: const OutlineInputBorder(),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
         ),
         items: [
           for (final entry in options.entries)
@@ -357,6 +458,7 @@ class _PanelFieldState extends State<PanelField> {
           ? objects(field['options'])
           : <Json>[];
       return Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
         margin: EdgeInsets.zero,
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -388,34 +490,33 @@ class _PanelFieldState extends State<PanelField> {
                           : '${rows[i]}',
                     ),
                     trailing: IconButton(
-                      icon: const Icon(Icons.delete_outline),
+                      icon: const Icon(Icons.delete_outline, color: Colors.red),
                       onPressed: () {
                         rows.removeAt(i);
                         widget.changed(rows);
                       },
                     ),
                     onTap: () async {
-                      final result = await Navigator.of(context)
-                          .push<PanelFormResult>(
-                            MaterialPageRoute(
-                              builder: (_) => PanelFormPage(
-                                title: label,
-                                fields: type == 'strings'
-                                    ? [
-                                        {
-                                          'key': 'value',
-                                          'label': label,
-                                          'type': 'text',
-                                        },
-                                      ]
-                                    : fields,
-                                data: widget.data,
-                                initial: type == 'strings'
-                                    ? {'value': rows[i]}
-                                    : optionalObject(rows[i]),
-                              ),
-                            ),
-                          );
+                      final result = await showDialog<PanelFormResult>(
+                        context: context,
+                        builder: (_) => PanelFormPage(
+                          dialog: true,
+                          title: label,
+                          fields: type == 'strings'
+                              ? [
+                                  {
+                                    'key': 'value',
+                                    'label': label,
+                                    'type': 'text',
+                                  },
+                                ]
+                              : fields,
+                          data: widget.data,
+                          initial: type == 'strings'
+                              ? {'value': rows[i]}
+                              : optionalObject(rows[i]),
+                        ),
+                      );
                       if (result != null && mounted) {
                         rows[i] = type == 'strings'
                             ? result.values['value']
@@ -428,24 +529,23 @@ class _PanelFieldState extends State<PanelField> {
                   icon: const Icon(Icons.add),
                   label: Text(socialText(context, 'افزودن', 'Add')),
                   onPressed: () async {
-                    final result = await Navigator.of(context)
-                        .push<PanelFormResult>(
-                          MaterialPageRoute(
-                            builder: (_) => PanelFormPage(
-                              title: label,
-                              fields: type == 'strings'
-                                  ? [
-                                      {
-                                        'key': 'value',
-                                        'label': label,
-                                        'type': 'text',
-                                      },
-                                    ]
-                                  : fields,
-                              data: widget.data,
-                            ),
-                          ),
-                        );
+                    final result = await showDialog<PanelFormResult>(
+                      context: context,
+                      builder: (_) => PanelFormPage(
+                        dialog: true,
+                        title: label,
+                        fields: type == 'strings'
+                            ? [
+                                {
+                                  'key': 'value',
+                                  'label': label,
+                                  'type': 'text',
+                                },
+                              ]
+                            : fields,
+                        data: widget.data,
+                      ),
+                    );
                     if (result != null && mounted) {
                       rows.add(
                         type == 'strings'
@@ -481,7 +581,7 @@ class _PanelFieldState extends State<PanelField> {
           : null,
       decoration: InputDecoration(
         labelText: label,
-        border: const OutlineInputBorder(),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
         suffixIcon: date || time
             ? Icon(date ? Icons.calendar_today_outlined : Icons.schedule)
             : null,

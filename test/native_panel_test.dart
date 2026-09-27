@@ -267,9 +267,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(PopupMenuButton<String>));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('ویرایش محتوا').last);
+    await tester.tap(find.text('ویرایش محتوا'));
     await tester.pumpAndSettle();
     expect(find.byType(PanelFormPage), findsOneWidget);
     expect(find.text('خوش آمدید'), findsWidgets);
@@ -418,7 +416,12 @@ void main() {
       expect(find.byIcon(Icons.person_remove_outlined), findsOneWidget);
       await tester.tap(find.byIcon(Icons.person_remove_outlined));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('بلی'));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.byType(FilledButton),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(mutations.single.path, endsWith('/chat/remove-member'));
       expect(mutations.single.queryParameters, {'id': '7', 'userId': '2'});

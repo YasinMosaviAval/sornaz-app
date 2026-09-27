@@ -1,4 +1,5 @@
 import 'panel_navigation.dart';
+import 'branch_style.dart';
 import 'panel_list_item.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -171,37 +172,40 @@ class _NativePanelState extends State<NativePanel> {
   }
 
   @override
-  Widget build(BuildContext context) => MainTabScaffold(
-    index: 1,
-    appBar: HomeTopBar(
-      onSearch: contentOverflows || query.isNotEmpty
-          ? (v) => setState(() => query = v)
-          : null,
-      hint: socialText(context, 'جستجو در پنل کاربری', 'Search user panel'),
-    ),
-    body: loading
-        ? const Center(child: CircularProgressIndicator())
-        : error != null
-        ? SocialEmpty(
-            socialText(
-              context,
-              'پنل دریافت نشد. دوباره تلاش کنید.',
-              'Could not load your panel. Please retry.',
-            ),
-            onRetry: load,
-          )
-        : RefreshIndicator(
-            onRefresh: () => load(refresh: true),
-            child: NotificationListener<ScrollMetricsNotification>(
-              onNotification: measure,
-              child: ListView(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                children: [
-                  for (final section in panelNavigation(sections))
-                    if (matches(section)) menuItem(section),
-                ],
+  Widget build(BuildContext context) => Theme(
+    data: branchTheme(context),
+    child: MainTabScaffold(
+      index: 1,
+      appBar: HomeTopBar(
+        onSearch: contentOverflows || query.isNotEmpty
+            ? (v) => setState(() => query = v)
+            : null,
+        hint: socialText(context, 'جستجو در پنل کاربری', 'Search user panel'),
+      ),
+      body: loading
+          ? const Center(child: CircularProgressIndicator())
+          : error != null
+          ? SocialEmpty(
+              socialText(
+                context,
+                'پنل دریافت نشد. دوباره تلاش کنید.',
+                'Could not load your panel. Please retry.',
+              ),
+              onRetry: load,
+            )
+          : RefreshIndicator(
+              onRefresh: () => load(refresh: true),
+              child: NotificationListener<ScrollMetricsNotification>(
+                onNotification: measure,
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  children: [
+                    for (final section in panelNavigation(sections))
+                      if (matches(section)) menuItem(section),
+                  ],
+                ),
               ),
             ),
-          ),
+    ),
   );
 }

@@ -36,7 +36,7 @@ void main() {
       await tester.tap(find.text('user1'));
       await tester.pump();
       expect(selected, {'1'});
-      expect(find.byIcon(Icons.check_circle), findsOneWidget);
+      expect(find.byIcon(Icons.check), findsOneWidget);
       expect(find.byIcon(Icons.person_outline), findsNWidgets(4));
       await tester.tap(find.text('user1'));
       await tester.pump();
