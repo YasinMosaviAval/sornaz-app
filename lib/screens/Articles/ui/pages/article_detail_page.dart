@@ -16,6 +16,7 @@ import 'package:sornaz/screens/Articles/ui/components/article_format.dart';
 import 'package:sornaz/screens/Articles/ui/components/article_item.dart';
 import 'package:sornaz/screens/Articles/ui/components/article_progress.dart';
 import 'package:sornaz/screens/Articles/ui/components/article_rating.dart';
+import 'package:sornaz/screens/Articles/ui/components/article_poll.dart';
 
 class ArticleDetailPage extends StatefulWidget {
   const ArticleDetailPage({super.key, required this.post});
@@ -295,15 +296,35 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
           final confirmed = await showDialog<bool>(
             context: context,
             builder: (c) => AlertDialog(
-              title: Text(tr('مطالعه مقاله $title', 'Read article $title')),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+              title: Text(
+                tr('مطالعه مقاله', 'Read article'),
+                style: const TextStyle(fontSize: 14),
+              ),
+              content: Text(title, style: const TextStyle(fontSize: 12)),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(c, false),
-                  child: Text(tr('انصراف', 'Cancel')),
+                  child: Text(
+                    tr('انصراف', 'Cancel'),
+                    style: TextStyle(
+                      color: Theme.of(c).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
                 ),
                 FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Theme.of(c).colorScheme.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    textStyle: const TextStyle(fontSize: 12),
+                  ),
                   onPressed: () => Navigator.pop(c, true),
-                  child: Text(tr('مطالعه مقاله', 'Read article')),
+                  child: Text(tr('مطالعه', 'Read')),
                 ),
               ],
             ),
@@ -598,6 +619,16 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                                     onLinkTap: _link,
                                   ),
                                 ),
+                                if (post['poll'] is Map)
+                                  ArticlePoll(
+                                    articleId: id,
+                                    poll: Map<String, dynamic>.from(
+                                      post['poll'] as Map,
+                                    ),
+                                    api: library.api,
+                                    locale: _locale,
+                                    token: _token,
+                                  ),
                                 const SizedBox(height: 24),
                                 Container(
                                   padding: const EdgeInsets.all(16),

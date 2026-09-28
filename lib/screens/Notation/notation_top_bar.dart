@@ -33,6 +33,18 @@ class NotationTopBar extends StatelessWidget implements PreferredSizeWidget {
                   onPressed: () => command('save'),
                   icon: const Icon(Icons.save_outlined),
                 ),
+              if (signedIn &&
+                  data['editable'] == true &&
+                  data['uploadable'] == true)
+                IconButton(
+                  tooltip: socialText(
+                    context,
+                    'آپلود روی سرور',
+                    'Upload to server',
+                  ),
+                  onPressed: () => command('upload-current'),
+                  icon: const Icon(Icons.cloud_upload_outlined),
+                ),
               IconButton(
                 tooltip: socialText(context, 'پخش / مکث', 'Play / pause'),
                 onPressed: () => command('play'),

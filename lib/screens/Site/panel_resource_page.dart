@@ -209,6 +209,29 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
     final fields = action['fields'] is List
         ? objects(action['fields'])
         : <Json>[];
+    if (section == 'posts' &&
+        ['create', 'update', 'edit'].contains(key) &&
+        !fields.any((field) => field['key'] == 'poll_options')) {
+      fields.addAll([
+        {
+          'key': 'poll_question',
+          'label': 'پرسش نظرسنجی',
+          'en': 'Poll question',
+          'type': 'text',
+          'required': false,
+        },
+        {
+          'key': 'poll_options',
+          'label': 'گزینه‌های نظرسنجی',
+          'en': 'Poll options',
+          'type': 'strings',
+          'required': false,
+          'options': {
+            'help': 'برای فعال شدن نظرسنجی حداقل دو گزینه وارد کنید.',
+          },
+        },
+      ]);
+    }
     var initial = <String, dynamic>{...record, ...widget.params};
     if (section == 'account' && action['row'] != true) {
       initial = {...optionalObject(data['profile'])};

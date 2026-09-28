@@ -130,6 +130,19 @@ class ArticleApiService {
       body: score == null ? null : {'score': score},
     ),
   );
+  Future<Map<String, dynamic>> votePoll(
+    int articleId,
+    int option, {
+    required String locale,
+    String? token,
+  }) async => Map<String, dynamic>.from(
+    await request(
+      '/articles/$articleId/poll',
+      locale: locale,
+      token: token,
+      body: {'option': option},
+    ),
+  );
   List<Map<String, dynamic>> _list(dynamic data) =>
       (data as List).map((e) => Map<String, dynamic>.from(e)).toList();
   void dispose() => client.close();

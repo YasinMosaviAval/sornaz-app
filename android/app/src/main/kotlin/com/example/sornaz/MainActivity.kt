@@ -36,6 +36,25 @@ class MainActivity : AudioServiceActivity() {
         deviceVideos = DeviceVideos(this, flutterEngine.dartExecutor.binaryMessenger)
         MusicEqualizer(flutterEngine.dartExecutor.binaryMessenger)
         PublicRecordings(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "sornaz/video_controls")
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "getBrightness" -> {
+                        val value = window.attributes.screenBrightness
+                        result.success(if (value < 0f) 0.5 else value.toDouble())
+                    }
+                    "setBrightness" -> {
+                        val value = (call.argument<Double>("value") ?: 0.5).coerceIn(0.05, 1.0)
+                        window.attributes = window.attributes.apply { screenBrightness = value.toFloat() }
+                        result.success(null)
+                    }
+                    "resetBrightness" -> {
+                        window.attributes = window.attributes.apply { screenBrightness = -1f }
+                        result.success(null)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
         recordingWorkspace = RecordingWorkspace(this, flutterEngine.dartExecutor.binaryMessenger)
         PrivatePdf(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "sornaz/app_share")

@@ -4,9 +4,9 @@ import 'package:flutter/services.dart';
 /// sends `setMinPrecision`, while Android requires `minPrecision`.
 class PitchInput {
   static const channel = MethodChannel('pitch_detection/methods');
-  Future<void> start() async {
+  Future<void> start([int sampleRate = 44100]) async {
     await channel.invokeMethod<void>('startDetection', {
-      'sampleRate': 44100,
+      'sampleRate': sampleRate,
       // Android's detector enforces >=8192 samples. Match it explicitly.
       'bufferSize': 8192,
       'overlap': 6144,

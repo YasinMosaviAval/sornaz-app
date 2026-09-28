@@ -127,7 +127,11 @@ class _TunerView extends StatelessWidget {
             cents: analyzed.cents,
             noteFreq: analyzed.targetFreq,
           ),
-          FrequencyBox(cents: analyzed.cents, inRange: inRange),
+          FrequencyBox(
+            cents: analyzed.cents,
+            inRange: inRange,
+            fillDuration: tuner.graphFillDuration,
+          ),
           AppSpacing.sizedBoxH16(),
           DetectedFrequency(frequency: tuner.frequency),
           const SizedBox(height: 16),

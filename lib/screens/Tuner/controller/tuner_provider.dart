@@ -1,15 +1,25 @@
 import 'package:flutter/foundation.dart';
 import 'package:sornaz/helpers/app_platform.dart';
 import 'dart:async';
-import 'package:flutter/material.dart';
 import '../audio/pitch_input.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/screens/Tuner/audio/note_player.dart';
 import 'package:sornaz/screens/Tuner/models/tuner_keyboard_settings.dart';
 import 'package:sornaz/screens/Tuner/utils/tuner_math.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TunerProvider extends ChangeNotifier {
+  TunerProvider() {
+    _sampleRateLoaded = _loadSampleRate();
+  }
+  static const defaultSampleRate = 44100;
+  static const defaultLineThickness = 1.2;
+  static const defaultGraphFillDuration = 0.96;
+  int sampleRate = defaultSampleRate;
+  double lineThickness = defaultLineThickness;
+  double graphFillDuration = defaultGraphFillDuration;
+  late final Future<void> _sampleRateLoaded;
   Timer? _pitchTimer;
   bool _polling = false;
   bool _running = false;
@@ -25,6 +35,72 @@ class TunerProvider extends ChangeNotifier {
   String note = AppConstants.EMPTY_TEXT;
 
   int noteDurationSeconds = 1;
+
+  Future<void> _loadSampleRate() async {
+    final preferences = await SharedPreferences.getInstance();
+    final sampleRateValue = preferences.getInt('tuner.sampleRate');
+    final lineThicknessValue = preferences.getDouble('tuner.lineThickness');
+    final graphFillDurationValue = preferences.getDouble(
+      'tuner.graphFillDuration',
+    );
+    if (_disposed) return;
+    if (sampleRateValue != null &&
+        sampleRateValue >= 8000 &&
+        sampleRateValue <= 192000) {
+      sampleRate = sampleRateValue;
+    }
+    if (lineThicknessValue != null &&
+        lineThicknessValue >= defaultLineThickness / 2 &&
+        lineThicknessValue <= defaultLineThickness * 5) {
+      lineThickness = lineThicknessValue;
+    }
+    if (graphFillDurationValue != null &&
+        graphFillDurationValue >= 0.1 &&
+        graphFillDurationValue <= 30) {
+      graphFillDuration = graphFillDurationValue;
+    }
+    notifyListeners();
+  }
+
+  Future<void> setSampleRate(int value) async {
+    if (value < 8000 || value > 192000 || value == sampleRate) return;
+    sampleRate = value;
+    await (await SharedPreferences.getInstance()).setInt(
+      'tuner.sampleRate',
+      value,
+    );
+    notifyListeners();
+    if (_requested) {
+      _pitchTimer?.cancel();
+      _pitchTimer = null;
+      if (_running) await _pitch.stop();
+      _running = false;
+      await _reconcile();
+    }
+  }
+
+  Future<void> setLineThickness(double value) async {
+    final normalized = value
+        .clamp(defaultLineThickness / 2, defaultLineThickness * 5)
+        .toDouble();
+    if (normalized == lineThickness) return;
+    lineThickness = normalized;
+    notifyListeners();
+    await (await SharedPreferences.getInstance()).setDouble(
+      'tuner.lineThickness',
+      normalized,
+    );
+  }
+
+  Future<void> setGraphFillDuration(double value) async {
+    if (value < 0.1 || value > 30 || value == graphFillDuration) return;
+    graphFillDuration = value;
+    notifyListeners();
+    await (await SharedPreferences.getInstance()).setDouble(
+      'tuner.graphFillDuration',
+      value,
+    );
+  }
 
   void setNoteDuration(int seconds) {
     noteDurationSeconds = seconds;
@@ -61,7 +137,8 @@ class TunerProvider extends ChangeNotifier {
     AppConstants.B,
   ];
 
-  bool get supportsPitchDetection => kIsWeb || AppPlatform.isAndroid || AppPlatform.isIOS;
+  bool get supportsPitchDetection =>
+      kIsWeb || AppPlatform.isAndroid || AppPlatform.isIOS;
 
   Future<void> start() {
     _requested = true;
@@ -84,8 +161,11 @@ class TunerProvider extends ChangeNotifier {
             return;
           }
           if (_running || !supportsPitchDetection) return;
+          await _sampleRateLoaded;
+          if (_disposed || !_requested) return;
           detectionError = null;
-          final granted = kIsWeb || (await Permission.microphone.request()).isGranted;
+          final granted =
+              kIsWeb || (await Permission.microphone.request()).isGranted;
           if (_disposed || !_requested) return;
           if (!granted) {
             detectionError = 'permission';
@@ -93,7 +173,7 @@ class TunerProvider extends ChangeNotifier {
             return;
           }
           // No call to the broken plugin precision setter after startup.
-          await _pitch.start();
+          await _pitch.start(sampleRate);
           _running = true;
           if (_disposed || !_requested) {
             await _pitch.stop();

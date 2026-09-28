@@ -17,6 +17,229 @@ import 'package:sornaz/screens/Tuner/controller/tuner_provider.dart';
 class TunerSettingsPage extends StatelessWidget {
   const TunerSettingsPage({super.key});
 
+  Future<void> _sampleRate(BuildContext context, TunerProvider tuner) async {
+    final current = tuner.sampleRate;
+    const baseRate = TunerProvider.defaultSampleRate;
+    final values = <int>[
+      baseRate ~/ 2,
+      baseRate,
+      (baseRate * 1.5).round(),
+      baseRate * 2,
+    ];
+    final selected = await showDialog<int>(
+      context: context,
+      builder: (c) => SimpleDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+        title: Text(
+          Localizations.localeOf(c).languageCode == 'fa'
+              ? 'نرخ نمونه‌برداری تیونر'
+              : 'Tuner sample rate',
+          style: const TextStyle(fontSize: 14),
+        ),
+        children: [
+          for (final value in values)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(c, value),
+              child: Row(
+                children: [
+                  Expanded(child: Text('$value Hz')),
+                  if (value == current)
+                    Icon(
+                      Icons.check,
+                      size: 18,
+                      color: Theme.of(c).colorScheme.primary,
+                    ),
+                ],
+              ),
+            ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(c, -1),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    Localizations.localeOf(c).languageCode == 'fa'
+                        ? 'مقدار دلخواه'
+                        : 'Custom value',
+                  ),
+                ),
+                if (!values.contains(current))
+                  Icon(
+                    Icons.check,
+                    size: 18,
+                    color: Theme.of(c).colorScheme.primary,
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+    if (selected == null || !context.mounted) return;
+    var value = selected;
+    if (selected == -1) {
+      final controller = TextEditingController(text: '$current');
+      value =
+          await showDialog<int>(
+            context: context,
+            builder: (c) => AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+              title: Text(
+                Localizations.localeOf(c).languageCode == 'fa'
+                    ? 'نرخ نمونه‌برداری دلخواه'
+                    : 'Custom sample rate',
+                style: const TextStyle(fontSize: 14),
+              ),
+              content: TextField(
+                controller: controller,
+                autofocus: true,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  suffixText: 'Hz',
+                  helperText: '8000 – 192000',
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(c),
+                  child: Text(
+                    Localizations.localeOf(c).languageCode == 'fa'
+                        ? 'انصراف'
+                        : 'Cancel',
+                  ),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    final parsed = int.tryParse(controller.text.trim());
+                    if (parsed != null && parsed >= 8000 && parsed <= 192000) {
+                      Navigator.pop(c, parsed);
+                    }
+                  },
+                  child: Text(
+                    Localizations.localeOf(c).languageCode == 'fa'
+                        ? 'ذخیره'
+                        : 'Save',
+                  ),
+                ),
+              ],
+            ),
+          ) ??
+          current;
+      controller.dispose();
+    }
+    await tuner.setSampleRate(value);
+  }
+
+  Future<void> _graphFillDuration(
+    BuildContext context,
+    TunerProvider tuner,
+  ) async {
+    final isPersian = Localizations.localeOf(context).languageCode == 'fa';
+    final current = tuner.graphFillDuration;
+    const base = TunerProvider.defaultGraphFillDuration;
+    const values = <double>[base / 2, base, base * 1.5, base * 2];
+    final selected = await showDialog<double>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+        title: Text(
+          isPersian ? 'زمان پر شدن نمودار فرکانس' : 'Frequency graph fill time',
+          style: const TextStyle(fontSize: 14),
+        ),
+        children: [
+          for (final value in values)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(dialogContext, value),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${value.toStringAsFixed(2)} ${isPersian ? 'ثانیه' : 'seconds'}',
+                    ),
+                  ),
+                  if ((value - current).abs() < 0.001)
+                    Icon(
+                      Icons.check,
+                      size: 18,
+                      color: Theme.of(dialogContext).colorScheme.primary,
+                    ),
+                ],
+              ),
+            ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(dialogContext, -1.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(isPersian ? 'مقدار دلخواه' : 'Custom value'),
+                ),
+                if (!values.any((value) => (value - current).abs() < 0.001))
+                  Icon(
+                    Icons.check,
+                    size: 18,
+                    color: Theme.of(dialogContext).colorScheme.primary,
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+    if (selected == null || !context.mounted) return;
+    var value = selected;
+    if (selected == -1) {
+      final controller = TextEditingController(
+        text: current.toStringAsFixed(2),
+      );
+      value =
+          await showDialog<double>(
+            context: context,
+            builder: (dialogContext) => AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+              title: Text(
+                isPersian ? 'زمان دلخواه' : 'Custom fill time',
+                style: const TextStyle(fontSize: 14),
+              ),
+              content: TextField(
+                controller: controller,
+                autofocus: true,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: InputDecoration(
+                  suffixText: isPersian ? 'ثانیه' : 'seconds',
+                  helperText: '0.10 – 30.00',
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: Text(isPersian ? 'انصراف' : 'Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    final parsed = double.tryParse(
+                      controller.text.trim().replaceAll(',', '.'),
+                    );
+                    if (parsed != null && parsed >= 0.1 && parsed <= 30) {
+                      Navigator.pop(dialogContext, parsed);
+                    }
+                  },
+                  child: Text(isPersian ? 'ذخیره' : 'Save'),
+                ),
+              ],
+            ),
+          ) ??
+          current;
+      controller.dispose();
+    }
+    await tuner.setGraphFillDuration(value);
+  }
+
   @override
   Widget build(BuildContext context) {
     final tuner = context.watch<TunerProvider>();
@@ -84,6 +307,64 @@ class TunerSettingsPage extends StatelessWidget {
                       divisions: 40,
                       isDark: isDark,
                       onChanged: tuner.setA4,
+                    ),
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                      ),
+                      leading: Icon(
+                        Icons.graphic_eq,
+                        color: AppColors.tuner_settings_icon_color(
+                          isDark: isDark,
+                        ),
+                        size: AppSpacing.space_20,
+                      ),
+                      title: Text(
+                        isEnglish
+                            ? 'Tuner sample rate'
+                            : 'نرخ نمونه‌برداری تیونر',
+                      ),
+                      trailing: Text('${tuner.sampleRate} Hz'),
+                      onTap: () => _sampleRate(context, tuner),
+                    ),
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                      ),
+                      leading: Icon(
+                        Icons.timeline,
+                        color: AppColors.tuner_settings_icon_color(
+                          isDark: isDark,
+                        ),
+                        size: AppSpacing.space_20,
+                      ),
+                      title: Text(
+                        isEnglish
+                            ? 'Frequency graph fill time'
+                            : 'زمان پر شدن نمودار فرکانس',
+                      ),
+                      trailing: Text(
+                        '${tuner.graphFillDuration.toStringAsFixed(2)} ${isEnglish ? 's' : 'ثانیه'}',
+                      ),
+                      onTap: () => _graphFillDuration(context, tuner),
+                    ),
+                    LabeledSlider(
+                      leadingIcon: Icon(
+                        Icons.line_weight,
+                        color: AppColors.tuner_settings_icon_color(
+                          isDark: isDark,
+                        ),
+                        size: AppSpacing.space_20,
+                      ),
+                      label: isEnglish
+                          ? 'Tuner line thickness: ${tuner.lineThickness.toStringAsFixed(1)}'
+                          : 'ضخامت خط تیونر: ${tuner.lineThickness.toStringAsFixed(1)}',
+                      value: tuner.lineThickness,
+                      min: TunerProvider.defaultLineThickness / 2,
+                      max: TunerProvider.defaultLineThickness * 5,
+                      divisions: 54,
+                      isDark: isDark,
+                      onChanged: tuner.setLineThickness,
                     ),
                   ],
                 ),

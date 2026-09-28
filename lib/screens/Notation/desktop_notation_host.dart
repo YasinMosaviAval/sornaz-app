@@ -141,7 +141,7 @@ class _DesktopNotationHostState extends State<DesktopNotationHost> {
         return;
       }
       final route = RegExp(
-        r'^api(?:/(\d+)(?:/(delete|bookmark))?)?$',
+        r'^api(?:/(-?\d+)(?:/(delete|bookmark|upload))?)?$',
       ).firstMatch(path);
       if (route == null || !['GET', 'POST'].contains(request.method)) {
         response.statusCode = HttpStatus.notFound;

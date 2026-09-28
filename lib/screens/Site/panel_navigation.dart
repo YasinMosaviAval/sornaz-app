@@ -4,7 +4,14 @@ import '../Social/social_api.dart';
 List<Json> panelNavigation(List<Json> sections) {
   final remaining = {
     for (final s in sections)
-      if (!['account', 'chat', 'settings', 'site-settings'].contains(s['key']))
+      if (![
+        'account',
+        'chat',
+        'settings',
+        'site-settings',
+        'pages',
+        'guides',
+      ].contains(s['key']))
         '${s['key']}': Map<String, dynamic>.of(s),
   };
   Json? group(String key, String fa, String en, List<String> keys) {
@@ -24,11 +31,11 @@ List<Json> panelNavigation(List<Json> sections) {
       'awards',
       'badges',
       'experiences',
+      'certificates',
       'educations',
       'events',
-      'publications',
-      'certificates',
       'polls',
+      'publications',
     ],
   );
   if (achievements != null)
@@ -89,12 +96,35 @@ List<Json> panelNavigation(List<Json> sections) {
     'availability-exceptions',
     'schedules',
   ]);
-  final main = [?roles, ?galleryMenu, ?lessons, ?classes, ?schedules];
+  // Match the website sidebar while retaining only server-authorized entries.
+  List<Json> take(List<String> keys) => [
+    for (final key in keys)
+      if (remaining.containsKey(key)) remaining.remove(key)!,
+  ];
   return [
-    if (remaining.containsKey('dashboard')) remaining.remove('dashboard')!,
+    ...take([
+      'tests',
+      'posts',
+      'post-categories',
+      'media',
+      'comments',
+      'chart-gallery',
+      'reports',
+    ]),
+    ...take(['dashboard', 'my-classrooms', 'my-courses', 'my-terms']),
     ?achievements,
+    ...take(['tracking', 'national-holidays']),
     ?branches,
-    ...main,
+    ?roles,
+    ?galleryMenu,
+    ?lessons,
+    // The mobile catalog calls the website's "teachers" section "members".
+    ...take(['teachers', 'members']),
+    ?classes,
+    ...take(['courses', 'terms', 'students']),
+    ?schedules,
+    ...take(['finance']),
+    // Keep app-only and future authorized sections available at the end.
     ...remaining.values,
   ];
 }

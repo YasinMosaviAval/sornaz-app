@@ -119,7 +119,7 @@ class _ExpandingSearchBarState extends State<ExpandingSearchBar> {
                   ),
                 ),
                 if (!open) ...widget.actions,
-                if (!open)
+                if (!open && widget.onSettings != null)
                   IconButton(
                     icon: Icon(
                       Icons.settings,

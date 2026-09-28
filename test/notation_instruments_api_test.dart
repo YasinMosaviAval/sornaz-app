@@ -7,7 +7,7 @@ import 'package:sornaz/screens/Notation/notation_api.dart';
 
 void main() {
   test(
-    'instrument catalog uses its GET endpoint and persists for offline notation',
+    'instrument catalog opens immediately and refreshes its offline cache',
     () async {
       SharedPreferences.setMockInitialValues({});
       const items = [
@@ -27,7 +27,8 @@ void main() {
           );
         }),
       );
-      expect(await online.request('instruments', {}), items);
+      expect(await online.request('instruments', {}), isNotEmpty);
+      await Future<void>.delayed(Duration.zero);
       online.close();
       final offline = NotationApi(
         '',

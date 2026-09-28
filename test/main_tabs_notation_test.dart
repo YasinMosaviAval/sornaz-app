@@ -35,7 +35,9 @@ void main() {
           MainTabs(
             pages: List.generate(
               5,
-              (index) => MainTabScaffold(index:index,appBar:AppBar(title:Text('header $index')),
+              (index) => MainTabScaffold(
+                index: index,
+                appBar: AppBar(title: Text('header $index')),
                 body: Center(child: Text('page $index')),
                 bottomNavigationBar: BottomNavBarWidget(selectedIndex: index),
               ),
@@ -44,13 +46,19 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.descendant(of:find.byType(PageView),matching:find.byType(AppBar)),findsNothing);
-      expect(find.byType(BottomNavigationBar),findsOneWidget);
-      final barRect=tester.getRect(find.byType(BottomNavigationBar));
+      expect(
+        find.descendant(
+          of: find.byType(PageView),
+          matching: find.byType(AppBar),
+        ),
+        findsNothing,
+      );
+      expect(find.byType(BottomNavigationBar), findsOneWidget);
+      final barRect = tester.getRect(find.byType(BottomNavigationBar));
       await tester.drag(find.byType(PageView), const Offset(-600, 0));
       await tester.pumpAndSettle();
       expect(find.text('page 1'), findsOneWidget);
-      expect(tester.getRect(find.byType(BottomNavigationBar)),barRect);
+      expect(tester.getRect(find.byType(BottomNavigationBar)), barRect);
       await tester.tap(find.byIcon(Icons.tune).first);
       await tester.pumpAndSettle();
       expect(find.text('page 3'), findsOneWidget);
@@ -64,43 +72,86 @@ void main() {
     },
   );
   test(
-    'phone-authored sheets survive restart and are isolated by account',
+    'phone-authored sheets save offline, survive restart and stay account scoped',
     () async {
-      final score = {
-        'id': 7,
-        'version': 1,
-        'editable': true,
-        'saved': false,
-        'metadata': {'title': 'Local'},
-        'score': {'measures': []},
-      };
+      var networkCalls = 0;
       final api = NotationApi(
         'token',
         userId: 12,
-        client: MockClient(
-          (_) async =>
-              http.Response(jsonEncode({'success': true, 'data': score}), 200),
-        ),
+        client: MockClient((_) async {
+          networkCalls++;
+          throw http.ClientException('offline');
+        }),
       );
-      await api.request('save', {
+      final saved = await api.request('save', {
         'sheetId': 0,
-        'payload': {'metadata': {}, 'score': {}},
+        'payload': {
+          'metadata': {'title': 'Local'},
+          'score': {'measures': []},
+        },
       });
+      expect(saved['id'], isNegative);
+      expect(saved['local'], true);
+      expect(saved['uploaded'], false);
+      expect(networkCalls, 0);
       api.close();
       MockClient offline() =>
           MockClient((_) async => throw http.ClientException('offline'));
       final reopened = NotationApi('token', userId: 12, client: offline());
-      final result = await reopened.request('get', {'sheetId': 7});
+      final result = await reopened.request('get', {'sheetId': saved['id']});
       expect(result['metadata']['title'], 'Local');
       final list = await reopened.request('list', {'mode': 'mine', 'page': 1});
       expect(list['items'], hasLength(1));
       final other = NotationApi('another', userId: 13, client: offline());
       await expectLater(
-        other.request('get', {'sheetId': 7}),
-        throwsA(isA<http.ClientException>()),
+        other.request('get', {'sheetId': saved['id']}),
+        throwsA(isA<FormatException>()),
       );
       reopened.close();
       other.close();
     },
   );
+  test('upload is explicit and preserves the local score id', () async {
+    final requests = <http.Request>[];
+    final api = NotationApi(
+      'token',
+      userId: 12,
+      client: MockClient((request) async {
+        requests.add(request);
+        return http.Response(
+          jsonEncode({
+            'success': true,
+            'data': {'id': 91, 'version': 4},
+          }),
+          200,
+        );
+      }),
+    );
+    final local = await api.request('save', {
+      'sheetId': 0,
+      'payload': {
+        'metadata': {'title': 'Upload later'},
+        'score': {'measures': []},
+      },
+    });
+    expect(requests, isEmpty);
+    final uploaded = await api.request('upload', {'sheetId': local['id']});
+    expect(requests, hasLength(1));
+    expect(requests.single.method, 'POST');
+    expect(uploaded['id'], local['id']);
+    expect(uploaded['remote_id'], 91);
+    expect(uploaded['uploaded'], true);
+    final edited = await api.request('save', {
+      'sheetId': local['id'],
+      'payload': {
+        'metadata': {'title': 'Edited offline'},
+        'score': {'measures': []},
+      },
+    });
+    expect(edited['uploaded'], false);
+    await api.request('upload', {'sheetId': local['id']});
+    expect(requests.last.url.path, endsWith('/music-sheets/91'));
+    expect(jsonDecode(requests.last.body)['version'], 4);
+    api.close();
+  });
 }

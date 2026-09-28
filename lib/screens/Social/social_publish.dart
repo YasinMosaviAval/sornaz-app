@@ -4,6 +4,7 @@ import 'media_picker.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
+import 'dart:convert';
 
 import 'social_api.dart';
 import 'social_widgets.dart';
@@ -18,12 +19,20 @@ class PublishPage extends StatefulWidget {
 
 class _PublishPageState extends State<PublishPage> {
   final body = TextEditingController();
+  final pollQuestion = TextEditingController();
+  final pollOptions = <TextEditingController>[
+    TextEditingController(),
+    TextEditingController(),
+  ];
+  bool hasPoll = false;
   Json? media;
   bool busy = false;
   String? filename;
   @override
   void dispose() {
     body.dispose();
+    pollQuestion.dispose();
+    for (final option in pollOptions) option.dispose();
     super.dispose();
   }
 
@@ -55,12 +64,27 @@ class _PublishPageState extends State<PublishPage> {
       return;
     }
     if (body.text.trim().isEmpty && media == null) return;
+    final options = pollOptions
+        .map((e) => e.text.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    if (hasPoll && (pollQuestion.text.trim().isEmpty || options.length < 2)) {
+      socialError(
+        context,
+        const SocialException(
+          'برای نظرسنجی یک پرسش و حداقل دو گزینه وارد کنید.',
+        ),
+      );
+      return;
+    }
     setState(() => busy = true);
     try {
       await widget.api.post('/posts', {
         'kind': widget.kind,
         'body': body.text.trim(),
         if (media != null) 'media_id': '${media!['id']}',
+        if (hasPoll) 'poll_question': pollQuestion.text.trim(),
+        if (hasPoll) 'poll_options': jsonEncode(options),
       });
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
@@ -131,6 +155,72 @@ class _PublishPageState extends State<PublishPage> {
                     border: OutlineInputBorder(),
                   ),
                 ),
+                if (widget.kind == 'post') ...[
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      socialText(context, 'افزودن نظرسنجی', 'Add poll'),
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    value: hasPoll,
+                    onChanged: busy
+                        ? null
+                        : (value) => setState(() => hasPoll = value),
+                  ),
+                  if (hasPoll) ...[
+                    TextField(
+                      controller: pollQuestion,
+                      enabled: !busy,
+                      maxLength: 240,
+                      decoration: InputDecoration(
+                        labelText: socialText(
+                          context,
+                          'پرسش نظرسنجی',
+                          'Poll question',
+                        ),
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                    for (var i = 0; i < pollOptions.length; i++) ...[
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: pollOptions[i],
+                        enabled: !busy,
+                        maxLength: 120,
+                        decoration: InputDecoration(
+                          labelText:
+                              '${socialText(context, 'گزینه', 'Option')} ${i + 1}',
+                          border: const OutlineInputBorder(),
+                          suffixIcon: pollOptions.length > 2
+                              ? IconButton(
+                                  onPressed: () => setState(() {
+                                    pollOptions.removeAt(i).dispose();
+                                  }),
+                                  icon: const Icon(
+                                    Icons.delete_outline,
+                                    color: Colors.red,
+                                  ),
+                                )
+                              : null,
+                        ),
+                      ),
+                    ],
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: TextButton.icon(
+                        onPressed: busy || pollOptions.length >= 10
+                            ? null
+                            : () => setState(
+                                () => pollOptions.add(TextEditingController()),
+                              ),
+                        icon: const Icon(Icons.add),
+                        label: Text(
+                          socialText(context, 'افزودن گزینه', 'Add option'),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
                 const SizedBox(height: 20),
                 if (busy) ...[
                   const LinearProgressIndicator(),

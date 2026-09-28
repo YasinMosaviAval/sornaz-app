@@ -3,12 +3,13 @@ import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
+import 'package:sornaz/screens/Tuner/controller/tuner_provider.dart';
 import 'dart:async';
 
 class FrequencyBox extends StatefulWidget {
   final double cents;
   final bool inRange;
-  final int pointsPerSecond;
+  final double fillDuration;
   final double pointSize;
   final double scale;
 
@@ -16,7 +17,7 @@ class FrequencyBox extends StatefulWidget {
     super.key,
     required this.cents,
     required this.inRange,
-    this.pointsPerSecond = 60,
+    this.fillDuration = 0.96,
     this.pointSize = 1.0,
     this.scale = 4.0,
   });
@@ -26,6 +27,7 @@ class FrequencyBox extends StatefulWidget {
 }
 
 class _FrequencyBoxState extends State<FrequencyBox> {
+  static const _sampleInterval = Duration(milliseconds: 16);
   late List<double> _points;
   Timer? _timer;
   double _lastCents = 0;
@@ -38,8 +40,8 @@ class _FrequencyBoxState extends State<FrequencyBox> {
     _points = [];
     _lastCents = widget.cents;
 
-    _timer = Timer.periodic(const Duration(milliseconds: 16), (_) {
-      if (_points.length >= widget.pointsPerSecond) {
+    _timer = Timer.periodic(_sampleInterval, (_) {
+      if (_points.length >= _maximumPoints) {
         _points.removeAt(0);
       }
       _points.add(_lastCents);
@@ -52,7 +54,17 @@ class _FrequencyBoxState extends State<FrequencyBox> {
   void didUpdateWidget(covariant FrequencyBox oldWidget) {
     super.didUpdateWidget(oldWidget);
     _lastCents = widget.cents;
+    if (oldWidget.fillDuration != widget.fillDuration &&
+        _points.length > _maximumPoints) {
+      _points.removeRange(0, _points.length - _maximumPoints);
+    }
   }
+
+  int get _maximumPoints =>
+      (widget.fillDuration * 1000 / _sampleInterval.inMilliseconds)
+          .round()
+          .clamp(2, 1875)
+          .toInt();
 
   @override
   void dispose() {
@@ -64,6 +76,7 @@ class _FrequencyBoxState extends State<FrequencyBox> {
   @override
   Widget build(BuildContext context) {
     final appData = context.watch<AppData>();
+    final tuner = context.watch<TunerProvider>();
     final isDark = appData.isDark;
     final width = MediaQuery.of(context).size.width;
     final height = AppSpacing.space_300;
@@ -103,7 +116,8 @@ class _FrequencyBoxState extends State<FrequencyBox> {
                 height: height,
                 pointSize: widget.pointSize,
                 scale: widget.scale,
-                pointsPerSecond: widget.pointsPerSecond,
+                maximumPoints: _maximumPoints,
+                lineThickness: tuner.lineThickness,
                 isDark: isDark,
                 repaint: _repaintTick,
               ),
@@ -120,17 +134,19 @@ class _FrequencyPointsPainter extends CustomPainter {
   final double width;
   final double height;
   final double pointSize;
-  final int pointsPerSecond;
+  final int maximumPoints;
   final bool isDark;
   final double scale;
+  final double lineThickness;
 
   _FrequencyPointsPainter({
     required this.points,
     required this.width,
     required this.height,
     required this.pointSize,
-    required this.pointsPerSecond,
+    required this.maximumPoints,
     required this.isDark,
+    required this.lineThickness,
     this.scale = 1.0,
     required Listenable repaint,
   }) : super(repaint: repaint);
@@ -141,10 +157,10 @@ class _FrequencyPointsPainter extends CustomPainter {
 
     final paintLine = Paint()
       ..color = AppColors.tuner_frequency_box_line_color(isDark: isDark)
-      ..strokeWidth = 1.2
+      ..strokeWidth = lineThickness
       ..style = PaintingStyle.stroke;
 
-    final dy = height / (pointsPerSecond - 1);
+    final dy = height / (maximumPoints - 1);
 
     final path = Path();
 
@@ -164,6 +180,8 @@ class _FrequencyPointsPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _FrequencyPointsPainter old) {
-    return old.points.length != points.length;
+    return old.points.length != points.length ||
+        old.lineThickness != lineThickness ||
+        old.maximumPoints != maximumPoints;
   }
 }
