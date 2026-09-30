@@ -1,7 +1,7 @@
-/* Stable vector symbols: independent of platform music-font metrics. */
+﻿/* Stable vector symbols: independent of platform music-font metrics. */
 (function(root){
 'use strict';
-const paths={trash:'<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>',eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>','eye-off':'<path d="m3 3 18 18M10 5.2c6.5-1 12 6.8 12 6.8a21 21 0 0 1-3 3.8M6 6.5A21 21 0 0 0 2 12s3.5 7 10 7a11 11 0 0 0 4-1M10 10a3 3 0 0 0 4 4"/>',pdf:'<path d="M7 2h13v16H7zM3 6v16h13"/><path d="M9 13V8h1a1.3 1.3 0 0 1 0 2.6H9m4 2.4V8h.5c2 0 2 5 0 5H13m4 0V8h2m-2 2.5h1.7"/>',chevron:'<path d="m5 9 7 7 7-7"/>',rest:'<path fill="currentColor" stroke="none" d="m10 2 7 6-5 6 5 6c-7-3-9 1-4 6-9-4-8-10-2-10l-6-5 7-6Z" transform="translate(2 1) scale(.78)"/>'};
+const paths={trash:'<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>',upload:'<path d="M12 16V3m0 0L7 8m5-5 5 5M4 16v4h16v-4"/>',eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>','eye-off':'<path d="m3 3 18 18M10 5.2c6.5-1 12 6.8 12 6.8a21 21 0 0 1-3 3.8M6 6.5A21 21 0 0 0 2 12s3.5 7 10 7a11 11 0 0 0 4-1M10 10a3 3 0 0 0 4 4"/>',pdf:'<path d="M7 2h13v16H7zM3 6v16h13"/><path d="M9 13V8h1a1.3 1.3 0 0 1 0 2.6H9m4 2.4V8h.5c2 0 2 5 0 5H13m4 0V8h2m-2 2.5h1.7"/>',chevron:'<path d="m5 9 7 7 7-7"/>',rest:'<path fill="currentColor" stroke="none" d="m10 2 7 6-5 6 5 6c-7-3-9 1-4 6-9-4-8-10-2-10l-6-5 7-6Z" transform="translate(2 1) scale(.78)"/>'};
 function icon(kind){return '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+paths[kind]+'</svg>';}
 function note(value){
  const flags={8:1,16:2,32:3,64:4}[value]||0;

@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
 import 'social_api.dart';
@@ -25,7 +26,7 @@ class CourseCard extends StatelessWidget {
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: appRadius(context),
         side: BorderSide(
           color: Theme.of(context).dividerColor.withValues(alpha: .15),
         ),

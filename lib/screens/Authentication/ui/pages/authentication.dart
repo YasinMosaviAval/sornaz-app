@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/account_avatar.dart';
 import 'package:sornaz/screens/Social/social_api.dart';
@@ -689,7 +690,7 @@ class _Field extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = context.watch<AppData>().isDark;
     OutlineInputBorder border(Color color) => OutlineInputBorder(
-      borderRadius: BorderRadius.circular(4),
+      borderRadius: appRadius(context),
       borderSide: BorderSide(color: color),
     );
     return Column(
@@ -750,7 +751,7 @@ class _MainButton extends StatelessWidget {
               ? AppColors.primary_dark
               : AppColors.primary_light,
           foregroundColor: dark ? Colors.black : Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+          shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
         ),
         onPressed: onPressed,
         child: loading

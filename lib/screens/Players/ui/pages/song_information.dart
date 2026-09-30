@@ -1,3 +1,4 @@
+﻿import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'lyrics.dart';
 import '../../metadata/audio_metadata.dart';
@@ -77,7 +78,7 @@ class NowPlayingInfoTab extends StatelessWidget {
             Center(
               child: meta?.artwork != null
                   ? ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: appRadius(context),
                       child: Image.memory(
                         meta!.artwork!,
                         width: 260,
@@ -240,7 +241,7 @@ class DefaultSongCover extends StatelessWidget {
     height: 260,
     decoration: BoxDecoration(
       color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: appRadius(context),
     ),
     child: Icon(
       Icons.album,

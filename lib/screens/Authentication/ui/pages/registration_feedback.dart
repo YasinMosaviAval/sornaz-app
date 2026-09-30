@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:flutter/material.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 
@@ -120,7 +121,7 @@ class PasswordStrengthFeedback extends StatelessWidget {
                     backgroundColor: Theme.of(
                       context,
                     ).colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: appRadius(context),
                     semanticsLabel: 'auth.strength'.translate(context),
                   ),
                 ),

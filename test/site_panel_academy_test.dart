@@ -261,10 +261,16 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(JoinCommunity), findsOneWidget);
       expect(
-        tester
-            .widget<BottomNavigationBar>(find.byType(BottomNavigationBar))
-            .currentIndex,
-        1,
+        find.descendant(
+          of: find.byType(BottomNavBarWidget),
+          matching: find.byWidgetPredicate(
+            (widget) =>
+                widget is Semantics &&
+                widget.properties.selected == true &&
+                widget.properties.label == 'پنل کاربری',
+          ),
+        ),
+        findsOneWidget,
       );
       expect(find.byType(BottomNavBarWidget), findsOneWidget);
       await tester.tap(find.text('پروفایل'));

@@ -1,3 +1,4 @@
+﻿import 'package:sornaz/helpers/app_appearance.dart';
 import '../components/recording_timer.dart';
 import 'package:sornaz/screens/Players/providers/audio_player_provider.dart';
 import 'package:sornaz/screens/Players/services/player_settings.dart';
@@ -82,7 +83,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
                     backgroundColor: colors.primary,
                     textStyle: const TextStyle(fontSize: 12),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: appRadius(context),
                     ),
                   ),
                   child: const Text('ذخیره'),

@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:flutter/foundation.dart';
 import 'story_composer.dart';
 import 'media_picker.dart';
@@ -127,7 +128,7 @@ class _PublishPageState extends State<PublishPage> {
                   const SizedBox(height: 16),
                   if ('${media!['mime']}'.startsWith('image/'))
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: appRadius(context),
                       child: SocialImage(
                         api: widget.api,
                         path: media!['url'],

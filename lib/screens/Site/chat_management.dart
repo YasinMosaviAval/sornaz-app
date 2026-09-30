@@ -1,3 +1,4 @@
+﻿import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:flutter/material.dart';
 import '../Social/social_api.dart';
 import '../Social/social_widgets.dart';
@@ -28,7 +29,7 @@ Future<bool> conversationMenu(
     ].where(actions.containsKey).toList();
     final key = await showModalBottomSheet<String>(
       context: context,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+      shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
       builder: (c) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,

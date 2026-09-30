@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/screens/Site/site_api.dart';
 import 'package:sornaz/screens/Site/academy_registration.dart';
 import 'package:sornaz/screens/Site/academy_search.dart';
@@ -11,7 +12,6 @@ import 'package:sornaz/screens/Social/community_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/bottom_nav.dart';
-import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 import 'package:sornaz/screens/Articles/provider/articles_provider.dart';
 import 'package:sornaz/screens/Articles/ui/pages/article_detail_page.dart';
@@ -162,23 +162,7 @@ class _HomeContentState extends State<HomeContent>
       socialPush(context, CourseDetailPage(api: api, id: number(c['id'])));
   @override
   Widget build(BuildContext context) {
-    final app = context.watch<AppData>();
-    final dark = app.isDark;
-    final accent = app.accent;
-    final theme = ThemeData(
-      useMaterial3: true,
-      brightness: dark ? Brightness.dark : Brightness.light,
-      fontFamily: app.fontFamily,
-      scaffoldBackgroundColor: dark ? Colors.black : Colors.white,
-      colorScheme:
-          ColorScheme.fromSeed(
-            seedColor: accent,
-            brightness: dark ? Brightness.dark : Brightness.light,
-          ).copyWith(
-            primary: accent,
-            surface: dark ? const Color(0xff202020) : const Color(0xfff1f1f1),
-          ),
-    );
+    final theme = Theme.of(context);
     final filtered = courses
         .where(
           (c) =>
@@ -290,7 +274,7 @@ class _HomeContentState extends State<HomeContent>
                                     margin: EdgeInsets.zero,
                                     clipBehavior: Clip.antiAlias,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(4),
+                                      borderRadius: appRadius(context),
                                       side: BorderSide(
                                         color: theme.dividerColor,
                                       ),

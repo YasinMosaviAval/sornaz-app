@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:flutter/material.dart';
 import '../screens/Social/social_widgets.dart';
 
@@ -50,9 +51,7 @@ Future<String?> renameMediaDialog(
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
             ),
             onPressed: draft.trim().isEmpty
                 ? null

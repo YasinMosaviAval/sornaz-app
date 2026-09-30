@@ -6,7 +6,7 @@ const keys=['C','G','D','A','E','B','F#','C#','F','Bb','Eb','Ab','Db','Gb','Cb',
 const clone=v=>JSON.parse(JSON.stringify(v));
 const ticks=n=>durations[n.duration]*(2-Math.pow(.5,n.dots||0));
 const capacity=m=>{const[a,b]=m.time.split('/').map(Number);return a*64/b;};
-function fresh(){return {id:0,version:0,editable:true,visibility:'private',metadata:{title:'',subtitle:'',composer:'',arranger:'',lyricist:'',instrument:'Tar',key:'C',time:'4/4',tempo_text:'Allegro',tempo_note:'q',bpm:100,clef:'treble'},score:{measures:[{notes:[]}]}};}
+function fresh(){return {id:0,version:0,editable:true,visibility:'private',metadata:{title:'',subtitle:'',composer:'',arranger:'',lyricist:'',instrument:'Tar',scale_type:'major',key:'C',time:'4/4',tempo_text:'Allegro',tempo_note:'q',tempo_dots:0,bpm:100,clef:'treble'},score:{measures:[{notes:[]}]}};}
 function add(sheet,bar,note){if(!sheet.editable)throw Error('This sheet is read-only.');const notes=sheet.score.measures[bar].notes;if(notes.reduce((s,n)=>s+ticks(n),0)+ticks(note)>capacity(sheet.metadata)+.0001)throw Error('This measure is full.');notes.push(clone(note));return notes.length-1;}
 // Plan the complete insertion before mutating, including overflow into later bars.
 function insert(sheet,bar,note,replaceIndex=null){
@@ -40,7 +40,7 @@ function prepare(sheet){
  sheet.score.measures=measures;return sheet;
 }
 function timeline(sheet){
- const events=[],meta=sheet.metadata,unit=60/meta.bpm/durations[meta.tempo_note];let elapsed=0,last;
+ const events=[],meta=sheet.metadata,beatTicks=ticks({duration:meta.tempo_note,dots:meta.tempo_dots||0}),unit=60/meta.bpm/beatTicks;let elapsed=0,last;
  sheet.score.measures.forEach((bar,barIndex)=>{
   const carry={};let used=0;
   bar.notes.forEach((n,noteIndex)=>{

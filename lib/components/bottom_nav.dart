@@ -12,61 +12,101 @@ import 'package:sornaz/screens/Social/social_widgets.dart';
 class BottomNavBarWidget extends StatelessWidget {
   const BottomNavBarWidget({super.key, this.selectedIndex});
   final int? selectedIndex;
+
   @override
   Widget build(BuildContext context) {
     final data = context.watch<AppData>();
     final current = selectedIndex ?? data.bottomNavIndex.clamp(0, 4);
+    final inactive = data.isDark ? Colors.white60 : Colors.black54;
+    final background = data.isDark
+        ? const Color(0xff202020)
+        : const Color(0xfff1f1f1);
+    const items = [
+      (Icons.home_outlined, Icons.home, 'خانه', 'Home'),
+      (Icons.dashboard_outlined, Icons.dashboard, 'پنل کاربری', 'User panel'),
+      (Icons.dynamic_feed_outlined, Icons.dynamic_feed, 'صحنه', 'Stage'),
+      (Icons.tune, Icons.tune, 'ابزار موسیقی', 'Music tools'),
+      (Icons.person_outline, Icons.person, 'پروفایل', 'Profile'),
+    ];
+    void select(int index) {
+      if (index == current) return;
+      final tabs = MainTabsScope.maybeOf(context);
+      if (tabs != null) {
+        tabs.select(index);
+        return;
+      }
+      data.setBottomNavIndex(index);
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => const [
+            HomePage(),
+            SitePanelPage(),
+            UserPanelPage(),
+            MusicToolsPage(),
+            MyProfilePage(),
+          ][index],
+        ),
+      );
+    }
+
     return Directionality(
       textDirection: TextDirection.ltr,
-      child: BottomNavigationBar(
-        currentIndex: current,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: data.isDark
-            ? const Color(0xff202020)
-            : const Color(0xfff1f1f1),
-        selectedItemColor: data.accent,
-        unselectedItemColor: data.isDark ? Colors.white60 : Colors.black54,
-        selectedFontSize: 10,
-        unselectedFontSize: 10,
-        onTap: (index) {
-          if (index == current) return;
-          final tabs = MainTabsScope.maybeOf(context);
-          if (tabs != null) {
-            tabs.select(index);
-            return;
-          }
-          data.setBottomNavIndex(index);
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => const [
-                HomePage(),
-                SitePanelPage(),
-                UserPanelPage(),
-                MusicToolsPage(),
-                MyProfilePage(),
-              ][index],
+      child: ColoredBox(
+        color: background,
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            height: 48,
+            child: Row(
+              children: [
+                for (var index = 0; index < items.length; index++)
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => select(index),
+                      child: Semantics(
+                        selected: index == current,
+                        button: true,
+                        label: socialText(
+                          context,
+                          items[index].$3,
+                          items[index].$4,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              index == current
+                                  ? items[index].$2
+                                  : items[index].$1,
+                              color: index == current ? data.accent : inactive,
+                              size: 21,
+                            ),
+                            const SizedBox(height: 1),
+                            Text(
+                              socialText(
+                                context,
+                                items[index].$3,
+                                items[index].$4,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 10,
+                                height: 1.1,
+                                color: index == current
+                                    ? data.accent
+                                    : inactive,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
-          );
-        },
-        items: [
-          for (final item in [
-            (Icons.home_outlined, Icons.home, 'خانه', 'Home'),
-            (
-              Icons.dashboard_outlined,
-              Icons.dashboard,
-              'پنل کاربری',
-              'User panel',
-            ),
-            (Icons.dynamic_feed_outlined, Icons.dynamic_feed, 'صحنه', 'Stage'),
-            (Icons.tune, Icons.tune, 'ابزار موسیقی', 'Music tools'),
-            (Icons.person_outline, Icons.person, 'پروفایل', 'Profile'),
-          ])
-            BottomNavigationBarItem(
-              icon: Icon(item.$1),
-              activeIcon: Icon(item.$1),
-              label: socialText(context, item.$3, item.$4),
-            ),
-        ],
+          ),
+        ),
       ),
     );
   }

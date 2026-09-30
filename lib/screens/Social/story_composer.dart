@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import '../Site/chat_media.dart';
 import '../Site/panel_api.dart';
 import 'dart:convert';
@@ -164,9 +165,7 @@ class _StoryComposerState extends State<StoryComposer>
             ),
           FilledButton(
             style: FilledButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
             ),
             onPressed: () {
               if (form.currentState!.validate()) Navigator.pop(context, true);
@@ -1201,7 +1200,7 @@ class _StoryComposerState extends State<StoryComposer>
                 child: FilledButton(
                   style: FilledButton.styleFrom(
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: appRadius(context),
                     ),
                   ),
                   onPressed: busy ? null : () => finish(save: false),
@@ -1387,7 +1386,7 @@ class _StoryMentionPickerState extends State<StoryMentionPicker> {
                 child: FilledButton(
                   style: FilledButton.styleFrom(
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: appRadius(context),
                     ),
                   ),
                   onPressed: selected.isEmpty

@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import '../../components/app_top_bar_direction.dart';
 import 'branch_export.dart';
 import 'package:flutter/material.dart';
@@ -145,7 +146,7 @@ class _BranchesPageState extends State<BranchesPage> {
     final yes = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+        shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
         titleTextStyle: const TextStyle(fontSize: 14, color: Color(0xff111827)),
         title: Text(
           t(
@@ -168,9 +169,7 @@ class _BranchesPageState extends State<BranchesPage> {
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: Colors.red.shade600,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
             ),
             onPressed: () => Navigator.pop(c, true),
             child: Text(t('حذف', 'Delete')),
@@ -218,10 +217,10 @@ class _BranchesPageState extends State<BranchesPage> {
     VoidCallback? onTap,
   }) => Material(
     color: background,
-    borderRadius: BorderRadius.circular(4),
+    borderRadius: appRadius(context),
     child: InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(4),
+      borderRadius: appRadius(context),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
         child: Text(text, style: TextStyle(fontSize: 12, color: foreground)),
@@ -255,7 +254,7 @@ class _BranchesPageState extends State<BranchesPage> {
           flex: 2,
           child: Text(
             label,
-            style: const TextStyle(fontSize: 14, color: branchMuted),
+            style: TextStyle(fontSize: 14, color: branchSecondary(context)),
           ),
         ),
         const SizedBox(width: 8),
@@ -264,7 +263,7 @@ class _BranchesPageState extends State<BranchesPage> {
           child: Text(
             '${value ?? '—'}'.isEmpty ? '—' : '$value',
             textAlign: TextAlign.end,
-            style: const TextStyle(fontSize: 14),
+            style: TextStyle(fontSize: 14),
           ),
         ),
       ],
@@ -283,14 +282,14 @@ class _BranchesPageState extends State<BranchesPage> {
         (
           t('جزئیات', 'Details'),
           Icons.info_outline,
-          branchIndigo,
+          branchAccent(context),
           () => details(row),
         ),
       if (canEdit(row))
         (
           t('ویرایش', 'Edit'),
           Icons.edit_outlined,
-          branchIndigo,
+          branchAccent(context),
           () => edit(row),
         ),
       if (canDelete(row))
@@ -317,7 +316,7 @@ class _BranchesPageState extends State<BranchesPage> {
               child: TextButton(
                 style: TextButton.styleFrom(
                   foregroundColor: i == 0 && !typesOnly
-                      ? branchIndigo
+                      ? branchAccent(context)
                       : Colors.white,
                   backgroundColor: i == 0 && !typesOnly
                       ? Colors.white
@@ -327,7 +326,7 @@ class _BranchesPageState extends State<BranchesPage> {
                     vertical: 8,
                   ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: appRadius(context),
                     side: BorderSide(color: specs[i].$3.withValues(alpha: .25)),
                   ),
                 ),
@@ -338,10 +337,7 @@ class _BranchesPageState extends State<BranchesPage> {
                     Icon(specs[i].$2, size: 16),
                     const SizedBox(width: 4),
                     Flexible(
-                      child: Text(
-                        specs[i].$1,
-                        style: const TextStyle(fontSize: 12),
-                      ),
+                      child: Text(specs[i].$1, style: TextStyle(fontSize: 12)),
                     ),
                   ],
                 ),
@@ -356,7 +352,9 @@ class _BranchesPageState extends State<BranchesPage> {
     final address = primary(row['addresses']);
     return BranchSurface(
       key: ValueKey('branch-card-${row['id']}'),
-      color: branchFlag(row['is_main']) ? branchAmber : Colors.white,
+      color: branchFlag(row['is_main'])
+          ? branchHighlight(context)
+          : Colors.white,
       border: branchFlag(row['is_main'])
           ? const Color(0xfffcd34d)
           : Colors.transparent,
@@ -369,10 +367,7 @@ class _BranchesPageState extends State<BranchesPage> {
               Expanded(
                 child: Text(
                   '${row['name']}',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(width: 12),
@@ -407,9 +402,9 @@ class _BranchesPageState extends State<BranchesPage> {
               padding: const EdgeInsets.only(top: 12),
               child: Text(
                 '«${row['slogan']}»',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
-                  color: branchIndigo,
+                  color: branchAccent(context),
                   fontStyle: FontStyle.italic,
                 ),
               ),
@@ -447,7 +442,7 @@ class _BranchesPageState extends State<BranchesPage> {
           children: [
             Text(
               '${row['academy_name'] ?? '—'} · ${row['type'] ?? '—'} · ${branchMode(row['physical_type'], fa)} · ${branchFlag(row['is_main']) ? t('شعبه اصلی', 'Main branch') : t('شعبه فرعی', 'Secondary branch')}',
-              style: const TextStyle(color: branchMuted, fontSize: 14),
+              style: TextStyle(color: branchSecondary(context), fontSize: 14),
             ),
             const SizedBox(height: 24),
             for (final e in {
@@ -474,10 +469,7 @@ class _BranchesPageState extends State<BranchesPage> {
               'bio': t('بیوگرافی', 'Biography'),
             }.entries) ...[
               const SizedBox(height: 16),
-              Text(
-                e.value,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
+              Text(e.value, style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               Text('${row[e.key] ?? '—'}'),
             ],
@@ -487,10 +479,7 @@ class _BranchesPageState extends State<BranchesPage> {
               'addresses': t('آدرس‌ها', 'Addresses'),
             }.entries) ...[
               const SizedBox(height: 24),
-              Text(
-                e.value,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
+              Text(e.value, style: TextStyle(fontWeight: FontWeight.bold)),
               if (objects(row[e.key] ?? []).isEmpty) const Text('—'),
               for (final item in objects(row[e.key] ?? []))
                 Padding(
@@ -515,9 +504,9 @@ class _BranchesPageState extends State<BranchesPage> {
                           e.key == 'addresses'
                               ? '${t('کد پستی', 'Postal code')}: ${item['postal_code'] ?? '—'} · ${item['lat'] ?? '—'}, ${item['lng'] ?? '—'}'
                               : '${e.key == 'links' ? '${item['mode'] ?? ''} · ${item['platform'] ?? ''} · ' : ''}${item['priority'] ?? ''}${branchFlag(item['is_main']) ? t(' · اصلی', ' · Primary') : ''}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: branchMuted,
+                            color: branchSecondary(context),
                           ),
                         ),
                       ],
@@ -534,10 +523,7 @@ class _BranchesPageState extends State<BranchesPage> {
     key: ValueKey('stat-$label'),
     height: 40,
     padding: const EdgeInsets.symmetric(horizontal: 10),
-    decoration: BoxDecoration(
-      color: bg,
-      borderRadius: BorderRadius.circular(4),
-    ),
+    decoration: BoxDecoration(color: bg, borderRadius: appRadius(context)),
     child: Row(
       children: [
         Expanded(
@@ -582,10 +568,8 @@ class _BranchesPageState extends State<BranchesPage> {
             final choice = await showDialog<String>(
               context: context,
               builder: (c) => SimpleDialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                title: Text(label, style: const TextStyle(fontSize: 14)),
+                shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
+                title: Text(label, style: TextStyle(fontSize: 14)),
                 children: [
                   SimpleDialogOption(
                     onPressed: () => Navigator.pop(c, ''),
@@ -609,9 +593,7 @@ class _BranchesPageState extends State<BranchesPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: Row(
               children: [
-                Expanded(
-                  child: Text(label, style: const TextStyle(fontSize: 13)),
-                ),
+                Expanded(child: Text(label, style: TextStyle(fontSize: 13))),
                 const SizedBox(width: 12),
                 Flexible(
                   child: Text(
@@ -619,7 +601,7 @@ class _BranchesPageState extends State<BranchesPage> {
                         ? hint
                         : '${selected['name'] ?? selected['title']}',
                     textAlign: TextAlign.end,
-                    style: const TextStyle(fontSize: 12),
+                    style: TextStyle(fontSize: 12),
                   ),
                 ),
               ],
@@ -649,7 +631,7 @@ class _BranchesPageState extends State<BranchesPage> {
     return BranchSurface(
       padding: 0,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: appRadius(context),
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: DataTable(
@@ -663,7 +645,7 @@ class _BranchesPageState extends State<BranchesPage> {
                 : sort == 'id'
                 ? columns.length
                 : null,
-            headingRowColor: const WidgetStatePropertyAll(branchBackground),
+            headingRowColor: WidgetStatePropertyAll(branchCanvas(context)),
             columnSpacing: 24,
             dataRowMinHeight: 64,
             dataRowMaxHeight: 90,
@@ -692,7 +674,9 @@ class _BranchesPageState extends State<BranchesPage> {
               for (final r in rows)
                 DataRow(
                   color: WidgetStatePropertyAll(
-                    branchFlag(r['is_main']) ? branchAmber : Colors.white,
+                    branchFlag(r['is_main'])
+                        ? branchHighlight(context)
+                        : Colors.white,
                   ),
                   cells: [
                     for (final key in columns.keys)
@@ -1019,7 +1003,7 @@ class _BranchesPageState extends State<BranchesPage> {
                                   : 'شعبه‌ای یافت نشد',
                               'No results found',
                             ),
-                            style: const TextStyle(color: branchMuted),
+                            style: TextStyle(color: branchSecondary(context)),
                           ),
                         ),
                       )
@@ -1041,9 +1025,9 @@ class _BranchesPageState extends State<BranchesPage> {
                                 'نمایش ${digits(rows.isEmpty ? 0 : (current - 1) * pageSize + 1)} تا ${digits(((current - 1) * pageSize + shown.length))} از ${digits(rows.length)} شعبه',
                                 '${rows.length} branches',
                               ),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
-                                color: branchMuted,
+                                color: branchSecondary(context),
                               ),
                             ),
                             const SizedBox(height: 12),

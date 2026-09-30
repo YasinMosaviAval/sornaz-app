@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -50,9 +51,7 @@ class AcademyRegistrationCard extends StatelessWidget {
           const SizedBox(height: 16),
           FilledButton.icon(
             style: FilledButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
             ),
             key: const ValueKey('register-academy'),
             icon: const Icon(Icons.add),

@@ -198,7 +198,7 @@ class _NativePanelState extends State<NativePanel> {
               child: NotificationListener<ScrollMetricsNotification>(
                 onNotification: measure,
                 child: ListView(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  padding: const EdgeInsets.only(bottom: 24),
                   children: [
                     for (final section in panelNavigation(sections))
                       if (matches(section)) menuItem(section),

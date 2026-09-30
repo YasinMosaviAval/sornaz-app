@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
@@ -37,23 +38,29 @@ class ComponentSearchBar extends StatelessWidget {
               prefixIcon: Icon(
                 Icons.search,
                 size: AppSpacing.space_24,
-                color: AppColors.component_search_bar_prefix_icon_color(isDark: isDark),
+                color: AppColors.component_search_bar_prefix_icon_color(
+                  isDark: isDark,
+                ),
               ),
               suffixIcon: Icon(
                 Icons.tune,
                 size: AppSpacing.space_22,
-                color: AppColors.component_search_bar_suffix_icon_color(isDark: isDark),
+                color: AppColors.component_search_bar_suffix_icon_color(
+                  isDark: isDark,
+                ),
               ),
               contentPadding: EdgeInsets.symmetric(
                 horizontal: AppSpacing.space_16,
                 vertical: AppSpacing.space_0,
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: appRadius(context),
                 borderSide: BorderSide.none,
               ),
               filled: true,
-              fillColor: AppColors.component_search_bar_fill_color(isDark: isDark),
+              fillColor: AppColors.component_search_bar_fill_color(
+                isDark: isDark,
+              ),
             ),
           ),
         ),

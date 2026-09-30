@@ -5,7 +5,6 @@ import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 
-
 class SettingsSectionHeader extends StatefulWidget {
   final String title;
 
@@ -14,6 +13,7 @@ class SettingsSectionHeader extends StatefulWidget {
   final double size;
   final bool showDivider;
   final bool animated;
+  final double topSpacing;
   final EdgeInsetsGeometry padding;
 
   final bool collapsible;
@@ -28,9 +28,10 @@ class SettingsSectionHeader extends StatefulWidget {
     this.size = 24,
     this.showDivider = true,
     this.animated = true,
+    this.topSpacing = AppSpacing.space_16,
     this.padding = const EdgeInsets.symmetric(
       horizontal: AppSpacing.space_12,
-      vertical: AppSpacing.space_12
+      vertical: AppSpacing.space_12,
     ),
 
     this.collapsible = true,
@@ -94,38 +95,33 @@ class _SettingsSectionHeaderState extends State<SettingsSectionHeader> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     final appData = Provider.of<AppData>(context);
     final isDark = appData.isDark;
-    final textColor = AppColors.settings_section_header_text_color(isDark: isDark);
+    final textColor = AppColors.settings_section_header_text_color(
+      isDark: isDark,
+    );
 
     Widget header = InkWell(
       onTap: _isCollapsible ? _toggle : null,
-      borderRadius: BorderRadius.only(
-        topLeft: Radius.circular(AppSpacing.space_8),
-        topRight: Radius.circular(AppSpacing.space_8),
-        bottomLeft: Radius.circular(AppSpacing.space_2),
-        bottomRight: Radius.circular(AppSpacing.space_2)
-      ),
+      borderRadius: BorderRadius.circular(appData.cornerRadius),
       child: Padding(
         padding: widget.padding,
         child: Row(
           children: [
             if (widget.leadingIcon != null) ...[
-              Icon(
-                widget.leadingIcon,
-                size: widget.size,
-                color: textColor,
-              ),
+              Icon(widget.leadingIcon, size: widget.size, color: textColor),
               const SizedBox(width: AppSpacing.space_12),
             ],
 
             Expanded(
               child: Text(
                 widget.title,
-                style: AppTypography.settingsSectionHeaderTitle(context, textColor),
+                style: AppTypography.settingsSectionHeaderTitle(
+                  context,
+                  textColor,
+                ),
               ),
             ),
 
@@ -133,10 +129,7 @@ class _SettingsSectionHeaderState extends State<SettingsSectionHeader> {
               AnimatedRotation(
                 turns: _expanded ? 0.5 : 0,
                 duration: const Duration(milliseconds: 250),
-                child: Icon(
-                  Icons.keyboard_arrow_down,
-                  color: textColor,
-                ),
+                child: Icon(Icons.keyboard_arrow_down, color: textColor),
               ),
           ],
         ),
@@ -152,11 +145,13 @@ class _SettingsSectionHeaderState extends State<SettingsSectionHeader> {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.space_16),
+      padding: EdgeInsets.only(top: widget.topSpacing),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.settings_section_header_box_decoration_color(isDark: isDark),
-          borderRadius: BorderRadius.all(Radius.circular(AppSpacing.space_8))
+          color: AppColors.settings_section_header_box_decoration_color(
+            isDark: isDark,
+          ),
+          borderRadius: BorderRadius.circular(appData.cornerRadius),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,11 +160,15 @@ class _SettingsSectionHeaderState extends State<SettingsSectionHeader> {
 
             if (widget.showDivider)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space_8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.space_8,
+                ),
                 child: Divider(
                   height: AppSpacing.space_16,
                   thickness: 1,
-                  color: AppColors.settings_section_header_divider_color(isDark: isDark),
+                  color: AppColors.settings_section_header_divider_color(
+                    isDark: isDark,
+                  ),
                 ),
               ),
 
@@ -189,16 +188,15 @@ class _SettingsSectionHeaderState extends State<SettingsSectionHeader> {
                       child: AnimatedSlide(
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeInOut,
-                        offset: _contentVisible ? Offset.zero : const Offset(0, -0.05),
-                        child: Column(
-                          children: widget.children!,
-                        ),
+                        offset: _contentVisible
+                            ? Offset.zero
+                            : const Offset(0, -0.05),
+                        child: Column(children: widget.children!),
                       ),
                     ),
                   ),
                 ),
               ),
-
           ],
         ),
       ),

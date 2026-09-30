@@ -1,6 +1,7 @@
 package com.example.sornaz
 import android.app.Activity
 import android.content.Intent
+import android.content.ClipData
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -11,6 +12,7 @@ import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 import org.json.JSONObject
 import java.io.File
+import androidx.core.content.FileProvider
 import java.util.concurrent.Executors
 
 /** A user-selected tree, or the shared root Sornaz/Music Sheets folder. */
@@ -26,18 +28,22 @@ class NotationStorage(private val activity:Activity,messenger:BinaryMessenger) {
    "sdk"->result.success(Build.VERSION.SDK_INT)
    "location"->result.success(location())
    "choose"->choose(false){ok->if(ok)result.success(location())else result.success(null)}
-   "save","pdf"->{
+   "save","pdf","sibelius","musicxml","share"->{
     val name=call.argument<String>("name")?:"score"
     val content=call.argument<String>(if(call.method=="pdf")"html" else "content")?:""
-    if(content.toByteArray().size>(if(call.method=="pdf")8000000 else 300000)){result.error("NOTATION_STORAGE","File is too large.",null);return@setMethodCallHandler}
-    if(call.method=="save"&&runCatching{JSONObject(content).optString("format")}.getOrNull()!="sornaz-notation"){result.error("NOTATION_STORAGE","Invalid music sheet.",null);return@setMethodCallHandler}
+    if(content.toByteArray().size>(if(call.method=="pdf")8000000 else 1000000)){result.error("NOTATION_STORAGE","File is too large.",null);return@setMethodCallHandler}
+    if(call.method in listOf("save","share")&&runCatching{JSONObject(content).optString("format")}.getOrNull()!="sornaz-notation"){result.error("NOTATION_STORAGE","Invalid music sheet.",null);return@setMethodCallHandler}
     if(call.method=="pdf"){
      NotationPdf(activity).open(content,name,{result.success("print-dialog")},{result.error("NOTATION_STORAGE","Could not open PDF export.",null)})
      return@setMethodCallHandler
     }
+    if(call.method=="share"){
+     val directory=File(activity.cacheDir,"notation-exports").apply{mkdirs()};val file=File(directory,name.replace(Regex("[^\\p{L}\\p{N}._ -]"),"_").take(100)).apply{writeText(content)}
+     val uri=FileProvider.getUriForFile(activity,"${activity.packageName}.apkprovider",file);val intent=Intent(Intent.ACTION_SEND).apply{type="application/json";putExtra(Intent.EXTRA_STREAM,uri);clipData=ClipData.newRawUri("Sornaz notation",uri);addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)};activity.startActivity(Intent.createChooser(intent,"Sornaz"));result.success("shared");return@setMethodCallHandler
+    }
     ensure { ok ->
      if(!ok){result.error("NOTATION_STORAGE","No folder was selected.",null)}
-     else write(name,content.toByteArray(Charsets.UTF_8),"application/json",result)
+     else write(name,content.toByteArray(Charsets.UTF_8),if(call.method in listOf("sibelius","musicxml"))"application/vnd.recordare.musicxml+xml" else "application/json",result)
     }
    }
    else->result.notImplemented()
@@ -75,7 +81,11 @@ class NotationStorage(private val activity:Activity,messenger:BinaryMessenger) {
  }
  private fun write(rawName:String,bytes:ByteArray,mime:String,result:MethodChannel.Result){worker.execute{
   try{
-   val extension=if(mime=="application/pdf")"pdf" else "json"
+   val extension=when(mime){
+    "application/pdf"->"pdf"
+    "application/vnd.recordare.musicxml+xml"->"musicxml"
+    else->"json"
+   }
    val name=rawName.substringBeforeLast('.',rawName).replace(Regex("[^\\p{L}\\p{N} _-]"),"").take(80).ifBlank{"score"}+"."+extension
    val directory=prefs.getString("directory",null)
    val saved=if(directory!=null){

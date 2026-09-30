@@ -20,7 +20,7 @@ class ExpandingSearchBar extends StatefulWidget implements PreferredSizeWidget {
   final String hint;
   final List<Widget> actions;
   @override
-  Size get preferredSize => const Size.fromHeight(56);
+  Size get preferredSize => const Size.fromHeight(48);
   @override
   State<ExpandingSearchBar> createState() => _ExpandingSearchBarState();
 }
@@ -43,7 +43,7 @@ class _ExpandingSearchBarState extends State<ExpandingSearchBar> {
       child: SafeArea(
         bottom: false,
         child: SizedBox(
-          height: 56,
+          height: 48,
           child: LayoutBuilder(
             builder: (_, constraints) => Row(
               children: [

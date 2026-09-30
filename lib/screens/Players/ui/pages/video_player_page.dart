@@ -1,3 +1,4 @@
+﻿import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
@@ -80,7 +81,7 @@ class _VideoThumbnailState extends State<VideoThumbnail> {
 
   @override
   Widget build(BuildContext context) => ClipRRect(
-    borderRadius: BorderRadius.circular(4),
+    borderRadius: appRadius(context),
     child: SizedBox(
       width: 48,
       height: 36,
@@ -145,7 +146,7 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
       context: context,
       builder: (c) => StatefulBuilder(
         builder: (c, setDialog) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+          shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
           title: Text(
             t('تنظیمات نمایش ویدیو', 'Video display settings'),
             style: const TextStyle(fontSize: 14),
@@ -297,7 +298,7 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
                   ),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: .68),
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: appRadius(context),
                   ),
                   child: Text(
                     _videoDuration(items[i].duration),
@@ -1027,15 +1028,6 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
         .values[(repeatMode.index + 1) % VideoRepeatMode.values.length];
   });
 
-  String get sleepRemaining {
-    final remaining =
-        sleepDeadline?.difference(DateTime.now()) ?? Duration.zero;
-    if (remaining <= Duration.zero) return '';
-    final minutes = remaining.inMinutes.toString().padLeft(2, '0');
-    final seconds = (remaining.inSeconds % 60).toString().padLeft(2, '0');
-    return '$minutes:$seconds';
-  }
-
   Future<void> rotate() async {
     landscape = !landscape;
     await SystemChrome.setPreferredOrientations(
@@ -1044,6 +1036,15 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
           : [DeviceOrientation.portraitUp],
     );
     if (mounted) setState(() {});
+  }
+
+  String get sleepRemaining {
+    final remaining =
+        sleepDeadline?.difference(DateTime.now()) ?? Duration.zero;
+    if (remaining <= Duration.zero) return '';
+    final minutes = remaining.inMinutes.toString().padLeft(2, '0');
+    final seconds = (remaining.inSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
   }
 
   void dragUpdate(DragUpdateDetails d, double width) {

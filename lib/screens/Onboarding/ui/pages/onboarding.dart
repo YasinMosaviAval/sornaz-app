@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -150,7 +151,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               color: dot == index
                                   ? accent
                                   : Colors.grey.shade600,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: appRadius(context),
                             ),
                           ),
                         ),
@@ -229,7 +230,7 @@ class _ActionButton extends StatelessWidget {
       style: FilledButton.styleFrom(
         backgroundColor: accent,
         foregroundColor: isDark ? Colors.black : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
       ),
       onPressed: onPressed,
       child: Text(label),

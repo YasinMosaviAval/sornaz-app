@@ -240,7 +240,10 @@ void main() {
       );
       await tester.pumpAndSettle();
       final card = find.byKey(const ValueKey('branch-card-1'));
-      expect(tester.widget<BranchSurface>(card).color, branchAmber);
+      expect(
+        tester.widget<BranchSurface>(card).color,
+        branchHighlight(tester.element(card)),
+      );
       expect(
         find.descendant(of: card, matching: find.text('حذف')),
         findsNothing,

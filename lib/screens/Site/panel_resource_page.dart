@@ -1,3 +1,4 @@
+﻿import 'package:sornaz/helpers/app_appearance.dart';
 import '../Social/media_picker.dart';
 import 'branches_page.dart';
 import 'chat_message_bubble.dart';
@@ -332,7 +333,7 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                   child: AppBar(title: Text('${action['label']}')),
                 ),
                 body: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.only(bottom: 16),
                   child: PanelDataView(value: detail),
                 ),
               ),
@@ -495,7 +496,7 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
       border: TableBorder.all(
         color: const Color(0xffeeeeee),
         width: .2,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: appRadius(context),
       ),
       headingRowHeight: 40,
       dataRowMinHeight: 48,
@@ -536,7 +537,10 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                   children: [
                     IconButton(
                       tooltip: socialText(context, 'جزئیات', 'Details'),
-                      icon: const Icon(Icons.info_outline, color: branchIndigo),
+                      icon: Icon(
+                        Icons.info_outline,
+                        color: branchAccent(context),
+                      ),
                       onPressed: () => openRecord(row),
                     ),
                     for (final key in ['update', 'delete'])
@@ -550,7 +554,9 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                             key == 'delete'
                                 ? Icons.delete_outline
                                 : Icons.edit_outlined,
-                            color: key == 'delete' ? Colors.red : branchIndigo,
+                            color: key == 'delete'
+                                ? Colors.red
+                                : branchAccent(context),
                           ),
                           onPressed: busy ? null : () => perform(key, row),
                         ),
@@ -660,7 +666,7 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                         style: TextButton.styleFrom(
                           foregroundColor: key == 'delete'
                               ? Colors.red
-                              : branchIndigo,
+                              : branchAccent(context),
                         ),
                         onPressed: busy ? null : () => perform(key, row, extra),
                         icon: Icon(
@@ -939,7 +945,7 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
           : RefreshIndicator(
               onRefresh: () => load(refresh: true),
               child: ListView(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.only(bottom: 16),
                 children: [
                   if (busy) const LinearProgressIndicator(),
                   for (final field in objects(widget.section['filters'] ?? []))
@@ -988,7 +994,9 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                                   setState(() => tableView = false),
                               child: Icon(
                                 Icons.view_list_outlined,
-                                color: !tableView ? branchIndigo : branchMuted,
+                                color: !tableView
+                                    ? branchAccent(context)
+                                    : branchSecondary(context),
                                 size: 20,
                               ),
                             ),
@@ -1000,7 +1008,9 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                               onPressed: () => setState(() => tableView = true),
                               child: Icon(
                                 Icons.table_rows_outlined,
-                                color: tableView ? branchIndigo : branchMuted,
+                                color: tableView
+                                    ? branchAccent(context)
+                                    : branchSecondary(context),
                                 size: 20,
                               ),
                             ),

@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
 import 'social_api.dart';
@@ -57,7 +58,7 @@ class LearningCourseTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: appRadius(context),
             child: SocialImage(
               api: api,
               path: course['cover_id'] == null

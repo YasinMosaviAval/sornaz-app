@@ -6,7 +6,10 @@ import 'package:sornaz/helpers/app_typography.dart';
 class AppData extends ChangeNotifier {
   final SharedPreferences? preferences;
   AppData({this.preferences}) {
-    _palette = ColorPalette.values.firstWhere((p) => p.name == preferences?.getString('appearance.palette'), orElse: () => ColorPalette.original);
+    _palette = ColorPalette.values.firstWhere(
+      (p) => p.name == preferences?.getString('appearance.palette'),
+      orElse: () => ColorPalette.original,
+    );
     ColorPalette.current = _palette;
     _isDark = preferences?.getBool('appearance.dark') ?? false;
     _fontFamily =
@@ -14,6 +17,8 @@ class AppData extends ChangeNotifier {
         AppTypography.default_font_family;
     fontSize = (preferences?.getDouble('appearance.size') ?? 0).clamp(-2, 2);
     fontWeight = (preferences?.getDouble('appearance.weight') ?? 0).clamp(0, 5);
+    cornerRadius = (preferences?.getDouble('appearance.cornerRadius') ?? 4)
+        .clamp(0, 16);
   }
   bool _isDark = false;
   late ColorPalette _palette;
@@ -26,6 +31,7 @@ class AppData extends ChangeNotifier {
     final prefs = preferences ?? await SharedPreferences.getInstance();
     await prefs.setString('appearance.palette', value.name);
   }
+
   bool get isDark => _isDark;
 
   void toggleDarkMode(bool value) {
@@ -52,6 +58,15 @@ class AppData extends ChangeNotifier {
   }
 
   double fontWeight = 0;
+
+  double cornerRadius = 4;
+
+  Future<void> updateCornerRadius(double value) async {
+    cornerRadius = value.clamp(0, 16);
+    final prefs = preferences ?? await SharedPreferences.getInstance();
+    await prefs.setDouble('appearance.cornerRadius', cornerRadius);
+    notifyListeners();
+  }
 
   Future<void> updateFontWeight(double value) async {
     fontWeight = value.clamp(0, 5);

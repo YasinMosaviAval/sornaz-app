@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -29,7 +30,7 @@ class TunerSettingsPage extends StatelessWidget {
     final selected = await showDialog<int>(
       context: context,
       builder: (c) => SimpleDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+        shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
         title: Text(
           Localizations.localeOf(c).languageCode == 'fa'
               ? 'نرخ نمونه‌برداری تیونر'
@@ -83,9 +84,7 @@ class TunerSettingsPage extends StatelessWidget {
           await showDialog<int>(
             context: context,
             builder: (c) => AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
               title: Text(
                 Localizations.localeOf(c).languageCode == 'fa'
                     ? 'نرخ نمونه‌برداری دلخواه'
@@ -143,7 +142,7 @@ class TunerSettingsPage extends StatelessWidget {
     final selected = await showDialog<double>(
       context: context,
       builder: (dialogContext) => SimpleDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+        shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
         title: Text(
           isPersian ? 'زمان پر شدن نمودار فرکانس' : 'Frequency graph fill time',
           style: const TextStyle(fontSize: 14),
@@ -197,9 +196,7 @@ class TunerSettingsPage extends StatelessWidget {
           await showDialog<double>(
             context: context,
             builder: (dialogContext) => AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
               title: Text(
                 isPersian ? 'زمان دلخواه' : 'Custom fill time',
                 style: const TextStyle(fontSize: 14),

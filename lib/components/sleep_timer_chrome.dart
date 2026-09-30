@@ -1,3 +1,4 @@
+﻿import 'package:sornaz/helpers/app_appearance.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:sornaz/screens/Players/services/sleep_timer_status.dart';
@@ -55,7 +56,7 @@ class _SleepTimerChromeState extends State<SleepTimerChrome> {
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: appRadius(context),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 5),

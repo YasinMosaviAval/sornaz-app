@@ -1,10 +1,13 @@
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'notation_top_bar.dart';
+import 'notation_settings.dart';
+import 'notation_list_dialog.dart';
 import 'package:sornaz/components/main_tabs.dart';
 import 'package:sornaz/components/join_community.dart';
 import 'package:sornaz/components/home_top_bar.dart';
 import 'package:sornaz/screens/Home/ui/components/app_drawer.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
+import 'package:sornaz/screens/Players/ui/components/player_dialog.dart';
 // ignore_for_file: deprecated_member_use, avoid_web_libraries_in_flutter
 import 'dart:async';
 import 'dart:convert';
@@ -12,6 +15,7 @@ import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sornaz/helpers/browser_bridge.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
@@ -40,10 +44,33 @@ class _BrowserNotationHostState extends State<BrowserNotationHost> {
   final channel = DateTime.now().microsecondsSinceEpoch.toString();
   String route = 'list';
   Map<String, dynamic> toolbar = {};
+  int durationMode = 1;
+  int pianoLabelMode = 1;
   @override
   void initState() {
     super.initState();
     subscription = html.window.onMessage.listen(message);
+    unawaited(loadDurationMode());
+  }
+
+  Future<void> loadDurationMode() async {
+    durationMode =
+        (await SharedPreferences.getInstance()).getInt(
+          'notation.durationMode',
+        ) ??
+        1;
+    pianoLabelMode =
+        (await SharedPreferences.getInstance()).getInt(
+          'notation.pianoLabelMode',
+        ) ??
+        1;
+    if (!mounted) return;
+    setState(() {});
+    frame?.contentWindow?.postMessage({
+      'channel': channel,
+      'action': 'configure',
+      'data': configuration,
+    }, Uri.base.origin);
   }
 
   Map<String, dynamic> get configuration => {
@@ -55,7 +82,95 @@ class _BrowserNotationHostState extends State<BrowserNotationHost> {
     'browser': true,
     'accent':
         '#${context.read<AppData>().accent.toARGB32().toRadixString(16).substring(2)}',
+    'fontScale': ((16 + context.read<AppData>().fontSize) / 16).clamp(.8, 1.5),
+    'fontFamily': context.read<AppData>().fontFamily,
+    'fontWeight': (400 + context.read<AppData>().fontWeight * 100)
+        .round()
+        .clamp(100, 900),
+    'durationMode': durationMode,
+    'pianoLabelMode': pianoLabelMode,
   };
+
+  Future<void> createList() async {
+    final name = await createNotationList(context);
+    if (!mounted || name == null || name.isEmpty) return;
+    await api.request('create-list', {'name': name});
+    frame?.contentWindow?.postMessage({
+      'channel': channel,
+      'action': 'command',
+      'data': 'lists',
+    }, Uri.base.origin);
+  }
+
+  Future<String?> chooseList() async {
+    final value = await api.request('list', {'mode': 'lists', 'page': 1});
+    if (!mounted) return null;
+    final items = (value['items'] as List? ?? const []).whereType<Map>().map(
+      (item) => Map<String, dynamic>.from(item),
+    );
+    var selected = await showModalBottomSheet<String>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.playlist_add),
+              title: Text(socialText(context, 'لیست جدید', 'New list')),
+              onTap: () => Navigator.pop(sheetContext, '__new__'),
+            ),
+            for (final item in items)
+              ListTile(
+                leading: Icon(
+                  item['favorite'] == true
+                      ? Icons.favorite_border
+                      : Icons.queue_music,
+                ),
+                title: Text(
+                  item['favorite'] == true
+                      ? socialText(context, 'علاقه‌مندی', 'Favorite')
+                      : '${item['title']}',
+                ),
+                onTap: () => Navigator.pop(sheetContext, '${item['id']}'),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (selected == '__new__') {
+      selected = await createNotationList(context);
+      if (selected != null && selected.isNotEmpty) {
+        await api.request('create-list', {'name': selected});
+      }
+    }
+    return selected;
+  }
+
+  Future<String?> renameSheet(String current) async {
+    final controller = TextEditingController(text: current);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => PlayerDialog(
+        title: Text(socialText(context, 'تغییر نام', 'Rename')),
+        content: TextField(controller: controller, autofocus: true),
+        actions: [
+          PlayerDialogButton(
+            primary: false,
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(socialText(context, 'انصراف', 'Cancel')),
+          ),
+          PlayerDialogButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, controller.text.trim()),
+            child: Text(socialText(context, 'ذخیره', 'Save')),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    return result?.isEmpty == true ? null : result;
+  }
+
   Future<void> setup(Object element) async {
     frame = element as html.IFrameElement;
     frame!.style.border = '0';
@@ -135,7 +250,17 @@ window.addEventListener('message',(event)=>{
         );
         return;
       }
-      if (action == 'export' || action == 'download') {
+      if (action == 'choose-list') {
+        result = await chooseList();
+      } else if (action == 'rename-dialog') {
+        result = await renameSheet('${data['current'] ?? ''}');
+      } else if ([
+        'export',
+        'download',
+        'share',
+        'sibelius',
+        'musicxml',
+      ].contains(action)) {
         await browserCall('exportText', {
           'text': data['content'],
           'name': data['name'] ?? 'sornaz-notation.json',
@@ -200,7 +325,28 @@ window.addEventListener('message',(event)=>{
                 }, Uri.base.origin),
               )
             : HomeTopBar(
-                leadingWidget: const BackButton(),
+                searchOnly: true,
+                pageTitle: socialText(context, 'نت نویسی', 'Notation'),
+                extraActions: [
+                  IconButton(
+                    tooltip: socialText(context, 'لیست جدید', 'New list'),
+                    icon: const Icon(Icons.playlist_add),
+                    onPressed: createList,
+                  ),
+                  IconButton(
+                    tooltip: socialText(context, 'تنظیمات', 'Settings'),
+                    icon: const Icon(Icons.settings),
+                    onPressed: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => const NotationSettingsPage(),
+                        ),
+                      );
+                      await loadDurationMode();
+                    },
+                  ),
+                ],
                 hint: socialText(
                   context,
                   'جست‌وجوی نت‌ها…',

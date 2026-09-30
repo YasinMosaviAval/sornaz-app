@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui' show FontFeature;
@@ -269,7 +270,7 @@ class _PanelVoicePlaybackState extends State<PanelVoicePlayback> {
         color: widget.mine
             ? colors.primaryContainer
             : colors.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: appRadius(context),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

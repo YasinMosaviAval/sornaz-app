@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/components/home_top_bar.dart';
 import 'lesson_media.dart';
 import 'package:sornaz/helpers/user_facing_error.dart';
@@ -853,7 +854,7 @@ class _CourseEditorPageState extends State<CourseEditorPage> {
     padding: const EdgeInsets.all(8),
     decoration: BoxDecoration(
       border: Border.all(color: Theme.of(context).dividerColor),
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: appRadius(context),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,

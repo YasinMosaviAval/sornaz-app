@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:flutter/material.dart';
 import 'social_api.dart';
 
@@ -34,7 +35,7 @@ class MemberGrid extends StatelessWidget {
         selected: selected.contains(id),
         button: true,
         child: InkWell(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: appRadius(context),
           onTap: enabled ? () => onToggle(id) : null,
           child: Column(
             children: [

@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -39,7 +40,7 @@ class AppDrawerItem extends StatelessWidget {
                 color: AppColors.app_drawer_item_message_box_decoration_color(
                   isDark: isDark,
                 ),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: appRadius(context),
               ),
               child: AppText(
                 message,

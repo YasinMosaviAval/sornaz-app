@@ -12,7 +12,13 @@ class AppTopBarDirection extends StatelessWidget
   static double titleSize(BuildContext context) =>
       14.0 + (context.watch<AppData?>()?.fontSize ?? 0);
   @override
-  Size get preferredSize => child.preferredSize;
+  Size get preferredSize => child is AppBar
+      ? Size.fromHeight(
+          child.preferredSize.height -
+              ((child as AppBar).toolbarHeight ?? kToolbarHeight) +
+              48,
+        )
+      : child.preferredSize;
   Widget? title(BuildContext context, Widget? value) {
     if (value is Text && value.data != null)
       return Text(
@@ -72,7 +78,7 @@ class AppTopBarDirection extends StatelessWidget
                 primary: bar.primary,
                 centerTitle: false,
                 titleSpacing: 0,
-                toolbarHeight: bar.toolbarHeight,
+                toolbarHeight: 48,
                 leadingWidth: bar.leadingWidth,
                 toolbarOpacity: bar.toolbarOpacity,
                 bottomOpacity: bar.bottomOpacity,

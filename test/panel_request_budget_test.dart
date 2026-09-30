@@ -13,6 +13,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sornaz/components/main_tabs.dart';
+import 'package:sornaz/components/bottom_nav.dart';
 import 'package:sornaz/components/main_tab_scaffold.dart';
 import 'package:sornaz/screens/Site/panel_api.dart';
 import 'package:sornaz/screens/Site/site_panel_page.dart';
@@ -131,25 +132,37 @@ void main() {
       await tester.pumpAndSettle();
       expect(calls, 0);
       // A non-adjacent jump must not mount or fetch intermediate tabs.
-      tester
-          .widget<BottomNavigationBar>(find.byType(BottomNavigationBar))
-          .onTap!(4);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BottomNavBarWidget),
+          matching: find.text('پروفایل'),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(calls, 0);
       expect(otherLoads, 0);
-      tester
-          .widget<BottomNavigationBar>(find.byType(BottomNavigationBar))
-          .onTap!(1);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BottomNavBarWidget),
+          matching: find.text('پنل کاربری'),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(calls, 1);
       for (var i = 0; i < 5; i++) {
-        tester
-            .widget<BottomNavigationBar>(find.byType(BottomNavigationBar))
-            .onTap!(0);
+        await tester.tap(
+          find.descendant(
+            of: find.byType(BottomNavBarWidget),
+            matching: find.text('خانه'),
+          ),
+        );
         await tester.pumpAndSettle();
-        tester
-            .widget<BottomNavigationBar>(find.byType(BottomNavigationBar))
-            .onTap!(1);
+        await tester.tap(
+          find.descendant(
+            of: find.byType(BottomNavBarWidget),
+            matching: find.text('پنل کاربری'),
+          ),
+        );
         await tester.pumpAndSettle();
       }
       expect(calls, 1);
@@ -259,24 +272,34 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      final nav = tester.widget<BottomNavigationBar>(
-        find.byType(BottomNavigationBar),
+      expect(
+        find
+            .descendant(
+              of: find.byType(BottomNavBarWidget),
+              matching: find.byType(Text),
+            )
+            .evaluate()
+            .map((e) => (e.widget as Text).data)
+            .whereType<String>()
+            .toList(),
+        ['خانه', 'پنل کاربری', 'صحنه', 'ابزار موسیقی', 'پروفایل'],
       );
-      expect(nav.items.map((i) => i.label).toList(), [
-        'خانه',
-        'پنل کاربری',
-        'صحنه',
-        'ابزار موسیقی',
-        'پروفایل',
-      ]);
       expect(find.widgetWithText(ListTile, 'نت‌نویسی'), findsOneWidget);
-      nav.onTap!(4);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BottomNavBarWidget),
+          matching: find.text('پروفایل'),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.byType(MyProfilePage), findsOneWidget);
       expect(find.byType(JoinCommunity), findsOneWidget);
-      tester
-          .widget<BottomNavigationBar>(find.byType(BottomNavigationBar))
-          .onTap!(2);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BottomNavBarWidget),
+          matching: find.text('صحنه'),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.byType(UserPanelPage), findsOneWidget);
       expect(find.byType(JoinCommunity), findsOneWidget);

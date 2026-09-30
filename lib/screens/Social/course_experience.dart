@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'course_resource_file.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
@@ -326,7 +327,7 @@ class _CourseExperienceState extends State<CourseExperience> {
               ),
               filled: true,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: appRadius(context),
                 borderSide: BorderSide.none,
               ),
             ),

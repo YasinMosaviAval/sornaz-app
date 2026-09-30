@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:flutter/material.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_strings.dart';
@@ -47,7 +48,7 @@ class ArticlesListWidget extends StatelessWidget {
                   Padding(
                     padding: EdgeInsets.zero,
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: appRadius(context),
                       onTap: () => provider.updateCategory(
                         filters[i]['id']?.toString() ?? AppStrings.all,
                       ),
@@ -57,7 +58,7 @@ class ArticlesListWidget extends StatelessWidget {
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: appRadius(context),
                           color: filters[i]['id'] == provider.selectedCategoryId
                               ? AppColors.article_list_selected_box_decoration_color(
                                   isDark: isDark,

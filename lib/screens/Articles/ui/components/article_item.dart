@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:sornaz/helpers/app_colors.dart';
@@ -27,9 +28,9 @@ class ArticleItemWidget extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Material(
         color: AppColors.article_item_box_decoration_color(isDark: isDark),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: appRadius(context),
         child: InkWell(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: appRadius(context),
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => ArticleDetailPage(post: post)),
           ),

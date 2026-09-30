@@ -36,6 +36,15 @@ class MyApp extends StatelessWidget {
           theme: lightTheme(appData),
           darkTheme: darkTheme(appData),
           themeMode: appData.isDark ? ThemeMode.dark : ThemeMode.light,
+          builder: (context, child) {
+            final media = MediaQuery.of(context);
+            final scale =
+                media.textScaler.scale(1) * (1 + appData.fontSize / 16);
+            return MediaQuery(
+              data: media.copyWith(textScaler: TextScaler.linear(scale)),
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
           home: const SplashScreen(),
           routes: {
             '/profile': (_) => const UserPanelPage(),
@@ -69,16 +78,69 @@ class MyApp extends StatelessWidget {
           surface: surface,
           onSurface: foreground,
         );
+    final radius = BorderRadius.circular(appData.cornerRadius);
+    final shape = RoundedRectangleBorder(borderRadius: radius);
+    final baseText =
+        ThemeData(
+          brightness: scheme.brightness,
+          fontFamily: appData.fontFamily,
+        ).textTheme.apply(
+          fontFamily: appData.fontFamily,
+          fontSizeDelta: appData.fontSize,
+        );
+    TextStyle? weighted(TextStyle? style) =>
+        style?.apply(fontWeightDelta: appData.fontWeight.round());
+    final textTheme = baseText.copyWith(
+      displayLarge: weighted(baseText.displayLarge),
+      displayMedium: weighted(baseText.displayMedium),
+      displaySmall: weighted(baseText.displaySmall),
+      headlineLarge: weighted(baseText.headlineLarge),
+      headlineMedium: weighted(baseText.headlineMedium),
+      headlineSmall: weighted(baseText.headlineSmall),
+      titleLarge: weighted(baseText.titleLarge),
+      titleMedium: weighted(baseText.titleMedium),
+      titleSmall: weighted(baseText.titleSmall),
+      bodyLarge: weighted(baseText.bodyLarge),
+      bodyMedium: weighted(baseText.bodyMedium),
+      bodySmall: weighted(baseText.bodySmall),
+      labelLarge: weighted(baseText.labelLarge),
+      labelMedium: weighted(baseText.labelMedium),
+      labelSmall: weighted(baseText.labelSmall),
+    );
     return ThemeData(
       brightness: scheme.brightness,
       fontFamily: appData.fontFamily,
+      textTheme: textTheme,
+      primaryTextTheme: textTheme,
       colorScheme: scheme,
       scaffoldBackgroundColor: background,
       cardTheme: CardThemeData(
         color: surface,
         surfaceTintColor: Colors.transparent,
+        shape: shape,
+      ),
+      dialogTheme: DialogThemeData(shape: shape),
+      popupMenuTheme: PopupMenuThemeData(shape: shape),
+      bottomSheetTheme: BottomSheetThemeData(shape: shape),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(shape: shape),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(shape: shape),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(shape: shape),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(shape: shape),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        border: OutlineInputBorder(borderRadius: radius),
+        enabledBorder: OutlineInputBorder(borderRadius: radius),
+        focusedBorder: OutlineInputBorder(borderRadius: radius),
       ),
       appBarTheme: AppBarTheme(
+        toolbarHeight: 48,
         backgroundColor: background,
         foregroundColor: foreground,
       ),

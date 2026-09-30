@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:flutter/material.dart';
 import '../../components/scroll_aware_scaffold.dart';
 import '../Social/social_widgets.dart';
@@ -43,7 +44,7 @@ Future<bool> showPanelConfirmation(
       builder: (c) => Theme(
         data: branchTheme(context),
         child: AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+          shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
           title: Text(title, style: const TextStyle(fontSize: 14)),
           content: message == null ? null : Text(message),
           actions: [
@@ -54,10 +55,8 @@ Future<bool> showPanelConfirmation(
             ),
             FilledButton(
               style: FilledButton.styleFrom(
-                backgroundColor: delete ? Colors.red : branchIndigo,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
+                backgroundColor: delete ? Colors.red : branchAccent(context),
+                shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
               ),
               onPressed: () => Navigator.pop(c, true),
               child: Text(

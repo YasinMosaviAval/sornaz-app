@@ -22,6 +22,9 @@ void main() {
                 'editable': true,
                 'uploadable': true,
                 'playing': false,
+                'undo': true,
+                'redo': true,
+                'selectedNotes': 1,
               },
               command: actions.add,
             ),
@@ -30,11 +33,14 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(tester.widget<AppBar>(find.byType(AppBar)).bottom, isNull);
+      expect(tester.getSize(find.byType(AppBar)).height, 48);
+      expect(find.byType(ListView), findsNothing);
       expect(find.byIcon(Icons.file_download_outlined), findsNothing);
       expect(find.byIcon(Icons.picture_as_pdf_outlined), findsNothing);
       for (final icon in [
         Icons.save_outlined,
-        Icons.cloud_upload_outlined,
+        Icons.undo,
+        Icons.redo,
         Icons.play_arrow,
         Icons.edit_outlined,
       ]) {
@@ -44,7 +50,8 @@ void main() {
         );
         await tester.tap(find.byIcon(icon));
       }
-      expect(actions, ['save', 'upload-current', 'play', 'metadata']);
+      expect(find.byIcon(Icons.cloud_upload_outlined), findsNothing);
+      expect(actions, ['save', 'undo', 'redo', 'play', 'metadata']);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(
         fixture.host(

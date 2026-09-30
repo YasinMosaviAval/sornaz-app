@@ -42,6 +42,7 @@ class SettingsPage extends StatelessWidget {
               children: [
                 SettingsSectionHeader(
                   title: AppStrings.appearance_title.translate(context),
+                  topSpacing: 0,
                   leadingIcon: Icons.palette_outlined,
                   children: [
                     SettingsSwitchTile(
@@ -163,6 +164,35 @@ class SettingsPage extends StatelessWidget {
                       max: 5,
                       divisions: 5,
                       onChanged: appData.updateFontWeight,
+                    ),
+                    ListTile(
+                      title: Text(
+                        isEnglish
+                            ? 'Element corner radius'
+                            : 'زاویهٔ گوشهٔ المان‌ها',
+                        style: AppTypography.settingsItemTitle(context),
+                      ),
+                      subtitle: Text(
+                        isEnglish
+                            ? 'Cards, dialogs and buttons'
+                            : 'کارت‌ها، دیالوگ‌ها و دکمه‌ها',
+                        style: AppTypography.settingsItemSubtitle(context),
+                      ),
+                      trailing: Text(
+                        '${appData.cornerRadius.round()} dp',
+                        style: AppTypography.settingsItemContent(context),
+                      ),
+                    ),
+                    Slider(
+                      value: appData.cornerRadius,
+                      min: 0,
+                      max: 16,
+                      divisions: 16,
+                      label: '${appData.cornerRadius.round()} dp',
+                      activeColor: AppColors.settings_slider_active_color(
+                        isDark: isDark,
+                      ),
+                      onChanged: appData.updateCornerRadius,
                     ),
                     ListTile(
                       title: Text(

@@ -1,3 +1,4 @@
+﻿import 'package:sornaz/helpers/app_appearance.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -224,7 +225,7 @@ class _ChatMediaState extends State<ChatMedia> {
           width: 136,
           height: 176,
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: appRadius(context),
             child: GestureDetector(
               onTap: onTap,
               child: Stack(

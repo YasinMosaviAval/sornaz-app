@@ -1,3 +1,4 @@
+﻿import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:flutter/material.dart';
 import '../../services/article_api_service.dart';
 
@@ -66,7 +67,7 @@ class _ArticlePollState extends State<ArticlePoll> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: appRadius(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -85,7 +86,7 @@ class _ArticlePollState extends State<ArticlePoll> {
                   onTap: busy
                       ? null
                       : () => vote(int.tryParse('${rows[i]['id']}') ?? i),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: appRadius(context),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 6),
                     child: Column(

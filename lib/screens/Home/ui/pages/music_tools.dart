@@ -23,7 +23,7 @@ class MusicToolsPage extends StatelessWidget {
           drawer: const AppDrawer(),
           bottom: const BottomNavBarWidget(selectedIndex: 3),
           body: ListView(
-            padding: const EdgeInsets.symmetric(vertical: 24),
+            padding: const EdgeInsets.only(bottom: 24),
             children: [
               for (final item in [
                 (

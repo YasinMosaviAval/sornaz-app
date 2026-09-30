@@ -84,7 +84,7 @@ class _ScrollAwareScaffoldState extends State<ScrollAwareScaffold> {
               headerSliverBuilder: (context, innerScrolled) => [
                 SliverToBoxAdapter(
                   child: SizedBox(
-                    height: widget.appBar!.preferredSize.height,
+                    height: normalizedBar!.preferredSize.height,
                     child: MediaQuery.removePadding(
                       context: context,
                       removeTop: true,

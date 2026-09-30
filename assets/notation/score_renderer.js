@@ -3,7 +3,8 @@
 'use strict';
 const VF=Vex.Flow,M=NotationModel;
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const estimate=bar=>Math.max(90,bar.notes.length*18+55);
+// Reserve at least 12 logical pixels around each note/group and stave edge.
+const estimate=bar=>Math.max(110,bar.notes.length*34+82);
 function ottava(pitch,rest=false){
  if(rest)return {pitch,label:''};
  const octave=Number(pitch.slice(1)),letter=pitch[0];
@@ -39,6 +40,7 @@ function renderRow(target,bars,start,options){
    else{ctx.save();ctx.setFillStyle('#666');ctx.setFont('Arial',5.5);ctx.fillText(String(index+1),x+9,y+29);ctx.restore();}}
   if(index===options.lastWritten)stave.setEndBarType(VF.Barline.type.END);
   stave.setContext(ctx).draw();
+  stave.setNoteStartX(stave.getNoteStartX()+12);
   const source=bar.notes.map(n=>({...n}));
   if(!options.printing&&index===options.ghostBar&&options.ghost)source.push({...options.ghost,ghost:true,rest:false});
   const notes=source.map((n,i)=>{
@@ -54,7 +56,7 @@ function renderRow(target,bars,start,options){
    if(n.finger)v.addModifier(new VF.FretHandFinger(n.finger).setPosition(VF.Modifier.Position.ABOVE),0);
    if(n.bow)v.addModifier(new VF.Annotation(n.bow==='up'?'∨':'⊓').setFont('Arial',13).setVerticalJustification(VF.Annotation.VerticalJustify.TOP),0);
    if(n.dynamic)v.addModifier(new VF.Annotation(n.dynamic).setFont('Times',12,'italic').setVerticalJustification(VF.Annotation.VerticalJustify.BOTTOM),0);
-   const color=options.printing?'#111':n.ghost?'#d5d5d5':index===options.activeBar&&i===options.activeNote?options.accent:'#111';
+   const color=options.printing?'#111':n.ghost?'#d5d5d5':options.selectedNotes?.has(index+':'+i)||index===options.activeBar&&i===options.activeNote?options.accent:'#111';
    v.setStyle({fillStyle:color,strokeStyle:color});return v;
   });
   if(notes.length){const[beats,beatValue]=m.time.split('/').map(Number),voice=new VF.Voice({num_beats:beats,beat_value:beatValue}).setStrict(false);voice.addTickables(notes);

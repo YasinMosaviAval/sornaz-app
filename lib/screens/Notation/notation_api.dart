@@ -7,6 +7,7 @@ import 'package:sornaz/screens/Social/social_api.dart';
 /// Offline-first storage for the bundled notation editor.
 /// Editing never requires the network; uploading is an explicit operation.
 class NotationApi {
+  static const favoriteList = '__favorite__';
   NotationApi(this.token, {http.Client? client, this.userId = 0})
     : _client = client ?? http.Client();
   final String token;
@@ -14,6 +15,7 @@ class NotationApi {
   final Map<int, Map<String, dynamic>> _fetched = {};
   final http.Client _client;
   String get _storageKey => 'notation_local_v3_$userId';
+  String get _listsStorageKey => 'notation_lists_v1_$userId';
   void close() => _client.close();
 
   Future<Map<String, dynamic>> _local() async {
@@ -37,6 +39,26 @@ class NotationApi {
       (await SharedPreferences.getInstance()).setString(
         _storageKey,
         jsonEncode(entries),
+      );
+
+  Future<Map<String, dynamic>> _lists() async {
+    final value = (await SharedPreferences.getInstance()).getString(
+      _listsStorageKey,
+    );
+    if (value == null) return {favoriteList: <dynamic>[]};
+    try {
+      final lists = Map<String, dynamic>.from(jsonDecode(value) as Map);
+      lists.putIfAbsent(favoriteList, () => <dynamic>[]);
+      return lists;
+    } catch (_) {
+      return {favoriteList: <dynamic>[]};
+    }
+  }
+
+  Future<void> _writeLists(Map<String, dynamic> lists) async =>
+      (await SharedPreferences.getInstance()).setString(
+        _listsStorageKey,
+        jsonEncode(lists),
       );
 
   Future<void> remember(Map<String, dynamic> sheet) async {
@@ -66,12 +88,16 @@ class NotationApi {
 
   Map<String, dynamic> _summary(Map<String, dynamic> sheet) {
     final metadata = Map<String, dynamic>.from(sheet['metadata'] as Map? ?? {});
+    final owner = (sheet['owner_id'] as num?)?.toInt();
+    final id = (sheet['id'] as num?)?.toInt() ?? 0;
+    final authoredHere = owner == null && (id < 0 || sheet['editable'] == true);
+    final mine = owner == userId || authoredHere;
     return {
       ...sheet,
       'title': metadata['title'] ?? sheet['title'] ?? '',
       'author': sheet['author'] ?? '',
       'metadata': metadata,
-      'editable': true,
+      'editable': mine,
       'local': true,
     };
   }
@@ -81,26 +107,94 @@ class NotationApi {
     if (action == 'list') {
       final local = await _local();
       final mode = message['mode'];
-      final items =
-          local.values
-              .whereType<Map>()
-              .map((item) => _summary(Map<String, dynamic>.from(item)))
-              .where(
-                (item) =>
-                    ['all', 'mine'].contains(mode) ||
-                    mode == 'local' && item['uploaded'] != true ||
-                    mode == 'uploaded' && item['uploaded'] == true,
-              )
-              .toList()
-            ..sort(
-              (a, b) => '${b['updated_at'] ?? ''}'.compareTo(
-                '${a['updated_at'] ?? ''}',
-              ),
+      if (mode == 'lists') {
+        final lists = await _lists();
+        return {
+          'items': [
+            for (final entry in lists.entries)
+              {
+                'id': entry.key,
+                'title': entry.key == favoriteList ? 'Favorite' : entry.key,
+                'kind': 'list',
+                'favorite': entry.key == favoriteList,
+                'count': (entry.value as List? ?? const []).length,
+                'items': [
+                  for (final id in (entry.value as List? ?? const []))
+                    if (local['$id'] is Map)
+                      _summary(Map<String, dynamic>.from(local['$id'] as Map)),
+                ],
+              },
+          ],
+          'has_more': false,
+        };
+      }
+      final items = local.values
+          .whereType<Map>()
+          .map((item) => _summary(Map<String, dynamic>.from(item)))
+          .where((item) => mode != 'mine' || item['editable'] == true)
+          .toList();
+      if (mode == 'all' || mode == 'mine') {
+        try {
+          final remote = await _requestRemote('list', message);
+          final remoteItems = remote is Map ? remote['items'] : null;
+          if (remoteItems is List) {
+            final localRemoteIds = items
+                .map((item) => item['remote_id'] ?? item['id'])
+                .toSet();
+            items.addAll(
+              remoteItems
+                  .whereType<Map>()
+                  .map((item) => Map<String, dynamic>.from(item))
+                  .where((item) => !localRemoteIds.contains(item['id']))
+                  .where(
+                    (item) =>
+                        mode != 'mine' ||
+                        (item['owner_id'] as num?)?.toInt() == userId,
+                  ),
             );
+          }
+        } catch (_) {
+          // Keep the local list available while offline.
+        }
+      }
+      items..sort(
+        (a, b) =>
+            '${b['updated_at'] ?? ''}'.compareTo('${a['updated_at'] ?? ''}'),
+      );
       return {
         'items': message['page'] == 1 ? items : <dynamic>[],
         'has_more': false,
       };
+    }
+    if (action == 'create-list') {
+      final name = '${message['name'] ?? ''}'.trim();
+      if (name.isEmpty || name.length > 80) {
+        throw const FormatException('Invalid list name.');
+      }
+      final lists = await _lists();
+      lists.putIfAbsent(name, () => <dynamic>[]);
+      await _writeLists(lists);
+      return true;
+    }
+    if (action == 'add-to-list') {
+      final name = '${message['name'] ?? ''}'.trim();
+      final ids = (message['sheetIds'] as List? ?? const [])
+          .whereType<num>()
+          .map((id) => id.toInt())
+          .toSet();
+      final lists = await _lists();
+      if (!lists.containsKey(name) || ids.isEmpty) {
+        throw const FormatException('Invalid list.');
+      }
+      final current =
+          (lists[name] as List? ?? const [])
+              .whereType<num>()
+              .map((id) => id.toInt())
+              .toSet()
+            ..addAll(ids);
+      lists[name] = current.toList();
+      await _writeLists(lists);
+      return true;
     }
     if (action == 'get') {
       final id = message['sheetId'];
@@ -157,6 +251,7 @@ class NotationApi {
       'id': id,
       'version': (previous['version'] as num? ?? 0).toInt() + 1,
       'editable': true,
+      'owner_id': userId,
       'local': true,
       'uploaded': false,
       'updated_at': DateTime.now().toUtc().toIso8601String(),
@@ -226,13 +321,18 @@ class NotationApi {
     Map<String, dynamic> message,
   ) async {
     final id = message['sheetId'];
-    if (!['get', 'save', 'instruments'].contains(action)) {
+    if (!['list', 'get', 'save', 'instruments'].contains(action)) {
       throw const FormatException('Invalid operation.');
     }
-    if (action != 'instruments' && (id is! int || id < 0)) {
+    if (!['list', 'instruments'].contains(action) && (id is! int || id < 0)) {
       throw const FormatException('Invalid sheet.');
     }
     var suffix = action == 'instruments' ? '/instruments' : '';
+    if (action == 'list') {
+      final page = (message['page'] as num?)?.toInt() ?? 1;
+      final mode = message['mode'] == 'mine' ? 'mine' : 'all';
+      suffix = '?mode=$mode&page=$page';
+    }
     if (action == 'get' || (action == 'save' && id != 0)) suffix = '/$id';
     final url = Uri.parse(
       '${SocialApi.base.replaceFirst(RegExp(r'/$'), '')}/music-sheets$suffix',

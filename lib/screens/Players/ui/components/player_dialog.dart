@@ -37,14 +37,15 @@ class PlayerDialogButton extends StatelessWidget {
   final bool primary;
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     return TextButton(
       onPressed: onPressed,
       style: TextButton.styleFrom(
         foregroundColor: primary ? colors.onPrimary : colors.onSurfaceVariant,
         backgroundColor: primary ? colors.primary : Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-        textStyle: const TextStyle(fontSize: 14),
+        shape: theme.cardTheme.shape as OutlinedBorder?,
+        textStyle: theme.textTheme.labelLarge,
       ),
       child: child,
     );

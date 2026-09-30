@@ -1,3 +1,4 @@
+﻿import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'dart:convert';
@@ -296,9 +297,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
           final confirmed = await showDialog<bool>(
             context: context,
             builder: (c) => AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
               title: Text(
                 tr('مطالعه مقاله', 'Read article'),
                 style: const TextStyle(fontSize: 14),
@@ -319,7 +318,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                   style: FilledButton.styleFrom(
                     backgroundColor: Theme.of(c).colorScheme.primary,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: appRadius(context),
                     ),
                     textStyle: const TextStyle(fontSize: 12),
                   ),
@@ -421,7 +420,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
               ? Colors.amber.shade300
               : (dark ? Colors.white12 : const Color(0xffeeeeee)),
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: appRadius(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -561,7 +560,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                                 const SizedBox(height: 16),
                                 if (articleImage(post).isNotEmpty)
                                   ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: appRadius(context),
                                     child: CachedNetworkImage(
                                       imageUrl: articleImage(post),
                                       fit: BoxFit.contain,
@@ -633,7 +632,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                                 Container(
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: appRadius(context),
                                     color: dark
                                         ? const Color(0xff302a17)
                                         : const Color(0xfffffbeb),
@@ -726,7 +725,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                                   key: _formKey,
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: appRadius(context),
                                     color: dark
                                         ? const Color(0xff202020)
                                         : const Color(0xfff9fafb),

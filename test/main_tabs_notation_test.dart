@@ -53,12 +53,13 @@ void main() {
         ),
         findsNothing,
       );
-      expect(find.byType(BottomNavigationBar), findsOneWidget);
-      final barRect = tester.getRect(find.byType(BottomNavigationBar));
+      expect(find.byType(BottomNavBarWidget), findsOneWidget);
+      final barRect = tester.getRect(find.byType(BottomNavBarWidget));
+      expect(barRect.height, 48);
       await tester.drag(find.byType(PageView), const Offset(-600, 0));
       await tester.pumpAndSettle();
       expect(find.text('page 1'), findsOneWidget);
-      expect(tester.getRect(find.byType(BottomNavigationBar)), barRect);
+      expect(tester.getRect(find.byType(BottomNavBarWidget)), barRect);
       await tester.tap(find.byIcon(Icons.tune).first);
       await tester.pumpAndSettle();
       expect(find.text('page 3'), findsOneWidget);
@@ -102,6 +103,34 @@ void main() {
       expect(result['metadata']['title'], 'Local');
       final list = await reopened.request('list', {'mode': 'mine', 'page': 1});
       expect(list['items'], hasLength(1));
+      await reopened.request('create-list', {'name': 'تمرین‌ها'});
+      await reopened.request('add-to-list', {
+        'name': 'تمرین‌ها',
+        'sheetIds': [saved['id']],
+      });
+      final lists = await reopened.request('list', {
+        'mode': 'lists',
+        'page': 1,
+      });
+      expect(
+        lists['items'],
+        contains(
+          allOf(
+            containsPair('title', 'تمرین‌ها'),
+            containsPair('count', 1),
+            containsPair('items', hasLength(1)),
+          ),
+        ),
+      );
+      expect(
+        lists['items'],
+        contains(
+          allOf(
+            containsPair('id', NotationApi.favoriteList),
+            containsPair('favorite', true),
+          ),
+        ),
+      );
       final other = NotationApi('another', userId: 13, client: offline());
       await expectLater(
         other.request('get', {'sheetId': saved['id']}),
@@ -111,6 +140,33 @@ void main() {
       other.close();
     },
   );
+  test('mine excludes cached public sheets owned by another user', () async {
+    final api = NotationApi(
+      'token',
+      userId: 12,
+      client: MockClient((_) async => throw http.ClientException('offline')),
+    );
+    await api.remember({
+      'id': 42,
+      'owner_id': 99,
+      'editable': false,
+      'visibility': 'public',
+      'metadata': {'title': 'Someone else'},
+      'score': {'measures': []},
+    });
+    await api.request('save', {
+      'sheetId': 0,
+      'payload': {
+        'metadata': {'title': 'My score'},
+        'score': {'measures': []},
+      },
+    });
+    final mine = await api.request('list', {'mode': 'mine', 'page': 1});
+    final all = await api.request('list', {'mode': 'all', 'page': 1});
+    expect((mine['items'] as List).map((item) => item['title']), ['My score']);
+    expect((all['items'] as List).length, 2);
+    api.close();
+  });
   test('upload is explicit and preserves the local score id', () async {
     final requests = <http.Request>[];
     final api = NotationApi(

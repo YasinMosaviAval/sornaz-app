@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:flutter/material.dart';
@@ -92,7 +93,7 @@ class _AcademySearchCardState extends State<AcademySearchCard> {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 16),
+    padding: const EdgeInsets.only(bottom: 16),
     child: Padding(
       padding: EdgeInsets.zero,
       child: Column(
@@ -164,9 +165,7 @@ class _AcademySearchCardState extends State<AcademySearchCard> {
           const SizedBox(height: 12),
           FilledButton.icon(
             style: FilledButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
             ),
             onPressed: search,
             icon: const Icon(Icons.search),

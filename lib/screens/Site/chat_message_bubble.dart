@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../Social/social_api.dart';
@@ -104,7 +105,7 @@ class ChatMessageBubble extends StatelessWidget {
                         margin: const EdgeInsets.only(bottom: 4),
                         decoration: BoxDecoration(
                           color: colors.secondaryContainer,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: appRadius(context),
                         ),
                         child: Text(
                           '${message['reply']['body'] ?? ''}',
@@ -128,7 +129,7 @@ class ChatMessageBubble extends StatelessWidget {
                           color: mine
                               ? colors.primaryContainer
                               : colors.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: appRadius(context),
                         ),
                         child: Text(
                           '${message['body']}',

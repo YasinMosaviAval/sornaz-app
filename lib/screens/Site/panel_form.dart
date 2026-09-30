@@ -1,3 +1,4 @@
+﻿import 'package:sornaz/helpers/app_appearance.dart';
 import 'panel_ui.dart';
 import 'dart:async';
 import 'package:sornaz/helpers/app_typography.dart';
@@ -357,7 +358,7 @@ class _PanelFieldState extends State<PanelField> {
         return InputDecorator(
           decoration: InputDecoration(
             labelText: label,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
+            border: OutlineInputBorder(borderRadius: appRadius(context)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -434,7 +435,7 @@ class _PanelFieldState extends State<PanelField> {
         isExpanded: true,
         decoration: InputDecoration(
           labelText: label,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
+          border: OutlineInputBorder(borderRadius: appRadius(context)),
         ),
         items: [
           for (final entry in options.entries)
@@ -458,7 +459,7 @@ class _PanelFieldState extends State<PanelField> {
           ? objects(field['options'])
           : <Json>[];
       return Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+        shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
         margin: EdgeInsets.zero,
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -581,7 +582,7 @@ class _PanelFieldState extends State<PanelField> {
           : null,
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
+        border: OutlineInputBorder(borderRadius: appRadius(context)),
         suffixIcon: date || time
             ? Icon(date ? Icons.calendar_today_outlined : Icons.schedule)
             : null,

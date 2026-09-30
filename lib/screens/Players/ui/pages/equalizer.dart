@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
@@ -47,7 +48,7 @@ class _EqualizerTabState extends State<EqualizerTab> {
                     label: Text(name, style: const TextStyle(fontSize: 12)),
                     selected: eq.selected == name,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: appRadius(context),
                     ),
                     side: BorderSide.none,
                     backgroundColor:

@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
@@ -57,7 +58,7 @@ class StoryTextLabel extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
     decoration: BoxDecoration(
       color: sticker.background,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: appRadius(context),
     ),
     child: Text(
       sticker.text,

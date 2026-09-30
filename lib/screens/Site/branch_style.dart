@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:sornaz/helpers/app_data.dart';
 import '../Social/social_api.dart';
 
-// Colors and spacing from the mobile Analytics branch templates.
-const branchIndigo = Color(0xff4f46e5);
-const branchMuted = Color(0xff6b7280);
-const branchBorder = Color(0xffe5e7eb);
-const branchBackground = Color(0xfff9fafb);
-const branchAmber = Color(0xfffffbeb);
+Color branchAccent(BuildContext context) =>
+    Theme.of(context).colorScheme.primary;
+Color branchSecondary(BuildContext context) =>
+    Theme.of(context).colorScheme.onSurfaceVariant;
+Color branchDivider(BuildContext context) => Theme.of(context).dividerColor;
+Color branchCanvas(BuildContext context) =>
+    Theme.of(context).scaffoldBackgroundColor;
+Color branchHighlight(BuildContext context) =>
+    Theme.of(context).colorScheme.primaryContainer;
 bool branchFlag(dynamic value) => value == true || value == 1 || value == '1';
 String branchStatusCode(Json row) => switch ('${row['status']}') {
   'فعال' || 'approved' || 'active' => 'active',
@@ -23,99 +28,31 @@ String branchMode(dynamic value, bool fa) => switch (value) {
   'hybrid' => fa ? 'هیبرید' : 'Hybrid',
   _ => fa ? 'فیزیکی' : 'Physical',
 };
+BorderRadius branchRadius(BuildContext context) =>
+    BorderRadius.circular(context.watch<AppData>().cornerRadius);
+
 ThemeData branchTheme(BuildContext context) {
-  final base = Theme.of(context);
-  return base.copyWith(
-    colorScheme: const ColorScheme.light(
-      primary: branchIndigo,
-      surface: Colors.white,
-      onSurface: Color(0xff111827),
-    ),
-    scaffoldBackgroundColor: branchBackground,
-    cardTheme: CardThemeData(
-      color: Colors.white,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(4),
-        side: const BorderSide(color: branchBorder),
-      ),
-    ),
-    popupMenuTheme: PopupMenuThemeData(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-    ),
-    textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-      ),
-    ),
-    dividerTheme: const DividerThemeData(
-      color: Color(0xffeeeeee),
-      thickness: .2,
-    ),
-    dialogTheme: DialogThemeData(
-      titleTextStyle: const TextStyle(fontSize: 14, color: Color(0xff111827)),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-    ),
-    textTheme: base.textTheme.apply(
-      fontFamily: 'vazir_fa',
-      fontFamilyFallback: const ['vazir_en'],
-      bodyColor: const Color(0xff111827),
-      displayColor: const Color(0xff111827),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(4),
-        borderSide: const BorderSide(color: Color(0xffd1d5db)),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(4),
-        borderSide: const BorderSide(color: Color(0xffd1d5db)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(4),
-        borderSide: const BorderSide(color: branchIndigo),
-      ),
-    ),
-    filledButtonTheme: FilledButtonThemeData(
-      style: FilledButton.styleFrom(
-        backgroundColor: branchIndigo,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-      ),
-    ),
-    outlinedButtonTheme: OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(
-        foregroundColor: branchIndigo,
-        side: const BorderSide(color: branchBorder),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-      ),
-    ),
-  );
+  return Theme.of(context);
 }
 
 class BranchSurface extends StatelessWidget {
   const BranchSurface({
     super.key,
     required this.child,
-    this.color = Colors.white,
-    this.border = branchBorder,
+    this.color,
+    this.border,
     this.padding = 24,
   });
   final Widget child;
-  final Color color, border;
+  final Color? color, border;
   final double padding;
   @override
   Widget build(BuildContext context) => Container(
     padding: EdgeInsets.all(padding),
     decoration: BoxDecoration(
-      color: color,
-      borderRadius: BorderRadius.circular(4),
-      border: Border.all(color: border),
+      color: color ?? Theme.of(context).colorScheme.surface,
+      borderRadius: branchRadius(context),
+      border: Border.all(color: border ?? branchDivider(context)),
       boxShadow: const [
         BoxShadow(
           color: Color(0x08000000),
@@ -144,9 +81,11 @@ class BranchDialog extends StatelessWidget {
     canPop: !busy,
     child: Dialog(
       insetPadding: const EdgeInsets.all(16),
-      backgroundColor: main ? branchAmber : Colors.white,
+      backgroundColor: main
+          ? branchHighlight(context)
+          : Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: branchRadius(context),
         side: BorderSide(
           color: main ? const Color(0xfffcd34d) : Colors.transparent,
         ),
@@ -174,12 +113,12 @@ class BranchDialog extends StatelessWidget {
                   ),
                   IconButton(
                     onPressed: busy ? null : () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: branchMuted),
+                    icon: Icon(Icons.close, color: branchSecondary(context)),
                   ),
                 ],
               ),
             ),
-            const Divider(height: 1, color: branchBorder),
+            Divider(height: 1, color: branchDivider(context)),
             if (busy) const LinearProgressIndicator(),
             Flexible(
               child: SingleChildScrollView(

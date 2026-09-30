@@ -16,7 +16,7 @@ class SearchBarWidget extends StatelessWidget implements PreferredSizeWidget {
   const SearchBarWidget({super.key, this.tab = 0});
   final int tab;
   @override
-  Size get preferredSize => const Size.fromHeight(56);
+  Size get preferredSize => const Size.fromHeight(48);
   @override
   Widget build(BuildContext context) {
     void settings() => Navigator.push(

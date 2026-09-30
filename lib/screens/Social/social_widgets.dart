@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'story_seen.dart';
 import 'story_page.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
@@ -14,8 +15,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'course_cache.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
-import 'package:sornaz/helpers/app_colors.dart';
-import 'package:sornaz/helpers/app_data.dart';
 import 'package:video_player/video_player.dart';
 import 'social_api.dart';
 
@@ -63,24 +62,7 @@ class SocialScaffold extends StatelessWidget {
   final Widget? bottom, floatingActionButton;
   @override
   Widget build(BuildContext context) {
-    final data = context.watch<AppData>();
-    final theme = ThemeData(
-      useMaterial3: true,
-      brightness: data.isDark ? Brightness.dark : Brightness.light,
-      colorScheme:
-          ColorScheme.fromSeed(
-            seedColor: AppColors.primary_light,
-            brightness: data.isDark ? Brightness.dark : Brightness.light,
-          ).copyWith(
-            surface: data.isDark
-                ? const Color(0xff141414)
-                : const Color(0xfff6f6f6),
-            onSurface: data.isDark ? Colors.white : Colors.black,
-            primary: data.accent,
-          ),
-      fontFamily: data.fontFamily,
-      scaffoldBackgroundColor: data.isDark ? Colors.black : Colors.white,
-    );
+    final theme = Theme.of(context);
     return Theme(
       data: theme,
       child: tabIndex != null
@@ -456,7 +438,7 @@ class _SocialVideoState extends State<SocialVideo> with WidgetsBindingObserver {
                       child: DecoratedBox(
                         decoration: BoxDecoration(
                           color: Colors.black54,
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: appRadius(context),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(4),

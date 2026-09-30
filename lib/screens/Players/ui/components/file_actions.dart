@@ -11,9 +11,7 @@ import 'package:sornaz/screens/Players/scan/audio_file.dart';
 void showFileOptions(BuildContext context, AudioFile file) {
   showModalBottomSheet(
     context: context,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
+    shape: Theme.of(context).bottomSheetTheme.shape,
     builder: (sheetCtx) {
       return Column(
         mainAxisSize: MainAxisSize.min,

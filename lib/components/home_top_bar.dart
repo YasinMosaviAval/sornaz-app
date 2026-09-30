@@ -26,7 +26,7 @@ class HomeTopBar extends StatefulWidget implements PreferredSizeWidget {
   final VoidCallback? onFilter;
   final String hint, initialQuery;
   @override
-  Size get preferredSize => const Size.fromHeight(56);
+  Size get preferredSize => const Size.fromHeight(48);
   @override
   State<HomeTopBar> createState() => _HomeTopBarState();
 }
@@ -188,8 +188,6 @@ class _HomeTopBarState extends State<HomeTopBar> {
                 ),
               ),
         actions: [
-          if (widget.searchOnly && widget.pageTitle != null)
-            const SizedBox(width: 12),
           if (!open) ...widget.extraActions,
           if (!widget.searchOnly)
             Builder(
