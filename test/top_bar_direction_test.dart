@@ -36,7 +36,7 @@ void main() {
             .getCenter(find.byKey(const ValueKey('avatar')))
             .dx;
         final menu = tester.getCenter(find.byIcon(Icons.menu)).dx;
-        expect(avatar < menu, direction == TextDirection.rtl);
+        expect(avatar < menu, direction == TextDirection.ltr);
         expect(
           Directionality.of(tester.element(find.byKey(const ValueKey('body')))),
           direction,

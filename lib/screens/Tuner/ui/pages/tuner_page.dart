@@ -71,18 +71,20 @@ class _TunerView extends StatelessWidget {
 
     final tuner = context.watch<TunerProvider>();
     final analyzed = tuner.analyzePitch(tuner.frequency);
-    final inRange = analyzed.cents.abs() <= 20;
+    final active = tuner.hasSignal;
+    final inRange = tuner.frequency > 0 && analyzed.cents.abs() <= 5;
 
     return ScrollAwareScaffold(
       appBar: SornazAppBar(
-        showBackButton: false,
-        centerIcon: Icons.settings,
-        onCenterIconPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const TunerSettingsPage()),
-          );
-        },
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const TunerSettingsPage()),
+            ),
+          ),
+        ],
       ),
       backgroundColor: AppColors.tuner_page_background_color(isDark: isDark),
       body: Column(
@@ -130,6 +132,7 @@ class _TunerView extends StatelessWidget {
           FrequencyBox(
             cents: analyzed.cents,
             inRange: inRange,
+            active: active,
             fillDuration: tuner.graphFillDuration,
           ),
           AppSpacing.sizedBoxH16(),

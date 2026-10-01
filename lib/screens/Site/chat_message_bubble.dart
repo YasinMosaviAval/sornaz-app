@@ -40,6 +40,12 @@ class ChatMessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final mine = message['mine'] == true;
     final colors = Theme.of(context).colorScheme;
+    final VoidCallback? likeOnDoubleTap =
+        !selectionMode &&
+            actions.containsKey('like') &&
+            message['liked'] != true
+        ? () => onAction('like')
+        : null;
     Widget button(String action, IconData icon, String fa, String en) =>
         SizedBox(
           width: 26,
@@ -100,43 +106,59 @@ class ChatMessageBubble extends StatelessWidget {
                         style: Theme.of(context).textTheme.labelSmall,
                       ),
                     if (message['reply'] is Map)
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        margin: const EdgeInsets.only(bottom: 4),
-                        decoration: BoxDecoration(
-                          color: colors.secondaryContainer,
-                          borderRadius: appRadius(context),
-                        ),
-                        child: Text(
-                          '${message['reply']['body'] ?? ''}',
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: colors.onSecondaryContainer,
+                      GestureDetector(
+                        onDoubleTap: likeOnDoubleTap,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          margin: const EdgeInsets.only(bottom: 4),
+                          decoration: BoxDecoration(
+                            color:
+                                (mine
+                                        ? colors.primaryContainer
+                                        : colors.surfaceContainerHighest)
+                                    .withValues(alpha: .4),
+                            borderRadius: appRadius(context),
+                          ),
+                          child: Text(
+                            '${message['reply']['body'] ?? ''}',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: mine
+                                  ? colors.onPrimaryContainer
+                                  : colors.onSurface,
+                            ),
                           ),
                         ),
                       ),
-                    if (attachment != null) attachment!,
+                    if (attachment != null)
+                      GestureDetector(
+                        onDoubleTap: likeOnDoubleTap,
+                        child: attachment!,
+                      ),
                     if ('${message['body'] ?? ''}'.isNotEmpty)
-                      Container(
-                        key: ValueKey('message-body-${message['id']}'),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: mine
-                              ? colors.primaryContainer
-                              : colors.surfaceContainerHighest,
-                          borderRadius: appRadius(context),
-                        ),
-                        child: Text(
-                          '${message['body']}',
-                          style: TextStyle(
+                      GestureDetector(
+                        onDoubleTap: likeOnDoubleTap,
+                        child: Container(
+                          key: ValueKey('message-body-${message['id']}'),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
                             color: mine
-                                ? colors.onPrimaryContainer
-                                : colors.onSurface,
+                                ? colors.primaryContainer
+                                : colors.surfaceContainerHighest,
+                            borderRadius: appRadius(context),
+                          ),
+                          child: Text(
+                            '${message['body']}',
+                            style: TextStyle(
+                              color: mine
+                                  ? colors.onPrimaryContainer
+                                  : colors.onSurface,
+                            ),
                           ),
                         ),
                       ),

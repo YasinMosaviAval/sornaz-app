@@ -341,12 +341,12 @@ class ProfilePostGrid extends StatelessWidget {
     key: const ValueKey('profile-post-grid'),
     shrinkWrap: true,
     physics: const NeverScrollableScrollPhysics(),
-    padding: const EdgeInsets.symmetric(horizontal: 3),
+    padding: const EdgeInsets.all(1),
     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
       crossAxisCount: 3,
       childAspectRatio: 9 / 16,
-      crossAxisSpacing: 3,
-      mainAxisSpacing: 3,
+      crossAxisSpacing: 1,
+      mainAxisSpacing: 1,
     ),
     itemCount: posts.length,
     itemBuilder: (context, index) {

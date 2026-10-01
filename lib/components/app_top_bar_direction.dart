@@ -8,6 +8,9 @@ import 'package:sornaz/helpers/app_data.dart';
 class AppTopBarDirection extends StatelessWidget
     implements PreferredSizeWidget {
   const AppTopBarDirection({super.key, required this.child});
+  static const double contentInset = 12;
+  static const double leadingWidth = 48;
+  static const double iconSize = 24;
   final PreferredSizeWidget child;
   static double titleSize(BuildContext context) =>
       14.0 + (context.watch<AppData?>()?.fontSize ?? 0);
@@ -71,15 +74,18 @@ class AppTopBarDirection extends StatelessWidget
                 backgroundColor: bar.backgroundColor,
                 foregroundColor: bar.foregroundColor,
                 iconTheme: bar.iconTheme,
-                actionsIconTheme: bar.actionsIconTheme,
+                actionsIconTheme:
+                    bar.actionsIconTheme ?? const IconThemeData(size: iconSize),
                 excludeHeaderSemantics: bar.excludeHeaderSemantics,
                 clipBehavior: bar.clipBehavior,
-                actionsPadding: bar.actionsPadding,
+                actionsPadding:
+                    bar.actionsPadding ??
+                    const EdgeInsetsDirectional.only(end: contentInset),
                 primary: bar.primary,
                 centerTitle: false,
                 titleSpacing: 0,
                 toolbarHeight: 48,
-                leadingWidth: bar.leadingWidth,
+                leadingWidth: bar.leadingWidth ?? leadingWidth,
                 toolbarOpacity: bar.toolbarOpacity,
                 bottomOpacity: bar.bottomOpacity,
                 toolbarTextStyle: bar.toolbarTextStyle,

@@ -15,6 +15,29 @@ import 'social_widget_test.dart' as fixture;
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+  testWidgets('double tapping message content likes it once', (tester) async {
+    final actions = <String>[];
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: ChatMessageBubble(
+          message: const {
+            'id': 7,
+            'body': 'Hello',
+            'mine': true,
+            'liked': false,
+          },
+          actions: const {'like': {}},
+          onAction: actions.add,
+        ),
+      ),
+    ));
+    final body = find.byKey(const ValueKey('message-body-7'));
+    await tester.tap(body);
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.tap(body);
+    await tester.pumpAndSettle();
+    expect(actions, ['like']);
+  });
   test(
     'panel groups preserve granted sections and scope gallery categories',
     () {

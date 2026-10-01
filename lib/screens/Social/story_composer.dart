@@ -631,6 +631,9 @@ class _StoryComposerState extends State<StoryComposer>
         height: MediaQuery.sizeOf(c).height * .65,
         child: GridView.count(
           crossAxisCount: 3,
+          padding: const EdgeInsets.all(1),
+          crossAxisSpacing: 1,
+          mainAxisSpacing: 1,
           children: [
             for (final photo in gallery.where((p) => p['video'] != true))
               StoryGalleryTile(
@@ -1145,13 +1148,13 @@ class _StoryComposerState extends State<StoryComposer>
                   Expanded(
                     child: GridView.builder(
                       controller: galleryScroll,
-                      padding: const EdgeInsets.all(3),
+                      padding: const EdgeInsets.all(1),
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 3,
                             childAspectRatio: 9 / 16,
-                            crossAxisSpacing: 3,
-                            mainAxisSpacing: 3,
+                            crossAxisSpacing: 1,
+                            mainAxisSpacing: 1,
                           ),
                       itemCount: gallery.length + 1,
                       itemBuilder: (c, i) => i == 0

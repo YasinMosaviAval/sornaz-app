@@ -461,24 +461,37 @@ class _PostCardState extends State<PostCard> {
             if ('${post['mime']}'.startsWith('video/'))
               SocialVideo(
                 postControls: true,
+                onDoubleTap: () {
+                  if (post['liked'] != true) react('like');
+                },
                 api: widget.api,
                 path: post['media'],
                 autoplay: true,
                 localFile: widget.localMedia,
               )
             else if (widget.localMedia != null)
-              Image.file(
-                widget.localMedia!,
-                width: double.infinity,
-                height: 300,
-                fit: BoxFit.cover,
+              GestureDetector(
+                onDoubleTap: () {
+                  if (post['liked'] != true) react('like');
+                },
+                child: Image.file(
+                  widget.localMedia!,
+                  width: double.infinity,
+                  height: 300,
+                  fit: BoxFit.cover,
+                ),
               )
             else
-              SocialImage(
-                api: widget.api,
-                path: post['media'],
-                width: double.infinity,
-                height: 300,
+              GestureDetector(
+                onDoubleTap: () {
+                  if (post['liked'] != true) react('like');
+                },
+                child: SocialImage(
+                  api: widget.api,
+                  path: post['media'],
+                  width: double.infinity,
+                  height: 300,
+                ),
               ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),

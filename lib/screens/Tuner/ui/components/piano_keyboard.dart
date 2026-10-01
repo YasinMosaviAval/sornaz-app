@@ -4,8 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_data.dart';
-import 'package:sornaz/helpers/app_strings.dart';
-import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/screens/Tuner/controller/tuner_provider.dart';
 import 'package:sornaz/screens/Tuner/models/piano_key.dart';
@@ -15,18 +13,16 @@ import 'package:sornaz/screens/Tuner/utils/tuner_math.dart';
 class PianoKeyboard extends StatefulWidget {
   final double a4;
 
-  const PianoKeyboard({
-    super.key,
-    this.a4 = 440.0,
-  });
+  const PianoKeyboard({super.key, this.a4 = 440.0});
 
   @override
   PianoKeyboardState createState() => PianoKeyboardState();
 }
 
 class PianoKeyboardState extends State<PianoKeyboard> {
-  final Set<int> activeKeys = {};
+  final Set<String> activeKeys = {};
 
+  String _keyId(PianoKey key) => '${key.midi}:${key.microTone.index}';
 
   static const List<String> _noteNames = [
     AppConstants.C,
@@ -40,20 +36,18 @@ class PianoKeyboardState extends State<PianoKeyboard> {
     AppConstants.G_SHARP,
     AppConstants.A,
     AppConstants.A_SHARP,
-    AppConstants.B
+    AppConstants.B,
   ];
-
 
   // ---------- UI constants ----------
   // final double whiteKeyWidth = 60;
   final double whiteKeyHeight = 180;
   final double blackKeyWidth = 40;
   final double blackKeyHeight = 130;
-  double _whiteKeyWidth(TunerKeyboardSettings settings) => settings.showQuarterTones ? 120 : 60;
-
+  double _whiteKeyWidth(TunerKeyboardSettings settings) =>
+      settings.showQuarterTones ? 120 : 60;
 
   bool _isBlack(String note) => note.contains(AppConstants.SHARP);
-
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +64,6 @@ class PianoKeyboardState extends State<PianoKeyboard> {
     final blackKeys = keys.where((k) => k.isBlack).toList();
     final keyWidth = _whiteKeyWidth(settings);
 
-
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: SizedBox(
@@ -80,8 +73,13 @@ class PianoKeyboardState extends State<PianoKeyboard> {
         child: Container(
           decoration: BoxDecoration(
             border: Border(
-              top: BorderSide(color: AppColors.tuner_piano_keyboard_top_border_color(isDark: isDark), width: 0.3)
-            )
+              top: BorderSide(
+                color: AppColors.tuner_piano_keyboard_top_border_color(
+                  isDark: isDark,
+                ),
+                width: 0.3,
+              ),
+            ),
           ),
           child: Stack(
             children: [
@@ -94,13 +92,15 @@ class PianoKeyboardState extends State<PianoKeyboard> {
     );
   }
 
-
   // ---------- Build Keys ----------
   List<PianoKey> _buildKeys(TunerKeyboardSettings settings) {
     final List<PianoKey> keys = [];
 
-    for (int octaveLengthIndex = 0; octaveLengthIndex < settings.octaveCount; octaveLengthIndex++) {
-
+    for (
+      int octaveLengthIndex = 0;
+      octaveLengthIndex < settings.octaveCount;
+      octaveLengthIndex++
+    ) {
       final octave = settings.startOctave + octaveLengthIndex;
 
       for (int i = 0; i < _noteNames.length; i++) {
@@ -108,37 +108,42 @@ class PianoKeyboardState extends State<PianoKeyboard> {
         final midi = (octave + 1) * 12 + i;
 
         // نت اصلی
-        keys.add(PianoKey(
-          name: name,
-          octave: octave,
-          midi: midi,
-          isBlack: _isBlack(name),
-        ));
+        keys.add(
+          PianoKey(
+            name: name,
+            octave: octave,
+            midi: midi,
+            isBlack: _isBlack(name),
+          ),
+        );
 
         if (settings.showQuarterTones) {
           // کرن
-          keys.add(PianoKey(
-            name: name,
-            octave: octave,
-            midi: midi,
-            isBlack: true,
-            microTone: MicroToneType.koron,
-          ));
+          keys.add(
+            PianoKey(
+              name: name,
+              octave: octave,
+              midi: midi,
+              isBlack: true,
+              microTone: MicroToneType.koron,
+            ),
+          );
 
           // سری
-          keys.add(PianoKey(
-            name: name,
-            octave: octave,
-            midi: midi,
-            isBlack: true,
-            microTone: MicroToneType.sori,
-          ));
+          keys.add(
+            PianoKey(
+              name: name,
+              octave: octave,
+              midi: midi,
+              isBlack: true,
+              microTone: MicroToneType.sori,
+            ),
+          );
         }
       }
     }
     return keys;
   }
-
 
   // ---------- White Keys ----------
   Widget _buildWhiteKeys(
@@ -149,7 +154,7 @@ class PianoKeyboardState extends State<PianoKeyboard> {
   ) {
     return Row(
       children: keys.map((key) {
-        final isActive = activeKeys.contains(key.midi);
+        final isActive = activeKeys.contains(_keyId(key));
         final isA4 = settings.highlightA4 && key.midi == 69;
 
         return GestureDetector(
@@ -162,21 +167,34 @@ class PianoKeyboardState extends State<PianoKeyboard> {
             height: whiteKeyHeight,
             alignment: Alignment.bottomCenter,
             decoration: BoxDecoration(
-              color: isA4
+              color: isActive
+                  ? Theme.of(context).colorScheme.primary
+                  : isA4
                   ? AppColors.tuner_piano_keyboard_a4_key_color(isDark: isDark)
-                  : isActive
-                      ? AppColors.tuner_piano_keyboard_active_white_key_color(isDark: isDark)
-                      : AppColors.tuner_piano_keyboard_inactive_white_key_color(isDark: isDark),
-              border: Border.all(width: 0.5, color: AppColors.tuner_piano_keyboard_border_key_color(isDark: isDark)),
+                  : AppColors.tuner_piano_keyboard_inactive_white_key_color(
+                      isDark: isDark,
+                    ),
+              border: Border.all(
+                width: 0.5,
+                color: AppColors.tuner_piano_keyboard_border_key_color(
+                  isDark: isDark,
+                ),
+              ),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Text(key.label, style: AppTypography.pianoKeyboardWhiteKeyLabel(context)),
+                Text(
+                  key.label,
+                  style: AppTypography.pianoKeyboardWhiteKeyLabel(context),
+                ),
                 if (settings.showWhiteKeyFrequencies)
                   Text(
-                    "${TunerMath.removeUnusedZERO(_frequencyFromKey(key))} ${AppStrings.hz.translate(context)}",
-                    style: AppTypography.pianoKeyboardWhiteKeyFrequency(context),
+                    TunerMath.removeUnusedZERO(_frequencyFromKey(key)),
+                    textAlign: TextAlign.center,
+                    style: AppTypography.pianoKeyboardWhiteKeyFrequency(
+                      context,
+                    ),
                   ),
                 const SizedBox(height: 4),
               ],
@@ -187,7 +205,6 @@ class PianoKeyboardState extends State<PianoKeyboard> {
     );
   }
 
-
   // ---------- Black & Microtone Keys ----------
   List<Widget> _buildBlackKeys(
     BuildContext context,
@@ -196,7 +213,7 @@ class PianoKeyboardState extends State<PianoKeyboard> {
     bool isDark,
   ) {
     return keys.map((key) {
-      final isActive = activeKeys.contains(key.midi);
+      final isActive = activeKeys.contains(_keyId(key));
 
       return Positioned(
         top: _microToneTop(key),
@@ -210,7 +227,9 @@ class PianoKeyboardState extends State<PianoKeyboard> {
             height: _blackKeyHeightFor(key),
             alignment: Alignment.bottomCenter,
             decoration: BoxDecoration(
-              color: isActive ? AppColors.tuner_piano_keyboard_active_not_white_key_color(isDark: isDark) : _microToneColor(key, isDark),
+              color: isActive
+                  ? Theme.of(context).colorScheme.primary
+                  : _microToneColor(key, isDark),
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(4),
                 bottomRight: Radius.circular(4),
@@ -218,9 +237,35 @@ class PianoKeyboardState extends State<PianoKeyboard> {
             ),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 4),
-              child: Text(
-                key.label,
-                style: AppTypography.pianoKeyboardNotWhiteKeyLable(context, key.microTone == MicroToneType.normal ? 10 : 8),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    key.label,
+                    style:
+                        AppTypography.pianoKeyboardNotWhiteKeyLable(
+                          context,
+                          key.microTone == MicroToneType.normal ? 10 : 8,
+                        ).copyWith(
+                          color: key.microTone == MicroToneType.normal
+                              ? Colors.white
+                              : Colors.black,
+                        ),
+                  ),
+                  if (settings.showBlackKeyFrequencies)
+                    Text(
+                      TunerMath.removeUnusedZERO(_frequencyFromKey(key)),
+                      textAlign: TextAlign.center,
+                      style:
+                          AppTypography.pianoKeyboardWhiteKeyFrequency(
+                            context,
+                          ).copyWith(
+                            color: key.microTone == MicroToneType.normal
+                                ? Colors.white
+                                : Colors.black,
+                          ),
+                    ),
+                ],
               ),
             ),
           ),
@@ -231,12 +276,12 @@ class PianoKeyboardState extends State<PianoKeyboard> {
 
   // ---------- Interaction ----------
   void _onKeyDown(BuildContext context, PianoKey key) {
-    setState(() => activeKeys.add(key.midi));
+    setState(() => activeKeys.add(_keyId(key)));
     context.read<TunerProvider>().playNote(_frequencyFromKey(key));
   }
 
   void _onKeyUp(BuildContext context, PianoKey key) {
-    setState(() => activeKeys.remove(key.midi));
+    setState(() => activeKeys.remove(_keyId(key)));
     if (activeKeys.isEmpty) {
       context.read<TunerProvider>().stopNote();
     }
@@ -258,16 +303,10 @@ class PianoKeyboardState extends State<PianoKeyboard> {
 
   // ---------- Layout helpers ----------
   double _blackKeyOffset(PianoKey key, TunerKeyboardSettings settings) {
-    const pattern = {
-      1: 1.0,
-      3: 2.0,
-      6: 4.0,
-      8: 5.0,
-      10: 6.0,
-    };
+    const pattern = {1: 1.0, 3: 2.0, 6: 4.0, 8: 5.0, 10: 6.0};
 
     final index = key.midi % 12;
-    if (!pattern.containsKey(index)) return - 1000;
+    if (!pattern.containsKey(index)) return -1000;
 
     final keyWidth = _whiteKeyWidth(settings);
     final octaveOffset = (key.octave - settings.startOctave) * 7 * keyWidth;
@@ -292,7 +331,6 @@ class PianoKeyboardState extends State<PianoKeyboard> {
 
     return normalLeft;
   }
-
 
   double _microToneTop(PianoKey key) {
     switch (key.microTone) {
@@ -320,11 +358,17 @@ class PianoKeyboardState extends State<PianoKeyboard> {
   Color _microToneColor(PianoKey key, bool isDark) {
     switch (key.microTone) {
       case MicroToneType.koron:
-        return AppColors.tuner_piano_keyboard_inactive_koron_key_color(isDark: isDark);
+        return AppColors.tuner_piano_keyboard_inactive_koron_key_color(
+          isDark: isDark,
+        );
       case MicroToneType.sori:
-        return AppColors.tuner_piano_keyboard_inactive_sori_key_color(isDark: isDark);
+        return AppColors.tuner_piano_keyboard_inactive_sori_key_color(
+          isDark: isDark,
+        );
       default:
-        return AppColors.tuner_piano_keyboard_inactive_black_key_color(isDark: isDark);
+        return AppColors.tuner_piano_keyboard_inactive_black_key_color(
+          isDark: isDark,
+        );
     }
   }
 }

@@ -336,6 +336,9 @@ class _HighlightEditorState extends State<HighlightEditor> {
             physics: const NeverScrollableScrollPhysics(),
             crossAxisCount: 3,
             childAspectRatio: 9 / 16,
+            padding: const EdgeInsets.all(1),
+            crossAxisSpacing: 1,
+            mainAxisSpacing: 1,
             children: [
               for (final s in stories)
                 InkWell(

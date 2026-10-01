@@ -13,9 +13,9 @@ class TunerProvider extends ChangeNotifier {
   TunerProvider() {
     _sampleRateLoaded = _loadSampleRate();
   }
-  static const defaultSampleRate = 44100;
-  static const defaultLineThickness = 1.2;
-  static const defaultGraphFillDuration = 0.96;
+  static const defaultSampleRate = 88200;
+  static const defaultLineThickness = 2.0;
+  static const defaultGraphFillDuration = 3.0;
   int sampleRate = defaultSampleRate;
   double lineThickness = defaultLineThickness;
   double graphFillDuration = defaultGraphFillDuration;
@@ -30,11 +30,12 @@ class TunerProvider extends ChangeNotifier {
   final PitchInput _pitch = PitchInput();
 
   double frequency = 0.0;
+  bool hasSignal = false;
   double a4 = 440.0;
   double noteFreq = 0.0;
   String note = AppConstants.EMPTY_TEXT;
 
-  int noteDurationSeconds = 1;
+  int noteDurationSeconds = 3;
 
   Future<void> _loadSampleRate() async {
     final preferences = await SharedPreferences.getInstance();
@@ -50,8 +51,8 @@ class TunerProvider extends ChangeNotifier {
       sampleRate = sampleRateValue;
     }
     if (lineThicknessValue != null &&
-        lineThicknessValue >= defaultLineThickness / 2 &&
-        lineThicknessValue <= defaultLineThickness * 5) {
+        lineThicknessValue >= 1 &&
+        lineThicknessValue <= 3) {
       lineThickness = lineThicknessValue;
     }
     if (graphFillDurationValue != null &&
@@ -80,9 +81,7 @@ class TunerProvider extends ChangeNotifier {
   }
 
   Future<void> setLineThickness(double value) async {
-    final normalized = value
-        .clamp(defaultLineThickness / 2, defaultLineThickness * 5)
-        .toDouble();
+    final normalized = value.clamp(1.0, 3.0).toDouble();
     if (normalized == lineThickness) return;
     lineThickness = normalized;
     notifyListeners();
@@ -158,6 +157,7 @@ class TunerProvider extends ChangeNotifier {
             _pitchTimer = null;
             if (_running) await _pitch.stop();
             _running = false;
+            _pauseMeasurement();
             return;
           }
           if (_running || !supportsPitchDetection) return;
@@ -194,6 +194,7 @@ class TunerProvider extends ChangeNotifier {
                 _onPitchDetected({AppConstants.FREQUENCY: value});
               }
             } catch (_) {
+              _pauseMeasurement();
               if (++failures >= 5 && !_disposed && _requested) {
                 detectionError = 'input';
                 notifyListeners();
@@ -228,13 +229,24 @@ class TunerProvider extends ChangeNotifier {
 
   void _onPitchDetected(dynamic result) {
     final freq = (result[AppConstants.FREQUENCY] ?? 0).toDouble();
-    if (_disposed || !freq.isFinite || freq < 25 || freq > 5000) return;
+    if (_disposed) return;
+    if (!freq.isFinite || freq < 25 || freq > 5000) {
+      _pauseMeasurement();
+      return;
+    }
+    hasSignal = true;
     frequency = freq;
 
     final analyzed = analyzePitch(freq);
     note = analyzed.note;
     noteFreq = analyzed.targetFreq;
 
+    notifyListeners();
+  }
+
+  void _pauseMeasurement() {
+    if (_disposed || !hasSignal) return;
+    hasSignal = false;
     notifyListeners();
   }
 

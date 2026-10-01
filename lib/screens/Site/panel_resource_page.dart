@@ -1,4 +1,4 @@
-﻿import 'package:sornaz/helpers/app_appearance.dart';
+import 'package:sornaz/helpers/app_appearance.dart';
 import '../Social/media_picker.dart';
 import 'branches_page.dart';
 import 'chat_message_bubble.dart';
@@ -8,6 +8,7 @@ import 'panel_ui.dart';
 import 'branch_style.dart';
 import 'branch_export.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
+import 'package:sornaz/components/expanding_search_bar.dart';
 import 'dart:async';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -51,13 +52,11 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
   bool loading = true, busy = false;
   Object? error;
   String query = '';
-  bool searchOpen = false, tableView = false;
-  final searchInput = TextEditingController();
+  bool tableView = false;
   int page = 1, generation = 0;
   Timer? searchTimer;
   @override
   void dispose() {
-    searchInput.dispose();
     searchTimer?.cancel();
     generation++;
     super.dispose();
@@ -843,93 +842,69 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
         ].contains(section) &&
         collection is List;
     return PanelScaffold(
-      appBar: AppTopBarDirection(
-        child: AppBar(
-          title: searchOpen
-              ? TextField(
-                  controller: searchInput,
-                  autofocus: true,
-                  onChanged: searchChanged,
-                  decoration: InputDecoration(
-                    hintText: socialText(context, 'جستجو', 'Search'),
-                    border: InputBorder.none,
-                  ),
-                )
-              : Text(
-                  panelLabel(context, widget.section),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+      appBar: ExpandingSearchBar(
+        title: Row(
+          children: [
+            const BackButton(),
+            Expanded(
+              child: Text(
+                panelLabel(context, widget.section),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: AppTopBarDirection.titleSize(context),
                 ),
-          actions: [
-            if (!searchOpen && !loading && error == null)
-              ...exportButtons.map(
-                (button) => SizedBox(width: 36, child: button),
               ),
-            if (!searchOpen &&
-                !loading &&
-                error == null &&
-                additions.length == 1)
-              IconButton(
-                constraints: const BoxConstraints.tightFor(width: 40),
-                tooltip: '${additions.single.value['label']}',
-                icon: const Icon(Icons.add),
-                onPressed: busy ? null : () => perform(additions.single.key),
-              ),
-            if (!searchOpen &&
-                !loading &&
-                error == null &&
-                additions.length > 1)
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.add),
-                tooltip: socialText(context, 'افزودن', 'Add'),
-                onSelected: perform,
-                enabled: !busy,
-                itemBuilder: (_) => [
-                  for (final e in additions)
-                    PopupMenuItem(
-                      value: e.key,
-                      child: Text('${e.value['label']}'),
-                    ),
-                ],
-              ),
-            if (collection is List || data['items'] is List || query.isNotEmpty)
-              IconButton(
-                constraints: const BoxConstraints.tightFor(width: 40),
-                tooltip: socialText(
-                  context,
-                  searchOpen ? 'بستن جستجو' : 'جستجو',
-                  searchOpen ? 'Close search' : 'Search',
-                ),
-                icon: Icon(searchOpen ? Icons.close : Icons.search),
-                onPressed: () {
-                  setState(() => searchOpen = !searchOpen);
-                  if (!searchOpen && query.isNotEmpty) {
-                    searchInput.clear();
-                    searchChanged('');
-                  }
-                },
-              ),
-            if (!searchOpen && toolbar.isNotEmpty)
-              PopupMenuButton<VoidCallback>(
-                tooltip: socialText(context, 'گزینه‌های بیشتر', 'More options'),
-                onSelected: (action) => action(),
-                itemBuilder: (_) => [
-                  for (final button in toolbar)
-                    PopupMenuItem(
-                      value: button.onPressed,
-                      enabled: button.onPressed != null,
-                      child: Row(
-                        children: [
-                          button.icon,
-                          const SizedBox(width: 12),
-                          Flexible(child: Text(button.tooltip ?? '')),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
+            ),
           ],
         ),
+        hint: socialText(context, 'جستجو', 'Search'),
+        onChanged: searchChanged,
+        actions: [
+          if (!loading && error == null)
+            ...exportButtons.map(
+              (button) => SizedBox(width: 48, child: button),
+            ),
+          if (!loading && error == null && additions.length == 1)
+            IconButton(
+              tooltip: '${additions.single.value['label']}',
+              icon: const Icon(Icons.add),
+              onPressed: busy ? null : () => perform(additions.single.key),
+            ),
+          if (!loading && error == null && additions.length > 1)
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.add),
+              tooltip: socialText(context, 'افزودن', 'Add'),
+              onSelected: perform,
+              enabled: !busy,
+              itemBuilder: (_) => [
+                for (final e in additions)
+                  PopupMenuItem(
+                    value: e.key,
+                    child: Text('${e.value['label']}'),
+                  ),
+              ],
+            ),
+          if (toolbar.isNotEmpty)
+            PopupMenuButton<VoidCallback>(
+              tooltip: socialText(context, 'گزینه‌های بیشتر', 'More options'),
+              onSelected: (action) => action(),
+              itemBuilder: (_) => [
+                for (final button in toolbar)
+                  PopupMenuItem(
+                    value: button.onPressed,
+                    enabled: button.onPressed != null,
+                    child: Row(
+                      children: [
+                        button.icon,
+                        const SizedBox(width: 12),
+                        Flexible(child: Text(button.tooltip ?? '')),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+        ],
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator())

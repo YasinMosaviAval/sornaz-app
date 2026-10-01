@@ -182,13 +182,13 @@ class _DeviceMediaPickerState extends State<DeviceMediaPicker> {
               return false;
             },
             child: GridView.builder(
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(1),
               itemCount: rows.length + 1,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
                 childAspectRatio: 9 / 16,
-                crossAxisSpacing: 4,
-                mainAxisSpacing: 4,
+                crossAxisSpacing: 1,
+                mainAxisSpacing: 1,
               ),
               itemBuilder: (_, i) => i == 0
                   ? InkWell(

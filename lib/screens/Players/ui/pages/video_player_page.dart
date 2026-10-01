@@ -1,4 +1,4 @@
-﻿import 'package:sornaz/helpers/app_appearance.dart';
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
@@ -251,14 +251,14 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
 
   Widget _grid(List<DeviceVideo> items, {bool embedded = false}) =>
       GridView.builder(
-        padding: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(1),
         shrinkWrap: embedded,
         physics: embedded ? const NeverScrollableScrollPhysics() : null,
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: gridColumns,
           childAspectRatio: gridColumns == 3 ? 9 / 16 : 1,
-          crossAxisSpacing: 4,
-          mainAxisSpacing: 4,
+          crossAxisSpacing: 1,
+          mainAxisSpacing: 1,
         ),
         itemCount: items.length,
         itemBuilder: (context, i) => InkWell(
@@ -569,8 +569,15 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
           ListTile(
             dense: true,
             leading: Icon(
-              playlists ? Icons.queue_music : Icons.folder_outlined,
+              playlists
+                  ? Icons.queue_music
+                  : expanded.contains('f:${e.key}')
+                  ? Icons.folder
+                  : Icons.folder_outlined,
               size: 24,
+              color: expanded.contains('${playlists ? 'p' : 'f'}:${e.key}')
+                  ? Theme.of(context).colorScheme.primary
+                  : null,
             ),
             title: Text(
               playlists
@@ -811,6 +818,7 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
   bool changing = false;
   bool controlsVisible = true, muted = false, shuffle = false;
   bool adjustingBrightness = false, adjustingVolume = false, landscape = false;
+  bool pausedByHold = false;
   VideoRepeatMode repeatMode = VideoRepeatMode.off;
   double volume = .5, brightness = .5, speed = 1;
   final abRepeat = AbRepeat();
@@ -1072,12 +1080,23 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
   }
 
   Future<void> horizontalSpeed(LongPressStartDetails d, double width) async {
+    if (d.localPosition.dx >= width / 3 &&
+        d.localPosition.dx <= width * 2 / 3) {
+      pausedByHold = player?.value.isPlaying == true;
+      if (pausedByHold) await player?.pause();
+      return;
+    }
     speed = d.localPosition.dx < width / 2 ? .5 : 2;
     await player?.setPlaybackSpeed(speed);
     if (mounted) setState(() {});
   }
 
   Future<void> resetSpeed(LongPressEndDetails _) async {
+    if (pausedByHold) {
+      pausedByHold = false;
+      await player?.play();
+      return;
+    }
     speed = 1;
     await player?.setPlaybackSpeed(1);
     if (mounted) setState(() {});
@@ -1140,6 +1159,8 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
   }) => IconButton(
     tooltip: label,
     onPressed: action,
+    constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+    padding: EdgeInsets.zero,
     icon: Icon(
       icon,
       color: active ? Theme.of(context).colorScheme.primary : Colors.white,
@@ -1168,6 +1189,8 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
                   setState(() => controlsVisible = !controlsVisible);
                   if (controlsVisible) _hideChromeLater();
                 },
+                onDoubleTap: () =>
+                    player!.value.isPlaying ? player!.pause() : player!.play(),
                 onVerticalDragStart: (d) => dragStart(d, box.maxWidth),
                 onVerticalDragUpdate: (d) => dragUpdate(d, box.maxWidth),
                 onVerticalDragEnd: dragEnd,
@@ -1191,114 +1214,106 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              SizedBox(
-                                height: 52,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    const BackButton(color: Colors.white),
-                                    tool(
-                                      Icons.screenshot_outlined,
-                                      socialText(
-                                        context,
-                                        'اسکرین‌شات',
-                                        'Screenshot',
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
+                                child: SizedBox(
+                                  height: 52,
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const BackButton(color: Colors.white),
+                                      tool(
+                                        Icons.screenshot_outlined,
+                                        socialText(
+                                          context,
+                                          'اسکرین‌شات',
+                                          'Screenshot',
+                                        ),
+                                        screenshot,
                                       ),
-                                      screenshot,
-                                    ),
-                                    tool(
-                                      Icons.speed,
-                                      socialText(context, 'سرعت پخش', 'Speed'),
-                                      chooseSpeed,
-                                      active: speed != 1,
-                                    ),
-                                    tool(
-                                      Icons.screen_rotation,
-                                      socialText(
-                                        context,
-                                        'چرخش صفحه',
-                                        'Rotate',
-                                      ),
-                                      rotate,
-                                      active: landscape,
-                                    ),
-                                    tool(
-                                      Icons.graphic_eq,
-                                      socialText(
-                                        context,
-                                        'اکولایزر',
-                                        'Equalizer',
-                                      ),
-                                      () => showModalBottomSheet(
-                                        context: context,
-                                        isScrollControlled: true,
-                                        builder: (_) => const SizedBox(
-                                          height: 520,
-                                          child: EqualizerTab(),
+                                      tool(
+                                        Icons.graphic_eq,
+                                        socialText(
+                                          context,
+                                          'اکولایزر',
+                                          'Equalizer',
+                                        ),
+                                        () => showModalBottomSheet(
+                                          context: context,
+                                          isScrollControlled: true,
+                                          builder: (_) => const SizedBox(
+                                            height: 520,
+                                            child: EqualizerTab(),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    tool(
-                                      Icons.bedtime_outlined,
-                                      socialText(
-                                        context,
-                                        'تایمر خواب',
-                                        'Sleep timer',
+                                      tool(
+                                        Icons.bedtime_outlined,
+                                        socialText(
+                                          context,
+                                          'تایمر خواب',
+                                          'Sleep timer',
+                                        ),
+                                        chooseSleep,
+                                        active: sleepTimer?.isActive == true,
                                       ),
-                                      chooseSleep,
-                                      active: sleepTimer?.isActive == true,
-                                    ),
-                                    tool(
-                                      repeatMode == VideoRepeatMode.one
-                                          ? Icons.repeat_one
-                                          : Icons.repeat,
-                                      repeatMode == VideoRepeatMode.one
-                                          ? socialText(
-                                              context,
-                                              'تکرار ویدیو',
-                                              'Repeat video',
-                                            )
-                                          : repeatMode == VideoRepeatMode.all
-                                          ? socialText(
-                                              context,
-                                              'تکرار لیست',
-                                              'Repeat list',
-                                            )
-                                          : socialText(
-                                              context,
-                                              'تکرار خاموش',
-                                              'Repeat off',
-                                            ),
-                                      cycleRepeat,
-                                      active: repeatMode != VideoRepeatMode.off,
-                                    ),
-                                    tool(
-                                      Icons.loop,
-                                      socialText(
-                                        context,
-                                        'حلقه بخش',
-                                        'Section loop',
+                                      tool(
+                                        repeatMode == VideoRepeatMode.one
+                                            ? Icons.repeat_one
+                                            : Icons.repeat,
+                                        repeatMode == VideoRepeatMode.one
+                                            ? socialText(
+                                                context,
+                                                'تکرار ویدیو',
+                                                'Repeat video',
+                                              )
+                                            : repeatMode == VideoRepeatMode.all
+                                            ? socialText(
+                                                context,
+                                                'تکرار لیست',
+                                                'Repeat list',
+                                              )
+                                            : socialText(
+                                                context,
+                                                'تکرار خاموش',
+                                                'Repeat off',
+                                              ),
+                                        cycleRepeat,
+                                        active:
+                                            repeatMode != VideoRepeatMode.off,
                                       ),
-                                      () {
-                                        setState(() {
-                                          abRepeat.cycle(
-                                            player!.value.position,
-                                          );
-                                        });
-                                      },
-                                      active: abRepeat.start != null,
-                                    ),
-                                    tool(
-                                      Icons.shuffle,
-                                      socialText(
-                                        context,
-                                        'پخش تصادفی',
-                                        'Shuffle',
+                                      tool(
+                                        Icons.loop,
+                                        socialText(
+                                          context,
+                                          'حلقه بخش',
+                                          'Section loop',
+                                        ),
+                                        () {
+                                          setState(() {
+                                            abRepeat.cycle(
+                                              player!.value.position,
+                                            );
+                                          });
+                                        },
+                                        active: abRepeat.start != null,
                                       ),
-                                      () => setState(() => shuffle = !shuffle),
-                                      active: shuffle,
-                                    ),
-                                  ],
+                                      tool(
+                                        Icons.shuffle,
+                                        socialText(
+                                          context,
+                                          'پخش تصادفی',
+                                          'Shuffle',
+                                        ),
+                                        () =>
+                                            setState(() => shuffle = !shuffle),
+                                        active: shuffle,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                               if (sleepRemaining.isNotEmpty)
@@ -1326,21 +1341,41 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
                                 child: AbTrack(
                                   repeat: abRepeat,
                                   duration: player!.value.duration,
-                                  horizontalPadding: 0,
-                                  child: VideoProgressIndicator(
-                                    player!,
-                                    allowScrubbing: true,
-                                    colors: VideoProgressColors(
-                                      playedColor: Theme.of(
+                                  child: SliderTheme(
+                                    data: SliderTheme.of(context).copyWith(
+                                      trackHeight: 4,
+                                      thumbShape: const RoundSliderThumbShape(
+                                        enabledThumbRadius: 5,
+                                      ),
+                                      activeTrackColor: Theme.of(
                                         context,
                                       ).colorScheme.primary,
-                                      bufferedColor: Theme.of(context)
-                                          .colorScheme
-                                          .primary
-                                          .withValues(alpha: .28),
-                                      backgroundColor: Colors.white24,
+                                      thumbColor: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                      inactiveTrackColor: Colors.white24,
                                     ),
-                                    padding: EdgeInsets.zero,
+                                    child: Slider(
+                                      value: player!
+                                          .value
+                                          .position
+                                          .inMilliseconds
+                                          .clamp(
+                                            0,
+                                            player!
+                                                .value
+                                                .duration
+                                                .inMilliseconds,
+                                          )
+                                          .toDouble(),
+                                      max: max(
+                                        1,
+                                        player!.value.duration.inMilliseconds,
+                                      ).toDouble(),
+                                      onChanged: (value) => player!.seekTo(
+                                        Duration(milliseconds: value.round()),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -1349,19 +1384,28 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
                                 style: const TextStyle(color: Colors.white),
                               ),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                                textDirection: TextDirection.ltr,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  IconButton(
-                                    color: Colors.white,
-                                    onPressed: () => seekBy(10),
-                                    icon: const Icon(Icons.forward_10),
+                                  tool(
+                                    Icons.speed,
+                                    socialText(context, 'سرعت پخش', 'Speed'),
+                                    chooseSpeed,
+                                    active: speed != 1,
                                   ),
                                   IconButton(
                                     color: Colors.white,
-                                    onPressed: index + 1 < widget.videos.length
-                                        ? () => load(index + 1)
+                                    onPressed: () => seekBy(-10),
+                                    icon: const Icon(Icons.replay_10),
+                                  ),
+                                  IconButton(
+                                    color: Colors.white,
+                                    disabledColor: Colors.white38,
+                                    onPressed: index > 0
+                                        ? () => load(index - 1)
                                         : null,
-                                    icon: const Icon(Icons.skip_next),
+                                    icon: const Icon(Icons.skip_previous),
                                   ),
                                   IconButton(
                                     color: Colors.white,
@@ -1376,15 +1420,22 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
                                   ),
                                   IconButton(
                                     color: Colors.white,
-                                    onPressed: index > 0
-                                        ? () => load(index - 1)
+                                    disabledColor: Colors.white38,
+                                    onPressed: index + 1 < widget.videos.length
+                                        ? () => load(index + 1)
                                         : null,
-                                    icon: const Icon(Icons.skip_previous),
+                                    icon: const Icon(Icons.skip_next),
                                   ),
                                   IconButton(
                                     color: Colors.white,
-                                    onPressed: () => seekBy(-10),
-                                    icon: const Icon(Icons.replay_10),
+                                    onPressed: () => seekBy(10),
+                                    icon: const Icon(Icons.forward_10),
+                                  ),
+                                  tool(
+                                    Icons.screen_rotation,
+                                    socialText(context, 'چرخش صفحه', 'Rotate'),
+                                    rotate,
+                                    active: landscape,
                                   ),
                                 ],
                               ),

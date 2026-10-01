@@ -1,5 +1,6 @@
 import 'package:sornaz/helpers/app_appearance.dart';
 import '../../components/app_top_bar_direction.dart';
+import '../../components/expanding_search_bar.dart';
 import 'branch_export.dart';
 import 'package:flutter/material.dart';
 import '../Social/social_api.dart';
@@ -21,13 +22,6 @@ class _BranchesPageState extends State<BranchesPage> {
   Json data = {};
   bool loading = true, busy = false, table = false, initialized = false;
   Object? error;
-  bool searchOpen = false;
-  final searchInput = TextEditingController();
-  @override
-  void dispose() {
-    searchInput.dispose();
-    super.dispose();
-  }
 
   String query = '', type = '', academy = '', mode = '', status = '', sort = '';
   bool ascending = true;
@@ -763,88 +757,53 @@ class _BranchesPageState extends State<BranchesPage> {
     return Theme(
       data: branchTheme(context),
       child: Scaffold(
-        appBar: AppTopBarDirection(
-          child: AppBar(
-            title: searchOpen
-                ? TextField(
-                    key: const ValueKey('branch-search'),
-                    controller: searchInput,
-                    autofocus: true,
-                    decoration: InputDecoration(
-                      hintText: t('جستجو', 'Search'),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      filled: false,
-                    ),
-                    onChanged: (v) => setState(() {
-                      query = v;
-                      page = 1;
-                    }),
-                  )
-                : Text(title),
-            backgroundColor: Colors.white,
-            foregroundColor: const Color(0xff111827),
-            actions: [
-              if (!searchOpen && canCreate)
-                IconButton(
-                  constraints: const BoxConstraints.tightFor(
-                    width: 40,
-                    height: 48,
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  tooltip: typesOnly
-                      ? t('نوع آموزشی جدید', 'New education type')
-                      : t('افزودن شعبه جدید', 'Add new branch'),
-                  onPressed: loading || busy ? null : () => edit(),
-                  icon: const Icon(Icons.add),
-                ),
-              if (!searchOpen && !typesOnly) ...[
-                IconButton(
-                  constraints: const BoxConstraints.tightFor(
-                    width: 40,
-                    height: 48,
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  tooltip: t('خروجی اکسل', 'Export Excel'),
-                  onPressed: loading || busy ? null : () => export(false),
-                  icon: const Icon(Icons.table_view, color: Color(0xff16a34a)),
-                ),
-                IconButton(
-                  constraints: const BoxConstraints.tightFor(
-                    width: 40,
-                    height: 48,
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  tooltip: t('خروجی PDF', 'Export PDF'),
-                  onPressed: loading || busy ? null : () => export(true),
-                  icon: const Icon(
-                    Icons.picture_as_pdf_outlined,
-                    color: Color(0xffdc2626),
+        appBar: ExpandingSearchBar(
+          title: Row(
+            children: [
+              const BackButton(),
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: AppTopBarDirection.titleSize(context),
                   ),
                 ),
-              ],
-              IconButton(
-                constraints: const BoxConstraints.tightFor(
-                  width: 40,
-                  height: 48,
-                ),
-                padding: const EdgeInsets.all(8),
-                tooltip: searchOpen
-                    ? t('بستن جستجو', 'Close search')
-                    : t('جستجو', 'Search'),
-                icon: Icon(searchOpen ? Icons.close : Icons.search),
-                onPressed: () => setState(() {
-                  searchOpen = !searchOpen;
-                  if (!searchOpen) {
-                    searchInput.clear();
-                    query = '';
-                    page = 1;
-                  }
-                }),
               ),
             ],
           ),
+          hint: t('جستجو', 'Search'),
+          fieldKey: const ValueKey('branch-search'),
+          onChanged: (v) => setState(() {
+            query = v;
+            page = 1;
+          }),
+          actions: [
+            if (canCreate)
+              IconButton(
+                tooltip: typesOnly
+                    ? t('نوع آموزشی جدید', 'New education type')
+                    : t('افزودن شعبه جدید', 'Add new branch'),
+                onPressed: loading || busy ? null : () => edit(),
+                icon: const Icon(Icons.add),
+              ),
+            if (!typesOnly) ...[
+              IconButton(
+                tooltip: t('خروجی اکسل', 'Export Excel'),
+                onPressed: loading || busy ? null : () => export(false),
+                icon: const Icon(Icons.table_view, color: Color(0xff16a34a)),
+              ),
+              IconButton(
+                tooltip: t('خروجی PDF', 'Export PDF'),
+                onPressed: loading || busy ? null : () => export(true),
+                icon: const Icon(
+                  Icons.picture_as_pdf_outlined,
+                  color: Color(0xffdc2626),
+                ),
+              ),
+            ],
+          ],
         ),
         body: loading
             ? const Center(child: CircularProgressIndicator())

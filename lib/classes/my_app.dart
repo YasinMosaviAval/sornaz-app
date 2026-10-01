@@ -141,8 +141,20 @@ class MyApp extends StatelessWidget {
       ),
       appBarTheme: AppBarTheme(
         toolbarHeight: 48,
+        titleSpacing: 0,
+        leadingWidth: 48,
+        actionsPadding: const EdgeInsetsDirectional.only(end: 12),
         backgroundColor: background,
         foregroundColor: foreground,
+        iconTheme: IconThemeData(size: 24, color: foreground),
+        actionsIconTheme: IconThemeData(size: 24, color: foreground),
+        titleTextStyle: textTheme.titleMedium?.copyWith(
+          fontSize: 14 + appData.fontSize,
+          color: foreground,
+        ),
+      ),
+      listTileTheme: const ListTileThemeData(
+        contentPadding: EdgeInsets.symmetric(horizontal: 12),
       ),
       dividerColor: dark ? const Color(0xff333333) : const Color(0xffdddddd),
     );

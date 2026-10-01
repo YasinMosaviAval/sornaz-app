@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sornaz/components/expanding_search_bar.dart';
 import 'package:sornaz/screens/Site/branch_form.dart';
 import 'package:sornaz/screens/Site/branch_style.dart';
 import 'package:sornaz/screens/Site/branch_export.dart';
@@ -151,7 +152,7 @@ void main() {
       ]) {
         expect(
           find.descendant(
-            of: find.byType(AppBar),
+            of: find.byType(ExpandingSearchBar),
             matching: find.byTooltip(tooltip),
           ),
           findsOneWidget,

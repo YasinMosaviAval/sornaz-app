@@ -142,19 +142,21 @@ class _MetronomePageState extends State<MetronomePage>
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: ScrollAwareScaffold(
         appBar: SornazAppBar(
-          showBackButton: false,
-          centerIcon: Icons.settings,
-          onCenterIconPressed: () async {
-            final result = await Navigator.push<bool>(
-              context,
-              MaterialPageRoute(
-                builder: (_) => MetronomeSettingsPage(controller: _controller),
-              ),
-            );
-            if (result != null) {
-              setState(() {});
-            }
-          },
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.settings),
+              onPressed: () async {
+                final result = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        MetronomeSettingsPage(controller: _controller),
+                  ),
+                );
+                if (result != null) setState(() {});
+              },
+            ),
+          ],
         ),
         backgroundColor: AppColors.metronome_page_background_color(
           isDark: isDark,

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sornaz/components/expanding_search_bar.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -227,7 +228,7 @@ void main() {
             find.byWidgetPredicate((w) => w is PostCard && w.post['id'] == 3),
           )
           .dy;
-      expect(selected, closeTo(56, 1));
+      expect(selected, closeTo(48, 1));
       await tester.drag(view, const Offset(0, 300));
       await tester.pumpAndSettle();
       expect(find.text('Post body 2').hitTestable(), findsOneWidget);
@@ -260,7 +261,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       find.descendant(
-        of: find.byType(AppBar),
+        of: find.byType(ExpandingSearchBar),
         matching: find.byType(TextField),
       ),
       findsOneWidget,

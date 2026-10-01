@@ -9,6 +9,7 @@ import 'dart:async';
 class FrequencyBox extends StatefulWidget {
   final double cents;
   final bool inRange;
+  final bool active;
   final double fillDuration;
   final double pointSize;
   final double scale;
@@ -17,7 +18,8 @@ class FrequencyBox extends StatefulWidget {
     super.key,
     required this.cents,
     required this.inRange,
-    this.fillDuration = 0.96,
+    required this.active,
+    this.fillDuration = 3.0,
     this.pointSize = 1.0,
     this.scale = 4.0,
   });
@@ -31,6 +33,8 @@ class _FrequencyBoxState extends State<FrequencyBox> {
   late List<double> _points;
   Timer? _timer;
   double _lastCents = 0;
+  DateTime? _silenceStarted;
+  bool _gapInserted = false;
 
   final ValueNotifier<int> _repaintTick = ValueNotifier(0);
 
@@ -41,19 +45,38 @@ class _FrequencyBoxState extends State<FrequencyBox> {
     _lastCents = widget.cents;
 
     _timer = Timer.periodic(_sampleInterval, (_) {
-      if (_points.length >= _maximumPoints) {
-        _points.removeAt(0);
+      if (!widget.active) {
+        final started = _silenceStarted;
+        if (started == null) return;
+        if (DateTime.now().difference(started) < const Duration(seconds: 1)) {
+          _appendPoint(_lastCents);
+        } else if (!_gapInserted) {
+          _appendPoint(double.nan);
+          _gapInserted = true;
+        }
+        return;
       }
-      _points.add(_lastCents);
-
-      _repaintTick.value++;
+      _appendPoint(_lastCents);
     });
+  }
+
+  void _appendPoint(double cents) {
+    if (_points.length >= _maximumPoints) _points.removeAt(0);
+    _points.add(cents);
+    _repaintTick.value++;
   }
 
   @override
   void didUpdateWidget(covariant FrequencyBox oldWidget) {
     super.didUpdateWidget(oldWidget);
     _lastCents = widget.cents;
+    if (oldWidget.active && !widget.active) {
+      _silenceStarted = DateTime.now();
+      _gapInserted = false;
+    } else if (!oldWidget.active && widget.active) {
+      _silenceStarted = null;
+      _gapInserted = false;
+    }
     if (oldWidget.fillDuration != widget.fillDuration &&
         _points.length > _maximumPoints) {
       _points.removeRange(0, _points.length - _maximumPoints);
@@ -78,52 +101,56 @@ class _FrequencyBoxState extends State<FrequencyBox> {
     final appData = context.watch<AppData>();
     final tuner = context.watch<TunerProvider>();
     final isDark = appData.isDark;
-    final width = MediaQuery.of(context).size.width;
     final height = AppSpacing.space_300;
 
-    return SizedBox(
-      height: height,
-      child: Stack(
-        children: [
-          Container(
-            color: AppColors.tuner_frequency_box_background_color(
-              isDark: isDark,
-            ),
-          ),
-
-          Positioned(
-            left: width / 2 - 25,
-            top: 0,
-            bottom: 0,
-            child: Container(
-              width: 50,
-              color: widget.inRange
-                  ? AppColors.tuner_frequency_box_in_range_frequency_color(
-                      isDark: isDark,
-                    )
-                  : AppColors.tuner_frequency_box_not_in_range_frequency_color(
-                      isDark: isDark,
-                    ),
-            ),
-          ),
-
-          // رسم نقاط و خطوط
-          Positioned.fill(
-            child: CustomPaint(
-              painter: _FrequencyPointsPainter(
-                points: _points,
-                width: width,
-                height: height,
-                pointSize: widget.pointSize,
-                scale: widget.scale,
-                maximumPoints: _maximumPoints,
-                lineThickness: tuner.lineThickness,
-                isDark: isDark,
-                repaint: _repaintTick,
+    return LayoutBuilder(
+      builder: (context, constraints) => SizedBox(
+        height: height,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: ColoredBox(
+                color: AppColors.tuner_frequency_box_background_color(
+                  isDark: isDark,
+                ),
               ),
             ),
-          ),
-        ],
+
+            Positioned(
+              left: constraints.maxWidth / 2 - widget.scale * 5,
+              top: 0,
+              bottom: 0,
+              child: Container(
+                width: widget.scale * 10,
+                color: widget.inRange
+                    ? AppColors.tuner_frequency_box_in_range_frequency_color(
+                        isDark: isDark,
+                      )
+                    : AppColors.tuner_frequency_box_not_in_range_frequency_color(
+                        isDark: isDark,
+                      ),
+              ),
+            ),
+
+            // رسم نقاط و خطوط
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _FrequencyPointsPainter(
+                  points: _points,
+                  width: constraints.maxWidth,
+                  height: height,
+                  pointSize: widget.pointSize,
+                  scale: widget.scale,
+                  maximumPoints: _maximumPoints,
+                  lineThickness: tuner.lineThickness,
+                  lineColor: Theme.of(context).colorScheme.onSurface,
+                  isDark: isDark,
+                  repaint: _repaintTick,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -138,6 +165,7 @@ class _FrequencyPointsPainter extends CustomPainter {
   final bool isDark;
   final double scale;
   final double lineThickness;
+  final Color lineColor;
 
   _FrequencyPointsPainter({
     required this.points,
@@ -147,6 +175,7 @@ class _FrequencyPointsPainter extends CustomPainter {
     required this.maximumPoints,
     required this.isDark,
     required this.lineThickness,
+    required this.lineColor,
     this.scale = 1.0,
     required Listenable repaint,
   }) : super(repaint: repaint);
@@ -156,20 +185,34 @@ class _FrequencyPointsPainter extends CustomPainter {
     if (points.isEmpty) return;
 
     final paintLine = Paint()
-      ..color = AppColors.tuner_frequency_box_line_color(isDark: isDark)
+      ..color = lineColor
       ..strokeWidth = lineThickness
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
       ..style = PaintingStyle.stroke;
 
-    final dy = height / (maximumPoints - 1);
+    const safeInset = 12.0;
+    final dy =
+        (size.height - safeInset * 2 - lineThickness) / (maximumPoints - 1);
+    final minX = safeInset + lineThickness / 2;
+    final maxX = size.width - safeInset - lineThickness / 2;
 
     final path = Path();
 
+    var beginSegment = true;
     for (int i = 0; i < points.length; i++) {
-      final y = height - (i * dy);
-      final x = width / 2 + (points[i] * scale);
+      if (!points[i].isFinite) {
+        beginSegment = true;
+        continue;
+      }
+      final y = size.height - safeInset - lineThickness / 2 - (i * dy);
+      final x = (size.width / 2 + (points[i] * scale))
+          .clamp(minX, maxX)
+          .toDouble();
 
-      if (i == 0) {
+      if (beginSegment) {
         path.moveTo(x, y);
+        beginSegment = false;
       } else {
         path.lineTo(x, y);
       }
@@ -182,6 +225,7 @@ class _FrequencyPointsPainter extends CustomPainter {
   bool shouldRepaint(covariant _FrequencyPointsPainter old) {
     return old.points.length != points.length ||
         old.lineThickness != lineThickness ||
+        old.lineColor != lineColor ||
         old.maximumPoints != maximumPoints;
   }
 }

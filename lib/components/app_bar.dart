@@ -1,10 +1,5 @@
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:sornaz/helpers/app_colors.dart';
-import 'package:sornaz/helpers/app_data.dart';
-import 'package:sornaz/helpers/app_spacing.dart';
-import 'package:sornaz/helpers/app_typography.dart';
 
 class SornazAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? title;
@@ -35,38 +30,31 @@ class SornazAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.centerTitle = false,
     this.elevation = 0,
 
-    this.iconSize = AppSpacing.space_32,
-    this.padding = AppSpacing.space_16,
+    this.iconSize = AppTopBarDirection.iconSize,
+    this.padding = AppTopBarDirection.contentInset,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Provider.of<AppData>(context).isDark;
-
-    final textColor = AppColors.sornaz_app_bar_text_color(isDark: isDark);
+    final theme = Theme.of(context);
+    final textColor = theme.colorScheme.onSurface;
 
     return AppTopBarDirection(
       child: AppBar(
         automaticallyImplyLeading: false,
         centerTitle: centerTitle,
         elevation: elevation,
-        backgroundColor: AppColors.sornaz_app_bar_background_color(
-          isDark: isDark,
-        ),
+        backgroundColor: theme.appBarTheme.backgroundColor,
 
         leading: showBackButton
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back),
+            ? BackButton(
                 color: textColor,
                 onPressed: onBack ?? () => Navigator.pop(context),
               )
             : null,
 
         title: title != null
-            ? Text(
-                title!,
-                style: AppTypography.sornazAppBarTitle(context, textColor),
-              )
+            ? Text(title!, style: theme.appBarTheme.titleTextStyle)
             : centerIcon != null
             ? IconButton(
                 icon: Icon(centerIcon),

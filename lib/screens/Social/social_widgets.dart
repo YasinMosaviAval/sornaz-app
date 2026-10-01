@@ -264,10 +264,12 @@ class SocialVideo extends StatefulWidget {
     this.autoplay = false,
     this.controllerFactory,
     this.postControls = false,
+    this.onDoubleTap,
   });
   final File? localFile;
   final bool autoplay;
   final bool postControls;
+  final VoidCallback? onDoubleTap;
   final VideoPlayerController Function()? controllerFactory;
   final String title, subtitle;
   final SocialApi api;
@@ -281,6 +283,7 @@ class _SocialVideoState extends State<SocialVideo> with WidgetsBindingObserver {
   VideoPlayerController? controller;
   Timer? visibility;
   bool failed = false, fullScreen = false;
+  bool pausedByHold = false;
   @override
   void initState() {
     super.initState();
@@ -419,11 +422,33 @@ class _SocialVideoState extends State<SocialVideo> with WidgetsBindingObserver {
             builder: (context, constraints) => GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: full ? () => v.isPlaying ? c.pause() : c.play() : openFull,
-              onLongPressStart: (details) => c.setPlaybackSpeed(
-                details.localPosition.dx >= constraints.maxWidth / 2 ? 2 : .5,
-              ),
-              onLongPressEnd: (_) => c.setPlaybackSpeed(1),
-              onLongPressCancel: () => c.setPlaybackSpeed(1),
+              onDoubleTap: widget.onDoubleTap,
+              onLongPressStart: (details) {
+                final x = details.localPosition.dx;
+                if (x >= constraints.maxWidth / 3 &&
+                    x <= constraints.maxWidth * 2 / 3) {
+                  pausedByHold = c.value.isPlaying;
+                  if (pausedByHold) c.pause();
+                } else {
+                  c.setPlaybackSpeed(x >= constraints.maxWidth / 2 ? 2 : .5);
+                }
+              },
+              onLongPressEnd: (_) {
+                if (pausedByHold) {
+                  pausedByHold = false;
+                  c.play();
+                } else {
+                  c.setPlaybackSpeed(1);
+                }
+              },
+              onLongPressCancel: () {
+                if (pausedByHold) {
+                  pausedByHold = false;
+                  c.play();
+                } else {
+                  c.setPlaybackSpeed(1);
+                }
+              },
               child: Stack(
                 alignment: Alignment.center,
                 children: [

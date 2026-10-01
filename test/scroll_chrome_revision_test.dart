@@ -73,7 +73,7 @@ void main() {
           .state<NestedScrollViewState>(find.byType(NestedScrollView))
           .outerController
           .offset,
-      56,
+      48,
     );
     await tester.pumpWidget(const SizedBox());
     count.dispose();
@@ -139,7 +139,7 @@ void main() {
       await tester.pump();
       final partial = tester.getTopLeft(find.byType(AppBar)).dy;
       expect(partial, lessThan(initial));
-      expect(partial, greaterThan(initial - 56));
+      expect(partial, greaterThan(initial - 48));
       await gesture.moveBy(const Offset(0, -300));
       await gesture.up();
       await tester.pumpAndSettle();
@@ -148,7 +148,7 @@ void main() {
             .state<NestedScrollViewState>(find.byType(NestedScrollView))
             .outerController
             .offset,
-        56,
+        48,
       );
       expect(tester.getTopLeft(find.byKey(const ValueKey('bottom'))), bottom);
       expect(tester.takeException(), isNull);

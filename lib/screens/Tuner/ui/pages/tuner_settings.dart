@@ -137,8 +137,7 @@ class TunerSettingsPage extends StatelessWidget {
   ) async {
     final isPersian = Localizations.localeOf(context).languageCode == 'fa';
     final current = tuner.graphFillDuration;
-    const base = TunerProvider.defaultGraphFillDuration;
-    const values = <double>[base / 2, base, base * 1.5, base * 2];
+    const values = <double>[1, 2, 3, 4, 5];
     final selected = await showDialog<double>(
       context: context,
       builder: (dialogContext) => SimpleDialog(
@@ -155,7 +154,7 @@ class TunerSettingsPage extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      '${value.toStringAsFixed(2)} ${isPersian ? 'ثانیه' : 'seconds'}',
+                      '${value.toStringAsFixed(0)} ${isPersian ? 'ثانیه' : 'seconds'}',
                     ),
                   ),
                   if ((value - current).abs() < 0.001)
@@ -357,9 +356,9 @@ class TunerSettingsPage extends StatelessWidget {
                           ? 'Tuner line thickness: ${tuner.lineThickness.toStringAsFixed(1)}'
                           : 'ضخامت خط تیونر: ${tuner.lineThickness.toStringAsFixed(1)}',
                       value: tuner.lineThickness,
-                      min: TunerProvider.defaultLineThickness / 2,
-                      max: TunerProvider.defaultLineThickness * 5,
-                      divisions: 54,
+                      min: 1,
+                      max: 3,
+                      divisions: 20,
                       isDark: isDark,
                       onChanged: tuner.setLineThickness,
                     ),

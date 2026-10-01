@@ -41,13 +41,13 @@ class PanelGallery extends StatelessWidget {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(1),
       itemCount: rows.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         childAspectRatio: 9 / 16,
-        crossAxisSpacing: 6,
-        mainAxisSpacing: 6,
+        crossAxisSpacing: 1,
+        mainAxisSpacing: 1,
       ),
       itemBuilder: (context, index) => InkWell(
         onTap: () => Navigator.push(
