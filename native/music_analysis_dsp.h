@@ -22,6 +22,11 @@ extern "C" {
 
 typedef struct ma_context ma_context;
 
+typedef enum ma_engine {
+  MA_ENGINE_OPEN = 1,
+  MA_ENGINE_AUBIO = 2
+} ma_engine;
+
 typedef enum ma_status {
   MA_OK = 0,
   MA_INVALID_ARGUMENT = 1,
@@ -62,6 +67,10 @@ MA_API uint32_t ma_abi_version(void);
 MA_API const char *ma_status_message(ma_status status);
 /* On success the caller owns *out_context and must call ma_destroy. */
 MA_API ma_status ma_create(const ma_config *config, ma_context **out_context);
+/* Additive ABI-1 extension. Aubio returns MA_UNSUPPORTED_CONFIG when omitted. */
+MA_API ma_status ma_create_with_engine(const ma_config *config, ma_engine engine,
+                                       ma_context **out_context);
+MA_API uint32_t ma_available_engines(void);
 /* Samples are borrowed for this call only. consumed is always written. */
 MA_API ma_status ma_push_samples(ma_context *context, const float *samples,
                                   size_t count, size_t *consumed);

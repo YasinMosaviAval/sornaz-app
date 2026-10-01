@@ -10,6 +10,9 @@ int main(void) {
   size_t consumed = 0;
   size_t count = 0;
   if (ma_abi_version() != MA_ABI_VERSION) return 1;
+  if (!(ma_available_engines() & MA_ENGINE_OPEN)) return 7;
+  if (ma_create_with_engine(&config, (ma_engine)99, &context) !=
+      MA_UNSUPPORTED_CONFIG || context) return 8;
   if (ma_create(&config, &context) != MA_OK || !context) return 2;
   if (ma_push_samples(context, samples, MA_HOP_SAMPLES, &consumed) != MA_OK ||
       consumed != MA_HOP_SAMPLES) return 3;

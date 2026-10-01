@@ -29,6 +29,9 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        externalNativeBuild {
+            cmake { arguments "-DMA_ENABLE_AUBIO=OFF" }
+        }
     }
 
     externalNativeBuild {

@@ -5,10 +5,14 @@
 #include <cstdio>
 #include <cstdlib>
 #include <limits>
+#include <string>
 #include <vector>
 
 namespace {
 constexpr double pi = 3.14159265358979323846;
+ma_engine selected_engine = MA_ENGINE_OPEN;
+static_assert(sizeof(ma_config) == 16, "ABI-1 config layout changed");
+static_assert(sizeof(ma_feature) == 80, "ABI-1 feature layout changed");
 
 void check(bool value, const char *message) {
   if (!value) {
@@ -20,7 +24,7 @@ void check(bool value, const char *message) {
 ma_context *create() {
   ma_config config{sizeof(ma_config), MA_ABI_VERSION, MA_SAMPLE_RATE, 1};
   ma_context *ctx = nullptr;
-  check(ma_create(&config, &ctx) == MA_OK && ctx, "create");
+  check(ma_create_with_engine(&config, selected_engine, &ctx) == MA_OK && ctx, "create");
   return ctx;
 }
 
@@ -77,7 +81,8 @@ double median_pitch(const std::vector<ma_feature> &features, double after,
 }
 }  // namespace
 
-int main() {
+int main(int argc, char **argv) {
+  if (argc > 1 && std::string(argv[1]) == "aubio") selected_engine = MA_ENGINE_AUBIO;
   check(ma_abi_version() == 1, "ABI version");
   const auto tone = sine(440, 1.0, 0.5f);
   const auto baseline = analyze(tone, tone.size());
@@ -165,7 +170,7 @@ int main() {
   ma_destroy(invalid);
   ma_config wrong{sizeof(ma_config), 99, MA_SAMPLE_RATE, 1};
   ma_context *bad = nullptr;
-  check(ma_create(&wrong, &bad) == MA_UNSUPPORTED_CONFIG && !bad,
+  check(ma_create_with_engine(&wrong, selected_engine, &bad) == MA_UNSUPPORTED_CONFIG && !bad,
         "invalid ABI rejected");
   std::puts("PASS invalid data and lifecycle errors");
 

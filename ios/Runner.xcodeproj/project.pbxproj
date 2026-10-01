@@ -13,6 +13,8 @@
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		A10000000000000000000001 /* AnalysisAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* AnalysisAudio.swift */; };
 		B20000000000000000000001 /* music_analysis_dsp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000001 /* music_analysis_dsp.cpp */; };
+		B2000000000000000000003E /* dsp_engine_open.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000003E /* dsp_engine_open.cpp */; };
+		B2000000000000000000003F /* dsp_engine_aubio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000003F /* dsp_engine_aubio.cpp */; };
 		B20000000000000000000002 /* cvec.c in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000002 /* cvec.c */; };
 		B20000000000000000000003 /* fmat.c in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000003 /* fmat.c */; };
 		B20000000000000000000004 /* fvec.c in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000004 /* fvec.c */; };
@@ -111,6 +113,8 @@
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A10000000000000000000002 /* AnalysisAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisAudio.swift; sourceTree = "<group>"; };
 		B10000000000000000000001 /* music_analysis_dsp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ../../native/music_analysis_dsp.cpp; sourceTree = "<group>"; };
+		B1000000000000000000003E /* dsp_engine_open.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ../../native/dsp_engine_open.cpp; sourceTree = "<group>"; };
+		B1000000000000000000003F /* dsp_engine_aubio.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ../../native/dsp_engine_aubio.cpp; sourceTree = "<group>"; };
 		B10000000000000000000002 /* cvec.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ../../native/third_party/aubio/src/cvec.c; sourceTree = "<group>"; };
 		B10000000000000000000003 /* fmat.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ../../native/third_party/aubio/src/fmat.c; sourceTree = "<group>"; };
 		B10000000000000000000004 /* fvec.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ../../native/third_party/aubio/src/fvec.c; sourceTree = "<group>"; };
@@ -242,6 +246,8 @@
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				A10000000000000000000002 /* AnalysisAudio.swift */,
 				B10000000000000000000001 /* music_analysis_dsp.cpp */,
+				B1000000000000000000003E /* dsp_engine_open.cpp */,
+				B1000000000000000000003F /* dsp_engine_aubio.cpp */,
 				B10000000000000000000002 /* cvec.c */,
 				B10000000000000000000003 /* fmat.c */,
 				B10000000000000000000004 /* fvec.c */,
@@ -457,6 +463,8 @@
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				A10000000000000000000001 /* AnalysisAudio.swift in Sources */,
 				B20000000000000000000001 /* music_analysis_dsp.cpp in Sources */,
+				B2000000000000000000003E /* dsp_engine_open.cpp in Sources */,
+				B2000000000000000000003F /* dsp_engine_aubio.cpp in Sources */,
 				B20000000000000000000002 /* cvec.c in Sources */,
 				B20000000000000000000003 /* fmat.c in Sources */,
 				B20000000000000000000004 /* fvec.c in Sources */,
@@ -611,6 +619,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				ENABLE_BITCODE = NO;
+				EXCLUDED_SOURCE_FILE_NAMES = "*.c";
 				INFOPLIST_FILE = Runner/Info.plist;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				HEADER_SEARCH_PATHS = ("$(inherited)", "$(SRCROOT)/../native", "$(SRCROOT)/../native/third_party/aubio/src");
@@ -797,7 +806,7 @@
 				INFOPLIST_FILE = Runner/Info.plist;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				HEADER_SEARCH_PATHS = ("$(inherited)", "$(SRCROOT)/../native", "$(SRCROOT)/../native/third_party/aubio/src");
-				GCC_PREPROCESSOR_DEFINITIONS = ("$(inherited)", "HAVE_STDLIB_H=1", "HAVE_STDIO_H=1", "HAVE_MATH_H=1", "HAVE_STRING_H=1", "HAVE_ERRNO_H=1", "HAVE_LIMITS_H=1", "HAVE_STDARG_H=1", "HAVE_C99_VARARGS_MACROS=1");
+				GCC_PREPROCESSOR_DEFINITIONS = ("$(inherited)", "MA_ENABLE_AUBIO=1", "HAVE_STDLIB_H=1", "HAVE_STDIO_H=1", "HAVE_MATH_H=1", "HAVE_STRING_H=1", "HAVE_ERRNO_H=1", "HAVE_LIMITS_H=1", "HAVE_STDARG_H=1", "HAVE_C99_VARARGS_MACROS=1");
 				OTHER_LDFLAGS = ("$(inherited)", "-Wl,-u,_ma_abi_version", "-Wl,-u,_ma_status_message", "-Wl,-u,_ma_create", "-Wl,-u,_ma_push_samples", "-Wl,-u,_ma_finalize", "-Wl,-u,_ma_read_features", "-Wl,-u,_ma_destroy");
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -820,6 +829,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				ENABLE_BITCODE = NO;
+				EXCLUDED_SOURCE_FILE_NAMES = "*.c";
 				INFOPLIST_FILE = Runner/Info.plist;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				HEADER_SEARCH_PATHS = ("$(inherited)", "$(SRCROOT)/../native", "$(SRCROOT)/../native/third_party/aubio/src");

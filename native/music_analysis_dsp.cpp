@@ -1,18 +1,16 @@
 #include "music_analysis_dsp.h"
 
-#include <aubio.h>
+#include "dsp_engine.h"
 
 #include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <new>
+#include <memory>
 
 struct ma_context {
-  aubio_pitch_t *pitch = nullptr;
-  aubio_onset_t *onset = nullptr;
-  fvec_t *hop = nullptr;
-  fvec_t *pitch_result = nullptr;
-  fvec_t *onset_result = nullptr;
+  std::unique_ptr<DspEngine> engine;
+  float hop[MA_HOP_SAMPLES]{};
   ma_feature queue[MA_MAX_QUEUED_FEATURES]{};
   size_t queue_head = 0;
   size_t queue_count = 0;
@@ -25,9 +23,6 @@ struct ma_context {
 namespace {
 constexpr float kSilenceRms = 0.003f;
 constexpr float kClipLevel = 0.999f;
-constexpr float kPitchMinHz = 80.0f;
-constexpr float kPitchMaxHz = 2000.0f;
-constexpr float kPitchConfidence = 0.55f;
 
 void process_hop(ma_context *ctx, size_t valid) {
   ma_feature feature{};
@@ -42,7 +37,7 @@ void process_hop(ma_context *ctx, size_t valid) {
   size_t clipped = 0;
   size_t peak_index = 0;
   for (size_t i = 0; i < valid; ++i) {
-    const float value = ctx->hop->data[i];
+    const float value = ctx->hop[i];
     sum_squares += static_cast<double>(value) * value;
     if (std::fabs(value) > peak) {
       peak = std::fabs(value);
@@ -58,24 +53,8 @@ void process_hop(ma_context *ctx, size_t valid) {
   feature.signal_quality = feature.is_silent ? 0.0f :
       std::max(0.0f, 1.0f - 4.0f * feature.clipping_fraction);
 
-  aubio_pitch_do(ctx->pitch, ctx->hop, ctx->pitch_result);
-  const float hz = ctx->pitch_result->data[0];
-  const float confidence = aubio_pitch_get_confidence(ctx->pitch);
-  if (!feature.is_silent && std::isfinite(hz) && hz >= kPitchMinHz &&
-      hz <= kPitchMaxHz && std::isfinite(confidence) &&
-      confidence >= kPitchConfidence) {
-    feature.pitch_hz = hz;
-    feature.pitch_confidence = std::clamp(confidence, 0.0f, 1.0f);
-  }
-
-  aubio_onset_do(ctx->onset, ctx->hop, ctx->onset_result);
-  const float strength = aubio_onset_get_descriptor(ctx->onset);
-  feature.onset_strength = std::isfinite(strength) ?
-      std::max(0.0f, strength) : 0.0f;
-  if (ctx->onset_result->data[0] > 0.0f && !feature.is_silent) {
-    feature.onset_candidate = 1u;
-    feature.onset_sample = aubio_onset_get_last(ctx->onset);
-  } else if (feature.rms >= 0.02f &&
+  ctx->engine->process(ctx->hop, feature);
+  if (!feature.onset_candidate && feature.rms >= 0.02f &&
              feature.rms > ctx->previous_rms * 4.0f &&
              feature.peak_abs >= 0.1f) {
     // A sparse impulse may be too short for HFC peak-picking; retain it as a
@@ -108,6 +87,19 @@ const char *ma_status_message(ma_status status) {
 }
 
 ma_status ma_create(const ma_config *config, ma_context **out_context) {
+  return ma_create_with_engine(config, MA_ENGINE_OPEN, out_context);
+}
+
+uint32_t ma_available_engines(void) {
+  uint32_t engines = MA_ENGINE_OPEN;
+#if defined(MA_ENABLE_AUBIO)
+  engines |= MA_ENGINE_AUBIO;
+#endif
+  return engines;
+}
+
+ma_status ma_create_with_engine(const ma_config *config, ma_engine engine,
+                                ma_context **out_context) {
   if (!out_context) return MA_INVALID_ARGUMENT;
   *out_context = nullptr;
   if (!config || config->struct_size != sizeof(ma_config) ||
@@ -117,23 +109,20 @@ ma_status ma_create(const ma_config *config, ma_context **out_context) {
   }
   auto *ctx = new (std::nothrow) ma_context;
   if (!ctx) return MA_OUT_OF_MEMORY;
-  ctx->pitch = new_aubio_pitch("yinfast", MA_WINDOW_SAMPLES,
-                               MA_HOP_SAMPLES, MA_SAMPLE_RATE);
-  ctx->onset = new_aubio_onset("hfc", 1024, MA_HOP_SAMPLES, MA_SAMPLE_RATE);
-  ctx->hop = new_fvec(MA_HOP_SAMPLES);
-  ctx->pitch_result = new_fvec(1);
-  ctx->onset_result = new_fvec(1);
-  if (!ctx->pitch || !ctx->onset || !ctx->hop || !ctx->pitch_result ||
-      !ctx->onset_result) {
+  try {
+    if (engine == MA_ENGINE_OPEN) ctx->engine = make_open_engine();
+#if defined(MA_ENABLE_AUBIO)
+    else if (engine == MA_ENGINE_AUBIO) ctx->engine = make_aubio_engine();
+#endif
+    else { delete ctx; return MA_UNSUPPORTED_CONFIG; }
+  } catch (const std::bad_alloc &) {
+    delete ctx;
+    return MA_OUT_OF_MEMORY;
+  }
+  if (!ctx->engine) {
     ma_destroy(ctx);
     return MA_OUT_OF_MEMORY;
   }
-  aubio_pitch_set_unit(ctx->pitch, "Hz");
-  aubio_pitch_set_tolerance(ctx->pitch, 0.15f);
-  aubio_pitch_set_silence(ctx->pitch, -50.0f);
-  aubio_onset_set_threshold(ctx->onset, 0.3f);
-  aubio_onset_set_silence(ctx->onset, -55.0f);
-  aubio_onset_set_minioi_ms(ctx->onset, 30.0f);
   *out_context = ctx;
   return MA_OK;
 }
@@ -150,7 +139,7 @@ ma_status ma_push_samples(ma_context *ctx, const float *samples,
     const float value = samples[*consumed];
     if (!std::isfinite(value) || value < -1.0f || value > 1.0f)
       return MA_INVALID_SAMPLE;
-    ctx->hop->data[ctx->hop_filled++] = value;
+    ctx->hop[ctx->hop_filled++] = value;
     ++ctx->samples_received;
     ++*consumed;
     if (ctx->hop_filled == MA_HOP_SAMPLES) process_hop(ctx, MA_HOP_SAMPLES);
@@ -164,7 +153,7 @@ ma_status ma_finalize(ma_context *ctx) {
   if (ctx->hop_filled) {
     if (ctx->queue_count == MA_MAX_QUEUED_FEATURES) return MA_QUEUE_FULL;
     const size_t valid = ctx->hop_filled;
-    std::fill(ctx->hop->data + valid, ctx->hop->data + MA_HOP_SAMPLES, 0.0f);
+    std::fill(ctx->hop + valid, ctx->hop + MA_HOP_SAMPLES, 0.0f);
     process_hop(ctx, valid);
   }
   ctx->finalized = true;
@@ -188,11 +177,6 @@ ma_status ma_read_features(ma_context *ctx, ma_feature *features,
 
 void ma_destroy(ma_context *ctx) {
   if (!ctx) return;
-  if (ctx->pitch) del_aubio_pitch(ctx->pitch);
-  if (ctx->onset) del_aubio_onset(ctx->onset);
-  if (ctx->hop) del_fvec(ctx->hop);
-  if (ctx->pitch_result) del_fvec(ctx->pitch_result);
-  if (ctx->onset_result) del_fvec(ctx->onset_result);
   delete ctx;
 }
 }  // extern C
