@@ -1,3 +1,4 @@
 android/offline-maven/**/*.jar filter=lfs diff=lfs merge=lfs -text
 android/offline-maven/**/*.pom text eol=lf
 android/offline-maven/**/*.module text eol=lf
+native/third_party/aubio/** -whitespace
