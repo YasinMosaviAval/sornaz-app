@@ -624,7 +624,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				HEADER_SEARCH_PATHS = ("$(inherited)", "$(SRCROOT)/../native", "$(SRCROOT)/../native/third_party/aubio/src");
 				GCC_PREPROCESSOR_DEFINITIONS = ("$(inherited)", "HAVE_STDLIB_H=1", "HAVE_STDIO_H=1", "HAVE_MATH_H=1", "HAVE_STRING_H=1", "HAVE_ERRNO_H=1", "HAVE_LIMITS_H=1", "HAVE_STDARG_H=1", "HAVE_C99_VARARGS_MACROS=1");
-				OTHER_LDFLAGS = ("$(inherited)", "-Wl,-u,_ma_abi_version", "-Wl,-u,_ma_status_message", "-Wl,-u,_ma_create", "-Wl,-u,_ma_push_samples", "-Wl,-u,_ma_finalize", "-Wl,-u,_ma_read_features", "-Wl,-u,_ma_destroy");
+				OTHER_LDFLAGS = ("$(inherited)", "-Wl,-u,_ma_abi_version", "-Wl,-u,_ma_status_message", "-Wl,-u,_ma_create", "-Wl,-u,_ma_create_with_engine", "-Wl,-u,_ma_available_engines", "-Wl,-u,_ma_push_samples", "-Wl,-u,_ma_finalize", "-Wl,-u,_ma_read_features", "-Wl,-u,_ma_destroy");
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -807,7 +807,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				HEADER_SEARCH_PATHS = ("$(inherited)", "$(SRCROOT)/../native", "$(SRCROOT)/../native/third_party/aubio/src");
 				GCC_PREPROCESSOR_DEFINITIONS = ("$(inherited)", "MA_ENABLE_AUBIO=1", "HAVE_STDLIB_H=1", "HAVE_STDIO_H=1", "HAVE_MATH_H=1", "HAVE_STRING_H=1", "HAVE_ERRNO_H=1", "HAVE_LIMITS_H=1", "HAVE_STDARG_H=1", "HAVE_C99_VARARGS_MACROS=1");
-				OTHER_LDFLAGS = ("$(inherited)", "-Wl,-u,_ma_abi_version", "-Wl,-u,_ma_status_message", "-Wl,-u,_ma_create", "-Wl,-u,_ma_push_samples", "-Wl,-u,_ma_finalize", "-Wl,-u,_ma_read_features", "-Wl,-u,_ma_destroy");
+				OTHER_LDFLAGS = ("$(inherited)", "-Wl,-u,_ma_abi_version", "-Wl,-u,_ma_status_message", "-Wl,-u,_ma_create", "-Wl,-u,_ma_create_with_engine", "-Wl,-u,_ma_available_engines", "-Wl,-u,_ma_push_samples", "-Wl,-u,_ma_finalize", "-Wl,-u,_ma_read_features", "-Wl,-u,_ma_destroy");
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -834,7 +834,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				HEADER_SEARCH_PATHS = ("$(inherited)", "$(SRCROOT)/../native", "$(SRCROOT)/../native/third_party/aubio/src");
 				GCC_PREPROCESSOR_DEFINITIONS = ("$(inherited)", "HAVE_STDLIB_H=1", "HAVE_STDIO_H=1", "HAVE_MATH_H=1", "HAVE_STRING_H=1", "HAVE_ERRNO_H=1", "HAVE_LIMITS_H=1", "HAVE_STDARG_H=1", "HAVE_C99_VARARGS_MACROS=1");
-				OTHER_LDFLAGS = ("$(inherited)", "-Wl,-u,_ma_abi_version", "-Wl,-u,_ma_status_message", "-Wl,-u,_ma_create", "-Wl,-u,_ma_push_samples", "-Wl,-u,_ma_finalize", "-Wl,-u,_ma_read_features", "-Wl,-u,_ma_destroy");
+				OTHER_LDFLAGS = ("$(inherited)", "-Wl,-u,_ma_abi_version", "-Wl,-u,_ma_status_message", "-Wl,-u,_ma_create", "-Wl,-u,_ma_create_with_engine", "-Wl,-u,_ma_available_engines", "-Wl,-u,_ma_push_samples", "-Wl,-u,_ma_finalize", "-Wl,-u,_ma_read_features", "-Wl,-u,_ma_destroy");
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
