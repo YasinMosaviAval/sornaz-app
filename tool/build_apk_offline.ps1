@@ -1,7 +1,7 @@
 param(
     [string]$Flutter = 'flutter',
     [ValidateSet('android-arm', 'android-arm64', 'android-x64')]
-    [string[]]$TargetPlatform = @('android-arm64'),
+    [string[]]$TargetPlatform = @('android-arm', 'android-arm64', 'android-x64'),
     [string]$BuildNumber
 )
 
@@ -16,6 +16,7 @@ $previousCargoOffline = $env:CARGO_NET_OFFLINE
 $previousCargoJobs = $env:CARGO_BUILD_JOBS
 Push-Location (Split-Path $PSScriptRoot -Parent)
 try {
+    $buildWatch = [Diagnostics.Stopwatch]::StartNew()
     $env:SORNAZ_GRADLE_OFFLINE = 'true'
     $env:CI = 'true'
     # Android builds do not need desktop plugin symlinks / Windows Developer Mode.
@@ -35,6 +36,7 @@ try {
         throw 'Offline package resolution failed. Prepare the locked Dart packages online first.'
     }
     & (Join-Path $PSScriptRoot 'prepare_offline_native.ps1')
+    & (Join-Path $PSScriptRoot 'seed_flutter_engine_maven.ps1') -Flutter $Flutter
     $buildArguments = @('build', 'apk', '--release', '--no-pub', '--target-platform', ($TargetPlatform -join ','))
     if ($BuildNumber) { $buildArguments += @('--build-number', $BuildNumber) }
     $ErrorActionPreference = 'Continue'
@@ -44,7 +46,11 @@ try {
     if ($flutterExitCode -ne 0) {
         throw 'Offline APK build failed. See the Flutter/Gradle error above.'
     }
-    Get-Item 'build\app\outputs\flutter-apk\app-release.apk'
+    $artifact = Get-Item 'build\app\outputs\flutter-apk\app-release.apk'
+    $buildWatch.Stop()
+    Write-Host ("Offline build elapsed seconds: {0:N3}" -f $buildWatch.Elapsed.TotalSeconds)
+    Write-Host ("Artifact SHA256: {0}" -f (Get-FileHash -LiteralPath $artifact.FullName -Algorithm SHA256).Hash)
+    $artifact
 } finally {
     $env:SORNAZ_GRADLE_OFFLINE = $previousOffline
     $env:CI = $previousCi
