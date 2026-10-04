@@ -42,4 +42,12 @@ if(BUILD_TESTING AND NOT ANDROID AND NOT IOS)
   add_executable(music_analysis_ab_test tests/ab_benchmark.cpp)
   target_link_libraries(music_analysis_ab_test PRIVATE music_analysis_dsp)
   add_test(NAME music_analysis_ab_test COMMAND music_analysis_ab_test)
+  add_executable(music_analysis_yin_trace tests/open_dsp_yin_trace.cpp
+    music_analysis_dsp.cpp dsp_engine_open.cpp)
+  target_include_directories(music_analysis_yin_trace PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+  target_compile_definitions(music_analysis_yin_trace PRIVATE MA_TRACE_YIN=1)
+  add_executable(music_analysis_octave_synthetic tests/open_dsp_octave_synthetic.cpp)
+  target_link_libraries(music_analysis_octave_synthetic PRIVATE music_analysis_dsp)
+  add_test(NAME music_analysis_octave_synthetic_control
+    COMMAND music_analysis_octave_synthetic "${CMAKE_CURRENT_BINARY_DIR}/octave_synthetic_control.csv")
 endif()

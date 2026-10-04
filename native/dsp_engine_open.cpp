@@ -6,6 +6,9 @@
 #include <array>
 #include <cmath>
 #include <complex>
+#if defined(MA_TRACE_YIN)
+#include "tests/open_dsp_trace_hook.h"
+#endif
 
 namespace {
 constexpr size_t kFftSize = 8192;
@@ -89,7 +92,13 @@ class OpenEngine final : public DspEngine {
         break;
       }
     }
-    if (!chosen) return;
+    if (!chosen) {
+#if defined(MA_TRACE_YIN)
+      ma_trace_yin_window(samples_.data(), feature, cmnd_.data(), min_lag,
+                          max_lag, 0, 0.0);
+#endif
+      return;
+    }
     const double left = cmnd_[chosen - 1], center = cmnd_[chosen], right = cmnd_[chosen + 1];
     const double denominator = left - 2 * center + right;
     const double adjustment = std::abs(denominator) > 1e-12 ?
@@ -99,6 +108,10 @@ class OpenEngine final : public DspEngine {
       feature.pitch_hz = static_cast<float>(hz);
       feature.pitch_confidence = static_cast<float>(std::clamp(1.0 - center, 0.0, 1.0));
     }
+#if defined(MA_TRACE_YIN)
+    ma_trace_yin_window(samples_.data(), feature, cmnd_.data(), min_lag,
+                        max_lag, chosen, chosen + adjustment);
+#endif
   }
  private:
   std::array<float, kWindow> samples_{};
