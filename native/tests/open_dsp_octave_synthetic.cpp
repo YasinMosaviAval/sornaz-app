@@ -5,8 +5,10 @@
 #include <chrono>
 #include <cmath>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <random>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -59,10 +61,22 @@ std::vector<float> make_tone(double f, const std::array<double, 4> &harmonics,
 }
 
 int control_failures = 0;
+std::string corpus_dir;
+int synthetic_index = 0;
 
 void row(std::ostream &out, const std::string &name, double expected,
          const std::vector<float> &signal, double begin = .25,
          double end = .85) {
+  ++synthetic_index;
+  if (!corpus_dir.empty()) {
+    std::ostringstream filename;
+    filename << corpus_dir << "/S" << std::setfill('0')
+             << std::setw(3) << synthetic_index << ".f32le";
+    std::ofstream pcm(filename.str(), std::ios::binary);
+    pcm.write(reinterpret_cast<const char *>(signal.data()),
+              static_cast<std::streamsize>(signal.size() * sizeof(float)));
+    if (!pcm) { std::cerr << "Cannot write synthetic PCM\n"; ++control_failures; }
+  }
   const auto time = std::chrono::steady_clock::now();
   const auto features = analyze(signal);
   const auto elapsed = std::chrono::duration<double, std::milli>(
@@ -99,7 +113,8 @@ void row(std::ostream &out, const std::string &name, double expected,
 }  // namespace
 
 int main(int argc, char **argv) {
-  if (argc != 2) return 2;
+  if (argc != 2 && argc != 3) return 2;
+  if (argc == 3) corpus_dir = argv[2];
   std::ofstream out(argv[1]);
   if (!out) return 3;
   out << "case,expectedHz,voicedFrames,medianHz,medianConfidence,"

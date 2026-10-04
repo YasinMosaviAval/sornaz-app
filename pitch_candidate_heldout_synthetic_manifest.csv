@@ -1,0 +1,17 @@
+caseId,kind,expectedHz,startSeconds,endSeconds
+H001,heldout_harmonic,164.814,0.25,0.85
+H002,heldout_harmonic,174.614,0.25,0.85
+H003,heldout_harmonic,220.0,0.25,0.85
+H004,heldout_harmonic,329.628,0.25,0.85
+H005,heldout_harmonic,349.228,0.25,0.85
+H006,heldout_harmonic,440.0,0.25,0.85
+H007,heldout_harmonic,659.255,0.25,0.85
+H008,heldout_harmonic,698.456,0.25,0.85
+H009,heldout_harmonic,880.0,0.25,0.85
+H010,heldout_mixture,261.626,0.25,0.85
+H011,heldout_mixture,392.0,0.25,0.85
+H012,heldout_mixture,523.251,0.25,0.85
+H013,heldout_mixture,783.991,0.25,0.85
+H014,heldout_lower_h2,146.832,0.25,0.85
+H015,heldout_lower_h2,196.0,0.25,0.85
+H016,heldout_lower_h2,246.942,0.25,0.85

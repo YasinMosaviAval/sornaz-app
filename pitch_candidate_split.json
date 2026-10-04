@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "frozen_before_strategy_evaluation": true,
+  "development_new": ["N01", "N02", "N03", "N07", "N09", "N11"],
+  "heldout_new": ["N04", "N05", "N06", "N08", "N10", "N12"],
+  "development_previous": ["P01", "P02", "P03", "P04", "P05", "P07", "P09", "C01", "C02", "C03"],
+  "heldout_previous": ["P06", "P08", "P10", "C04", "C05"],
+  "synthetic_development": "existing 92-case corpus",
+  "synthetic_heldout": ["H001", "H002", "H003", "H004", "H005", "H006", "H007", "H008", "H009", "H010", "H011", "H012", "H013", "H014", "H015", "H016"],
+  "note": "Case IDs and expected pitches are evaluation-only. No production selector receives them."
+}
