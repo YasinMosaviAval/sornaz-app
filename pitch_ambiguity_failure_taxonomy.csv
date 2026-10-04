@@ -1,0 +1,12 @@
+set,domain,change,taxonomy,frames
+development,real,improvement,CMND_ambiguity,4
+development,real,improvement,UNKNOWN_real_acoustic_source,175
+heldout,real,improvement,CMND_ambiguity,4
+development,real,improvement,small_spectral_margin,5
+heldout,real,improvement,small_spectral_margin,2
+heldout,real,improvement,UNKNOWN_real_acoustic_source,58
+development,real,regression,UNKNOWN_real_acoustic_source,2
+development,real,regression,small_spectral_margin,2
+development,synthetic,regression,independent_low_interferer,29
+development,synthetic,improvement,independent_low_interferer,269
+heldout,synthetic,improvement,independent_low_interferer,156
