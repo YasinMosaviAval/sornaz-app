@@ -1,0 +1,15 @@
+criterion,diagnostic_B,diagnostic_C,diagnostic_D,diagnostic_E,evidence
+V01_single_note,FAIL,FAIL,FAIL,FAIL,all produce 14 segments rather than one
+V02_single_note,FAIL,FAIL,FAIL,FAIL,all retain octave-down E3 and at least four segments
+V03_repeated_boundary,PASS_LIMITED,PASS_LIMITED,PASS_LIMITED,PASS_LIMITED,two main F4 events found but total 13 segments
+V04_legato_boundary,PASS_LIMITED,PASS_LIMITED,PASS_LIMITED,PASS_LIMITED,main F4 and E4 found but total 10-12 segments
+previous_C_F4_E4,PASS,PASS,FAIL,PASS,previous diagnostic comparison: confirmation separates five C cases; baseline does not
+previous_sustained_no_regression,FAIL,FAIL,FAIL,FAIL,previous C policy regressed R06; new video singles already fail
+octave_controls,NOT_TESTED,NOT_TESTED,NOT_TESTED,NOT_TESTED,no new candidate accepted for complete revalidation
+extra_segments_not_worse,FAIL,FAIL,PASS,FAIL,B/C/E add two extra V04 segments; D adds one V02 segment
+synthetic_no_regression,NOT_TESTED,NOT_TESTED,NOT_TESTED,NOT_TESTED,no accepted candidate; prior synthetic tests remain unchanged
+runtime_acceptable,NOT_TESTED,NOT_TESTED,NOT_TESTED,NOT_TESTED,diagnostic host policies were not benchmarked as production candidates
+raw_DSP_unchanged,PASS,PASS,PASS,PASS,no raw DSP code edits
+ABI_unchanged,PASS,PASS,PASS,PASS,no ABI edits
+Aubio_excluded,PASS,PASS,PASS,PASS,production native remains Aubio-free
+FULL_PRODUCTION_GATE,FAIL,FAIL,FAIL,FAIL,V01/V02 preservation and extra-segment criteria fail

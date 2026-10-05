@@ -1,0 +1,5 @@
+﻿"case_id","video_first_pts","audio_stream_start_pts","extraction_trim","arbitrary_offset_seconds","decoded_audio_duration_seconds","video_duration_seconds","duration_difference_seconds","common_mp4_timeline","hardware_av_latency","sync_status"
+"V01","0","0","none","0","6.869333","6.9","-0.030667","yes","not independently measured","container PTS consistent; subframe physical-to-acoustic delay unknown"
+"V02","0","0","none","0","5.568","5.6","-0.032","yes","not independently measured","container PTS consistent; subframe physical-to-acoustic delay unknown"
+"V03","0","0","none","0","7.168","7.2","-0.032","yes","not independently measured","container PTS consistent; subframe physical-to-acoustic delay unknown"
+"V04","0","0","none","0","5.312","5.31","0.002","yes","not independently measured","container PTS consistent; subframe physical-to-acoustic delay unknown"

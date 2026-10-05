@@ -1,0 +1,5 @@
+case_id,extracted_source_pcm_format,source_sample_rate,source_channels,decoded_source_frames,canonical_pcm_format,canonical_sample_rate,canonical_channels,canonical_frames,canonical_duration_seconds,feature_count,segment_count
+V01,s16le,48000,2,329728,f32le,44100,1,302938,6.869342403628118,592,14
+V02,s16le,48000,2,267264,f32le,44100,1,245549,5.568004535147392,480,4
+V03,s16le,48000,2,344064,f32le,44100,1,316109,7.168004535147392,618,13
+V04,s16le,48000,2,254976,f32le,44100,1,234259,5.3119954648526075,458,10

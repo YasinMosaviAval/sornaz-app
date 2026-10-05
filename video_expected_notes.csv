@@ -1,0 +1,7 @@
+﻿"case_id","note_index","expected_midi","expected_note","expected_count","label_source"
+"V01","1","65","F4","1","user musical mapping; evaluation only"
+"V02","1","64","E4","1","user musical mapping; evaluation only"
+"V03","1","65","F4","2","user musical mapping; evaluation only"
+"V03","2","65","F4","2","user musical mapping; evaluation only"
+"V04","1","65","F4","2","user musical mapping; evaluation only"
+"V04","2","64","E4","2","user musical mapping; evaluation only"

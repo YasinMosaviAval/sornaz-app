@@ -1,0 +1,5 @@
+﻿"case_id","video_file","container","duration_seconds","video_codec","video_width","video_height","nominal_fps","average_fps","decoded_video_frames","first_video_pts","last_video_pts","min_frame_step_seconds","max_frame_step_seconds","vfr_observed","audio_codec","audio_sample_rate","audio_channels","audio_start_pts_seconds","mapping","source_present"
+"V01","01.mp4","MP4","6.9","H.264","1280","720","30","30/1","207","0","6.86643","0.0333099999999997","0.0333600000000001","False","AAC-LC","48000","2","0","F4","True"
+"V02","02.mp4","MP4","5.6","H.264","1280","720","30","28.95 average; 30 nominal","162","0","5.56313","0.0333099999999997","0.0633300000000001","True","AAC-LC","48000","2","0","E4","True"
+"V03","03.mp4","MP4","7.2","H.264","1280","720","30","29.18 average; 30 nominal","210","0","7.16317","0.0333099999999993","0.06334","True","AAC-LC","48000","2","0","F4>F4","True"
+"V04","04.mp4","MP4","5.31","H.264","1280","720","30","29.97 average; 30 nominal","159","0","5.27214","0.0299889","0.0456444","True","AAC-LC","48000","2","0","F4>E4","True"
