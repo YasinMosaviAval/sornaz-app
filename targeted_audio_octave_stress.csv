@@ -1,0 +1,3 @@
+caseId,region,frames,voiced,nearLower,nearUpper,other,medianConfidence,medianMargin,medianLowerCmnd,medianUpperCmnd,medianLowerFund,medianLowerH2,medianUpperFund,medianUpperH2,F2Abstained,note
+R07,combined,94,94,94,0,0,0.995054,4.665599,0.004968,0.676211,101.443564,111.666658,119.506293,8.904574,0,polyphonic_outside_monophonic_V1
+R08,combined,108,108,108,0,0,0.992826,4.407017,0.007192,0.794751,105.435234,82.894353,107.464585,11.215667,0,polyphonic_outside_monophonic_V1
