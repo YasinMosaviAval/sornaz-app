@@ -63,7 +63,7 @@ class _MyProfileState extends State<_MyProfile> {
     tabIndex: 4,
     title: socialText(context, 'پروفایل', 'Profile'),
     appBar: HomeTopBar(
-      leadingWidget: CreateContentButton(
+      trailingWidget: CreateContentButton(
         api: api,
         onCreated: () => setState(() => revision++),
       ),

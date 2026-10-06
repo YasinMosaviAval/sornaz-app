@@ -16,6 +16,7 @@ class ExpandingSearchBar extends StatefulWidget implements PreferredSizeWidget {
     this.searchIconColor,
     this.hint = 'جستجو',
     this.actions = const [],
+    this.actionsExtraWidth = 0,
   });
   final double searchIconSize;
   final Color? searchIconColor;
@@ -28,6 +29,7 @@ class ExpandingSearchBar extends StatefulWidget implements PreferredSizeWidget {
   final Key? openKey, fieldKey;
   final String hint;
   final List<Widget> actions;
+  final double actionsExtraWidth;
   @override
   Size get preferredSize => const Size.fromHeight(48);
   @override
@@ -81,6 +83,7 @@ class _ExpandingSearchBarState extends State<ExpandingSearchBar> {
                             : (constraints.maxWidth -
                                       48 -
                                       widget.actions.length * 48 -
+                                      widget.actionsExtraWidth -
                                       (widget.onSettings == null ? 0 : 48))
                                   .clamp(0, double.infinity),
                         child: ClipRect(
@@ -90,12 +93,14 @@ class _ExpandingSearchBarState extends State<ExpandingSearchBar> {
                                 (constraints.maxWidth -
                                         48 -
                                         widget.actions.length * 48 -
+                                        widget.actionsExtraWidth -
                                         (widget.onSettings == null ? 0 : 48))
                                     .clamp(0, double.infinity),
                             maxWidth:
                                 (constraints.maxWidth -
                                         48 -
                                         widget.actions.length * 48 -
+                                        widget.actionsExtraWidth -
                                         (widget.onSettings == null ? 0 : 48))
                                     .clamp(0, double.infinity),
                             child: AnimatedOpacity(

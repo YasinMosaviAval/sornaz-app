@@ -190,7 +190,7 @@ class _PanelState extends State<_Panel> {
     appBar: tab == 2
         ? null
         : HomeTopBar(
-            leadingWidget: CreateContentButton(api: api, onCreated: load),
+            trailingWidget: CreateContentButton(api: api, onCreated: load),
             hint: socialText(
               context,
               'جست‌وجو در پست‌ها و جامعه سرناز…',

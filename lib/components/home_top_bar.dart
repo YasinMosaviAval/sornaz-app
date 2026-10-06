@@ -13,13 +13,14 @@ class HomeTopBar extends StatelessWidget implements PreferredSizeWidget {
     this.pageTitle,
     this.flexibleSpace,
     this.leadingWidget,
+    this.trailingWidget,
     this.extraActions = const [],
     this.onFilter,
     this.hint = '',
     this.initialQuery = '',
   });
 
-  final Widget? leadingWidget, flexibleSpace;
+  final Widget? leadingWidget, trailingWidget, flexibleSpace;
   final bool searchOnly;
   final double? searchTextInset;
   final String? pageTitle;
@@ -36,21 +37,36 @@ class HomeTopBar extends StatelessWidget implements PreferredSizeWidget {
     child: searchOnly
         ? const BackButton()
         : leadingWidget ??
-              const Padding(
-                padding: EdgeInsets.all(8),
-                child: AppLogo(size: 40, withBackground: false),
+              Builder(
+                builder: (context) => IconButton(
+                  icon: const Icon(Icons.menu),
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                ),
               ),
   );
 
   List<Widget> _actions() => [
     ...extraActions,
     if (!searchOnly)
-      Builder(
-        builder: (context) => IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () => Scaffold.of(context).openDrawer(),
+      if (leadingWidget != null)
+        Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        )
+      else
+        Padding(
+          padding: EdgeInsetsDirectional.only(
+            end: trailingWidget == null ? 20 : 12,
+          ),
+          child: SizedBox(
+            width: AppTopBarDirection.leadingWidth,
+            child:
+                trailingWidget ??
+                const Center(child: AppLogo(size: 40, withBackground: false)),
+          ),
         ),
-      ),
   ];
 
   @override
@@ -80,13 +96,23 @@ class HomeTopBar extends StatelessWidget implements PreferredSizeWidget {
         fieldKey: const ValueKey('home-search'),
         hint: hint,
         actions: _actions(),
+        actionsExtraWidth: searchOnly || leadingWidget != null
+            ? 0
+            : trailingWidget == null
+            ? 20
+            : 12,
       );
     }
     return AppTopBarDirection(
       child: AppBar(
         automaticallyImplyLeading: false,
         flexibleSpace: flexibleSpace,
-        title: title,
+        title: Padding(
+          padding: const EdgeInsetsDirectional.only(
+            start: AppTopBarDirection.contentInset,
+          ),
+          child: title,
+        ),
         actions: _actions(),
       ),
     );

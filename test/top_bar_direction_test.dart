@@ -5,6 +5,51 @@ import 'package:sornaz/components/home_top_bar.dart';
 import 'package:sornaz/components/expanding_search_bar.dart';
 
 void main() {
+  for (final lang in ['fa', 'en']) {
+    for (final searchable in [false, true]) {
+      testWidgets(
+        'main toolbar places menu and actions for $lang (search: $searchable)',
+        (tester) async {
+          await tester.pumpWidget(
+            MaterialApp(
+              locale: Locale(lang),
+              supportedLocales: const [Locale('fa'), Locale('en')],
+              localizationsDelegates: GlobalMaterialLocalizations.delegates,
+              home: Scaffold(
+                drawer: const Drawer(),
+                appBar: HomeTopBar(
+                  trailingWidget: const Icon(Icons.add, key: ValueKey('add')),
+                  onSearch: searchable ? (_) {} : null,
+                ),
+              ),
+            ),
+          );
+          final menu = tester.getRect(find.byIcon(Icons.menu));
+          final add = tester.getRect(find.byKey(const ValueKey('add')));
+          expect(
+            lang == 'fa' ? menu.left > add.left : menu.left < add.left,
+            isTrue,
+          );
+          expect(lang == 'fa' ? 800 - menu.right : menu.left, closeTo(24, 0.1));
+          expect(lang == 'fa' ? add.left : 800 - add.right, closeTo(24, 0.1));
+          if (searchable) {
+            await tester.tap(find.byIcon(Icons.search));
+            await tester.pumpAndSettle();
+            expect(find.byType(TextField), findsOneWidget);
+          } else {
+            await tester.tap(find.byIcon(Icons.menu));
+            await tester.pumpAndSettle();
+            final drawer = tester.getRect(find.byType(Drawer));
+            expect(
+              lang == 'fa' ? drawer.right : drawer.left,
+              closeTo(lang == 'fa' ? 800 : 0, 0.1),
+            );
+          }
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+  }
   for (final direction in TextDirection.values) {
     testWidgets(
       'toolbar chrome reverses $direction without reversing page content',
