@@ -1,0 +1,27 @@
+gate,policy,status,evidence
+39_source_availability,A_PRODUCTION,PASS,39 real source files found and 15214 frozen feature rows assembled
+video_baseline_reproduction,A_PRODUCTION,PASS,feature counts 592/480/618/458 and segment counts 14/4/13/10 reproduced without source edits
+independent_pre_note_false_pitch,A_PRODUCTION,FAIL,136 accepted frames in 565 video pre-key-down frames
+pre_note_reduction,B_RMS_010,PASS,136 to 30 retained pre-note frames
+quiet_legitimate_note_retention,B_RMS_010,FAIL,Q007 52 to 0 retained and Q008 52 to 16 retained
+stable_real_coverage,B_RMS_010,PASS,3287 of 3287 baseline correct stable frames retained across 39 real files
+V02_stable_octave_down,B_RMS_010,FAIL,all 121 labelled stable V02 octave-down frames remain
+periodic_background_rejection,C_CONF_950,FAIL,Q005 periodic background 52 of 52 retained despite all 136 video pre-note frames rejected
+stable_real_coverage,C_CONF_950,FAIL,532 correct stable frames rejected across the 39 real files
+video_pre_reduction,E_SPECTRAL_DISAGREE,FAIL,136 of 136 video pre-note frames remain
+V02_candidate_correction,C_SPECTRAL,FAIL,V02 remains 121 of 121 octave-down stable frames
+original_92_case_baseline_reproduction,A_PRODUCTION,PASS,92 cases and all 8692 feature plus 36096 evidence lines reproduce frozen artifacts
+original_synthetic_C_regression,C_SPECTRAL,FAIL,octave-down 448 to 468 with 29 new errors in S050 and S071
+heldout_16_case_reproduction,A_PRODUCTION,PASS,16 cases and all 1392 feature lines plus evidence reproduce frozen artifacts
+lower_octave_retention,B_RMS_010,PASS,true E3/F3 stable controls and Q014 retained
+upper_octave_retention,B_RMS_010,PASS,true E5/F5 stable controls and Q015 retained
+true_octave_leap_retention,B_RMS_010,PASS,existing labelled stable leap regions retained
+semitone_retention,B_RMS_010,PASS,existing labelled stable semitone regions retained
+quiet_real_generalization,B_RMS_010,NOT TESTED,no independently labelled low-amplitude real note matching Q007 is available
+release_false_voicing_reduction,B_RMS_010,NOT TESTED,key-up is occluded and pitched decay has no independent pitch truth
+runtime_device_candidate,ALL_DIAGNOSTIC,NOT TESTED,no policy passed the preliminary safety gates
+voicing_production_gate,ALL_DIAGNOSTIC,FAIL,all candidates fail quiet-note or periodic-background safety
+candidate_selection_production_gate,C_SPECTRAL,FAIL,V02 unchanged and original synthetic regression reproduced
+combined_production_gate,ALL_DIAGNOSTIC,NOT TESTED,neither independent gate passed
+ABI_unchanged,A_PRODUCTION,PASS,no production code or public layout changed
+Aubio_excluded,A_PRODUCTION,PASS,production host build has MA_ENABLE_AUBIO disabled

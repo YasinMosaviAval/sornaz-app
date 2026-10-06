@@ -1,0 +1,5 @@
+"case_id","region","total_frames","accepted_voiced","high_confidence_accepted","median_all_rms","median_voiced_rms","median_voiced_confidence","median_selected_cmnd","median_candidate_margin","top_rounded_midi_counts","truth_quality"
+"V01","RELEASE_DECAY","118","101","101","0.022180467844","0.0223272982985","0.904698312283","0.0953017118628","1.3577082430174685","53:54;65:43;46:4","key_up_occluded_or_decay_uncertain"
+"V02","RELEASE_DECAY","100","53","53","0.0109556196257","0.0175547767431","0.905247449875","0.0947525270025","1.332925576656665","52:53","key_up_occluded_or_decay_uncertain"
+"V03","RELEASE_DECAY","90","31","31","0.00799711979926","0.0130543103442","0.889410436153","0.110589581559","2.0111501706079307","50:16;65:9;53:6","key_up_occluded_or_decay_uncertain"
+"V04","RELEASE_DECAY","86","46","46","0.00976166501641","0.0283554233611","0.917779326439","0.0891783186415","1.5072305652250302","64:28;52:12;50:6","key_up_occluded_or_decay_uncertain"
