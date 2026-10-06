@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'music_analysis_test_page.dart';
 
 class NotationSettingsPage extends StatefulWidget {
   const NotationSettingsPage({super.key});
@@ -77,6 +78,19 @@ class _NotationSettingsPageState extends State<NotationSettingsPage> {
     body: ListView(
       padding: const EdgeInsets.all(20),
       children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.analytics_outlined),
+          title: Text(
+            socialText(
+              context,
+              'آزمایش تحلیل اجرا',
+              'Performance analysis test',
+            ),
+          ),
+          onTap: () => socialPush(context, const MusicAnalysisTestPage()),
+        ),
+        const Divider(height: 1),
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: Text(
