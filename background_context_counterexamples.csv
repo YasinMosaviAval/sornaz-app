@@ -1,0 +1,7 @@
+"case_id","diagnostic_recipe","background_hz","new_hz","early_rms_ratio","intentional_event","B_new_event_retained","C_background_memory_retained","B_safety","C_safety","scope_note"
+"T01","persistent periodic background only","147.0","0.0","Infinity","false","true","false","FAIL","PASS_AFTER_DELAY_ONLY","Same signal can be labelled differently from T02; deterministic feature-level control, not native-DSP output"
+"T02","quiet intentional note from recording start","0.0","147.0","Infinity","true","true","false","PASS","FAIL","Same .008*sin(2*pi*147*t) waveform as T01; intent is unobservable; deterministic feature-level control, not native-DSP output"
+"T03","background then different-frequency note","147.0","329.628","3.0","true","true","true","PASS","PASS","Clear relative energy change; deterministic feature-level control, not native-DSP output"
+"T04","background then same-frequency clear attack","147.0","147.0","3.0","true","true","true","PASS","PASS","Clear relative energy change; deterministic feature-level control, not native-DSP output"
+"T05","background then same-frequency soft attack","147.0","147.0","1.1","true","false","false","FAIL","FAIL","Weak energy change; onset below .20; deterministic feature-level control, not native-DSP output"
+"T06","legato transition with weak onset","329.628","349.228","1.1","true","false","false","FAIL","FAIL","Pitch changes but onset/energy event is weak; deterministic feature-level control, not native-DSP output"
