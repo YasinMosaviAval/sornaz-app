@@ -11,6 +11,9 @@ List<Json> panelNavigation(List<Json> sections) {
         'site-settings',
         'pages',
         'guides',
+        'messages',
+        'notifications',
+        'points',
       ].contains(s['key']))
         '${s['key']}': Map<String, dynamic>.of(s),
   };

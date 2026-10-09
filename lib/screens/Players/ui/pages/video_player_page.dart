@@ -15,12 +15,83 @@ import 'package:sornaz/components/expanding_search_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:volume_controller/volume_controller.dart';
 import '../../services/player_settings.dart';
+import '../../services/last_playback_position.dart';
+import '../../services/video_audio_export.dart';
 import 'equalizer.dart';
-import '../components/search_bar.dart' show endLabel;
+import 'video_settings_page.dart';
 import '../components/playback_speed_dialog.dart';
+import '../components/video_viewport_transform.dart' as viewport_transform;
 import 'package:sornaz/components/ab_repeat.dart';
 
 enum VideoRepeatMode { off, one, all }
+
+Future<void> convertVideoToAudio(BuildContext context, String uri) async {
+  final format = await showDialog<AudioExportFormat>(
+    context: context,
+    builder: (dialog) => SimpleDialog(
+      shape: RoundedRectangleBorder(borderRadius: appRadius(dialog)),
+      title: Text(
+        socialText(
+          dialog,
+          'تبدیل ویدیو به فایل صوتی',
+          'Convert video to audio',
+        ),
+        style: Theme.of(dialog).textTheme.bodyMedium,
+      ),
+      children: [
+        for (final option in AudioExportFormat.values)
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(dialog, option),
+            child: Text(
+              option.name.toUpperCase(),
+              style: Theme.of(dialog).textTheme.bodyMedium,
+            ),
+          ),
+      ],
+    ),
+  );
+  if (format == null || !context.mounted) return;
+  final messenger = ScaffoldMessenger.of(context);
+  messenger.showSnackBar(
+    SnackBar(
+      content: Text(
+        socialText(context, 'در حال تبدیل ویدیو…', 'Converting video…'),
+      ),
+    ),
+  );
+  try {
+    await VideoAudioExport.convert(uri, format);
+    if (context.mounted) {
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            socialText(
+              context,
+              'فایل صوتی در پوشه Music/Sornaz ذخیره شد',
+              'Audio saved in Music/Sornaz',
+            ),
+          ),
+        ),
+      );
+    }
+  } catch (_) {
+    if (context.mounted) {
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            socialText(
+              context,
+              'تبدیل ویدیو به فایل صوتی انجام نشد',
+              'Could not convert video to audio',
+            ),
+          ),
+        ),
+      );
+    }
+  }
+}
 
 class DeviceVideo {
   const DeviceVideo({
@@ -29,6 +100,7 @@ class DeviceVideo {
     required this.folder,
     required this.folderId,
     required this.duration,
+    this.addedAt = 0,
   });
   factory DeviceVideo.fromMap(Map<dynamic, dynamic> value) => DeviceVideo(
     uri: value['uri'] as String,
@@ -36,9 +108,11 @@ class DeviceVideo {
     folder: value['folder'] as String,
     folderId: value['folderId'] as String,
     duration: Duration(milliseconds: (value['duration'] as num).toInt()),
+    addedAt: (value['addedAt'] as num?)?.toInt() ?? 0,
   );
   final String uri, name, folder, folderId;
   final Duration duration;
+  final int addedAt;
 }
 
 class VideoThumbnail extends StatefulWidget {
@@ -108,13 +182,60 @@ class VideoLibraryPage extends StatefulWidget {
 }
 
 class _VideoLibraryPageState extends State<VideoLibraryPage>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   static const channel = MethodChannel('sornaz/device_videos');
   final store = MusicPlaylists(storagePrefix: 'video');
   List<DeviceVideo> videos = [];
   final expanded = <String>{};
   final selected = <String>{};
-  late final tabs = TabController(length: 3, vsync: this);
+  late TabController tabs;
+  List<int> visibleTabs = [];
+  final settings = PlayerSettings.instance;
+  void syncTabs() {
+    final next = settings.videoTabOrder
+        .map(int.parse)
+        .where(
+          (i) => i >= 0 && i < 3 && !settings.videoHiddenTabs.contains('$i'),
+        )
+        .toList();
+    if (next.isEmpty) next.add(0);
+    if (visibleTabs.join(',') == next.join(',')) {
+      if (mounted) setState(() {});
+      return;
+    }
+    final selectedTab = visibleTabs.isEmpty ? 0 : visibleTabs[tabs.index];
+    if (visibleTabs.isNotEmpty) {
+      tabs.removeListener(tabChanged);
+      tabs.dispose();
+    }
+    visibleTabs = next;
+    tabs = TabController(
+      length: next.length,
+      vsync: this,
+      initialIndex: next.contains(selectedTab) ? next.indexOf(selectedTab) : 0,
+    );
+    currentTab = next[tabs.index];
+    tabs.addListener(tabChanged);
+    if (mounted) setState(() {});
+  }
+
+  bool videoVisible(DeviceVideo v) =>
+      !settings.videoHiddenUris.contains(v.uri) &&
+      !settings.videoHiddenFolders.contains(v.folderId);
+  List<DeviceVideo> sortedVideos(Iterable<DeviceVideo> items) {
+    final list = items.where(videoVisible).toList();
+    list.sort(
+      (a, b) =>
+          (settings.videoSortAscending ? 1 : -1) *
+          (settings.videoSort == 'added'
+              ? a.addedAt.compareTo(b.addedAt)
+              : settings.videoSort == 'duration'
+              ? a.duration.compareTo(b.duration)
+              : a.name.toLowerCase().compareTo(b.name.toLowerCase())),
+    );
+    return list;
+  }
+
   int currentTab = 0;
   bool busy = false;
   String query = '';
@@ -126,13 +247,15 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
   @override
   void initState() {
     super.initState();
-    tabs.addListener(tabChanged);
+    syncTabs();
+    settings.addListener(syncTabs);
     store.addListener(changed);
     _loadViewSettings();
     load();
   }
 
   Future<void> _loadViewSettings() async {
+    await settings.load();
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     setState(() {
@@ -141,105 +264,27 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
     });
   }
 
-  Future<void> _viewSettings() async {
-    await showDialog<void>(
-      context: context,
-      builder: (c) => StatefulBuilder(
-        builder: (c, setDialog) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
-          title: Text(
-            t('تنظیمات نمایش ویدیو', 'Video display settings'),
-            style: const TextStyle(fontSize: 14),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SwitchListTile(
-                title: Text(
-                  t('نمایش گرید', 'Grid view'),
-                  style: const TextStyle(fontSize: 13),
-                ),
-                value: gridView,
-                onChanged: (v) => setDialog(() => setState(() => gridView = v)),
-              ),
-              RadioListTile<int>(
-                title: Text(
-                  t(
-                    'سه ویدیو در هر ردیف (۱۶:۹ عمودی)',
-                    'Three portrait videos per row (9:16)',
-                  ),
-                  style: const TextStyle(fontSize: 12),
-                ),
-                value: 3,
-                groupValue: gridColumns,
-                onChanged: (v) =>
-                    setDialog(() => setState(() => gridColumns = v!)),
-              ),
-              RadioListTile<int>(
-                title: Text(
-                  t('چهار ویدیو در هر ردیف (۱:۱)', 'Four videos per row (1:1)'),
-                  style: const TextStyle(fontSize: 12),
-                ),
-                value: 4,
-                groupValue: gridColumns,
-                onChanged: (v) =>
-                    setDialog(() => setState(() => gridColumns = v!)),
-              ),
-              ListTile(
-                title: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        t('پایان آخرین فایل لیست', 'At the end of the list'),
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      endLabel(c, PlayerSettings.instance.listEnd),
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ],
-                ),
-                onTap: () async {
-                  final value = await showDialog<ListEndAction>(
-                    context: c,
-                    builder: (d) => SimpleDialog(
-                      title: Text(
-                        t('پایان آخرین فایل لیست', 'At the end of the list'),
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      children: [
-                        for (final action in ListEndAction.values)
-                          SimpleDialogOption(
-                            onPressed: () => Navigator.pop(d, action),
-                            child: Text(endLabel(d, action)),
-                          ),
-                      ],
-                    ),
-                  );
-                  if (value != null) {
-                    await PlayerSettings.instance.setListEnd(value);
-                    setDialog(() {});
-                  }
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(c),
-              child: Text(t('بستن', 'Close')),
-            ),
-          ],
-        ),
+  Future<void> _viewSettings() => Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => VideoSettingsPage(
+        videoNames: {
+          for (final video in videos) video.uri: video.name,
+          for (final video in videos) video.folderId: video.folder,
+        },
+        viewMode: gridView ? gridColumns : 0,
+        onViewMode: (value) async {
+          setState(() {
+            gridView = value != 0;
+            if (value != 0) gridColumns = value;
+          });
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('video.grid', gridView);
+          await prefs.setInt('video.grid.columns', gridColumns);
+        },
       ),
-    );
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('video.grid', gridView);
-    await prefs.setInt('video.grid.columns', gridColumns);
-  }
-
+    ),
+  );
   String _videoDuration(Duration duration) {
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
@@ -249,90 +294,101 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
         : '${duration.inMinutes}:$seconds';
   }
 
-  Widget _grid(List<DeviceVideo> items, {bool embedded = false}) =>
-      GridView.builder(
-        padding: const EdgeInsets.all(1),
-        shrinkWrap: embedded,
-        physics: embedded ? const NeverScrollableScrollPhysics() : null,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: gridColumns,
-          childAspectRatio: gridColumns == 3 ? 9 / 16 : 1,
-          crossAxisSpacing: 1,
-          mainAxisSpacing: 1,
-        ),
-        itemCount: items.length,
-        itemBuilder: (context, i) => InkWell(
-          onLongPress: () => setState(() {
-            if (!selected.remove(items[i].uri)) selected.add(items[i].uri);
-          }),
-          onTap: () => selected.isEmpty
-              ? open(items[i], items)
-              : setState(() {
-                  if (!selected.remove(items[i].uri)) {
-                    selected.add(items[i].uri);
-                  }
-                }),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              VideoThumbnail(uri: items[i].uri),
-              if (selected.contains(items[i].uri))
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: .22),
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.primary,
-                      width: 2,
-                    ),
-                  ),
-                ),
-              Positioned(
-                top: 4,
-                right: 4,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: .68),
-                    borderRadius: appRadius(context),
-                  ),
-                  child: Text(
-                    _videoDuration(items[i].duration),
-                    style: const TextStyle(color: Colors.white, fontSize: 9),
-                  ),
+  Widget _grid(
+    List<DeviceVideo> items, {
+    bool embedded = false,
+    String? collection,
+  }) => GridView.builder(
+    padding: const EdgeInsets.all(1),
+    shrinkWrap: embedded,
+    physics: embedded ? const NeverScrollableScrollPhysics() : null,
+    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: gridColumns,
+      childAspectRatio: gridColumns == 3 ? 9 / 16 : 1,
+      crossAxisSpacing: 1,
+      mainAxisSpacing: 1,
+    ),
+    itemCount: items.length,
+    itemBuilder: (context, i) => InkWell(
+      onLongPress: () => setState(() {
+        if (!selected.remove(items[i].uri)) selected.add(items[i].uri);
+      }),
+      onTap: () => selected.isEmpty
+          ? open(items[i], items)
+          : setState(() {
+              if (!selected.remove(items[i].uri)) {
+                selected.add(items[i].uri);
+              }
+            }),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          VideoThumbnail(uri: items[i].uri),
+          if (selected.contains(items[i].uri))
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: .22),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary,
+                  width: 2,
                 ),
               ),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: Container(
-                  width: double.infinity,
-                  color: Colors.black54,
-                  padding: const EdgeInsets.all(3),
-                  child: Text(
-                    items[i].name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white, fontSize: 10),
-                  ),
-                ),
+            ),
+          Positioned(
+            top: 4,
+            right: 4,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: .68),
+                borderRadius: appRadius(context),
               ),
-            ],
+              child: Text(
+                _videoDuration(items[i].duration),
+                style: const TextStyle(color: Colors.white, fontSize: 9),
+              ),
+            ),
           ),
-        ),
-      );
+          Positioned(
+            top: 2,
+            left: 2,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: appRadius(context),
+              ),
+              child: videoMenu(items[i], collection: collection, onGrid: true),
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              width: double.infinity,
+              color: Colors.black54,
+              padding: const EdgeInsets.all(3),
+              child: Text(
+                items[i].name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: Colors.white, fontSize: 10),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 
   void changed() {
     if (mounted) setState(() {});
   }
 
   void tabChanged() {
-    if (currentTab == tabs.index) return;
+    if (currentTab == visibleTabs[tabs.index]) return;
     setState(() {
-      currentTab = tabs.index;
+      currentTab = visibleTabs[tabs.index];
       selected.clear();
     });
   }
@@ -371,6 +427,8 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
 
   @override
   void dispose() {
+    settings.removeListener(syncTabs);
+    tabs.removeListener(tabChanged);
     tabs.dispose();
     store.removeListener(changed);
     store.dispose();
@@ -390,6 +448,78 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
       ),
     );
   }
+
+  Widget videoMenu(
+    DeviceVideo video, {
+    String? collection,
+    bool onGrid = false,
+  }) => PopupMenuButton<String>(
+    key: ValueKey('video-menu-${video.uri}'),
+    padding: EdgeInsets.zero,
+    tooltip: t('گزینه‌های ویدیو', 'Video options'),
+    icon: onGrid ? null : const Icon(Icons.more_vert),
+    enabled: !busy,
+    onSelected: (action) async {
+      if (['rename', 'crop', 'share', 'delete'].contains(action)) {
+        await fileAction(action, [video]);
+        return;
+      }
+      if (action == 'audio') {
+        await convertVideoToAudio(context, video.uri);
+        return;
+      }
+      if (action == 'add') {
+        await chooseAudioPlaylist(
+          context,
+          [video.uri],
+          store,
+          excludeKey: collection,
+        );
+      }
+      if (action == 'remove' && collection != null) {
+        await store.remove(collection, video.uri);
+      }
+      if (action == 'hide') {
+        await settings.setOption('videoHiddenUris', [
+          ...settings.videoHiddenUris,
+          video.uri,
+        ]);
+      }
+    },
+    itemBuilder: (_) => [
+      PopupMenuItem(
+        value: 'audio',
+        child: Text(t('تبدیل به فایل صوتی', 'Convert to audio')),
+      ),
+      PopupMenuItem(
+        value: 'hide',
+        child: Text(t('مخفی کردن ویدیو', 'Hide video')),
+      ),
+      for (final action in [
+        ('rename', t('تغییر نام', 'Rename')),
+        ('crop', t('برش ویدیو', 'Trim video')),
+        ('share', t('اشتراک‌گذاری', 'Share')),
+        ('delete', t('حذف', 'Delete')),
+      ])
+        PopupMenuItem(value: action.$1, child: Text(action.$2)),
+      PopupMenuItem(
+        value: 'add',
+        child: Text(t('افزودن به لیست پخش', 'Add to playlist')),
+      ),
+      if (collection != null)
+        PopupMenuItem(
+          value: 'remove',
+          child: Text(t('حذف از لیست پخش', 'Remove from playlist')),
+        ),
+    ],
+    child: onGrid
+        ? const SizedBox(
+            width: 32,
+            height: 32,
+            child: Icon(Icons.more_vert, color: Colors.white),
+          )
+        : null,
+  );
 
   Widget row(
     DeviceVideo video,
@@ -424,43 +554,7 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
             : setState(() {
                 if (!selected.remove(video.uri)) selected.add(video.uri);
               }),
-        trailing: PopupMenuButton<String>(
-          padding: EdgeInsets.zero,
-          enabled: !busy,
-          onSelected: (action) async {
-            if (['rename', 'crop', 'share', 'delete'].contains(action)) {
-              await fileAction(action, [video]);
-              return;
-            }
-            if (action == 'add')
-              await chooseAudioPlaylist(
-                context,
-                [video.uri],
-                store,
-                excludeKey: collection,
-              );
-            if (action == 'remove' && collection != null)
-              await store.remove(collection, video.uri);
-          },
-          itemBuilder: (_) => [
-            for (final action in [
-              ('rename', t('تغییر نام', 'Rename')),
-              ('crop', t('برش ویدیو', 'Trim video')),
-              ('share', t('اشتراک‌گذاری', 'Share')),
-              ('delete', t('حذف', 'Delete')),
-            ])
-              PopupMenuItem(value: action.$1, child: Text(action.$2)),
-            PopupMenuItem(
-              value: 'add',
-              child: Text(t('افزودن به لیست پخش', 'Add to playlist')),
-            ),
-            if (collection != null)
-              PopupMenuItem(
-                value: 'remove',
-                child: Text(t('حذف از لیست پخش', 'Remove from playlist')),
-              ),
-          ],
-        ),
+        trailing: videoMenu(video, collection: collection),
       ),
       Divider(
         height: .2,
@@ -470,6 +564,14 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
     ],
   );
   Future<void> fileAction(String action, List<DeviceVideo> items) async {
+    if (action == 'hide') {
+      await settings.setOption(
+        'videoHiddenUris',
+        {...settings.videoHiddenUris, ...items.map((v) => v.uri)}.toList(),
+      );
+      if (mounted) setState(selected.clear);
+      return;
+    }
     if (items.isEmpty || busy) return;
     setState(() => busy = true);
     try {
@@ -548,14 +650,39 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
     final groups = <String, List<DeviceVideo>>{};
     if (playlists) {
       for (final e in store.lists.entries) {
-        groups[e.key] = videos.where((v) => e.value.contains(v.uri)).toList();
+        groups[e.key] = sortedVideos(
+          videos.where((v) => e.value.contains(v.uri)),
+        );
       }
     } else {
-      for (final video in videos) {
+      for (final video in sortedVideos(videos)) {
         groups.putIfAbsent(video.folderId, () => []).add(video);
       }
     }
-    final visibleGroups = groups.entries.where((e) {
+    final orderedGroups = groups.entries.toList();
+    if (settings.videoSort == 'count')
+      orderedGroups.sort((a, b) => a.value.length.compareTo(b.value.length));
+    else if (settings.videoSort == 'duration')
+      orderedGroups.sort(
+        (a, b) => a.value
+            .fold<int>(0, (n, v) => n + v.duration.inMilliseconds)
+            .compareTo(
+              b.value.fold<int>(0, (n, v) => n + v.duration.inMilliseconds),
+            ),
+      );
+    else if (settings.videoSort == 'added')
+      orderedGroups.sort(
+        (a, b) => a.value.first.addedAt.compareTo(b.value.first.addedAt),
+      );
+    else
+      orderedGroups.sort(
+        (a, b) => a.key.toLowerCase().compareTo(b.key.toLowerCase()),
+      );
+    if (!settings.videoSortAscending) {
+      orderedGroups.setAll(0, orderedGroups.reversed.toList());
+    }
+    final visibleGroups = orderedGroups.where((e) {
+      if (e.value.isEmpty) return false;
       final title = playlists
           ? e.key
           : (e.value.isEmpty ? '' : e.value.first.folder);
@@ -595,7 +722,20 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
               final key = '${playlists ? 'p' : 'f'}:${e.key}';
               if (!expanded.remove(key)) expanded.add(key);
             }),
-            trailing: playlists && e.key != MusicPlaylists.favorite
+            trailing: !playlists
+                ? PopupMenuButton<String>(
+                    onSelected: (_) => settings.setOption(
+                      'videoHiddenFolders',
+                      [...settings.videoHiddenFolders, e.key],
+                    ),
+                    itemBuilder: (_) => [
+                      PopupMenuItem(
+                        value: 'hide',
+                        child: Text(t('مخفی کردن پوشه', 'Hide folder')),
+                      ),
+                    ],
+                  )
+                : playlists && e.key != MusicPlaylists.favorite
                 ? PopupMenuButton<String>(
                     padding: EdgeInsets.zero,
                     onSelected: (action) => editAudioCollection(
@@ -635,6 +775,7 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
                     )
                     .toList(),
                 embedded: true,
+                collection: playlists ? e.key : null,
               )
             else
               for (final video in e.value.where(
@@ -648,9 +789,9 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
 
   @override
   Widget build(BuildContext context) {
-    final visible = videos
-        .where((v) => v.name.toLowerCase().contains(query))
-        .toList();
+    final visible = sortedVideos(
+      videos,
+    ).where((v) => v.name.toLowerCase().contains(query)).toList();
     final selectable = visible
         .where(
           (v) =>
@@ -664,132 +805,145 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
                   )),
         )
         .toList();
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: ExpandingSearchBar(
-          title: Row(
-            children: [
-              const BackButton(),
-              Expanded(
-                child: Text(
-                  t('پخش‌کننده ویدیو', 'Video player'),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 14),
-                ),
+    return Scaffold(
+      appBar: ExpandingSearchBar(
+        title: Row(
+          children: [
+            const BackButton(),
+            Expanded(
+              child: Text(
+                t('پخش ویدیو', 'Video playback'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 14),
               ),
+            ),
+          ],
+        ),
+        hint: t('جستجوی ویدیو', 'Search videos'),
+        onChanged: (v) => setState(() => query = v.trim().toLowerCase()),
+        actions: [
+          IconButton(
+            tooltip: t('لیست پخش جدید', 'New playlist'),
+            icon: const Icon(Icons.playlist_add),
+            onPressed: () => createMusicPlaylist(context, collection: store),
+          ),
+          IconButton(
+            tooltip: t('تنظیمات پخش ویدیو', 'Video playback settings'),
+            icon: const Icon(Icons.settings),
+            onPressed: _viewSettings,
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          TabBar(
+            controller: tabs,
+            tabs: [
+              for (final i in visibleTabs)
+                Tab(
+                  text: t(
+                    const ['ویدیوها', 'پوشه‌ها', 'لیست پخش‌ها'][i],
+                    const ['Videos', 'Folders', 'Playlists'][i],
+                  ),
+                ),
             ],
           ),
-          hint: t('جستجوی ویدیو', 'Search videos'),
-          onChanged: (v) => setState(() => query = v.trim().toLowerCase()),
-          actions: [
-            IconButton(
-              tooltip: t('لیست پخش جدید', 'New playlist'),
-              icon: const Icon(Icons.playlist_add),
-              onPressed: () => createMusicPlaylist(context, collection: store),
-            ),
-            IconButton(
-              tooltip: t('تنظیمات نمایش', 'Display settings'),
-              icon: const Icon(Icons.view_module_outlined),
-              onPressed: _viewSettings,
-            ),
-          ],
-        ),
-        body: Column(
-          children: [
-            TabBar(
-              controller: tabs,
-              tabs: [
-                Tab(text: t('ویدیوها', 'Videos')),
-                Tab(text: t('پوشه‌ها', 'Folders')),
-                Tab(text: t('لیست پخش‌ها', 'Playlists')),
+          if (selected.isNotEmpty)
+            Row(
+              children: [
+                IconButton(
+                  onPressed: () => setState(() {
+                    if (selectable.every((v) => selected.contains(v.uri))) {
+                      selected.clear();
+                    } else {
+                      selected.addAll(selectable.map((v) => v.uri));
+                    }
+                  }),
+                  icon: Icon(
+                    selectable.every((v) => selected.contains(v.uri))
+                        ? Icons.check_box
+                        : Icons.check_box_outline_blank,
+                  ),
+                ),
+                Text('${selected.length}'),
+                const Spacer(),
+                PopupMenuButton<String>(
+                  enabled: !busy,
+                  onSelected: (action) {
+                    final chosen = videos
+                        .where((v) => selected.contains(v.uri))
+                        .toList();
+                    if (action == 'audio' && chosen.length == 1) {
+                      convertVideoToAudio(context, chosen.single.uri);
+                    } else {
+                      fileAction(action, chosen);
+                    }
+                  },
+                  itemBuilder: (_) => [
+                    for (final entry in [
+                      if (selected.length == 1) ...[
+                        ('audio', t('تبدیل به فایل صوتی', 'Convert to audio')),
+                        ('rename', t('تغییر نام', 'Rename')),
+                        ('crop', t('برش ویدیو', 'Trim video')),
+                      ],
+                      ('add', t('افزودن به لیست پخش', 'Add to playlist')),
+                      ('share', t('اشتراک‌گذاری', 'Share')),
+                      ('delete', t('حذف', 'Delete')),
+                      ('hide', t('مخفی کردن', 'Hide')),
+                    ])
+                      PopupMenuItem(value: entry.$1, child: Text(entry.$2)),
+                  ],
+                ),
+                IconButton(
+                  onPressed: () => setState(selected.clear),
+                  icon: const Icon(Icons.close),
+                ),
               ],
             ),
-            if (selected.isNotEmpty)
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: () => setState(() {
-                      if (selectable.every((v) => selected.contains(v.uri))) {
-                        selected.clear();
-                      } else {
-                        selected.addAll(selectable.map((v) => v.uri));
-                      }
-                    }),
-                    icon: Icon(
-                      selectable.every((v) => selected.contains(v.uri))
-                          ? Icons.check_box
-                          : Icons.check_box_outline_blank,
-                    ),
-                  ),
-                  Text('${selected.length}'),
-                  const Spacer(),
-                  PopupMenuButton<String>(
-                    enabled: !busy,
-                    onSelected: (action) => fileAction(
-                      action,
-                      videos.where((v) => selected.contains(v.uri)).toList(),
-                    ),
-                    itemBuilder: (_) => [
-                      for (final entry in [
-                        if (selected.length == 1) ...[
-                          ('rename', t('تغییر نام', 'Rename')),
-                          ('crop', t('برش ویدیو', 'Trim video')),
-                        ],
-                        ('add', t('افزودن به لیست پخش', 'Add to playlist')),
-                        ('share', t('اشتراک‌گذاری', 'Share')),
-                        ('delete', t('حذف', 'Delete')),
-                      ])
-                        PopupMenuItem(value: entry.$1, child: Text(entry.$2)),
-                    ],
-                  ),
-                  IconButton(
-                    onPressed: () => setState(selected.clear),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
-            Expanded(
-              child: loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : error != null
-                  ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(error!),
-                          TextButton(
-                            onPressed: load,
-                            child: Text(t('تلاش دوباره', 'Retry')),
-                          ),
-                        ],
-                      ),
-                    )
-                  : TabBarView(
-                      controller: tabs,
+          Expanded(
+            child: loading
+                ? const Center(child: CircularProgressIndicator())
+                : error != null
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        visible.isEmpty
-                            ? Center(
-                                child: Text(
-                                  t('ویدیویی پیدا نشد', 'No videos found'),
-                                ),
-                              )
-                            : gridView
-                            ? _grid(visible)
-                            : ListView(
-                                children: [
-                                  for (final video in visible)
-                                    row(video, visible),
-                                ],
-                              ),
-                        groups(false),
-                        groups(true),
+                        Text(error!),
+                        TextButton(
+                          onPressed: load,
+                          child: Text(t('تلاش دوباره', 'Retry')),
+                        ),
                       ],
                     ),
-            ),
-          ],
-        ),
+                  )
+                : TabBarView(
+                    controller: tabs,
+                    children: [
+                      for (final i in visibleTabs)
+                        if (i == 0)
+                          visible.isEmpty
+                              ? Center(
+                                  child: Text(
+                                    t('ویدیویی پیدا نشد', 'No videos found'),
+                                  ),
+                                )
+                              : gridView
+                              ? _grid(visible)
+                              : ListView(
+                                  children: [
+                                    for (final video in visible)
+                                      row(video, visible),
+                                  ],
+                                )
+                        else if (i == 1)
+                          groups(false)
+                        else
+                          groups(true),
+                    ],
+                  ),
+          ),
+        ],
       ),
     );
   }
@@ -814,6 +968,18 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
   VideoPlayerController? player;
   late int index;
   int generation = 0;
+  int lastSavedSecond = -1;
+  bool _restoreOnFirstLoad = true;
+  Future<void> _positionWrites = Future<void>.value();
+
+  Future<void> _writeLastPosition(String uri, int milliseconds) {
+    final write = _positionWrites.then(
+      (_) => LastPlaybackPositionStore.saveVideo(uri, milliseconds),
+    );
+    _positionWrites = write.catchError((_) {});
+    return write;
+  }
+
   String? error;
   bool changing = false;
   bool controlsVisible = true, muted = false, shuffle = false;
@@ -824,6 +990,20 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
   final abRepeat = AbRepeat();
   Timer? sleepTimer, chromeTimer, countdownTimer;
   DateTime? sleepDeadline;
+  double videoScale = 1, startScale = 1;
+  Offset videoOffset = Offset.zero, startOffset = Offset.zero;
+  Offset gestureStart = Offset.zero;
+  Duration gesturePosition = Duration.zero;
+  bool pinchGesture = false;
+  Offset clampVideoOffset(Offset offset, double scale, Size viewport) {
+    return viewport_transform.clampVideoOffset(
+      offset,
+      scale,
+      viewport,
+      player?.value.aspectRatio ?? 1,
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -841,18 +1021,26 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.resumed) player?.pause();
+    if (state != AppLifecycleState.resumed) {
+      unawaited(savePosition());
+      player?.pause();
+    }
   }
 
   Future<void> load(int at) async {
     if (at < 0 || at >= widget.videos.length) return;
+    final restorePosition = _restoreOnFirstLoad;
+    _restoreOnFirstLoad = false;
     final request = ++generation;
     final old = player;
+    await savePosition();
     setState(() {
       changing = true;
       player = null;
       index = at;
       error = null;
+      videoScale = 1;
+      videoOffset = Offset.zero;
     });
     old?.removeListener(update);
     await old?.dispose();
@@ -870,7 +1058,17 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
         changing = false;
       });
       next.addListener(update);
+      if (restorePosition &&
+          PlayerSettings.instance.videoSavePlaybackPosition) {
+        final saved = await LastPlaybackPositionStore.readVideo();
+        if (saved?.id == widget.videos[at].uri &&
+            saved!.milliseconds > 0 &&
+            saved.milliseconds < next.value.duration.inMilliseconds) {
+          await next.seekTo(Duration(milliseconds: saved.milliseconds));
+        }
+      }
       await next.play();
+      await savePosition();
       await next.setPlaybackSpeed(speed);
       _hideChromeLater();
     } catch (_) {
@@ -890,10 +1088,19 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
   void update() {
     if (!mounted) return;
     setState(() {});
+    if (player?.value.isPlaying == true &&
+        PlayerSettings.instance.videoSavePlaybackPosition) {
+      final second = player!.value.position.inSeconds;
+      if (second != lastSavedSecond && second % 5 == 0) {
+        lastSavedSecond = second;
+        unawaited(savePosition());
+      }
+    }
     if (abRepeat.shouldLoop(player!.value.position)) {
       player!.seekTo(abRepeat.start!);
     }
     if (!changing && player!.value.isCompleted) {
+      unawaited(clearPosition());
       if (repeatMode == VideoRepeatMode.one) {
         player!.seekTo(Duration.zero);
         player!.play();
@@ -911,6 +1118,23 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
           PlayerSettings.instance.listEnd == ListEndAction.restart)
         load(0);
     }
+  }
+
+  Future<void> savePosition() async {
+    final current = player;
+    if (current == null ||
+        current.value.isCompleted ||
+        !PlayerSettings.instance.videoSavePlaybackPosition)
+      return;
+    await _writeLastPosition(
+      widget.videos[index].uri,
+      current.value.position.inMilliseconds,
+    );
+  }
+
+  Future<void> clearPosition() async {
+    if (!PlayerSettings.instance.videoSavePlaybackPosition) return;
+    await _writeLastPosition(widget.videos[index].uri, 0);
   }
 
   void _hideChromeLater() {
@@ -1105,6 +1329,7 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
   @override
   void dispose() {
     generation++;
+    unawaited(savePosition());
     WidgetsBinding.instance.removeObserver(this);
     player?.removeListener(update);
     player?.dispose();
@@ -1191,18 +1416,89 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
                 },
                 onDoubleTap: () =>
                     player!.value.isPlaying ? player!.pause() : player!.play(),
-                onVerticalDragStart: (d) => dragStart(d, box.maxWidth),
-                onVerticalDragUpdate: (d) => dragUpdate(d, box.maxWidth),
-                onVerticalDragEnd: dragEnd,
+                onScaleStart: (d) {
+                  startScale = videoScale;
+                  startOffset = videoOffset;
+                  gestureStart = d.localFocalPoint;
+                  gesturePosition = player!.value.position;
+                  pinchGesture = d.pointerCount > 1;
+                  chromeTimer?.cancel();
+                },
+                onScaleUpdate: (d) {
+                  if (d.pointerCount > 1) pinchGesture = true;
+                  if (pinchGesture) {
+                    final nextScale = (startScale * d.scale).clamp(1.0, 4.0);
+                    setState(() {
+                      videoScale = nextScale;
+                      videoOffset = viewport_transform.zoomOffsetAroundFocal(
+                        startOffset: startOffset,
+                        startFocal: gestureStart,
+                        focal: d.localFocalPoint,
+                        startScale: startScale,
+                        scale: nextScale,
+                        viewport: Size(box.maxWidth, box.maxHeight),
+                        aspect: player!.value.aspectRatio,
+                      );
+                    });
+                    return;
+                  }
+                  final delta = d.localFocalPoint - gestureStart;
+                  if (videoScale > 1) {
+                    setState(
+                      () => videoOffset = clampVideoOffset(
+                        startOffset + delta,
+                        videoScale,
+                        Size(box.maxWidth, box.maxHeight),
+                      ),
+                    );
+                    return;
+                  }
+                  if (delta.dx.abs() > delta.dy.abs() && delta.dx.abs() > 12) {
+                    final ms =
+                        gesturePosition.inMilliseconds +
+                        (delta.dx / box.maxWidth * 120000).round();
+                    player!.seekTo(
+                      Duration(
+                        milliseconds: ms.clamp(
+                          0,
+                          player!.value.duration.inMilliseconds,
+                        ),
+                      ),
+                    );
+                    setState(() => controlsVisible = true);
+                  } else if (delta.dy.abs() > 12) {
+                    dragStart(
+                      DragStartDetails(localPosition: gestureStart),
+                      box.maxWidth,
+                    );
+                    dragUpdate(
+                      DragUpdateDetails(
+                        localPosition: d.localFocalPoint,
+                        globalPosition: d.focalPoint,
+                        delta: d.focalPointDelta,
+                      ),
+                      box.maxWidth,
+                    );
+                  }
+                },
+                onScaleEnd: (_) => dragEnd(DragEndDetails()),
                 onLongPressStart: (d) => horizontalSpeed(d, box.maxWidth),
                 onLongPressEnd: resetSpeed,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Center(
-                      child: AspectRatio(
-                        aspectRatio: player!.value.aspectRatio,
-                        child: VideoPlayer(player!),
+                    ClipRect(
+                      child: Center(
+                        child: Transform.translate(
+                          offset: videoOffset,
+                          child: Transform.scale(
+                            scale: videoScale,
+                            child: AspectRatio(
+                              aspectRatio: player!.value.aspectRatio,
+                              child: VideoPlayer(player!),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                     if (controlsVisible) ...[
@@ -1251,7 +1547,7 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
                                         ),
                                       ),
                                       tool(
-                                        Icons.bedtime_outlined,
+                                        Icons.nights_stay_outlined,
                                         socialText(
                                           context,
                                           'تایمر خواب',
@@ -1285,21 +1581,15 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
                                         active:
                                             repeatMode != VideoRepeatMode.off,
                                       ),
-                                      tool(
-                                        Icons.loop,
-                                        socialText(
-                                          context,
-                                          'حلقه بخش',
-                                          'Section loop',
-                                        ),
-                                        () {
+                                      AbRepeatButton(
+                                        repeat: abRepeat,
+                                        onPressed: () {
                                           setState(() {
                                             abRepeat.cycle(
                                               player!.value.position,
                                             );
                                           });
                                         },
-                                        active: abRepeat.start != null,
                                       ),
                                       tool(
                                         Icons.shuffle,

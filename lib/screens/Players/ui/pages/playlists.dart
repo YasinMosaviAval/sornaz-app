@@ -124,7 +124,8 @@ class _PlaylistsTabState extends State<PlaylistsTab> {
       animation: store,
       builder: (c, _) {
         final byPath = {
-          for (final file in player.allFiles) file.file.path: file,
+          for (final file in player.allFiles)
+            if (!player.settings.isHidden(file.file.path)) file.file.path: file,
         };
         final lists = [
           for (final e in store.lists.entries)

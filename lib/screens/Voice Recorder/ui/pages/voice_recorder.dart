@@ -138,6 +138,7 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
                 automaticallyImplyLeading: false,
                 leading: BackButton(onPressed: leave),
                 leadingWidth: 48,
+                title: Text(AppStrings.voice_recorder_title.translate(context)),
                 actions: [
                   if (!vm.isRecording && !vm.isPaused)
                     IconButton(

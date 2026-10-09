@@ -64,7 +64,7 @@ class _BrowserMusicPlayerState extends State<BrowserMusicPlayer> {
   Widget build(BuildContext context) => ScrollAwareScaffold(
     appBar: AppTopBarDirection(
       child: AppBar(
-        title: Text(socialText(context, 'پخش موسیقی', 'Music player')),
+        title: Text(socialText(context, 'پخش موسیقی', 'Music playback')),
       ),
     ),
 

@@ -15,6 +15,7 @@ class HomeTopBar extends StatelessWidget implements PreferredSizeWidget {
     this.leadingWidget,
     this.trailingWidget,
     this.extraActions = const [],
+    this.showLogo = true,
     this.onFilter,
     this.hint = '',
     this.initialQuery = '',
@@ -22,6 +23,7 @@ class HomeTopBar extends StatelessWidget implements PreferredSizeWidget {
 
   final Widget? leadingWidget, trailingWidget, flexibleSpace;
   final bool searchOnly;
+  final bool showLogo;
   final double? searchTextInset;
   final String? pageTitle;
   final List<Widget> extraActions;
@@ -55,17 +57,12 @@ class HomeTopBar extends StatelessWidget implements PreferredSizeWidget {
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         )
-      else
-        Padding(
-          padding: EdgeInsetsDirectional.only(
-            end: trailingWidget == null ? 20 : 12,
-          ),
-          child: SizedBox(
-            width: AppTopBarDirection.leadingWidth,
-            child:
-                trailingWidget ??
-                const Center(child: AppLogo(size: 40, withBackground: false)),
-          ),
+      else if (showLogo || trailingWidget != null)
+        SizedBox(
+          width: AppTopBarDirection.leadingWidth,
+          child:
+              trailingWidget ??
+              const Center(child: AppLogo(size: 40, withBackground: false)),
         ),
   ];
 
@@ -96,11 +93,7 @@ class HomeTopBar extends StatelessWidget implements PreferredSizeWidget {
         fieldKey: const ValueKey('home-search'),
         hint: hint,
         actions: _actions(),
-        actionsExtraWidth: searchOnly || leadingWidget != null
-            ? 0
-            : trailingWidget == null
-            ? 20
-            : 12,
+        actionsExtraWidth: 0,
       );
     }
     return AppTopBarDirection(

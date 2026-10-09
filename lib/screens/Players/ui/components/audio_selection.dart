@@ -1,4 +1,7 @@
 import 'player_dialog.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
+import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'package:sornaz/components/audio_crop_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -16,6 +19,15 @@ Future<void> audioAction(
   if (files.isEmpty) return;
   final provider = context.read<AudioPlayerProvider>();
   try {
+    if (action == 'hide')
+      await provider.settings.setOption('hiddenPaths', [
+        ...provider.settings.hiddenPaths,
+        ...files.map((f) => f.file.path),
+      ]);
+    if (action == 'ringtone')
+      await const MethodChannel(
+        'sornaz/music_tools',
+      ).invokeMethod('ringtone', {'path': files.single.file.path});
     if (action == 'crop' && files.length == 1) {
       final file = files.single;
       await provider.pause();
@@ -117,6 +129,25 @@ Future<void> audioAction(
         }
       }
     }
+  } on PlatformException catch (e) {
+    if (context.mounted)
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.code == 'PERMISSION'
+                ? socialText(
+                    context,
+                    'اجازه تغییر تنظیمات سیستم را بدهید و دوباره «قرار دادن به عنوان زنگ گوشی» را انتخاب کنید.',
+                    'Allow modifying system settings, then choose Set as Ringtone again.',
+                  )
+                : socialText(
+                    context,
+                    'تنظیم زنگ گوشی انجام نشد.',
+                    'Could not set the ringtone.',
+                  ),
+          ),
+        ),
+      );
   } catch (_) {
     if (context.mounted)
       ScaffoldMessenger.of(context).showSnackBar(
@@ -148,6 +179,17 @@ class AudioActionsMenu extends StatelessWidget {
       },
       itemBuilder: (_) => [
         for (final action in [
+          ('hide', socialText(context, 'مخفی کردن', 'Hide')),
+          if (files.length == 1 &&
+              defaultTargetPlatform == TargetPlatform.android)
+            (
+              'ringtone',
+              socialText(
+                context,
+                'قرار دادن به عنوان زنگ گوشی',
+                'Set as Ringtone',
+              ),
+            ),
           if (files.length == 1) ('rename', 'تغییر نام'),
           if (files.length == 1) ('crop', 'برش صدا'),
           ('playlist', 'افزودن به لیست پخش'),

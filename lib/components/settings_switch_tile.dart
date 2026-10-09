@@ -10,6 +10,7 @@ class SettingsSwitchTile extends StatelessWidget {
   final bool value;
   final bool isDark;
   final bool enabled;
+  final double? horizontalPadding;
 
   final IconData? leadingIcon;
   final ValueChanged<bool> onChanged;
@@ -23,6 +24,7 @@ class SettingsSwitchTile extends StatelessWidget {
     required this.onChanged,
     this.leadingIcon,
     this.enabled = true,
+    this.horizontalPadding,
   });
 
   @override
@@ -32,7 +34,9 @@ class SettingsSwitchTile extends StatelessWidget {
         : AppColors.settings_switch_tile_enabled_title_color(isDark: isDark);
 
     final effectiveSubtitleColor = !enabled
-        ? AppColors.settings_switch_tile_not_enabled_subtitle_color(isDark: isDark)
+        ? AppColors.settings_switch_tile_not_enabled_subtitle_color(
+            isDark: isDark,
+          )
         : AppColors.settings_switch_tile_enabled_subtitle_color(isDark: isDark);
 
     return InkWell(
@@ -44,42 +48,58 @@ class SettingsSwitchTile extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: AppSpacing.space_0),
           child: ListTile(
-            contentPadding: const EdgeInsets.fromLTRB(
-              AppSpacing.space_16, 
-              AppSpacing.space_0, 
-              AppSpacing.space_24, 
-              AppSpacing.space_0
-            ),
+            contentPadding: horizontalPadding == null
+                ? const EdgeInsets.fromLTRB(
+                    AppSpacing.space_16,
+                    0,
+                    AppSpacing.space_24,
+                    0,
+                  )
+                : EdgeInsets.symmetric(horizontal: horizontalPadding!),
 
             // ===== Leading Icon (optional)
             leading: leadingIcon != null
-                ? Icon(
-                    leadingIcon,
-                    color: effectiveTitleColor,
-                  )
+                ? Icon(leadingIcon, color: effectiveTitleColor)
                 : null,
 
             title: Text(
               title,
-              style: AppTypography.settingsSwitchTileItemTitle(context, effectiveTitleColor),
+              style: AppTypography.settingsSwitchTileItemTitle(
+                context,
+                effectiveTitleColor,
+              ),
             ),
 
             subtitle: Text(
               subtitle,
-              style: AppTypography.settingsSwitchTileItemSubtitle(context, effectiveSubtitleColor),
+              style: AppTypography.settingsSwitchTileItemSubtitle(
+                context,
+                effectiveSubtitleColor,
+              ),
             ),
 
             // ===== Switch
             trailing: Switch(
               value: value,
               onChanged: enabled ? onChanged : null,
-              inactiveThumbColor: AppColors.settings_switch_tile_inactive_thumb_color(isDark: isDark),
-              inactiveTrackColor: AppColors.settings_switch_tile_inactive_track_color(isDark: isDark),
-              activeTrackColor: AppColors.settings_switch_tile_active_track_color(isDark: isDark),
-              activeThumbColor: AppColors.settings_switch_tile_active_thumb_color(isDark: isDark),
+              inactiveThumbColor:
+                  AppColors.settings_switch_tile_inactive_thumb_color(
+                    isDark: isDark,
+                  ),
+              inactiveTrackColor:
+                  AppColors.settings_switch_tile_inactive_track_color(
+                    isDark: isDark,
+                  ),
+              activeTrackColor:
+                  AppColors.settings_switch_tile_active_track_color(
+                    isDark: isDark,
+                  ),
+              activeThumbColor:
+                  AppColors.settings_switch_tile_active_thumb_color(
+                    isDark: isDark,
+                  ),
             ),
             onTap: null,
-
           ),
         ),
       ),

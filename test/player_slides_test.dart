@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart' hide RepeatMode;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sornaz/screens/Players/services/player_settings.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/ab_repeat.dart';
 import 'package:sornaz/screens/Players/providers/audio_player_provider.dart';
@@ -10,6 +12,8 @@ import 'package:sornaz/screens/Players/ui/components/audio_controls.dart';
 import 'social_widget_test.dart' as fixture;
 
 class Audio extends ChangeNotifier implements AudioPlayerProvider {
+  @override
+  PlayerSettings get settings => PlayerSettings.instance;
   @override
   bool get isPlaying => false;
   @override
@@ -33,6 +37,41 @@ class Audio extends ChangeNotifier implements AudioPlayerProvider {
 }
 
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+  testWidgets('tab reordering and hiding preserve the selected page', (
+    tester,
+  ) async {
+    final settings = PlayerSettings.instance;
+    await settings.setOption('tabOrder', ['0', '1', '2', '3']);
+    await settings.setOption('hiddenTabs', <String>[]);
+    await tester.pumpWidget(
+      fixture.host(
+        const Scaffold(
+          body: MusicPlayerTabs(
+            pages: [
+              Center(child: Text('songs-page')),
+              Center(child: Text('folders-page')),
+              Center(child: Text('lists-page')),
+              Center(child: Text('equalizer-page')),
+            ],
+            controls: SizedBox(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await settings.setOption('tabOrder', ['2', '0', '3', '1']);
+    await tester.pumpAndSettle();
+    expect(find.text('songs-page').hitTestable(), findsOneWidget);
+    await settings.setOption('hiddenTabs', ['0']);
+    await tester.pumpAndSettle();
+    expect(tester.widget<TabBar>(find.byType(TabBar)).tabs.length, 3);
+    expect(find.text('lists-page').hitTestable(), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    await settings.setOption('tabOrder', ['0', '1', '2', '3']);
+    await settings.setOption('hiddenTabs', <String>[]);
+  });
   for (final direction in TextDirection.values) {
     testWidgets(
       'player slides retain physical left/right order with controls at 320: $direction',

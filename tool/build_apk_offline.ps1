@@ -1,7 +1,7 @@
 param(
     [string]$Flutter = 'flutter',
     [ValidateSet('android-arm', 'android-arm64', 'android-x64')]
-    [string[]]$TargetPlatform = @('android-arm', 'android-arm64', 'android-x64'),
+    [string[]]$TargetPlatform = @('android-arm64'),
     [string]$BuildNumber
 )
 
@@ -15,8 +15,9 @@ $previousPubHost = $env:PUB_HOSTED_URL
 $previousCargoOffline = $env:CARGO_NET_OFFLINE
 $previousCargoJobs = $env:CARGO_BUILD_JOBS
 Push-Location (Split-Path $PSScriptRoot -Parent)
+$buildWatch = [Diagnostics.Stopwatch]::StartNew()
+$buildStage = 'offline package resolution'
 try {
-    $buildWatch = [Diagnostics.Stopwatch]::StartNew()
     $env:SORNAZ_GRADLE_OFFLINE = 'true'
     $env:CI = 'true'
     # Android builds do not need desktop plugin symlinks / Windows Developer Mode.
@@ -35,8 +36,12 @@ try {
     if ($flutterExitCode -ne 0) {
         throw 'Offline package resolution failed. Prepare the locked Dart packages online first.'
     }
+    Write-Host ("Offline packages ready after {0:N1}s" -f $buildWatch.Elapsed.TotalSeconds)
+    $buildStage = 'native preparation'
     & (Join-Path $PSScriptRoot 'prepare_offline_native.ps1')
-    & (Join-Path $PSScriptRoot 'seed_flutter_engine_maven.ps1') -Flutter $Flutter
+    & (Join-Path $PSScriptRoot 'seed_flutter_engine_maven.ps1') -Flutter $Flutter -TargetPlatform $TargetPlatform
+    Write-Host ("Native dependencies ready after {0:N1}s" -f $buildWatch.Elapsed.TotalSeconds)
+    $buildStage = 'Flutter/Gradle compilation and packaging'
     $buildArguments = @('build', 'apk', '--release', '--no-pub', '--target-platform', ($TargetPlatform -join ','))
     if ($BuildNumber) { $buildArguments += @('--build-number', $BuildNumber) }
     $ErrorActionPreference = 'Continue'
@@ -51,6 +56,10 @@ try {
     Write-Host ("Offline build elapsed seconds: {0:N3}" -f $buildWatch.Elapsed.TotalSeconds)
     Write-Host ("Artifact SHA256: {0}" -f (Get-FileHash -LiteralPath $artifact.FullName -Algorithm SHA256).Hash)
     $artifact
+} catch {
+    $buildWatch.Stop()
+    Write-Warning ("Offline build stopped during {0} after {1:N1}s" -f $buildStage, $buildWatch.Elapsed.TotalSeconds)
+    throw
 } finally {
     $env:SORNAZ_GRADLE_OFFLINE = $previousOffline
     $env:CI = $previousCi

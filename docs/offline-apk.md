@@ -14,6 +14,19 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tool\build_apk_offline.ps1
 build\app\outputs\flutter-apk\app-release.apk
 ```
 
+از ۲۰۲۶/۱۰/۰۷ پیش‌فرض اسکریپت فقط ARM64 است. خروجی قبلی ۱۷۵٬۴۷۱٬۸۶۸
+بایتی، کتابخانه‌های سه معماری ARM64، ARMv7 و x86_64 را با هم داشت. بررسی
+محتوای آن نشان داد حدود ۱۵۷٫۵ مگابایت از حجم APK به فایل‌های بومی این سه
+معماری مربوط است. خروجی ARM64 تنها باید به‌طور محسوسی کوچک‌تر باشد، اما
+اندازهٔ دقیق آن تا اجرای ساخت جدید مشخص نیست. برای ساخت یک APK شامل هر سه
+معماری، پارامتر زیر را صریح وارد کنید:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tool\build_apk_offline.ps1 -TargetPlatform android-arm,android-arm64,android-x64
+```
+
+برای گوشی‌های ۳۲بیتی می‌توان `-TargetPlatform android-arm` را انتخاب کرد.
+
 برای افزایش شمارهٔ ساخت، مثلاً به ۲:
 
 ```powershell
@@ -36,6 +49,40 @@ APK نسخهٔ `1.0.0+1` با حجم ۳۶٬۹۲۴٬۷۱۲ بایت ساخته ش
 برای خروجی‌های بعدی، حفظ پوشهٔ `build` از تکرار کارهای بدون تغییر جلوگیری می‌کند.
 
 # Offline Android arm64 release
+
+## FFmpeg audio dependency added in October 2026
+
+Video-to-audio conversion adds `ffmpeg_kit_flutter_new_audio:2.5.7`. Its Dart
+package is in the Pub cache, but Android also needs the separate Maven artifact
+`com.antonkarpenko:ffmpeg-kit-audio:2.2.3`. Download the following files
+from Maven Central and place all three in
+`android/offline-maven/com/antonkarpenko/ffmpeg-kit-audio/2.2.3/`:
+
+- https://repo.maven.apache.org/maven2/com/antonkarpenko/ffmpeg-kit-audio/2.2.3/ffmpeg-kit-audio-2.2.3.aar
+- https://repo.maven.apache.org/maven2/com/antonkarpenko/ffmpeg-kit-audio/2.2.3/ffmpeg-kit-audio-2.2.3.pom
+- https://repo.maven.apache.org/maven2/com/antonkarpenko/ffmpeg-kit-audio/2.2.3/ffmpeg-kit-audio-2.2.3.module
+
+The three files were placed on 2026-10-07. The downloaded POM had a browser
+explanation line before its XML; that line was removed so Gradle can parse it.
+The AAR's SHA-256 matches the value in its module metadata. The exact version
+is routed exclusively to the local Maven repository in
+`android/build.gradle`; copying just the AAR into an arbitrary Gradle cache
+directory will not reliably satisfy offline resolution. After placing the
+files, run the dependency-only verification command below. It does not create
+an APK. On 2026-10-07 it passed offline with 58 compile and 111 runtime
+artifacts. The locked Dart packages also resolved with `flutter pub get
+--offline --enforce-lockfile`.
+
+The first full offline APK run then exposed one plugin-only compile dependency:
+`androidx.annotation:annotation:1.9.1`. The FFmpeg plugin is now routed to the
+already cached compatible `1.10.0` release in `android/build.gradle`. A second
+offline build completed successfully on 2026-10-07. The resulting APK was
+renamed in this workspace to `build/app/outputs/flutter-apk/app-release-8.apk`
+(175,471,868 bytes; SHA-256
+`57A2EA54C6B757E806641D1487FB5CC2DF3815D7CC9AD8926BB8E7B0B50A1981`).
+`apksigner verify` passed with a v2 signature, and the APK contains FFmpeg and
+metadata_god native libraries for armv7, arm64 and x86_64. Device installation
+and runtime behavior were not checked.
 
 The Flutter SDK, Android SDK, Dart packages, Gradle plugins and all artifacts must
 already be installed on this machine. --no-pub alone does not make Gradle offline.

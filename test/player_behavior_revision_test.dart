@@ -222,6 +222,72 @@ void main() {
     },
   );
 
+  testWidgets(
+    'normal replay starts at zero and disabling restore keeps it there',
+    (tester) async {
+      final library = AudioLibraryManager();
+      final controller = MemoryController();
+      final settings = PlayerSettings();
+      await settings.setOption('savePlaybackPosition', true);
+      final player = AudioPlayerProvider(
+        libraryManager: library,
+        controller: controller,
+        playbackSettings: settings,
+      );
+      player.setFileList(FolderAudio().allFiles);
+      await player.play(0);
+      await player.seek(const Duration(seconds: 37));
+      await player.stop();
+      await tester.pump(const Duration(seconds: 3));
+      await player.play(0);
+      expect(player.position, Duration.zero);
+      await player.stop();
+      await settings.setOption('savePlaybackPosition', false);
+      await player.play(0);
+      expect(player.position, Duration.zero);
+      await player.stop();
+      player.dispose();
+      library.dispose();
+      settings.dispose();
+    },
+  );
+
+  test(
+    'returning to the player starts the last file at its saved position',
+    () async {
+      final dir = await Directory.systemTemp.createTemp('sornaz-playback-');
+      final file = File('${dir.path}/last.mp3');
+      await file.writeAsBytes([0]);
+      final audio = AudioFile(
+        file: file,
+        fileName: 'last.mp3',
+        folderName: dir.path,
+        duration: const Duration(minutes: 2),
+      );
+      final settings = PlayerSettings();
+      await settings.setOption('savePlaybackPosition', true);
+      final library = AudioLibraryManager();
+      final controller = MemoryController();
+      final player = AudioPlayerProvider(
+        libraryManager: library,
+        controller: controller,
+        playbackSettings: settings,
+      );
+      player.setFileList([audio]);
+      await player.play(0);
+      await player.seek(const Duration(seconds: 43));
+      await player.stop();
+      await player.restoreLastPlayback();
+      expect(player.currentAudio?.file.path, file.path);
+      expect(player.isPlaying, true);
+      expect(player.position, const Duration(seconds: 43));
+      player.dispose();
+      library.dispose();
+      settings.dispose();
+      await dir.delete(recursive: true);
+    },
+  );
+
   testWidgets('audio folders expand independently without nested navigation', (
     tester,
   ) async {

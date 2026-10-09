@@ -3,7 +3,6 @@ import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/app_bar.dart';
-import 'package:sornaz/components/settings_section_header.dart';
 import 'package:sornaz/components/settings_switch_tile.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_constants.dart';
@@ -17,6 +16,29 @@ import 'package:sornaz/screens/Tuner/controller/tuner_provider.dart';
 
 class TunerSettingsPage extends StatelessWidget {
   const TunerSettingsPage({super.key});
+
+  Future<bool?> _chooseMode(
+    BuildContext context,
+    String title,
+    String first,
+    String second,
+  ) => showDialog<bool>(
+    context: context,
+    builder: (dialog) => SimpleDialog(
+      shape: RoundedRectangleBorder(borderRadius: appRadius(dialog)),
+      title: Text(title, style: Theme.of(dialog).textTheme.bodyMedium),
+      children: [
+        SimpleDialogOption(
+          onPressed: () => Navigator.pop(dialog, false),
+          child: Text(first, style: Theme.of(dialog).textTheme.bodyMedium),
+        ),
+        SimpleDialogOption(
+          onPressed: () => Navigator.pop(dialog, true),
+          child: Text(second, style: Theme.of(dialog).textTheme.bodyMedium),
+        ),
+      ],
+    ),
+  );
 
   Future<void> _sampleRate(BuildContext context, TunerProvider tuner) async {
     final current = tuner.sampleRate;
@@ -257,193 +279,228 @@ class TunerSettingsPage extends StatelessWidget {
         ),
         body: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.space_16,
-            ),
+            padding: EdgeInsets.zero,
             child: Column(
               children: [
-                SettingsSectionHeader(
-                  title: AppStrings.volumes.translate(context),
-                  leadingIcon: Icons.volume_up,
-                  children: [
-                    LabeledSlider(
-                      leadingIcon: Icon(
-                        Icons.access_alarm,
-                        color: AppColors.tuner_settings_icon_color(
-                          isDark: isDark,
-                        ),
-                        size: AppSpacing.space_20,
-                      ),
-                      // label: "Note duration (seconds)",
-                      // unit: AppStrings.second.translate(context),
-                      label:
-                          "${AppStrings.note_stretch.translate(context)} : ${tuner.noteDurationSeconds} ${AppStrings.second.translate(context)}",
-                      value: tuner.noteDurationSeconds.toDouble(),
-                      min: 1,
-                      max: 60,
-                      divisions: 59,
-                      isDark: isDark,
-                      onChanged: (value) {
-                        tuner.setNoteDuration(value.toInt());
-                      },
-                    ),
-                    LabeledSlider(
-                      leadingIcon: Icon(
-                        Icons.tune,
-                        color: AppColors.tuner_settings_icon_color(
-                          isDark: isDark,
-                        ),
-                        size: AppSpacing.space_20,
-                      ),
-                      label:
-                          "${AppStrings.set_base_frequency.translate(context)}${tuner.a4.toStringAsFixed(0)} ${AppStrings.hz.translate(context)}",
-                      value: tuner.a4,
-                      min: 420,
-                      max: 460,
-                      divisions: 40,
-                      isDark: isDark,
-                      onChanged: tuner.setA4,
-                    ),
-                    ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                      ),
-                      leading: Icon(
-                        Icons.graphic_eq,
-                        color: AppColors.tuner_settings_icon_color(
-                          isDark: isDark,
-                        ),
-                        size: AppSpacing.space_20,
-                      ),
-                      title: Text(
-                        isEnglish
-                            ? 'Tuner sample rate'
-                            : 'نرخ نمونه‌برداری تیونر',
-                      ),
-                      trailing: Text('${tuner.sampleRate} Hz'),
-                      onTap: () => _sampleRate(context, tuner),
-                    ),
-                    ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                      ),
-                      leading: Icon(
-                        Icons.timeline,
-                        color: AppColors.tuner_settings_icon_color(
-                          isDark: isDark,
-                        ),
-                        size: AppSpacing.space_20,
-                      ),
-                      title: Text(
-                        isEnglish
-                            ? 'Frequency graph fill time'
-                            : 'زمان پر شدن نمودار فرکانس',
-                      ),
-                      trailing: Text(
-                        '${tuner.graphFillDuration.toStringAsFixed(2)} ${isEnglish ? 's' : 'ثانیه'}',
-                      ),
-                      onTap: () => _graphFillDuration(context, tuner),
-                    ),
-                    LabeledSlider(
-                      leadingIcon: Icon(
-                        Icons.line_weight,
-                        color: AppColors.tuner_settings_icon_color(
-                          isDark: isDark,
-                        ),
-                        size: AppSpacing.space_20,
-                      ),
-                      label: isEnglish
-                          ? 'Tuner line thickness: ${tuner.lineThickness.toStringAsFixed(1)}'
-                          : 'ضخامت خط تیونر: ${tuner.lineThickness.toStringAsFixed(1)}',
-                      value: tuner.lineThickness,
-                      min: 1,
-                      max: 3,
-                      divisions: 20,
-                      isDark: isDark,
-                      onChanged: tuner.setLineThickness,
-                    ),
-                  ],
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+                  title: Text(
+                    isEnglish ? 'Tuner mode' : 'حالت تیونر',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  trailing: Text(
+                    tuner.professionalMode
+                        ? (isEnglish ? 'Professional tuner' : 'تیونر حرفه‌ای')
+                        : (isEnglish ? 'Normal tuner' : 'تیونر معمولی'),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  onTap: () async {
+                    final value = await _chooseMode(
+                      context,
+                      isEnglish ? 'Tuner mode' : 'حالت تیونر',
+                      isEnglish ? 'Normal tuner' : 'تیونر معمولی',
+                      isEnglish ? 'Professional tuner' : 'تیونر حرفه‌ای',
+                    );
+                    if (value != null) await tuner.setProfessionalMode(value);
+                  },
                 ),
-                SettingsSectionHeader(
-                  title: AppStrings.tools.translate(context),
-                  leadingIcon: Icons.construction_outlined,
-                  children: [
-                    LabeledSlider(
-                      leadingIcon: Icon(
-                        Icons.flag_outlined,
-                        color: AppColors.tuner_settings_icon_color(
-                          isDark: isDark,
-                        ),
-                        size: AppSpacing.space_20,
-                      ),
-                      label:
-                          "${AppStrings.starting_octave.translate(context)}: ${tuner.keyboardSettings.startOctave}",
-                      value: tuner.keyboardSettings.startOctave.toDouble(),
-                      min: 1,
-                      max: 6,
-                      divisions: 5,
-                      isDark: isDark,
-                      onChanged: (value) => tuner.setStartOctave(value.toInt()),
-                    ),
-                    LabeledSlider(
-                      leadingIcon: Icon(
-                        Icons.arrow_forward_outlined,
-                        color: AppColors.tuner_settings_icon_color(
-                          isDark: isDark,
-                        ),
-                        size: AppSpacing.space_20,
-                      ),
-                      label:
-                          "${AppStrings.number_of_octaves.translate(context)}: ${tuner.keyboardSettings.octaveCount}",
-                      value: tuner.keyboardSettings.octaveCount.toDouble(),
-                      min: 1,
-                      max: 6,
-                      divisions: 5,
-                      isDark: isDark,
-                      onChanged: (value) => tuner.setOctaveCount(value.toInt()),
-                    ),
-                    SettingsSwitchTile(
-                      title: AppStrings.highlight_a4_key.translate(context),
-                      subtitle: AppStrings.enable_a4_key_highlight.translate(
-                        context,
-                      ),
-                      value: tuner.keyboardSettings.highlightA4,
-                      isDark: isDark,
-                      onChanged: tuner.setHighlightA4,
-                    ),
-                    SettingsSwitchTile(
-                      title: AppStrings.frequencies_on_white_keys.translate(
-                        context,
-                      ),
-                      subtitle: AppStrings
-                          .enable_frequency_display_on_white_keys
-                          .translate(context),
-                      value: tuner.keyboardSettings.showWhiteKeyFrequencies,
-                      isDark: isDark,
-                      onChanged: (value) =>
-                          tuner.setShowWhiteKeyFrequencies(value),
-                    ),
-                    SettingsSwitchTile(
-                      title: AppStrings.frequencies_on_black_keys.translate(
-                        context,
-                      ),
-                      subtitle: AppStrings
-                          .enable_frequency_display_on_black_keys
-                          .translate(context),
-                      value: tuner.keyboardSettings.showBlackKeyFrequencies,
-                      isDark: isDark,
-                      onChanged: (value) =>
-                          tuner.setShowBlackKeyFrequencies(value),
-                    ),
-                    SettingsSwitchTile(
-                      title: AppStrings.quarter_tones.translate(context),
-                      subtitle: AppStrings.enable_iranian_quarter_tones
-                          .translate(context),
-                      value: tuner.keyboardSettings.showQuarterTones,
-                      isDark: isDark,
-                      onChanged: (_) => tuner.toggleQuarterTones(),
-                    ),
-                  ],
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+                  title: Text(
+                    isEnglish ? 'Playback type' : 'نوع پخش',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  trailing: Text(
+                    tuner.intermittentPlayback
+                        ? (isEnglish ? 'Intermittent' : 'پخش منفصل')
+                        : (isEnglish ? 'Continuous' : 'پخش ممتد'),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  onTap: () async {
+                    final value = await _chooseMode(
+                      context,
+                      isEnglish ? 'Playback type' : 'نوع پخش',
+                      isEnglish ? 'Continuous' : 'پخش ممتد',
+                      isEnglish ? 'Intermittent' : 'پخش منفصل',
+                    );
+                    if (value != null)
+                      await tuner.setIntermittentPlayback(value);
+                  },
+                ),
+                LabeledSlider(
+                  leadingIcon: Icon(
+                    Icons.access_alarm,
+                    color: AppColors.tuner_settings_icon_color(isDark: isDark),
+                    size: AppSpacing.space_20,
+                  ),
+                  // label: "Note duration (seconds)",
+                  // unit: AppStrings.second.translate(context),
+                  label:
+                      "${AppStrings.note_stretch.translate(context)} : ${tuner.noteDurationSeconds} ${AppStrings.second.translate(context)}",
+                  value: tuner.noteDurationSeconds.toDouble(),
+                  min: 1,
+                  max: 60,
+                  divisions: 59,
+                  isDark: isDark,
+                  onChanged: (value) {
+                    tuner.setNoteDuration(value.toInt());
+                  },
+                ),
+                LabeledSlider(
+                  leadingIcon: Icon(
+                    Icons.hourglass_empty,
+                    color: AppColors.tuner_settings_icon_color(isDark: isDark),
+                    size: AppSpacing.space_20,
+                  ),
+                  label: isEnglish
+                      ? 'Silence: ${tuner.silenceSeconds} seconds'
+                      : 'میزان سکوت: ${tuner.silenceSeconds} ثانیه',
+                  value: tuner.silenceSeconds.toDouble(),
+                  min: 1,
+                  max: 10,
+                  divisions: 9,
+                  isDark: isDark,
+                  enabled: tuner.intermittentPlayback,
+                  onChanged: (value) => tuner.setSilenceSeconds(value.toInt()),
+                ),
+                LabeledSlider(
+                  leadingIcon: Icon(
+                    Icons.tune,
+                    color: AppColors.tuner_settings_icon_color(isDark: isDark),
+                    size: AppSpacing.space_20,
+                  ),
+                  label:
+                      "${AppStrings.set_base_frequency.translate(context)}${tuner.a4.toStringAsFixed(0)} ${AppStrings.hz.translate(context)}",
+                  value: tuner.a4,
+                  min: 420,
+                  max: 460,
+                  divisions: 40,
+                  isDark: isDark,
+                  onChanged: tuner.setA4,
+                ),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+                  minLeadingWidth: 20,
+                  horizontalTitleGap: 4,
+                  leading: Icon(
+                    Icons.graphic_eq,
+                    color: AppColors.tuner_settings_icon_color(isDark: isDark),
+                    size: AppSpacing.space_20,
+                  ),
+                  title: Text(
+                    isEnglish ? 'Tuner sample rate' : 'نرخ نمونه‌برداری تیونر',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  trailing: Text('${tuner.sampleRate} Hz'),
+                  onTap: () => _sampleRate(context, tuner),
+                ),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+                  minLeadingWidth: 20,
+                  horizontalTitleGap: 4,
+                  leading: Icon(
+                    Icons.timeline,
+                    color: AppColors.tuner_settings_icon_color(isDark: isDark),
+                    size: AppSpacing.space_20,
+                  ),
+                  title: Text(
+                    isEnglish
+                        ? 'Frequency graph fill time'
+                        : 'زمان پر شدن نمودار فرکانس',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  trailing: Text(
+                    '${tuner.graphFillDuration.toStringAsFixed(2)} ${isEnglish ? 's' : 'ثانیه'}',
+                  ),
+                  onTap: () => _graphFillDuration(context, tuner),
+                ),
+                LabeledSlider(
+                  leadingIcon: Icon(
+                    Icons.line_weight,
+                    color: AppColors.tuner_settings_icon_color(isDark: isDark),
+                    size: AppSpacing.space_20,
+                  ),
+                  label: isEnglish
+                      ? 'Tuner line thickness: ${tuner.lineThickness.toStringAsFixed(1)}'
+                      : 'ضخامت خط تیونر: ${tuner.lineThickness.toStringAsFixed(1)}',
+                  value: tuner.lineThickness,
+                  min: 1,
+                  max: 3,
+                  divisions: 20,
+                  isDark: isDark,
+                  onChanged: tuner.setLineThickness,
+                ),
+                LabeledSlider(
+                  leadingIcon: Icon(
+                    Icons.flag_outlined,
+                    color: AppColors.tuner_settings_icon_color(isDark: isDark),
+                    size: AppSpacing.space_20,
+                  ),
+                  label:
+                      "${AppStrings.starting_octave.translate(context)}: ${tuner.keyboardSettings.startOctave}",
+                  value: tuner.keyboardSettings.startOctave.toDouble(),
+                  min: 1,
+                  max: 6,
+                  divisions: 5,
+                  isDark: isDark,
+                  onChanged: (value) => tuner.setStartOctave(value.toInt()),
+                ),
+                LabeledSlider(
+                  leadingIcon: Icon(
+                    Icons.arrow_forward_outlined,
+                    color: AppColors.tuner_settings_icon_color(isDark: isDark),
+                    size: AppSpacing.space_20,
+                  ),
+                  label:
+                      "${AppStrings.number_of_octaves.translate(context)}: ${tuner.keyboardSettings.octaveCount}",
+                  value: tuner.keyboardSettings.octaveCount.toDouble(),
+                  min: 1,
+                  max: 6,
+                  divisions: 5,
+                  isDark: isDark,
+                  onChanged: (value) => tuner.setOctaveCount(value.toInt()),
+                ),
+                SettingsSwitchTile(
+                  horizontalPadding: 24,
+                  title: AppStrings.highlight_a4_key.translate(context),
+                  subtitle: AppStrings.enable_a4_key_highlight.translate(
+                    context,
+                  ),
+                  value: tuner.keyboardSettings.highlightA4,
+                  isDark: isDark,
+                  onChanged: tuner.setHighlightA4,
+                ),
+                SettingsSwitchTile(
+                  horizontalPadding: 24,
+                  title: AppStrings.frequencies_on_white_keys.translate(
+                    context,
+                  ),
+                  subtitle: AppStrings.enable_frequency_display_on_white_keys
+                      .translate(context),
+                  value: tuner.keyboardSettings.showWhiteKeyFrequencies,
+                  isDark: isDark,
+                  onChanged: (value) => tuner.setShowWhiteKeyFrequencies(value),
+                ),
+                SettingsSwitchTile(
+                  horizontalPadding: 24,
+                  title: AppStrings.frequencies_on_black_keys.translate(
+                    context,
+                  ),
+                  subtitle: AppStrings.enable_frequency_display_on_black_keys
+                      .translate(context),
+                  value: tuner.keyboardSettings.showBlackKeyFrequencies,
+                  isDark: isDark,
+                  onChanged: (value) => tuner.setShowBlackKeyFrequencies(value),
+                ),
+                SettingsSwitchTile(
+                  horizontalPadding: 24,
+                  title: AppStrings.quarter_tones.translate(context),
+                  subtitle: AppStrings.enable_iranian_quarter_tones.translate(
+                    context,
+                  ),
+                  value: tuner.keyboardSettings.showQuarterTones,
+                  isDark: isDark,
+                  onChanged: (_) => tuner.toggleQuarterTones(),
                 ),
 
                 AppSpacing.sizedBoxH16(),

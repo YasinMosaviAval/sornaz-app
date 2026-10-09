@@ -18,6 +18,8 @@ import 'package:sornaz/screens/Others/ui/pages/settings.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 import 'package:sornaz/screens/Authentication/ui/pages/authentication.dart';
 import 'package:sornaz/screens/Others/ui/pages/support_pages.dart';
+import 'package:sornaz/screens/Others/ui/pages/app_release_info.dart';
+import 'package:sornaz/screens/Social/social_widgets.dart' show socialText;
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -129,6 +131,15 @@ class AppDrawer extends StatelessWidget {
                                 'اطلاعات شخصی کاربران محرمانه نگهداری می‌شود و جز در موارد قانونی یا با رضایت کاربر در اختیار شخص ثالث قرار نمی‌گیرد.',
                           ),
                         ),
+                        AppDrawerItem(
+                          icon: Icons.star_outline,
+                          text: socialText(
+                            context,
+                            'به ما امتیاز دهید',
+                            'Rate Us',
+                          ),
+                          link: const AppReleaseInfo(rating: true),
+                        ),
                         const Divider(),
                         const Padding(
                           padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
@@ -165,88 +176,117 @@ class AppDrawer extends StatelessWidget {
                         ),
                       ],
                     ),
-                    Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Ink(
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? const Color(0xff111111)
-                              : const Color(0xfff7f7f7),
-                          border: Border.all(
-                            color: isDark ? Colors.white12 : Colors.black12,
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 8,
                           ),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            ListTile(
-                              textColor: appData.accent,
-                              title: AppText(
-                                authUser == null
-                                    ? 'ورود یا ثبت‌نام'
-                                    : 'ورود با حساب دیگر',
+                          child: FutureBuilder<String>(
+                            future: AppReleaseInfo.version(),
+                            builder: (context, snapshot) => Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: Text(
+                                '${socialText(context, 'نسخه', 'Version')} ${snapshot.data ?? ''}',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
                               ),
-                              onTap: session.isChanging
-                                  ? null
-                                  : () => _accounts(context),
                             ),
-                            if (authUser != null)
-                              ListTile(
-                                textColor: AppColors.error,
-                                title: const AppText('خروج از حساب'),
-                                onTap: session.isChanging
-                                    ? null
-                                    : () async {
-                                        final session = context
-                                            .read<AuthSession>();
-                                        final selected =
-                                            await showModalBottomSheet<int>(
-                                              context: context,
-                                              builder: (c) => SafeArea(
-                                                child: ListView(
-                                                  shrinkWrap: true,
-                                                  children: [
-                                                    for (final account
-                                                        in session.accounts)
-                                                      ListTile(
-                                                        leading: AccountAvatar(
-                                                          avatar:
-                                                              account.avatar,
-                                                          token: session
-                                                              .tokenFor(
-                                                                account.id,
-                                                              ),
-                                                        ),
-                                                        title: Text(
-                                                          account.fullName,
-                                                        ),
-                                                        subtitle: Text(
-                                                          account.contact,
-                                                        ),
-                                                        trailing: const Icon(
-                                                          Icons.logout,
-                                                        ),
-                                                        onTap: () =>
-                                                            Navigator.pop(
-                                                              c,
-                                                              account.id,
-                                                            ),
-                                                      ),
-                                                  ],
-                                                ),
-                                              ),
-                                            );
-                                        if (selected == null) return;
-                                        await session.clear(
-                                          accountId: selected,
-                                        );
-                                        if (context.mounted) _home(context);
-                                      },
-                              ),
-                          ],
+                          ),
                         ),
-                      ),
+                        Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Ink(
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? const Color(0xff111111)
+                                  : const Color(0xfff7f7f7),
+                              border: Border.all(
+                                color: isDark ? Colors.white12 : Colors.black12,
+                              ),
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                ListTile(
+                                  textColor: appData.accent,
+                                  title: AppText(
+                                    authUser == null
+                                        ? 'ورود یا ثبت‌نام'
+                                        : 'ورود با حساب دیگر',
+                                  ),
+                                  onTap: session.isChanging
+                                      ? null
+                                      : () => _accounts(context),
+                                ),
+                                if (authUser != null)
+                                  ListTile(
+                                    textColor: AppColors.error,
+                                    title: const AppText('خروج از حساب'),
+                                    onTap: session.isChanging
+                                        ? null
+                                        : () async {
+                                            final session = context
+                                                .read<AuthSession>();
+                                            final selected =
+                                                await showModalBottomSheet<int>(
+                                                  context: context,
+                                                  builder: (c) => SafeArea(
+                                                    child: ListView(
+                                                      shrinkWrap: true,
+                                                      children: [
+                                                        for (final account
+                                                            in session.accounts)
+                                                          ListTile(
+                                                            leading:
+                                                                AccountAvatar(
+                                                                  avatar: account
+                                                                      .avatar,
+                                                                  token: session
+                                                                      .tokenFor(
+                                                                        account
+                                                                            .id,
+                                                                      ),
+                                                                ),
+                                                            title: Text(
+                                                              account.fullName,
+                                                            ),
+                                                            subtitle: Text(
+                                                              account.contact,
+                                                            ),
+                                                            trailing:
+                                                                const Icon(
+                                                                  Icons.logout,
+                                                                ),
+                                                            onTap: () =>
+                                                                Navigator.pop(
+                                                                  c,
+                                                                  account.id,
+                                                                ),
+                                                          ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                );
+                                            if (selected == null) return;
+                                            await session.clear(
+                                              accountId: selected,
+                                            );
+                                            if (context.mounted) _home(context);
+                                          },
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

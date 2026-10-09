@@ -199,6 +199,8 @@ class _HomeContentState extends State<HomeContent>
         builder: (context) => MainTabScaffold(
           index: 0,
           appBar: HomeTopBar(
+            showLogo:
+                !(context.watch<AuthSession?>()?.isAuthenticated ?? false),
             onSearch: (v) => setState(() => query = v.trim()),
             onFilter: filters,
             hint: socialText(
@@ -233,6 +235,7 @@ class _HomeContentState extends State<HomeContent>
                         ],
                         LearningHeading(
                           socialText(context, 'تازه‌های وبلاگ', 'New blog'),
+                          horizontalInset: 0,
                           onMore: () =>
                               socialPush(context, const ArticlesPage()),
                         ),
@@ -341,6 +344,7 @@ class _HomeContentState extends State<HomeContent>
                               'دوره‌های به‌روزشده',
                               'Updated courses',
                             ),
+                            horizontalInset: 0,
                             onMore: () =>
                                 socialPush(context, CoursesPage(api: api)),
                           ),
@@ -427,6 +431,7 @@ class _HomeContentState extends State<HomeContent>
                             'جامعه سرناز',
                             'Sornaz community',
                           ),
+                          horizontalInset: 0,
                           onMore: () =>
                               socialPush(context, CommunityPage(api: api)),
                         ),

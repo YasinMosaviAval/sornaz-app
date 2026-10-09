@@ -28,10 +28,18 @@ class MainActivity : AudioServiceActivity() {
     override fun onDestroy() { practiceMetronome?.stop(); storyMedia?.dispose(); super.onDestroy() }
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "sornaz/app_info").setMethodCallHandler { call, result ->
+            if (call.method == "version") {
+                val info = packageManager.getPackageInfo(packageName, 0)
+                val code = if (android.os.Build.VERSION.SDK_INT >= 28) info.longVersionCode else info.versionCode.toLong()
+                result.success("${info.versionName} ($code)")
+            } else result.notImplemented()
+        }
         storyMedia = StoryMedia(this, flutterEngine.dartExecutor.binaryMessenger)
         practiceMetronome = PracticeMetronome(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         notationStorage = NotationStorage(this, flutterEngine.dartExecutor.binaryMessenger)
         MusicMetadata(flutterEngine.dartExecutor.binaryMessenger)
+        MusicTools(this, flutterEngine.dartExecutor.binaryMessenger)
         AudioCrop(this, flutterEngine.dartExecutor.binaryMessenger)
         deviceVideos = DeviceVideos(this, flutterEngine.dartExecutor.binaryMessenger)
         MusicEqualizer(flutterEngine.dartExecutor.binaryMessenger)

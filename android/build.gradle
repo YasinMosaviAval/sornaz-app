@@ -14,6 +14,7 @@ allprojects {
                 includeVersion('org.jetbrains.kotlinx', 'kotlinx-coroutines-android', '1.9.0')
                 includeVersion('org.jetbrains.kotlinx', 'kotlinx-coroutines-guava', '1.9.0')
                 includeVersion('androidx.concurrent', 'concurrent-futures', '1.2.0')
+                includeVersion('com.antonkarpenko', 'ffmpeg-kit-audio', '2.2.3')
             }
         }
         // Flutter engine artifacts cached locally for reliable/offline builds.
@@ -41,6 +42,22 @@ buildscript {
 rootProject.buildDir = "../build"
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+subprojects { project ->
+    // The FFmpeg plugin asks for annotation 1.9.1, while the offline cache
+    // already contains the newer 1.10.0 artifact and its JVM variant.
+    if (project.name == 'ffmpeg_kit_flutter_new_audio') {
+        project.configurations.configureEach {
+            resolutionStrategy.eachDependency { details ->
+                if (details.requested.group == 'androidx.annotation' &&
+                    details.requested.name == 'annotation' &&
+                    details.requested.version == '1.9.1') {
+                    details.useVersion('1.10.0')
+                    details.because('Use the cached compatible AndroidX annotation release for offline builds')
+                }
+            }
+        }
+    }
 }
 subprojects {
     project.evaluationDependsOn(":app")

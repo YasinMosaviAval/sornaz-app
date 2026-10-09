@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.ContentUris
 import android.os.Build
 import android.provider.MediaStore
+import java.io.File
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 
@@ -45,16 +46,74 @@ class DeviceVideos(private val activity: Activity, messenger: BinaryMessenger) {
                     val entries = mutableListOf<Map<String, Any>>()
                     val collection = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
                     val columns = arrayOf(MediaStore.Video.Media._ID, MediaStore.Video.Media.DISPLAY_NAME,
-                        MediaStore.Video.Media.DURATION, MediaStore.Video.Media.BUCKET_DISPLAY_NAME, MediaStore.Video.Media.BUCKET_ID)
+                        MediaStore.Video.Media.DURATION, MediaStore.Video.Media.BUCKET_DISPLAY_NAME, MediaStore.Video.Media.BUCKET_ID,
+                        MediaStore.Video.Media.DATE_ADDED)
                     activity.contentResolver.query(collection, columns, null, null, "${MediaStore.Video.Media.DATE_ADDED} DESC")?.use { cursor ->
                         while (cursor.moveToNext()) {
                             entries.add(mapOf("uri" to ContentUris.withAppendedId(collection, cursor.getLong(0)).toString(),
                                 "name" to (cursor.getString(1) ?: "Video"), "duration" to cursor.getLong(2),
-                                "folder" to (cursor.getString(3) ?: "Videos"), "folderId" to cursor.getLong(4).toString()))
+                                "folder" to (cursor.getString(3) ?: "Videos"), "folderId" to cursor.getLong(4).toString(),
+                                "addedAt" to cursor.getLong(5)))
                         }
                     }
                     activity.runOnUiThread { result.success(entries) }
                 } catch (e: Exception) { activity.runOnUiThread { result.error("VIDEO_LIBRARY", e.message, null) } }
+            }.start()
+            else if (call.method == "stageAudioSource") Thread {
+                try {
+                    val uri = android.net.Uri.parse(call.argument<String>("uri")!!)
+                    require(uri.scheme == "content" && uri.authority == "media")
+                    val staged = File.createTempFile("audio-source-", ".mp4", activity.cacheDir)
+                    try {
+                        activity.contentResolver.openInputStream(uri)!!.use { input ->
+                            staged.outputStream().use { output -> input.copyTo(output) }
+                        }
+                        activity.runOnUiThread { result.success(staged.path) }
+                    } catch (e: Exception) { staged.delete(); throw e }
+                } catch (e: Exception) {
+                    activity.runOnUiThread { result.error("VIDEO_AUDIO", e.message, null) }
+                }
+            }.start()
+            else if (call.method == "saveAudioExport") Thread {
+                try {
+                    val staged = File(call.argument<String>("path")!!).canonicalFile
+                    val format = call.argument<String>("format")!!
+                    require(format in listOf("mp3", "m4a", "wav", "flac", "ogg"))
+                    require(staged.parentFile == activity.cacheDir.canonicalFile &&
+                        staged.name.startsWith("audio-export-") && staged.extension == format && staged.length() > 0)
+                    val mime = mapOf("mp3" to "audio/mpeg", "m4a" to "audio/mp4", "wav" to "audio/wav",
+                        "flac" to "audio/flac", "ogg" to "audio/ogg")[format]!!
+                    val name = "Sornaz_${System.currentTimeMillis()}.$format"
+                    if (Build.VERSION.SDK_INT >= 29) {
+                        val values = android.content.ContentValues().apply {
+                            put(MediaStore.Audio.Media.DISPLAY_NAME, name)
+                            put(MediaStore.Audio.Media.MIME_TYPE, mime)
+                            put(MediaStore.Audio.Media.RELATIVE_PATH, "Music/Sornaz")
+                            put(MediaStore.Audio.Media.IS_PENDING, 1)
+                        }
+                        val uri = activity.contentResolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, values)
+                            ?: error("Cannot create audio file")
+                        try {
+                            activity.contentResolver.openOutputStream(uri)!!.use { output ->
+                                staged.inputStream().use { input -> input.copyTo(output) }
+                            }
+                            activity.contentResolver.update(uri, android.content.ContentValues().apply {
+                                put(MediaStore.Audio.Media.IS_PENDING, 0)
+                            }, null, null)
+                            activity.runOnUiThread { result.success(uri.toString()) }
+                        } catch (e: Exception) { activity.contentResolver.delete(uri, null, null); throw e }
+                    } else {
+                        val folder = File(android.os.Environment.getExternalStoragePublicDirectory(
+                            android.os.Environment.DIRECTORY_MUSIC), "Sornaz").apply { mkdirs() }
+                        val target = File(folder, name)
+                        staged.copyTo(target)
+                        android.media.MediaScannerConnection.scanFile(activity, arrayOf(target.path), arrayOf(mime), null)
+                        activity.runOnUiThread { result.success(target.path) }
+                    }
+                    staged.delete()
+                } catch (e: Exception) {
+                    activity.runOnUiThread { result.error("VIDEO_AUDIO", e.message, null) }
+                }
             }.start()
             else if (call.method in listOf("rename", "delete", "share", "saveCrop")) {
                 try {

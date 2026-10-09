@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:async';
 import 'dart:isolate';
+import 'package:path/path.dart' as p;
 import 'package:sornaz/helpers/app_constants.dart';
 import 'scan_progress.dart';
 import 'audio_file.dart';
@@ -15,16 +16,18 @@ class AudioFileLoader {
     final receivePort = ReceivePort();
 
     // await Isolate.spawn(_scanIsolate as void Function(List<Object> message), [receivePort.sendPort, roots]);
-    await Isolate.spawn(_scanIsolate, [receivePort.sendPort, roots]);
-
-    await for (final message in receivePort) {
-      if (message is ScanStatus) {
-        onProgress(message);
-      } else if (message is List<AudioFile>) {
-        await onDone(message);
-        receivePort.close();
-        break;
+    try {
+      await Isolate.spawn(_scanIsolate, [receivePort.sendPort, roots]);
+      await for (final message in receivePort) {
+        if (message is ScanStatus) {
+          onProgress(message);
+        } else if (message is List<AudioFile>) {
+          await onDone(message);
+          break;
+        }
       }
+    } finally {
+      receivePort.close();
     }
   }
 
@@ -46,7 +49,6 @@ class AudioFileLoader {
 
     List<AudioFile> files = [];
     int scanned = 0;
-    int total = 0;
 
     Future<void> scanDirectory(Directory dir, Function(File) onFile) async {
       try {
@@ -65,32 +67,9 @@ class AudioFileLoader {
       }
     }
 
-    // sendPort.send(ScanStatus(scanned: 0, total: 0, currentPath: AppStrings.audio_file_loader_calculating.translate(context)));
     sendPort.send(
-      ScanStatus(scanned: 0, total: 0, currentPath: 'در حال شمارش...'),
+      ScanStatus(scanned: 0, total: 0, currentPath: 'در حال اسکن...'),
     );
-    for (var root in roots) {
-      if (root.existsSync()) {
-        await scanDirectory(root, (file) {
-          total++;
-          if (total % 50 == 0) {
-            sendPort.send(
-              ScanStatus(scanned: 0, total: total, currentPath: file.path),
-            );
-          }
-        });
-      }
-    }
-    // if(!context.mounted) return;
-    // sendPort.send(ScanStatus(scanned: 0, total: total, currentPath: AppStrings.audio_library_manager_fininshed_calculating.translate(context)));
-    sendPort.send(
-      ScanStatus(scanned: 0, total: total, currentPath: 'شمارش تمام شد'),
-    );
-    if (total == 0) {
-      sendPort.send(files);
-      return;
-    }
-
     for (var root in roots) {
       if (root.existsSync()) {
         await scanDirectory(root, (file) {
@@ -98,24 +77,23 @@ class AudioFileLoader {
           files.add(
             AudioFile(
               file: file,
-              fileName: file.path.split('/').last,
+              fileName: p.basename(file.path),
               folderName: file.parent.path,
               duration: Duration.zero,
             ),
           );
-          if (scanned % 20 == 0 || scanned == total) {
+          if (scanned % 20 == 0) {
             sendPort.send(
-              ScanStatus(
-                scanned: scanned,
-                total: total,
-                currentPath: file.path,
-              ),
+              ScanStatus(scanned: scanned, total: 0, currentPath: file.path),
             );
           }
         });
       }
     }
 
+    sendPort.send(
+      ScanStatus(scanned: scanned, total: scanned, currentPath: 'اسکن تمام شد'),
+    );
     sendPort.send(files);
   }
 }

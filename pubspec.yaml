@@ -43,7 +43,8 @@ dependencies:
   record: ^6.1.2
   path_provider: ^2.1.4
   just_waveform: ^0.0.7
-  metadata_god: ^1.1.0
+  metadata_god:
+    path: packages/metadata_god
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   logger: ^2.0.2+1
@@ -55,6 +56,8 @@ dependencies:
     sdk: flutter
   pdf: ^3.13.0
   xml: ^7.0.1
+  flutter_rust_bridge: 2.11.1
+  ffmpeg_kit_flutter_new_audio: 2.5.7
 
 
 dev_dependencies:

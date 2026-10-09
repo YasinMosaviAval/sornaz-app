@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'package:provider/provider.dart';
 import '../../providers/audio_player_provider.dart';
 import '../../scan/audio_file.dart';
@@ -28,17 +29,54 @@ class _FlatListViewState extends State<FlatListView> {
   Widget build(BuildContext context) {
     final controller = this.controller;
     final player = context.watch<AudioPlayerProvider>();
+    final settings = player.settings;
+    final visible = player.allFiles
+        .where((f) => !settings.isHidden(f.file.path))
+        .toList();
+    int compare(AudioFile a, AudioFile b) => settings.musicSort == 'duration'
+        ? a.duration.compareTo(b.duration)
+        : settings.musicSort == 'added'
+        ? a.addedAt.compareTo(b.addedAt)
+        : a.fileName.toLowerCase().compareTo(b.fileName.toLowerCase());
+    visible.sort(
+      (a, b) => settings.musicSortAscending ? compare(a, b) : compare(b, a),
+    );
     final path = player.currentAudio?.file.path;
     final changedTrack = path != lastPlaying;
     if (widget.folders && changedTrack && player.currentAudio != null) {
       expanded.add(player.currentAudio!.file.parent.path);
     }
     final groups = <String, List<AudioFile>>{};
-    for (final file in player.allFiles) {
+    for (final file in visible) {
       groups.putIfAbsent(file.file.parent.path, () => []).add(file);
     }
     final folderNames = groups.keys.toList()..sort();
-    final files = player.allFiles
+    if (settings.musicSort == 'count')
+      folderNames.sort(
+        (a, b) => groups[a]!.length.compareTo(groups[b]!.length),
+      );
+    if (settings.musicSort == 'duration')
+      folderNames.sort(
+        (a, b) => groups[a]!
+            .fold<int>(0, (n, f) => n + f.duration.inMilliseconds)
+            .compareTo(
+              groups[b]!.fold<int>(0, (n, f) => n + f.duration.inMilliseconds),
+            ),
+      );
+    if (settings.musicSort == 'added')
+      folderNames.sort((a, b) {
+        final aLatest = groups[a]!
+            .map((f) => f.addedAt)
+            .reduce((x, y) => x.isAfter(y) ? x : y);
+        final bLatest = groups[b]!
+            .map((f) => f.addedAt)
+            .reduce((x, y) => x.isAfter(y) ? x : y);
+        return aLatest.compareTo(bLatest);
+      });
+    if (!settings.musicSortAscending) {
+      folderNames.setAll(0, folderNames.reversed.toList());
+    }
+    final files = visible
         .where((f) => f.fileName.toLowerCase().contains(player.searchQuery))
         .toList();
     final rows = <Object>[];
@@ -113,18 +151,26 @@ class _FlatListViewState extends State<FlatListView> {
                   location: row,
                   duration: Duration.zero,
                   count: groups[row]!.length,
-                  leadingIcon: player.currentAudio?.file.parent.path == row
+                  leadingIcon: expanded.contains(row)
                       ? Icons.folder
                       : Icons.folder_outlined,
-                  isPlaying: player.currentAudio?.file.parent.path == row,
+                  isPlaying: expanded.contains(row),
                   onTap: () => setState(() {
                     if (!expanded.remove(row)) expanded.add(row);
                   }),
-                  trailing: Icon(
-                    expanded.contains(row)
-                        ? Icons.expand_less
-                        : Icons.expand_more,
-                    size: 24,
+                  trailing: PopupMenuButton<String>(
+                    onSelected: (_) => settings.setOption('hiddenPaths', [
+                      ...settings.hiddenPaths,
+                      row,
+                    ]),
+                    itemBuilder: (_) => [
+                      PopupMenuItem(
+                        value: 'hide',
+                        child: Text(
+                          socialText(context, 'مخفی کردن پوشه', 'Hide folder'),
+                        ),
+                      ),
+                    ],
                   ),
                 );
               }

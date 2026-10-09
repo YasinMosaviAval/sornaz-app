@@ -17,6 +17,7 @@ import 'package:sornaz/screens/Players/metadata/metadata_service.dart';
 import 'package:sornaz/screens/Players/playback/playback_history.dart';
 import 'package:sornaz/screens/Players/playback/playback_queue_manager.dart';
 import '../services/player_settings.dart';
+import '../services/last_playback_position.dart';
 import 'package:sornaz/screens/Players/scan/audio_file.dart';
 
 class AudioPlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
@@ -77,6 +78,7 @@ class AudioPlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> stop() async {
+    await _savePosition();
     setSleepTimer();
     _mediaActive = false;
     await _controller.stop();
@@ -96,6 +98,45 @@ class AudioPlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
   List<Duration> history = [];
   Timer? undoTimer;
   final PlayerSettings settings;
+  Timer? _positionTimer;
+  Future<void> _positionWrites = Future<void>.value();
+
+  Future<void> _writeLastPosition(String path, int milliseconds) {
+    final write = _positionWrites.then(
+      (_) => LastPlaybackPositionStore.saveMusic(path, milliseconds),
+    );
+    _positionWrites = write.catchError((_) {});
+    return write;
+  }
+
+  Future<void> _savePosition() async {
+    if (!settings.savePlaybackPosition ||
+        _playingAudio == null ||
+        !_mediaActive)
+      return;
+    await _writeLastPosition(_playingAudio!.file.path, position.inMilliseconds);
+  }
+
+  Future<void> restoreLastPlayback() async {
+    await settings.load();
+    if (!settings.savePlaybackPosition || isLoading) return;
+    if (_playingAudio != null && _mediaActive) {
+      if (!isPlaying) await resume();
+      return;
+    }
+    final saved = await LastPlaybackPositionStore.readMusic();
+    if (saved == null) return;
+    final files = allFiles
+        .where((f) => !settings.isHidden(f.file.path))
+        .toList();
+    final at = files.indexWhere((f) => f.file.path == saved.id);
+    if (at < 0 || !await File(saved.id).exists()) return;
+    filteredFiles = files;
+    _queue.setQueue(files.length);
+    await play(at, remember: false, restorePosition: saved.milliseconds);
+  }
+
+  void _settingsChanged() => notifyListeners();
   Timer? _sleepTimer;
   DateTime? sleepDeadline;
   Duration? sleepDuration;
@@ -110,6 +151,10 @@ class AudioPlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      unawaited(_savePosition());
+    }
     if (state == AppLifecycleState.detached)
       interrupt(PlaybackInterruption.exitApp);
   }
@@ -224,12 +269,18 @@ class AudioPlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  Future<void> play(int index, {bool remember = true}) async {
+  Future<void> play(
+    int index, {
+    bool remember = true,
+    int? restorePosition,
+  }) async {
     if (index < 0 || index >= filteredFiles.length || isLoading) return;
     if (remember && _playingAudio?.file.path != filteredFiles[index].file.path)
       _remember();
 
     try {
+      await settings.load();
+      await _savePosition();
       isLoading = true;
       notifyListeners();
 
@@ -244,6 +295,18 @@ class AudioPlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
 
       await _activateMedia();
       await _controller.playFile(filteredFiles[index].file.path);
+      if (restorePosition != null &&
+          restorePosition > 0 &&
+          (duration == Duration.zero ||
+              restorePosition < duration.inMilliseconds)) {
+        await _controller.seek(Duration(milliseconds: restorePosition));
+      }
+      if (settings.savePlaybackPosition) {
+        await _writeLastPosition(
+          filteredFiles[index].file.path,
+          position.inMilliseconds,
+        );
+      }
       loadCurrentMetadata();
     } catch (_) {
       await stop();
@@ -264,6 +327,10 @@ class AudioPlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
     _controller = controller ?? AudioPlayerController();
     _history = PlaybackHistoryManager();
     settings.load();
+    settings.addListener(_settingsChanged);
+    _positionTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (isPlaying) _savePosition();
+    });
     _queue = PlaybackQueueManager();
 
     isHiveLoading = true;
@@ -324,7 +391,11 @@ class AudioPlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
     );
   }
 
-  Future<void> pause() async => await _controller.pause();
+  Future<void> pause() async {
+    await _savePosition();
+    await _controller.pause();
+  }
+
   Future<void> resume() async {
     if (_playingAudio == null) return;
     _mediaActive = true;
@@ -589,6 +660,9 @@ class AudioPlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _savePosition();
+    _positionTimer?.cancel();
+    settings.removeListener(_settingsChanged);
     WidgetsBinding.instance.removeObserver(this);
     undoTimer?.cancel();
     _history.dispose();

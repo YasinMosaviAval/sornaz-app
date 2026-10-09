@@ -30,9 +30,11 @@ class AppTopBarDirection extends StatelessWidget
         textAlign: TextAlign.start,
         textDirection: value.textDirection,
         semanticsLabel: value.semanticsLabel,
-        style: (value.style ?? const TextStyle()).copyWith(
-          fontSize: titleSize(context),
-        ),
+        style:
+            (Theme.of(context).appBarTheme.titleTextStyle ??
+                    Theme.of(context).textTheme.titleMedium ??
+                    const TextStyle())
+                .copyWith(fontSize: titleSize(context)),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       );
@@ -40,9 +42,11 @@ class AppTopBarDirection extends StatelessWidget
       return AppText(
         value.data,
         key: value.key,
-        style: (value.style ?? const TextStyle()).copyWith(
-          fontSize: titleSize(context),
-        ),
+        style:
+            (Theme.of(context).appBarTheme.titleTextStyle ??
+                    Theme.of(context).textTheme.titleMedium ??
+                    const TextStyle())
+                .copyWith(fontSize: titleSize(context)),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       );

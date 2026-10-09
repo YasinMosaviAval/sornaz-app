@@ -1,4 +1,3 @@
-import 'social_direct.dart';
 export 'social_direct.dart';
 export 'story_page.dart';
 import 'package:sornaz/helpers/user_facing_error.dart';
@@ -8,6 +7,31 @@ import 'social_api.dart';
 import 'social_widgets.dart';
 import 'social_profile.dart';
 import 'user_panel.dart';
+
+const stageActivityKinds = <String>{
+  'comment',
+  'follow',
+  'like',
+  'post',
+  'story',
+  'publish',
+  'publication',
+  'post_published',
+  'story_published',
+};
+
+bool isStageActivityNotification(Json item) =>
+    stageActivityKinds.contains('${item['kind']}');
+
+int unreadStageActivityCount(Iterable<Json> items) => items
+    .where(
+      (item) => isStageActivityNotification(item) && item['read_at'] == null,
+    )
+    .length;
+
+int unreadConversationCount(Iterable<Json> conversations) => conversations
+    .where((conversation) => number(conversation['unread']) > 0)
+    .length;
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key, required this.api});
@@ -27,7 +51,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   Future<void> load() async {
     try {
-      final rows = objects(await widget.api.get('/notifications'));
+      final rows = objects(
+        await widget.api.get('/notifications'),
+      ).where(isStageActivityNotification).toList();
       if (mounted)
         setState(() {
           items = rows;
@@ -39,20 +65,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
   }
 
   Future<void> open(Json n) async {
+    if (!isStageActivityNotification(n)) return;
     try {
       await widget.api.post('/notifications/${n['id']}/read');
       if (!mounted) return;
       setState(() => n['read_at'] = 'read');
-      if (n['kind'] == 'message') {
-        await socialPush(
-          context,
-          ChatPage(
-            api: widget.api,
-            id: number(n['target_id']),
-            title: '${n['actor']['name']}',
-          ),
-        );
-      } else if (n['kind'] == 'follow') {
+      if (n['kind'] == 'follow') {
         await socialPush(
           context,
           ProfilePage(api: widget.api, userId: number(n['actor_id'])),

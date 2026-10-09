@@ -9,6 +9,8 @@ import 'package:sornaz/components/app_bar.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
+import 'package:sornaz/helpers/app_strings.dart';
+import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/screens/Tuner/controller/tuner_provider.dart';
 import 'package:sornaz/screens/Tuner/ui/pages/tuner_settings.dart';
 import 'package:sornaz/screens/Tuner/ui/components/detected_frequency.dart';
@@ -47,6 +49,7 @@ class _TunerPageState extends State<TunerPage> with WidgetsBindingObserver {
     } else if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
       tuner.stop();
+      tuner.stopNote();
     }
   }
 
@@ -54,6 +57,7 @@ class _TunerPageState extends State<TunerPage> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     tuner.stop();
+    tuner.stopNote();
     super.dispose();
   }
 
@@ -76,6 +80,7 @@ class _TunerView extends StatelessWidget {
 
     return ScrollAwareScaffold(
       appBar: SornazAppBar(
+        title: AppStrings.tuner_title.translate(context),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -89,55 +94,57 @@ class _TunerView extends StatelessWidget {
       backgroundColor: AppColors.tuner_page_background_color(isDark: isDark),
       body: Column(
         children: [
-          if (!tuner.supportsPitchDetection)
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                socialText(
-                  context,
-                  'تشخیص فرکانس میکروفون در این نسخهٔ ویندوز فعال نیست؛ می‌توانید از کیبورد برای پخش نت مرجع استفاده کنید.',
-                  'Microphone pitch detection is not available in this Windows version. Use the keyboard to play reference notes.',
+          if (!tuner.professionalMode) ...[
+            if (!tuner.supportsPitchDetection)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  socialText(
+                    context,
+                    'تشخیص فرکانس میکروفون در این نسخهٔ ویندوز فعال نیست؛ می‌توانید از کیبورد برای پخش نت مرجع استفاده کنید.',
+                    'Microphone pitch detection is not available in this Windows version. Use the keyboard to play reference notes.',
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
               ),
-            ),
-          if (tuner.detectionError != null)
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                children: [
-                  Text(
-                    socialText(
-                      context,
-                      tuner.detectionError == 'permission'
-                          ? 'برای تشخیص فرکانس، دسترسی به میکروفون را فعال کنید.'
-                          : 'دریافت صدای میکروفون متوقف شد. دوباره تلاش کنید.',
-                      tuner.detectionError == 'permission'
-                          ? 'Allow microphone access to detect pitch.'
-                          : 'Microphone input stopped. Please try again.',
+            if (tuner.detectionError != null)
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  children: [
+                    Text(
+                      socialText(
+                        context,
+                        tuner.detectionError == 'permission'
+                            ? 'برای تشخیص فرکانس، دسترسی به میکروفون را فعال کنید.'
+                            : 'دریافت صدای میکروفون متوقف شد. دوباره تلاش کنید.',
+                        tuner.detectionError == 'permission'
+                            ? 'Allow microphone access to detect pitch.'
+                            : 'Microphone input stopped. Please try again.',
+                      ),
                     ),
-                  ),
-                  TextButton(
-                    onPressed: tuner.start,
-                    child: Text(socialText(context, 'تلاش مجدد', 'Retry')),
-                  ),
-                ],
+                    TextButton(
+                      onPressed: tuner.start,
+                      child: Text(socialText(context, 'تلاش مجدد', 'Retry')),
+                    ),
+                  ],
+                ),
               ),
+            FrequencyInfoRow(
+              note: analyzed.note,
+              cents: analyzed.cents,
+              noteFreq: analyzed.targetFreq,
             ),
-          FrequencyInfoRow(
-            note: analyzed.note,
-            cents: analyzed.cents,
-            noteFreq: analyzed.targetFreq,
-          ),
-          FrequencyBox(
-            cents: analyzed.cents,
-            inRange: inRange,
-            active: active,
-            fillDuration: tuner.graphFillDuration,
-          ),
-          AppSpacing.sizedBoxH16(),
-          DetectedFrequency(frequency: tuner.frequency),
-          const SizedBox(height: 16),
+            FrequencyBox(
+              cents: analyzed.cents,
+              inRange: inRange,
+              active: active,
+              fillDuration: tuner.graphFillDuration,
+            ),
+            AppSpacing.sizedBoxH16(),
+            DetectedFrequency(frequency: tuner.frequency),
+            const SizedBox(height: 16),
+          ],
           Directionality(
             textDirection: TextDirection.ltr,
             child: Expanded(

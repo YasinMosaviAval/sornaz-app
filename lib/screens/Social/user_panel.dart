@@ -4,6 +4,8 @@ import 'story_seen.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:sornaz/components/home_top_bar.dart';
+import 'package:sornaz/components/app_top_bar_direction.dart';
+import 'package:sornaz/components/app_logo.dart';
 import 'package:sornaz/screens/Home/ui/components/app_drawer.dart';
 import 'package:sornaz/components/main_tabs.dart';
 import 'package:sornaz/components/join_community.dart';
@@ -33,6 +35,8 @@ class UserPanelPage extends StatelessWidget {
       return SocialScaffold(
         tabIndex: 2,
         title: socialText(context, 'صحنه', 'Stage'),
+        appBar: const GuestStageBar(),
+        drawer: const AppDrawer(),
         bottom: const BottomNavBarWidget(selectedIndex: 2),
         body: const JoinCommunity(),
       );
@@ -43,6 +47,39 @@ class UserPanelPage extends StatelessWidget {
       initialTab: initialTab,
     );
   }
+}
+
+class GuestStageBar extends StatelessWidget implements PreferredSizeWidget {
+  const GuestStageBar({super.key});
+
+  @override
+  Size get preferredSize => const Size.fromHeight(48);
+
+  @override
+  Widget build(BuildContext context) => AppTopBarDirection(
+    child: AppBar(
+      automaticallyImplyLeading: false,
+      leadingWidth: AppTopBarDirection.leadingWidth,
+      actions: const [
+        SizedBox(
+          width: AppTopBarDirection.leadingWidth,
+          child: Center(child: AppLogo(size: 40, withBackground: false)),
+        ),
+      ],
+      leading: Builder(
+        builder: (barContext) => Transform.translate(
+          offset: Offset(
+            Directionality.of(barContext) == TextDirection.rtl ? -12 : 12,
+            0,
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(barContext).openDrawer(),
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 class _Panel extends StatefulWidget {
@@ -73,7 +110,8 @@ class _PanelState extends State<_Panel> {
       group.every((s) => seenStories.contains(s['id'].toString()));
   Json? self;
   late int tab = widget.initialTab;
-  int unread = 0;
+  int unread = 0, unreadConversations = 0;
+  int conversationBadgeRequest = 0;
   String searchQuery = '';
   Timer? searchTimer;
   int searchVersion = 0;
@@ -120,6 +158,7 @@ class _PanelState extends State<_Panel> {
   }
 
   Future<void> load() async {
+    unawaited(loadConversationBadge());
     try {
       await restoreSeenStories();
       final data = await Future.wait([
@@ -142,7 +181,7 @@ class _PanelState extends State<_Panel> {
         ];
         final storyIds = <int>{};
         stories = stories.where((s) => storyIds.add(number(s['id']))).toList();
-        unread = objects(data[2]).where((n) => n['read_at'] == null).length;
+        unread = unreadStageActivityCount(objects(data[2]));
         loading = false;
         error = null;
         more = posts.length == 30;
@@ -154,6 +193,27 @@ class _PanelState extends State<_Panel> {
           loading = false;
         });
     }
+  }
+
+  Future<void> loadConversationBadge() async {
+    final request = ++conversationBadgeRequest;
+    try {
+      final conversations = objects(await api.get('/conversations'));
+      if (mounted && request == conversationBadgeRequest) {
+        setState(() => unreadConversations = unreadConversationCount(conversations));
+      }
+    } catch (_) {
+      // A conversation error must not block the stage feed.
+    }
+  }
+
+  Future<void> refreshNotificationBadge() async {
+    try {
+      final notifications = objects(await api.get('/notifications'));
+      if (mounted) {
+        setState(() => unread = unreadStageActivityCount(notifications));
+      }
+    } catch (_) {}
   }
 
   List<List<Json>> get storyGroups => groupStoriesByAuthor(
@@ -199,8 +259,18 @@ class _PanelState extends State<_Panel> {
             onSearch: searchCommunity,
             extraActions: [
               IconButton(
-                icon: const Icon(Icons.chat_bubble_outline),
-                onPressed: () => socialPush(context, DirectPage(api: api)),
+                icon: Badge(
+                  isLabelVisible: unreadConversations > 0,
+                  label: Text('$unreadConversations'),
+                  child: const Icon(Icons.chat_bubble_outline),
+                ),
+                onPressed: () async {
+                  await socialPush(context, DirectPage(api: api));
+                  if (mounted) {
+                    unawaited(loadConversationBadge());
+                    unawaited(refreshNotificationBadge());
+                  }
+                },
               ),
               IconButton(
                 icon: Badge(
@@ -210,7 +280,7 @@ class _PanelState extends State<_Panel> {
                 ),
                 onPressed: () async {
                   await socialPush(context, NotificationsPage(api: api));
-                  if (mounted) load();
+                  if (mounted) unawaited(refreshNotificationBadge());
                 },
               ),
             ],

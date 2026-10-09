@@ -15,6 +15,7 @@ import 'package:sornaz/screens/Articles/provider/articles_provider.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 import 'package:sornaz/screens/Players/cache/audio_cache_factory.dart';
 import 'package:sornaz/screens/Players/library/audio_library_manager.dart';
+import 'package:sornaz/screens/Players/library/audio_library_lifecycle.dart';
 import 'package:sornaz/screens/Players/providers/audio_player_provider.dart';
 import 'package:sornaz/screens/Players/providers/folder_navigator_provider.dart';
 import 'package:sornaz/screens/Players/scan/audio_file_hive.dart';
@@ -55,6 +56,7 @@ void main() async {
   Hive.registerAdapter(AudioFileHiveAdapter());
 
   final libraryManager = AudioLibraryManager();
+  final folderNavigator = FolderNavigatorProvider();
   if (!kIsWeb) {
     final cache = await AudioCacheFactory.getCache();
     final cachedFiles = await cache.loadCachedFiles();
@@ -77,7 +79,7 @@ void main() async {
               library!..setLocale(locale.locale.languageCode),
         ),
         ChangeNotifierProvider(create: (_) => AuthSession()..restore()),
-        ChangeNotifierProvider(create: (_) => FolderNavigatorProvider()),
+        ChangeNotifierProvider(create: (_) => folderNavigator),
         ChangeNotifierProvider(create: (_) => libraryManager),
         ChangeNotifierProvider(
           create: (_) => AudioPlayerProvider(libraryManager: libraryManager),
@@ -90,7 +92,13 @@ void main() async {
           )..init(),
         ),
       ],
-      child: const MyApp(),
+      child: AppPlatform.isAndroid
+          ? AudioLibraryLifecycle(
+              library: libraryManager,
+              folders: folderNavigator,
+              child: const MyApp(),
+            )
+          : const MyApp(),
     ),
   );
 }

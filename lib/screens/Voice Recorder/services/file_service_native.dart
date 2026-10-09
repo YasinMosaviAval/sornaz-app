@@ -63,8 +63,17 @@ class FileService {
   }
 
   Future<void> preparePublicStorage() async {
+    if (AppPlatform.isAndroid && (_sdk ?? 29) >= 30) {
+      final customFolder = await location();
+      if (!customFolder.startsWith('content://') &&
+          !await Permission.manageExternalStorage.request().isGranted) {
+        throw const FileSystemException(
+          'Storage access is required to save in Sornaz/Voice Recorder.',
+        );
+      }
+    }
     if (AppPlatform.isAndroid &&
-        (_sdk ?? 29) < 29 &&
+        (_sdk ?? 29) < 30 &&
         !await Permission.storage.request().isGranted) {
       throw const FileSystemException(
         'Storage permission is required on Android 9 and earlier.',
@@ -199,7 +208,7 @@ class FileService {
       ? (await const MethodChannel(
               'sornaz/recording_workspace',
             ).invokeMethod<String>('location')) ??
-            'Music/Sornaz'
+            'Sornaz/Voice Recorder'
       : _dir.path;
   Future<void> chooseLocation() async {
     if (AppPlatform.isAndroid)

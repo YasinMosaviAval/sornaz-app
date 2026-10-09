@@ -175,8 +175,14 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byType(SwitchListTile), findsNWidgets(5));
+    expect(find.byType(SwitchListTile), findsNWidgets(6));
+    expect(find.text('Save/Restore Playback Position'), findsOneWidget);
     expect(find.text('Stop when entering the voice recorder'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Sleep Timer'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     player.setSleepTimer(duration: const Duration(minutes: 5));
     await tester.pump();
     expect(find.text('5 minutes'), findsOneWidget);

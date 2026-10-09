@@ -1,0 +1,116 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.antonkarpenko",
+    "module": "ffmpeg-kit-audio",
+    "version": "2.2.3",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.14.3"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseVariantReleaseApiPublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib-jdk8",
+          "version": {
+            "requires": "1.8.22"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "ffmpeg-kit-audio-2.2.3.aar",
+          "url": "ffmpeg-kit-audio-2.2.3.aar",
+          "size": 51299672,
+          "sha512": "48cb139875bc863718ad76ca5e77978ed1d325035a4c53d5070453a7ff2166d66f02b8d66c71fd7d60619bea53e7b61fc65a1f95ef17bcac23ad50b9bbdc7d40",
+          "sha256": "fdd535e5d518d9fc5e7ffe0e66208a5cf59fa581133427e0daa182b37553adee",
+          "sha1": "a40a59197212067b4e89b3a9bc3e0e11c9c92e85",
+          "md5": "d05e281306b4332cfe501be79aa85621"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseRuntimePublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib-jdk8",
+          "version": {
+            "requires": "1.8.22"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "ffmpeg-kit-audio-2.2.3.aar",
+          "url": "ffmpeg-kit-audio-2.2.3.aar",
+          "size": 51299672,
+          "sha512": "48cb139875bc863718ad76ca5e77978ed1d325035a4c53d5070453a7ff2166d66f02b8d66c71fd7d60619bea53e7b61fc65a1f95ef17bcac23ad50b9bbdc7d40",
+          "sha256": "fdd535e5d518d9fc5e7ffe0e66208a5cf59fa581133427e0daa182b37553adee",
+          "sha1": "a40a59197212067b4e89b3a9bc3e0e11c9c92e85",
+          "md5": "d05e281306b4332cfe501be79aa85621"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseSourcePublication",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "ffmpeg-kit-audio-2.2.3-sources.jar",
+          "url": "ffmpeg-kit-audio-2.2.3-sources.jar",
+          "size": 47404,
+          "sha512": "43709e652030007b41293c0365e4479e5e344a4087b36c756d34c89a73ddd6b3fa5f76ab76a11a5f58f7a6efa09d897fe1e9ae4dd669c0b438e872f1f2c412b6",
+          "sha256": "08ac5cb6c97ac299ab0fa4d17e37f0cfe0b7ec88c47f8b49021f3ae9ed9f49fc",
+          "sha1": "9b8b382a40ae82e55424789952cbfa1ce0c0f592",
+          "md5": "57a2c8cca22ef905f24696d0719192d2"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseJavaDocPublication",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "javadoc",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "ffmpeg-kit-audio-2.2.3-javadoc.jar",
+          "url": "ffmpeg-kit-audio-2.2.3-javadoc.jar",
+          "size": 412894,
+          "sha512": "deb912949d25f51f3320e4d3413e8c7d0cb77294019ed4dff83c6f88df7e6123a275e64a542080ed075d79c4c6e740c0590ea0bb6ab88640ea896406ff1deb36",
+          "sha256": "74de64dcb56accf8c254a4ae51c318d88d1022ab7a065a063f04cb93f559e69f",
+          "sha1": "d565df441bfd807b27e45dada0f22ec797fa0cca",
+          "md5": "55f5fa88b5b480439b6a5025f8ebd66b"
+        }
+      ]
+    }
+  ]
+}

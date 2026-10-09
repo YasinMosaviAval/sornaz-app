@@ -142,6 +142,7 @@ class _MetronomePageState extends State<MetronomePage>
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: ScrollAwareScaffold(
         appBar: SornazAppBar(
+          title: AppStrings.metronome_title.translate(context),
           actions: [
             IconButton(
               icon: const Icon(Icons.settings),

@@ -1,17 +1,27 @@
 import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/components/app_text.dart';
+import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:flutter/material.dart';
 import 'social_api.dart';
 import 'social_widgets.dart';
 import 'social_courses.dart';
 
 class LearningHeading extends StatelessWidget {
-  const LearningHeading(this.title, {super.key, this.onMore});
+  const LearningHeading(
+    this.title, {
+    super.key,
+    this.onMore,
+    this.horizontalInset = AppTopBarDirection.contentInset,
+  });
   final String title;
   final VoidCallback? onMore;
+  final double horizontalInset;
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 16),
+    padding: EdgeInsets.symmetric(
+      horizontal: horizontalInset,
+      vertical: 16,
+    ),
     child: Row(
       children: [
         Expanded(
@@ -23,6 +33,11 @@ class LearningHeading extends StatelessWidget {
         if (onMore != null)
           TextButton(
             onPressed: onMore,
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.zero,
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
             child: AppText(socialText(context, 'مشاهده همه', 'View all')),
           ),
       ],

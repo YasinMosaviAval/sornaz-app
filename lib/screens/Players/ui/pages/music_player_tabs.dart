@@ -6,6 +6,7 @@ import '../components/bottom_player.dart';
 import '../components/player_slide_navigation.dart';
 import 'equalizer.dart';
 import 'playlists.dart';
+import '../../services/player_settings.dart';
 
 class MusicPlayerTabs extends StatefulWidget {
   const MusicPlayerTabs({
@@ -27,21 +28,53 @@ class MusicPlayerTabs extends StatefulWidget {
 }
 
 class _MusicPlayerTabsState extends State<MusicPlayerTabs>
-    with SingleTickerProviderStateMixin {
-  late final tabs = TabController(length: widget.pages.length, vsync: this);
+    with TickerProviderStateMixin {
+  late TabController tabs;
+  List<int> visible = [];
+  final settings = PlayerSettings.instance;
+  void syncTabs() {
+    final next = settings.tabOrder
+        .map(int.parse)
+        .where(
+          (i) => i < widget.pages.length && !settings.hiddenTabs.contains('$i'),
+        )
+        .toList();
+    if (next.isEmpty) next.add(0);
+    if (visible.join(',') == next.join(',')) return;
+    final selected = visible.isEmpty ? 0 : visible[tabs.index];
+    if (visible.isNotEmpty) {
+      tabs.removeListener(changed);
+      tabs.dispose();
+    }
+    visible = next;
+    tabs = TabController(
+      length: visible.length,
+      vsync: this,
+      initialIndex: visible.contains(selected) ? visible.indexOf(selected) : 0,
+    );
+    tabs.addListener(changed);
+    if (mounted) setState(() {});
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onTabChanged?.call(visible[tabs.index]);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-    tabs.addListener(changed);
+    syncTabs();
+    settings.addListener(syncTabs);
+    settings.load();
   }
 
   void changed() {
     if (mounted) setState(() {});
-    widget.onTabChanged?.call(tabs.index);
+    widget.onTabChanged?.call(visible[tabs.index]);
   }
 
   @override
   void dispose() {
+    settings.removeListener(syncTabs);
     tabs.removeListener(changed);
     tabs.dispose();
     super.dispose();
@@ -50,23 +83,30 @@ class _MusicPlayerTabsState extends State<MusicPlayerTabs>
   @override
   Widget build(BuildContext context) => PlayerSlideNavigation(
     page: tabs.index,
-    count: widget.pages.length,
+    count: visible.length,
     go: tabs.animateTo,
     child: Column(
       children: [
         TabBar(
           controller: tabs,
           labelPadding: EdgeInsets.zero,
-          labelStyle: const TextStyle(fontSize: 12),
+          labelStyle: Theme.of(context).textTheme.labelLarge,
           tabs: [
-            Tab(text: socialText(context, 'آهنگ‌ها', 'Songs')),
-            Tab(text: socialText(context, 'پوشه‌ها', 'Folders')),
-            Tab(text: socialText(context, 'لیست پخش‌ها', 'Playlists')),
-            Tab(text: socialText(context, 'اکولایزر', 'Equalizer')),
+            for (final i in visible)
+              Tab(
+                text: socialText(
+                  context,
+                  const ['آهنگ‌ها', 'پوشه‌ها', 'لیست پخش‌ها', 'اکولایزر'][i],
+                  const ['Songs', 'Folders', 'Playlists', 'Equalizer'][i],
+                ),
+              ),
           ],
         ),
         Expanded(
-          child: TabBarView(controller: tabs, children: widget.pages),
+          child: TabBarView(
+            controller: tabs,
+            children: [for (final i in visible) widget.pages[i]],
+          ),
         ),
         widget.controls,
       ],

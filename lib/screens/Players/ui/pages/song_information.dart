@@ -1,6 +1,7 @@
-﻿import 'package:sornaz/helpers/app_appearance.dart';
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'lyrics.dart';
+import 'edit_song_metadata.dart';
 import '../../metadata/audio_metadata.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 
@@ -15,7 +16,7 @@ import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/screens/Players/providers/audio_player_provider.dart';
 
-class NowPlayingInfoTab extends StatelessWidget {
+class NowPlayingInfoTab extends StatefulWidget {
   const NowPlayingInfoTab({
     super.key,
     this.fileName,
@@ -24,6 +25,15 @@ class NowPlayingInfoTab extends StatelessWidget {
   });
   final String? fileName, filePath;
   final AudioMetadata? metadata;
+  @override
+  State<NowPlayingInfoTab> createState() => _NowPlayingInfoTabState();
+}
+
+class _NowPlayingInfoTabState extends State<NowPlayingInfoTab> {
+  AudioMetadata? edited;
+  String? get fileName => widget.fileName;
+  String? get filePath => widget.filePath;
+  AudioMetadata? get metadata => edited ?? widget.metadata;
   @override
   Widget build(BuildContext context) {
     // final appData = context.watch<AppData>();
@@ -70,10 +80,34 @@ class NowPlayingInfoTab extends StatelessWidget {
         ),
       ),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            TextButton.icon(
+              icon: const Icon(Icons.edit),
+              label: Text(
+                socialText(
+                  context,
+                  'ویرایش اطلاعات و کاور',
+                  'Edit information and cover',
+                ),
+              ),
+              onPressed: () async {
+                final provider = context.read<AudioPlayerProvider>();
+                final path = filePath ?? audio!.currentAudio!.file.path;
+                final saved = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EditSongMetadata(path: path),
+                  ),
+                );
+                if (saved == true && filePath != null) {
+                  final updated = await provider.extractMetadata(path);
+                  if (mounted) setState(() => edited = updated);
+                }
+              },
+            ),
             AppSpacing.sizedBoxH32(),
             Center(
               child: meta?.artwork != null

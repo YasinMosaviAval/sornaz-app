@@ -5,20 +5,36 @@ import 'package:sornaz/helpers/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/expanding_search_bar.dart';
+import 'package:sornaz/helpers/app_appearance.dart';
 
 import '../../providers/audio_player_provider.dart';
+import '../../library/audio_library_manager.dart';
 import '../../services/player_settings.dart';
 import '../pages/playlists.dart';
+import '../pages/music_library_settings.dart';
 import 'player_dialog.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
 
 class SearchBarWidget extends StatelessWidget implements PreferredSizeWidget {
-  const SearchBarWidget({super.key, this.tab = 0});
+  const SearchBarWidget({super.key, this.tab = 0, this.onRescan});
   final int tab;
+  final VoidCallback? onRescan;
   @override
   Size get preferredSize => const Size.fromHeight(48);
   @override
   Widget build(BuildContext context) {
+    final scanning = context.select<AudioLibraryManager, bool>(
+      (library) => library.isScanning,
+    );
+    Widget rescanButton() => IconButton(
+      tooltip: socialText(
+        context,
+        'اسکن مجدد فایل‌های صوتی',
+        'Rescan audio files',
+      ),
+      onPressed: scanning ? null : onRescan,
+      icon: const Icon(Icons.refresh, size: 24),
+    );
     void settings() => Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const PlayerSettingsPage()),
@@ -30,10 +46,15 @@ class SearchBarWidget extends StatelessWidget implements PreferredSizeWidget {
         builder: (c, _) => AppTopBarDirection(
           child: AppBar(
             title: Text(
-              socialText(context, 'پخش‌کننده موسیقی', 'Music player'),
-              style: const TextStyle(fontSize: 16),
+              socialText(context, 'پخش موسیقی', 'Music playback'),
+              style:
+                  Theme.of(c).appBarTheme.titleTextStyle?.copyWith(
+                    fontSize: AppTopBarDirection.titleSize(c),
+                  ) ??
+                  TextStyle(fontSize: AppTopBarDirection.titleSize(c)),
             ),
             actions: [
+              rescanButton(),
               IconButton(
                 tooltip: socialText(
                   context,
@@ -68,16 +89,29 @@ class SearchBarWidget extends StatelessWidget implements PreferredSizeWidget {
       );
     }
     return ExpandingSearchBar(
-      title: Row(
-        children: [
-          const BackButton(),
-          Expanded(
-            child: Text(
-              socialText(context, 'پخش‌کننده موسیقی', 'Music player'),
-              style: const TextStyle(fontSize: 16),
+      title: Transform.translate(
+        offset: Offset(
+          Localizations.localeOf(context).languageCode == 'fa' ? 12 : -12,
+          0,
+        ),
+        child: Row(
+          children: [
+            const SizedBox(
+              width: AppTopBarDirection.leadingWidth,
+              child: BackButton(),
             ),
-          ),
-        ],
+            Expanded(
+              child: Text(
+                socialText(context, 'پخش موسیقی', 'Music playback'),
+                style:
+                    Theme.of(context).appBarTheme.titleTextStyle?.copyWith(
+                      fontSize: AppTopBarDirection.titleSize(context),
+                    ) ??
+                    TextStyle(fontSize: AppTopBarDirection.titleSize(context)),
+              ),
+            ),
+          ],
+        ),
       ),
       searchIconSize: 24,
       searchIconColor: AppColors.sornaz_app_bar_text_color(
@@ -85,6 +119,7 @@ class SearchBarWidget extends StatelessWidget implements PreferredSizeWidget {
       ),
       onChanged: context.read<AudioPlayerProvider>().filter,
       actions: [
+        rescanButton(),
         if (tab == 2)
           IconButton(
             tooltip: 'لیست پخش جدید',
@@ -125,6 +160,35 @@ class PlayerSettingsPage extends StatelessWidget {
         body: ListView(
           padding: const EdgeInsets.symmetric(vertical: 12),
           children: [
+            for (final entry in [
+              ('sort', 'مرتب‌سازی تب‌ها', 'Sort Tabs'),
+              ('hide', 'مخفی کردن تب‌ها', 'Hide Tabs'),
+              ('files', 'فایل‌ها و پوشه‌های مخفی', 'Hidden Files and Folders'),
+            ])
+              ListTile(
+                title: Text(
+                  socialText(c, entry.$2, entry.$3),
+                  style: Theme.of(c).textTheme.bodyMedium,
+                ),
+                onTap: () => Navigator.push(
+                  c,
+                  MaterialPageRoute(
+                    builder: (_) => MusicLibrarySettings(mode: entry.$1),
+                  ),
+                ),
+              ),
+            SwitchListTile(
+              title: Text(
+                socialText(
+                  c,
+                  'ذخیره و بازیابی موقعیت پخش',
+                  'Save/Restore Playback Position',
+                ),
+                style: Theme.of(c).textTheme.bodyMedium,
+              ),
+              value: settings.savePlaybackPosition,
+              onChanged: (v) => settings.setOption('savePlaybackPosition', v),
+            ),
             for (final entry in {
               PlaybackInterruption.leavePlayer: socialText(
                 c,
@@ -170,12 +234,89 @@ class PlayerSettingsPage extends StatelessWidget {
                   ),
                   title: Text(
                     entry.value,
-                    style: const TextStyle(fontSize: 13),
+                    style: Theme.of(c).textTheme.bodyMedium,
                   ),
                   value: settings.stopsFor(entry.key),
                   onChanged: (v) => settings.setStop(entry.key, v),
                 ),
               ),
+            ListTile(
+              title: Text(
+                socialText(c, 'مرتب‌سازی', 'Sort'),
+                style: Theme.of(c).textTheme.bodyMedium,
+              ),
+              trailing: Text(switch (settings.musicSort) {
+                'name' => socialText(c, 'حروف الفبا', 'Alphabetical'),
+                'duration' => socialText(c, 'مدت زمان', 'Duration'),
+                'count' => socialText(
+                  c,
+                  'تعداد آهنگ‌های پوشه',
+                  'Audio count in folders',
+                ),
+                _ => socialText(
+                  c,
+                  'تاریخ و زمان اضافه شدن',
+                  'Date and time added',
+                ),
+              }, style: Theme.of(c).textTheme.bodySmall),
+              onTap: () async {
+                final value = await showDialog<String>(
+                  context: c,
+                  builder: (dialog) => SimpleDialog(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: appRadius(dialog),
+                    ),
+                    title: Text(
+                      socialText(dialog, 'مرتب‌سازی', 'Sort'),
+                      style: Theme.of(dialog).textTheme.bodyMedium,
+                    ),
+                    children: [
+                      for (final entry in [
+                        (
+                          'added',
+                          'تاریخ و زمان اضافه شدن',
+                          'Date and time added',
+                        ),
+                        ('name', 'حروف الفبا', 'Alphabetical'),
+                        ('duration', 'مدت زمان', 'Duration'),
+                        (
+                          'count',
+                          'تعداد آهنگ‌های پوشه',
+                          'Audio count in folders',
+                        ),
+                      ])
+                        SimpleDialogOption(
+                          onPressed: () => Navigator.pop(dialog, entry.$1),
+                          child: Text(
+                            socialText(dialog, entry.$2, entry.$3),
+                            style: Theme.of(dialog).textTheme.bodyMedium,
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+                if (value != null) {
+                  await settings.setOption('musicSort', value);
+                  await settings.setOption(
+                    'musicSortAscending',
+                    value == 'name' || value == 'duration',
+                  );
+                }
+              },
+            ),
+            SwitchListTile(
+              title: Text(
+                socialText(c, 'ترتیب صعودی', 'Ascending order'),
+                style: Theme.of(c).textTheme.bodyMedium,
+              ),
+              subtitle: Text(
+                socialText(c, 'خاموش: نزولی', 'Off: descending'),
+                style: Theme.of(c).textTheme.bodySmall,
+              ),
+              value: settings.musicSortAscending,
+              onChanged: (value) =>
+                  settings.setOption('musicSortAscending', value),
+            ),
             InkWell(
               onTap: () async {
                 final action = await showDialog<ListEndAction>(
@@ -344,16 +485,18 @@ Future<void> showSleepTimer(
           ),
           PlayerDialogButton(
             onPressed: () {
-              if (form.currentState!.validate())
+              if (form.currentState!.validate()) {
                 Navigator.pop(c, int.parse(minutes));
+              }
             },
             child: Text(socialText(c, 'شروع', 'Start')),
           ),
         ],
       ),
     );
-    if (custom != null)
+    if (custom != null) {
       player.setSleepTimer(duration: Duration(minutes: custom));
+    }
   } else {
     player.setSleepTimer(
       duration: value > 0 ? Duration(minutes: value) : null,

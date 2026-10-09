@@ -1,4 +1,8 @@
-param([string]$Flutter = 'flutter')
+param(
+    [string]$Flutter = 'flutter',
+    [ValidateSet('android-arm', 'android-arm64', 'android-x64')]
+    [string[]]$TargetPlatform = @('android-arm', 'android-arm64', 'android-x64')
+)
 
 $ErrorActionPreference = 'Stop'
 $flutterCommand = (Get-Command $Flutter -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
@@ -10,10 +14,11 @@ Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 foreach ($item in @(
-    @{ artifact = 'armeabi_v7a_release'; folder = 'android-arm-release'; abi = 'armeabi-v7a' },
-    @{ artifact = 'arm64_v8a_release'; folder = 'android-arm64-release'; abi = 'arm64-v8a' },
-    @{ artifact = 'x86_64_release'; folder = 'android-x64-release'; abi = 'x86_64' }
+    @{ platform = 'android-arm'; artifact = 'armeabi_v7a_release'; folder = 'android-arm-release'; abi = 'armeabi-v7a' },
+    @{ platform = 'android-arm64'; artifact = 'arm64_v8a_release'; folder = 'android-arm64-release'; abi = 'arm64-v8a' },
+    @{ platform = 'android-x64'; artifact = 'x86_64_release'; folder = 'android-x64-release'; abi = 'x86_64' }
 )) {
+    if ($item.platform -notin $TargetPlatform) { continue }
     $source = Join-Path $flutterRoot ('bin/cache/artifacts/engine/' + $item.folder + '/flutter.jar')
     if (!(Test-Path -LiteralPath $source)) { throw "Missing Flutter SDK artifact: $source" }
     $version = '1.0.0-' + $revision

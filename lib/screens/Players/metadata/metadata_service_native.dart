@@ -6,10 +6,12 @@ import 'audio_metadata.dart';
 
 class MetadataService {
   static Future<void>? _initialization;
+  static Future<void> ensureInitialized() =>
+      _initialization ??= MetadataGod.initialize();
   static Future<AudioMetadata> extract(String path) async {
     Metadata meta = const Metadata();
     try {
-      await (_initialization ??= MetadataGod.initialize());
+      await ensureInitialized();
       meta = await MetadataGod.readMetadata(file: path);
     } catch (_) {}
 

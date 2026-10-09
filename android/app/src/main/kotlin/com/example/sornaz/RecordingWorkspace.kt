@@ -13,7 +13,7 @@ class RecordingWorkspace(private val activity: Activity, messenger: BinaryMessen
     init {
         MethodChannel(messenger, "sornaz/recording_workspace").setMethodCallHandler { call, result ->
             when(call.method) {
-                "location" -> result.success(prefs.getString("tree", null) ?: "Music/Sornaz")
+                "location" -> result.success(prefs.getString("tree", null) ?: "Sornaz/Voice Recorder")
                 "choose" -> {
                     if (pending != null) { result.error("BUSY", "Folder selection is already open", null) }
                     else {

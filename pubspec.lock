@@ -393,6 +393,22 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.2.0"
+  ffmpeg_kit_flutter_new_audio:
+    dependency: "direct main"
+    description:
+      name: ffmpeg_kit_flutter_new_audio
+      sha256: "05d49d170cdc1d077a59fbb0c77fef321d6b9cdcc42653f2b1c4b70640d74c38"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.5.7"
+  ffmpeg_kit_flutter_platform_interface:
+    dependency: transitive
+    description:
+      name: ffmpeg_kit_flutter_platform_interface
+      sha256: addf046ae44e190ad0101b2fde2ad909a3cd08a2a109f6106d2f7048b7abedee
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.2.1"
   file:
     dependency: transitive
     description:
@@ -500,13 +516,13 @@ packages:
     source: hosted
     version: "2.6.1"
   flutter_rust_bridge:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: flutter_rust_bridge
-      sha256: ec69331e2335ab4d456c0a9fc700892c2c85b72b9c0cb39df3ecfe8833d5d5c8
+      sha256: "37ef40bc6f863652e865f0b2563ea07f0d3c58d8efad803cc01933a4b2ee067e"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.13.0"
+    version: "2.11.1"
   flutter_secure_storage:
     dependency: "direct main"
     description:
@@ -864,10 +880,9 @@ packages:
   metadata_god:
     dependency: "direct main"
     description:
-      name: metadata_god
-      sha256: "2b19b7e88cf5ab7016fe8d1f868bb35a193aaef06fd96cfc7de4ec3eacc16eb0"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
+      path: "packages/metadata_god"
+      relative: true
+    source: path
     version: "1.1.0"
   metronome:
     dependency: "direct main"
@@ -1691,7 +1706,7 @@ packages:
     source: hosted
     version: "1.1.0"
   xml:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: xml
       sha256: "67f0aff7be013d107995e9b75bf4e7f2c3ef2dfdb2c8e68024bba0a7fd5756a4"

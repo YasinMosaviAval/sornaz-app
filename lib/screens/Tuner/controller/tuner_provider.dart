@@ -10,7 +10,8 @@ import 'package:sornaz/screens/Tuner/utils/tuner_math.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TunerProvider extends ChangeNotifier {
-  TunerProvider() {
+  TunerProvider({NotePlayer? notePlayer})
+    : notePlayer = notePlayer ?? NotePlayer() {
     _sampleRateLoaded = _loadSampleRate();
   }
   static const defaultSampleRate = 88200;
@@ -36,6 +37,12 @@ class TunerProvider extends ChangeNotifier {
   String note = AppConstants.EMPTY_TEXT;
 
   int noteDurationSeconds = 3;
+  int silenceSeconds = 1;
+  bool intermittentPlayback = false;
+  bool professionalMode = false;
+  Timer? _noteTimer;
+  int _noteGeneration = 0;
+  final NotePlayer notePlayer;
 
   Future<void> _loadSampleRate() async {
     final preferences = await SharedPreferences.getInstance();
@@ -44,6 +51,8 @@ class TunerProvider extends ChangeNotifier {
     final graphFillDurationValue = preferences.getDouble(
       'tuner.graphFillDuration',
     );
+    final durationValue = preferences.getInt('tuner.noteDurationSeconds');
+    final silenceValue = preferences.getInt('tuner.silenceSeconds');
     if (_disposed) return;
     if (sampleRateValue != null &&
         sampleRateValue >= 8000 &&
@@ -60,6 +69,15 @@ class TunerProvider extends ChangeNotifier {
         graphFillDurationValue <= 30) {
       graphFillDuration = graphFillDurationValue;
     }
+    if (durationValue != null && durationValue >= 1 && durationValue <= 60) {
+      noteDurationSeconds = durationValue;
+    }
+    if (silenceValue != null && silenceValue >= 1 && silenceValue <= 10) {
+      silenceSeconds = silenceValue;
+    }
+    intermittentPlayback =
+        preferences.getBool('tuner.intermittentPlayback') ?? false;
+    professionalMode = preferences.getBool('tuner.professionalMode') ?? false;
     notifyListeners();
   }
 
@@ -101,9 +119,48 @@ class TunerProvider extends ChangeNotifier {
     );
   }
 
-  void setNoteDuration(int seconds) {
-    noteDurationSeconds = seconds;
+  Future<void> setNoteDuration(int seconds) async {
+    await _sampleRateLoaded;
+    noteDurationSeconds = seconds.clamp(1, 60);
     notifyListeners();
+    await _saveInt('tuner.noteDurationSeconds', noteDurationSeconds);
+  }
+
+  Future<void> setSilenceSeconds(int seconds) async {
+    await _sampleRateLoaded;
+    silenceSeconds = seconds.clamp(1, 10);
+    notifyListeners();
+    await _saveInt('tuner.silenceSeconds', silenceSeconds);
+  }
+
+  Future<void> _saveInt(String key, int value) async {
+    await (await SharedPreferences.getInstance()).setInt(key, value);
+  }
+
+  Future<void> setIntermittentPlayback(bool value) async {
+    await _sampleRateLoaded;
+    if (intermittentPlayback == value) return;
+    await stopNote();
+    intermittentPlayback = value;
+    notifyListeners();
+    await (await SharedPreferences.getInstance()).setBool(
+      'tuner.intermittentPlayback',
+      value,
+    );
+  }
+
+  Future<void> setProfessionalMode(bool value) async {
+    await _sampleRateLoaded;
+    if (professionalMode == value) return;
+    await stopNote();
+    if (value) await stop();
+    professionalMode = value;
+    notifyListeners();
+    await (await SharedPreferences.getInstance()).setBool(
+      'tuner.professionalMode',
+      value,
+    );
+    if (!value) await start();
   }
 
   void setA4(double frequencyBase) {
@@ -111,13 +168,32 @@ class TunerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void playNote(double freq) async {
-    await notePlayer.play(freq, noteDurationSeconds);
+  Future<void> playNote(double freq) async {
+    final generation = ++_noteGeneration;
+    _noteTimer?.cancel();
+    _noteTimer = null;
+    await _playCycle(freq, generation, 1);
   }
 
-  final NotePlayer notePlayer = NotePlayer();
+  Future<void> _playCycle(double freq, int generation, int cycle) async {
+    if (_disposed || generation != _noteGeneration) return;
+    await notePlayer.play(freq, noteDurationSeconds);
+    if (_disposed || generation != _noteGeneration || !professionalMode) return;
+    _noteTimer = Timer(Duration(seconds: noteDurationSeconds), () async {
+      if (_disposed || generation != _noteGeneration) return;
+      await notePlayer.stop();
+      if (_disposed || generation != _noteGeneration || cycle >= 10) return;
+      _noteTimer = Timer(
+        Duration(seconds: intermittentPlayback ? silenceSeconds : 0),
+        () => unawaited(_playCycle(freq, generation, cycle + 1)),
+      );
+    });
+  }
 
   Future<void> stopNote() async {
+    ++_noteGeneration;
+    _noteTimer?.cancel();
+    _noteTimer = null;
     await notePlayer.stop();
   }
 
@@ -139,9 +215,11 @@ class TunerProvider extends ChangeNotifier {
   bool get supportsPitchDetection =>
       kIsWeb || AppPlatform.isAndroid || AppPlatform.isIOS;
 
-  Future<void> start() {
+  Future<void> start() async {
+    await _sampleRateLoaded;
+    if (_disposed || professionalMode) return;
     _requested = true;
-    return _reconcile();
+    await _reconcile();
   }
 
   Future<void> stop() {
@@ -223,7 +301,7 @@ class TunerProvider extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     unawaited(stop());
-    unawaited(notePlayer.stop());
+    unawaited(stopNote());
     super.dispose();
   }
 

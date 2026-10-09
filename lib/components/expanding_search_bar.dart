@@ -1,4 +1,5 @@
 import 'sleep_timer_chrome.dart';
+import 'app_top_bar_direction.dart';
 import 'package:flutter/material.dart';
 
 class ExpandingSearchBar extends StatefulWidget implements PreferredSizeWidget {
@@ -70,7 +71,9 @@ class _ExpandingSearchBarState extends State<ExpandingSearchBar> {
               if (widget.background != null)
                 Positioned.fill(child: widget.background!),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTopBarDirection.contentInset,
+                ),
                 child: LayoutBuilder(
                   builder: (_, constraints) => Row(
                     children: [

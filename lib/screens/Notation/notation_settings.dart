@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'music_analysis_test_page.dart';
+import 'package:sornaz/helpers/app_appearance.dart';
 
 class NotationSettingsPage extends StatefulWidget {
   const NotationSettingsPage({super.key});
@@ -72,100 +72,103 @@ class _NotationSettingsPageState extends State<NotationSettingsPage> {
     }
   }
 
+  Future<int?> chooseOption(String title, List<(int, String)> options) =>
+      showDialog<int>(
+        context: context,
+        builder: (dialog) => SimpleDialog(
+          shape: RoundedRectangleBorder(borderRadius: appRadius(dialog)),
+          title: Text(title, style: Theme.of(dialog).textTheme.bodyMedium),
+          children: [
+            for (final option in options)
+              SimpleDialogOption(
+                onPressed: () => Navigator.pop(dialog, option.$1),
+                child: Text(
+                  option.$2,
+                  style: Theme.of(dialog).textTheme.bodyMedium,
+                ),
+              ),
+          ],
+        ),
+      );
+
   @override
   Widget build(BuildContext context) => SocialScaffold(
     title: socialText(context, 'تنظیمات نت‌نویسی', 'Notation settings'),
     body: ListView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
       children: [
         ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.analytics_outlined),
-          title: Text(
-            socialText(
-              context,
-              'آزمایش تحلیل اجرا',
-              'Performance analysis test',
-            ),
-          ),
-          onTap: () => socialPush(context, const MusicAnalysisTestPage()),
-        ),
-        const Divider(height: 1),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
           title: Text(
             socialText(context, 'حالت انتخاب کشش نت', 'Note duration mode'),
+            style: Theme.of(context).textTheme.bodyMedium,
           ),
-          trailing: DropdownButton<int>(
-            value: durationMode,
-            onChanged: setDurationMode,
-            items: [
-              DropdownMenuItem(
-                value: 1,
-                child: Text(socialText(context, 'حالت اول', 'Mode one')),
-              ),
-              DropdownMenuItem(
-                value: 2,
-                child: Text(socialText(context, 'حالت دوم', 'Mode two')),
-              ),
-              DropdownMenuItem(
-                value: 3,
-                child: Text(socialText(context, 'حالت سوم', 'Mode three')),
-              ),
-            ],
+          trailing: Text(
+            socialText(
+              context,
+              switch (durationMode) {
+                2 => 'حالت دوم',
+                3 => 'حالت سوم',
+                _ => 'حالت اول',
+              },
+              switch (durationMode) {
+                2 => 'Mode two',
+                3 => 'Mode three',
+                _ => 'Mode one',
+              },
+            ),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          onTap: () async => setDurationMode(
+            await chooseOption(
+              socialText(context, 'حالت انتخاب کشش نت', 'Note duration mode'),
+              [
+                (1, socialText(context, 'حالت اول', 'Mode one')),
+                (2, socialText(context, 'حالت دوم', 'Mode two')),
+                (3, socialText(context, 'حالت سوم', 'Mode three')),
+              ],
+            ),
           ),
         ),
-        const Divider(height: 1),
         ListTile(
-          contentPadding: EdgeInsets.zero,
           title: Text(
             socialText(
               context,
               'نمایش نت‌ها روی کلیدهای پیانو',
               'Piano key note labels',
             ),
+            style: Theme.of(context).textTheme.bodyMedium,
           ),
-          trailing: DropdownButton<int>(
-            value: pianoLabelMode,
-            onChanged: setPianoLabelMode,
-            items: [
-              DropdownMenuItem(
-                value: 1,
-                child: Text(socialText(context, 'تمام نت‌ها', 'All notes')),
-              ),
-              DropdownMenuItem(
-                value: 2,
-                child: Text(
-                  socialText(context, 'نت‌های گام', 'Scale notes only'),
-                ),
-              ),
-            ],
+          trailing: Text(
+            pianoLabelMode == 2
+                ? socialText(context, 'نت‌های گام', 'Scale notes only')
+                : socialText(context, 'تمام نت‌ها', 'All notes'),
+            style: Theme.of(context).textTheme.bodySmall,
           ),
-        ),
-        const Divider(height: 1),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  socialText(context, 'محل ذخیره‌سازی', 'Storage location'),
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 12),
-                Text(location, textDirection: TextDirection.ltr),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: busy ? null : choose,
-                  icon: const Icon(Icons.folder_open),
-                  label: Text(
-                    socialText(context, 'تغییر پوشه', 'Change folder'),
-                  ),
-                ),
+          onTap: () async => setPianoLabelMode(
+            await chooseOption(
+              socialText(
+                context,
+                'نمایش نت‌ها روی کلیدهای پیانو',
+                'Piano key note labels',
+              ),
+              [
+                (1, socialText(context, 'تمام نت‌ها', 'All notes')),
+                (2, socialText(context, 'نت‌های گام', 'Scale notes only')),
               ],
             ),
           ),
+        ),
+        ListTile(
+          title: Text(
+            socialText(context, 'محل ذخیره‌سازی', 'Storage location'),
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          subtitle: Text(
+            Uri.decodeFull(location),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          trailing: const Icon(Icons.folder_open),
+          onTap: busy ? null : choose,
         ),
       ],
     ),

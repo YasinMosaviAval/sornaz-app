@@ -3,6 +3,8 @@ import 'package:sornaz/components/main_tabs.dart';
 import 'package:sornaz/components/home_top_bar.dart';
 import '../components/app_drawer.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 import 'package:sornaz/components/bottom_nav.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'package:sornaz/screens/Players/ui/pages/music_palyer.dart';
@@ -10,6 +12,8 @@ import 'package:sornaz/screens/Players/ui/pages/video_player_page.dart';
 import 'package:sornaz/screens/Metronome/ui/pages/metronome_page.dart';
 import 'package:sornaz/screens/Tuner/ui/pages/tuner_page.dart';
 import 'package:sornaz/screens/Voice%20Recorder/ui/pages/voice_recorder.dart';
+import 'package:sornaz/screens/Notation/music_analysis_test_page.dart';
+import 'solfege_practice_page.dart';
 
 class MusicToolsPage extends StatelessWidget {
   const MusicToolsPage({super.key});
@@ -19,7 +23,10 @@ class MusicToolsPage extends StatelessWidget {
       : SocialScaffold(
           tabIndex: 3,
           title: socialText(context, 'ابزار موسیقی', 'Music tools'),
-          appBar: const HomeTopBar(),
+          appBar: HomeTopBar(
+            showLogo:
+                !(context.watch<AuthSession?>()?.isAuthenticated ?? false),
+          ),
           drawer: const AppDrawer(),
           bottom: const BottomNavBarWidget(selectedIndex: 3),
           body: ListView(
@@ -34,14 +41,14 @@ class MusicToolsPage extends StatelessWidget {
                 ),
                 (
                   Icons.library_music_outlined,
-                  'پخش‌کننده موسیقی',
-                  'Music player',
+                  'پخش موسیقی',
+                  'Music playback',
                   const MusicPlayerPage(),
                 ),
                 (
                   Icons.video_library_outlined,
-                  'پخش‌کننده ویدیو',
-                  'Video player',
+                  'پخش ویدیو',
+                  'Video playback',
                   const VideoLibraryPage(),
                 ),
                 (
@@ -56,6 +63,18 @@ class MusicToolsPage extends StatelessWidget {
                   'ضبط صدا',
                   'Recorder',
                   const VoiceRecorderPage(),
+                ),
+                (
+                  Icons.hearing_outlined,
+                  'تمرین سولفژ',
+                  'Solfege practice',
+                  const SolfegePracticePage(),
+                ),
+                (
+                  Icons.analytics_outlined,
+                  'آزمایش تحلیل اجرا',
+                  'Performance analysis test',
+                  const MusicAnalysisTestPage(),
                 ),
               ])
                 ListTile(

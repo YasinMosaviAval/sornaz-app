@@ -282,9 +282,6 @@ class PianoKeyboardState extends State<PianoKeyboard> {
 
   void _onKeyUp(BuildContext context, PianoKey key) {
     setState(() => activeKeys.remove(_keyId(key)));
-    if (activeKeys.isEmpty) {
-      context.read<TunerProvider>().stopNote();
-    }
   }
 
   // ---------- Frequency ----------

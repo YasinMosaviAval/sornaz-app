@@ -5,14 +5,12 @@ import '../components/search_bar.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:flutter/foundation.dart';
 import 'browser_music_player.dart';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
-import 'package:sornaz/helpers/app_functions.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 import 'package:sornaz/helpers/app_spacing.dart';
@@ -20,6 +18,7 @@ import 'package:sornaz/helpers/app_spacing.dart';
 import 'package:sornaz/helpers/app_strings.dart';
 import 'package:sornaz/helpers/app_translations.dart';
 import 'package:sornaz/screens/Players/library/audio_library_manager.dart';
+import 'package:sornaz/screens/Players/library/device_audio_scan.dart';
 import 'package:sornaz/screens/Players/providers/folder_navigator_provider.dart';
 import 'package:sornaz/screens/Players/ui/pages/music_player_tabs.dart';
 
@@ -56,67 +55,29 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
 
   Future<void> _requestPermissionsAndScan() async {
     if (kIsWeb) return;
-    var storageStatus = await Permission.storage.request();
-
-    if (storageStatus.isDenied) {
-      var manageStatus = await Permission.manageExternalStorage.request();
-      if (manageStatus.isDenied || manageStatus.isPermanentlyDenied) {
-        if (mounted) _showPermissionDeniedDialog();
-        return;
-      }
-    }
-
-    if (storageStatus.isPermanentlyDenied) {
-      if (mounted) _showPermissionDeniedDialog();
+    final allowed = await hasAudioStoragePermission(request: true);
+    if (!mounted) return;
+    if (!allowed) {
+      _showPermissionDeniedDialog();
       return;
     }
-
-    if (!mounted) return;
-
-    final libraryManager = context.read<AudioLibraryManager>();
-    final folderNav = context.read<FolderNavigatorProvider>();
-
-    List<Directory> availableRoots = [];
-
-    final internalStorage = Directory(AppConstants.STORAGE_EMULATED_0);
-    if (await internalStorage.exists()) availableRoots.add(internalStorage);
-
-    final storageDir = Directory(AppConstants.STORAGE);
-    if (await storageDir.exists()) {
-      try {
-        final List<FileSystemEntity> entities = await storageDir
-            .list(followLinks: false)
-            .toList();
-        for (var entity in entities) {
-          if (entity is Directory) {
-            final String path = entity.path;
-            // if (path != AppConstants.STORAGE_EMULATED && path != AppConstants.STORAGE_SELF && !path.startsWith(AppConstants.STORAGE_0000_0000) && RegExp(r'^/storage/[A-F0-9]{4}-[A-F0-9]{4}$').hasMatch(path)) {
-            if (path != AppConstants.STORAGE_EMULATED &&
-                path != AppConstants.STORAGE_SELF &&
-                !path.startsWith(AppConstants.STORAGE_0000_0000) &&
-                RegExp(AppConstants.MUSIC_PLAYER_REGEX).hasMatch(path)) {
-              if (await entity.exists()) {
-                availableRoots.add(entity);
-              }
-            }
-          }
-        }
-      } catch (e) {
-        loggingSornaz(" ============= ");
-      }
+    final player = context.read<AudioPlayerProvider>();
+    await player.restoreLastPlayback();
+    await _rescan(requestPermission: false);
+    if (mounted && player.currentAudio == null) {
+      await player.restoreLastPlayback();
     }
+  }
 
-    if (availableRoots.isEmpty && await internalStorage.exists())
-      availableRoots.add(internalStorage);
-    await libraryManager.setRoots(availableRoots);
-
-    if (!mounted) return;
-
-    if (availableRoots.isNotEmpty) {
-      await folderNav.startRealNavigation(availableRoots.first);
+  Future<void> _rescan({bool requestPermission = true}) async {
+    final refreshed = await refreshDeviceAudioLibrary(
+      library: context.read<AudioLibraryManager>(),
+      folders: context.read<FolderNavigatorProvider>(),
+      requestPermission: requestPermission,
+    );
+    if (!refreshed && mounted && requestPermission) {
+      _showPermissionDeniedDialog();
     }
-    await libraryManager.loadOrScan();
-    if (mounted) await folderNav.indexFiles(libraryManager.allFiles);
   }
 
   void _showPermissionDeniedDialog() {
@@ -160,11 +121,11 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
     return Directionality(
       textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: ScrollAwareScaffold(
-        appBar: SearchBarWidget(tab: activeTab),
+        appBar: SearchBarWidget(tab: activeTab, onRescan: _rescan),
         pinTopBar: true,
         body: Consumer<AudioLibraryManager>(
           builder: (_, library, _) {
-            if (library.isScanning) {
+            if (library.isScanning && library.allFiles.isEmpty) {
               return Container(
                 color: AppColors.music_player_is_scanning_background_color(
                   isDark: isDark,
@@ -186,10 +147,16 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                           ),
                         ),
                         AppSpacing.sizedBoxH32(),
-                        LinearProgressIndicator(value: library.progress),
+                        LinearProgressIndicator(
+                          value: library.totalFiles == 0
+                              ? null
+                              : library.progress,
+                        ),
                         AppSpacing.sizedBoxH32(),
                         Text(
-                          "${library.scannedFiles} / ${library.totalFiles}   ${AppStrings.music_player_scanned_files.translate(context)}",
+                          library.totalFiles == 0
+                              ? '${library.scannedFiles} ${AppStrings.music_player_scanned_files.translate(context)}'
+                              : '${library.scannedFiles} / ${library.totalFiles}   ${AppStrings.music_player_scanned_files.translate(context)}',
                           style: AppTypography.musicPlayerScannedFiles(context),
                         ),
                         AppSpacing.sizedBoxH32(),
@@ -208,10 +175,20 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                 ),
               );
             }
-            return MusicPlayerTabs(
-              onTabChanged: (tab) {
-                if (activeTab != tab) setState(() => activeTab = tab);
-              },
+            return Column(
+              children: [
+                if (library.isScanning)
+                  LinearProgressIndicator(
+                    value: library.totalFiles == 0 ? null : library.progress,
+                  ),
+                Expanded(
+                  child: MusicPlayerTabs(
+                    onTabChanged: (tab) {
+                      if (activeTab != tab) setState(() => activeTab = tab);
+                    },
+                  ),
+                ),
+              ],
             );
             // return Expanded(child: MusicPlayerTabs());
           },

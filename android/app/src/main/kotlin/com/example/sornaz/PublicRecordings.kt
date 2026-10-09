@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.media.MediaScannerConnection
 import android.provider.MediaStore
 import android.provider.DocumentsContract
 import android.net.Uri
@@ -16,13 +17,16 @@ import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import java.util.concurrent.Executors
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 class PublicRecordings(private val context: Context, messenger: BinaryMessenger) {
     private val resolver = context.contentResolver
     private val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
     private val main = Handler(Looper.getMainLooper())
     private val work = Executors.newSingleThreadExecutor()
-    private val folder = "Music/Sornaz/"
+    private val folder = "Sornaz/Voice Recorder/"
+    private val legacyFolder = "Music/Sornaz/"
     init {
         MethodChannel(messenger, "sornaz/recordings").setMethodCallHandler { call, result ->
             if (call.method == "sdk") { result.success(Build.VERSION.SDK_INT); return@setMethodCallHandler }
@@ -95,9 +99,16 @@ class PublicRecordings(private val context: Context, messenger: BinaryMessenger)
     private fun list(): List<Map<String, Any>> {
         val results = mutableListOf<Map<String, Any>>()
         val pathColumn = if (Build.VERSION.SDK_INT >= 29) MediaStore.Audio.Media.RELATIVE_PATH else MediaStore.Audio.Media.DATA
-        val path = if (Build.VERSION.SDK_INT >= 29) folder else File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC), "Sornaz").absolutePath + "/%"
-        val selection = if (Build.VERSION.SDK_INT >= 29) "$pathColumn = ? AND ${MediaStore.Audio.Media.IS_PENDING} = 0" else "$pathColumn LIKE ?"
-        resolver.query(collection, arrayOf(MediaStore.Audio.Media._ID, MediaStore.Audio.Media.DISPLAY_NAME, MediaStore.Audio.Media.DATE_MODIFIED), selection, arrayOf(path), "${MediaStore.Audio.Media.DATE_MODIFIED} DESC")?.use { cursor ->
+        val paths = if (Build.VERSION.SDK_INT >= 29)
+            arrayOf(folder, legacyFolder)
+        else arrayOf(
+            File(Environment.getExternalStorageDirectory(), "Sornaz/Voice Recorder").absolutePath + "/%",
+            File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC), "Sornaz").absolutePath + "/%"
+        )
+        val selection = if (Build.VERSION.SDK_INT >= 29)
+            "($pathColumn = ? OR $pathColumn = ?) AND ${MediaStore.Audio.Media.IS_PENDING} = 0"
+        else "($pathColumn LIKE ? OR $pathColumn LIKE ?)"
+        resolver.query(collection, arrayOf(MediaStore.Audio.Media._ID, MediaStore.Audio.Media.DISPLAY_NAME, MediaStore.Audio.Media.DATE_MODIFIED), selection, paths, "${MediaStore.Audio.Media.DATE_MODIFIED} DESC")?.use { cursor ->
             while (cursor.moveToNext()) {
                 results.add(mapOf("uri" to ContentUris.withAppendedId(collection, cursor.getLong(0)).toString(), "name" to cursor.getString(1), "modified" to cursor.getLong(2) * 1000))
             }
@@ -140,26 +151,29 @@ class PublicRecordings(private val context: Context, messenger: BinaryMessenger)
             catch (e: Exception) { DocumentsContract.deleteDocument(resolver, target); throw e }
             return target.toString()
         }
-        val values = ContentValues().apply {
-            put(MediaStore.Audio.Media.DISPLAY_NAME, "Sornaz_${source.name}")
-            put(MediaStore.Audio.Media.MIME_TYPE, "audio/mp4")
-            put(MediaStore.Audio.Media.IS_MUSIC, 0)
-            put(MediaStore.Audio.Media.DATE_ADDED, System.currentTimeMillis() / 1000)
-            if (Build.VERSION.SDK_INT >= 29) {
-                put(MediaStore.Audio.Media.RELATIVE_PATH, folder)
-                put(MediaStore.Audio.Media.IS_PENDING, 1)
-            } else {
-                val dir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC), "Sornaz")
-                require(dir.exists() || dir.mkdirs())
-                put(MediaStore.Audio.Media.DATA, File(dir, "Sornaz_${source.name}").absolutePath)
+        val directAccess = if (Build.VERSION.SDK_INT >= 30) Environment.isExternalStorageManager()
+            else if (Build.VERSION.SDK_INT == 29)
+                Environment.isExternalStorageLegacy() &&
+                    context.checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            else true
+        if (directAccess) {
+            val dir = File(Environment.getExternalStorageDirectory(), folder)
+            require(dir.isDirectory || dir.mkdirs()) { "Cannot create recording folder" }
+            val target = File(dir, "Sornaz_${source.name}")
+            try { source.inputStream().use { input -> target.outputStream().use { input.copyTo(it) } } }
+            catch (e: Exception) { target.delete(); throw e }
+            val latch = CountDownLatch(1)
+            var scanned: Uri? = null
+            MediaScannerConnection.scanFile(context, arrayOf(target.absolutePath), arrayOf("audio/mp4")) { _, uri ->
+                scanned = uri
+                latch.countDown()
             }
+            if (!latch.await(15, TimeUnit.SECONDS) || scanned == null) {
+                target.delete()
+                error("Cannot index recording")
+            }
+            return scanned.toString()
         }
-        val uri = resolver.insert(collection, values) ?: error("Cannot create public recording")
-        try {
-            val output = resolver.openOutputStream(uri) ?: error("Cannot open public recording")
-            output.use { sink -> source.inputStream().use { input -> input.copyTo(sink) } }
-            if (Build.VERSION.SDK_INT >= 29) resolver.update(uri, ContentValues().apply { put(MediaStore.Audio.Media.IS_PENDING, 0) }, null, null)
-            return uri.toString()
-        } catch (e: Exception) { resolver.delete(uri, null, null); throw e }
+        error("Storage access is required to save in Sornaz/Voice Recorder")
     }
 }
