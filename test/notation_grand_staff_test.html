@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<body data-result="pending">
+<div id="score" style="width:800px"></div>
+<script src="../assets/notation/vendor/vexflow.js"></script>
+<script src="../assets/notation/model.js"></script>
+<script src="../assets/notation/score_renderer.js"></script>
+<script>
+try {
+  const M = NotationModel;
+  const sheet = M.fresh();
+  sheet.metadata.instrument = 'piano';
+  sheet.metadata.staves = [{clef:'treble'}, {clef:'bass'}];
+  const upper = {pitch:'C4', duration:'q', dots:0, rest:false, staff:1};
+  const lower = {pitch:'C3', duration:'q', dots:0, rest:false, staff:2,
+    pitches:[{pitch:'E3', accidental:''}, {pitch:'G3', accidental:''}]};
+  M.insert(sheet, 0, upper);
+  M.insert(sheet, 0, lower);
+  if (M.used(sheet.score.measures[0],1) !== 16 || M.used(sheet.score.measures[0],2) !== 16)
+    throw Error('Staff durations are not independent');
+  const overflow=M.clone(sheet);
+  for(let i=0;i<4;i++)M.insert(overflow,0,upper);
+  if(M.lane(overflow.score.measures[0],2).length!==1 || M.lane(overflow.score.measures[1],1).length!==1)
+    throw Error('Treble overflow changed the bass staff or lost a measure');
+  const changed=M.clone(sheet);
+  M.insert(changed,0,{...lower,duration:'h'},1);
+  if(M.used(changed.score.measures[0],1)!==16 || M.used(changed.score.measures[0],2)!==32)
+    throw Error('Editing a bass note changed the treble duration');
+  const timeline = M.timeline(sheet);
+  if (timeline.events.length !== 4 || !timeline.events.every(event => event.start === 0))
+    throw Error('Piano notes and chord do not start together');
+  const restored = JSON.parse(JSON.stringify(sheet));
+  if (restored.score.measures[0].notes[1].staff !== 2 || restored.score.measures[0].notes[1].pitches.length !== 2)
+    throw Error('Second-staff chord was not serialized');
+  const score = document.getElementById('score');
+  const aligned=M.fresh();aligned.metadata.staves=[{clef:'treble'},{clef:'bass'}];
+  for(const note of [{...upper,pitch:'C5'},{...upper,pitch:'D5'},{...lower,pitch:'C3',pitches:[]},{...lower,pitch:'D3',pitches:[]}])M.insert(aligned,0,note);
+  NotationRenderer.draw(score,aligned,{accent:'#0065ff',activeBar:0,activeNote:-1,selectedNotes:new Set()});
+  const x=index=>Number(score.querySelector(`[data-note="${index}"]`)?.getAttribute('x'));
+  if(Math.abs(x(0)-x(2))>2||Math.abs(x(1)-x(3))>2)throw Error('Piano beats are not horizontally aligned');
+  NotationRenderer.draw(score, restored, {accent:'#0065ff', activeBar:0, activeNote:-1, selectedNotes:new Set()});
+  if (score.querySelectorAll('[data-bar="0"][data-staff="1"]').length < 1 ||
+      score.querySelectorAll('[data-bar="0"][data-staff="2"]').length < 1)
+    throw Error('One of the two staff hit regions is missing');
+  if (score.querySelectorAll('[data-note]').length !== 2)
+    throw Error('Notes on both staves were not engraved');
+  const printed=NotationRenderer.printDocument(restored);
+  if(!printed.includes('print-staff')||!printed.includes('<svg'))throw Error('Grand staff PDF markup was not produced');
+  if (!location.search.includes('preview-grand')) {
+    const single = M.fresh();
+    M.insert(single,0,{...upper,staff:1});
+    NotationRenderer.draw(score,single,{accent:'#0065ff', activeBar:0, activeNote:-1, selectedNotes:new Set()});
+    if (score.querySelector('[data-staff="2"]')) throw Error('Single-staff score gained a second staff');
+  }
+  const legacy = M.fresh();
+  legacy.score.measures[0].notes.push({pitch:'D4',duration:'q',dots:0,rest:false});
+  if (M.staffOf(legacy.score.measures[0].notes[0]) !== 1) throw Error('Legacy note moved staff');
+  sheet.metadata.staves = [{clef:'treble'}];
+  if (sheet.score.measures[0].notes[1].staff !== 2) throw Error('Switching instruments lost bass notes');
+  document.body.dataset.result = 'passed';
+} catch (error) {
+  document.body.dataset.result = 'failed: ' + error.message;
+}
+</script>
+</body>
+</html>

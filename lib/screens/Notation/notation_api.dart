@@ -297,21 +297,46 @@ class NotationApi {
   Future<dynamic> _instruments() async {
     final prefs = await SharedPreferences.getInstance();
     const bundled = [
-      {'id': 'piano', 'fa': 'پیانو', 'en': 'Piano'},
+      {
+        'id': 'piano',
+        'fa': 'پیانو',
+        'en': 'Piano',
+        'staves': [
+          {'clef': 'treble'},
+          {'clef': 'bass'},
+        ],
+      },
       {'id': 'guitar', 'fa': 'گیتار', 'en': 'Guitar'},
       {'id': 'violin', 'fa': 'ویولن', 'en': 'Violin'},
       {'id': 'voice', 'fa': 'آواز', 'en': 'Voice'},
     ];
     final cached = prefs.getString('notation_instruments_v1');
     unawaited(_refreshInstruments(prefs));
-    return cached == null ? bundled : jsonDecode(cached);
+    return cached == null ? bundled : _instrumentLayouts(jsonDecode(cached));
   }
+
+  List<dynamic> _instrumentLayouts(dynamic items) => [
+    for (final item in items is List ? items : const [])
+      if (item is Map)
+        {
+          ...item,
+          if ('${item['en']}'.trim().toLowerCase() == 'piano' ||
+              '${item['fa']}'.trim() == 'پیانو')
+            'staves': const [
+              {'clef': 'treble'},
+              {'clef': 'bass'},
+            ],
+        },
+  ];
 
   Future<void> _refreshInstruments(SharedPreferences prefs) async {
     try {
       final value = await _requestRemote('instruments', {});
       if (value is List) {
-        await prefs.setString('notation_instruments_v1', jsonEncode(value));
+        await prefs.setString(
+          'notation_instruments_v1',
+          jsonEncode(_instrumentLayouts(value)),
+        );
       }
     } catch (_) {}
   }

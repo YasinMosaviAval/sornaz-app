@@ -6,15 +6,20 @@ const keys=['C','G','D','A','E','B','F#','C#','F','Bb','Eb','Ab','Db','Gb','Cb',
 const clone=v=>JSON.parse(JSON.stringify(v));
 const ticks=n=>durations[n.duration]*(2-Math.pow(.5,n.dots||0));
 const capacity=m=>{const[a,b]=m.time.split('/').map(Number);return a*64/b;};
+const staves=m=>Array.isArray(m.staves)&&m.staves.length===2?m.staves.map(s=>({clef:s.clef||'treble'})):[{clef:m.clef||'treble'}];
+const staffOf=n=>n.staff===2?2:1;
+const lane=(bar,staff)=>bar.notes.filter(n=>staffOf(n)===staff);
+const used=(bar,staff)=>lane(bar,staff).reduce((sum,n)=>sum+ticks(n),0);
 function fresh(){return {id:0,version:0,editable:true,visibility:'private',metadata:{title:'',subtitle:'',composer:'',arranger:'',lyricist:'',instrument:'Tar',scale_type:'major',key:'C',time:'4/4',tempo_text:'Allegro',tempo_note:'q',tempo_dots:0,bpm:100,clef:'treble'},score:{measures:[{notes:[]}]}};}
-function add(sheet,bar,note){if(!sheet.editable)throw Error('This sheet is read-only.');const notes=sheet.score.measures[bar].notes;if(notes.reduce((s,n)=>s+ticks(n),0)+ticks(note)>capacity(sheet.metadata)+.0001)throw Error('This measure is full.');notes.push(clone(note));return notes.length-1;}
+function add(sheet,bar,note){if(!sheet.editable)throw Error('This sheet is read-only.');const measure=sheet.score.measures[bar];if(used(measure,staffOf(note))+ticks(note)>capacity(sheet.metadata)+.0001)throw Error('This measure is full.');measure.notes.push(clone(note));return measure.notes.length-1;}
 // Plan the complete insertion before mutating, including overflow into later bars.
 function insert(sheet,bar,note,replaceIndex=null){
  if(!sheet.editable)throw Error('This sheet is read-only.');
  const measures=clone(sheet.score.measures),cap=capacity(sheet.metadata),values=Object.keys(durations).flatMap(duration=>[0,1,2].map(dots=>({duration,dots,value:ticks({duration,dots})}))).sort((a,b)=>b.value-a.value);
  const inserted={...clone(note),_inserted:true};delete inserted.tieNext;delete inserted.tiePrevious;
- let queue=(measures[bar]?.notes||[]).slice(),lastBar=bar;
- if(replaceIndex===null)queue.push(inserted);else queue.splice(replaceIndex,1,inserted);
+ const staff=staffOf(note),initial=measures[bar]?.notes||[];
+ let queue=initial.filter(n=>staffOf(n)===staff),lastBar=bar;
+ if(replaceIndex===null)queue.push(inserted);else{const preceding=initial.slice(0,replaceIndex).filter(n=>staffOf(n)===staff).length;queue.splice(preceding,1,inserted);}
  while(queue.length){
   if(bar>=64)throw Error('At most 64 measures.');
   const output=[];let room=cap;
@@ -27,8 +32,9 @@ function insert(sheet,bar,note,replaceIndex=null){
    output.push(...first);queue.unshift(...remaining);room=0;
   }
   for(const n of output){if(n._inserted)lastBar=bar;delete n._inserted;}
-  measures[bar]={notes:output};bar++;
-  if(queue.length)queue.push(...(measures[bar]?.notes||[]));
+  const other=(measures[bar]?.notes||[]).filter(n=>staffOf(n)!==staff);
+  measures[bar]={notes:staff===1?[...output,...other]:[...other,...output]};bar++;
+  if(queue.length)queue.push(...(measures[bar]?.notes||[]).filter(n=>staffOf(n)===staff));
  }
  sheet.score.measures=measures;return lastBar;
 }
@@ -36,24 +42,35 @@ function insert(sheet,bar,note,replaceIndex=null){
 function trimmedMeasures(sheet){const measures=clone(sheet.score.measures);while(measures.length&&!measures.at(-1).notes.length)measures.pop();return measures;}
 function prepare(sheet){
  const measures=trimmedMeasures(sheet);
- if(sheet.editable&&(!measures.length||measures.at(-1).notes.reduce((v,n)=>v+ticks(n),0)>=capacity(sheet.metadata))){if(measures.length<64)measures.push({notes:[]});}
+ if(sheet.editable&&(!measures.length||staves(sheet.metadata).some((_,i)=>used(measures.at(-1),i+1)>=capacity(sheet.metadata)))){if(measures.length<64)measures.push({notes:[]});}
  sheet.score.measures=measures;return sheet;
 }
 function timeline(sheet){
- const events=[],meta=sheet.metadata,beatTicks=ticks({duration:meta.tempo_note,dots:meta.tempo_dots||0}),unit=60/meta.bpm/beatTicks;let elapsed=0,last;
+ const events=[],meta=sheet.metadata,beatTicks=ticks({duration:meta.tempo_note,dots:meta.tempo_dots||0}),unit=60/meta.bpm/beatTicks,lastByStaff=new Map();let elapsed=0;
  sheet.score.measures.forEach((bar,barIndex)=>{
-  const carry={};let used=0;
-  bar.notes.forEach((n,noteIndex)=>{
-   const length=ticks(n)*unit,hz=n.rest?0:frequency(n.pitch,n.accidental,meta.key,carry);
-   const event={bar:barIndex,note:noteIndex,start:elapsed,length,hz,soundLength:length};
-   if(n.tiePrevious&&last?.source.tieNext&&last.source.pitch===n.pitch&&!n.rest){
-    event.hz=0;last.attack.soundLength+=length;event.attack=last.attack;
-   }else event.attack=event;
-   events.push(event);last={source:n,attack:event.attack};elapsed+=length;used+=ticks(n);
-  });
-  const gap=(capacity(meta)-used)*unit;elapsed+=gap;if(gap>.0001)last=null;
+  for(let staff=1;staff<=staves(meta).length;staff++){
+   const carry={},notes=bar.notes.map((n,i)=>({n,i})).filter(({n})=>staffOf(n)===staff);
+   let position=0;const previous=lastByStaff.get(staff)||new Map();
+   for(const {n,i} of notes){
+    const length=ticks(n)*unit,start=elapsed+position*unit;
+    for(const tone of [{pitch:n.pitch,accidental:n.accidental},...(n.pitches||[])]){
+     const pitch=typeof tone==='string'?tone:tone.pitch,accidental=typeof tone==='string'?'':tone.accidental;
+     const hz=n.rest?0:frequency(pitch,accidental,meta.key,carry);
+     const event={bar:barIndex,note:i,staff,start,length,hz,soundLength:length};
+     const last=previous.get(pitch);
+     if(n.tiePrevious&&last?.source.tieNext&&!n.rest){event.hz=0;last.attack.soundLength+=length;event.attack=last.attack;}else event.attack=event;
+     events.push(event);previous.set(pitch,{source:n,attack:event.attack});
+    }
+    if(n.rest)previous.clear();
+    position+=ticks(n);
+   }
+   if(position<capacity(meta)-.0001)previous.clear();
+   lastByStaff.set(staff,previous);
+  }
+  elapsed+=capacity(meta)*unit;
  });
- return {events,duration:events.length?events.at(-1).start+events.at(-1).length:0};
+ events.sort((a,b)=>a.start-b.start||a.staff-b.staff||a.note-b.note);
+ return {events,duration:elapsed};
 }
 function frequency(pitch,accidental='',key='C',carry={}){
  const letter=pitch[0],octave=Number(pitch.slice(1)),base={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
@@ -64,5 +81,5 @@ function frequency(pitch,accidental='',key='C',carry={}){
  if(accidental){delta={'#':1,b:-1,n:0,'##':2,bb:-2,'+':.5,d:-.5}[accidental];carry[pitch]=delta;}
  return 440*Math.pow(2,((octave+1)*12+base[letter]+delta-69)/12);
 }
-const api={durations,keys,clone,ticks,capacity,fresh,add,insert,trimmedMeasures,prepare,timeline,frequency};if(typeof module==='object')module.exports=api;root.NotationModel=api;
+const api={durations,keys,clone,ticks,capacity,staves,staffOf,lane,used,fresh,add,insert,trimmedMeasures,prepare,timeline,frequency};if(typeof module==='object')module.exports=api;root.NotationModel=api;
 })(globalThis);
