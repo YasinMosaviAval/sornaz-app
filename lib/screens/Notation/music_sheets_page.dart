@@ -131,6 +131,7 @@ class _NotationHostState extends State<_NotationHost>
       'fontScale': ((16 + app.fontSize) / 16).clamp(.8, 1.5),
       'fontFamily': app.fontFamily,
       'fontWeight': (400 + app.fontWeight * 100).round().clamp(100, 900),
+      'cornerRadius': app.cornerRadius,
       'durationMode': _durationMode,
       'pianoLabelMode': _pianoLabelMode,
     });

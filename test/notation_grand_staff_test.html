@@ -3,11 +3,13 @@
 <meta charset="utf-8">
 <body data-result="pending">
 <div id="score" style="width:800px"></div>
+<script>window.onerror=(message,source,line)=>{window.parseError??=message+' at '+source+':'+line;};</script>
 <script src="../assets/notation/vendor/vexflow.js"></script>
 <script src="../assets/notation/model.js"></script>
 <script src="../assets/notation/score_renderer.js"></script>
 <script>
 try {
+  if(!window.NotationModel)throw Error(window.parseError||'NotationModel is not defined');
   const M = NotationModel;
   const sheet = M.fresh();
   sheet.metadata.instrument = 'piano';

@@ -1,0 +1,67 @@
+<!doctype html><html><meta charset="utf-8"><body data-result="pending"><div id="score" style="width:800px"></div>
+<script src="../assets/notation/vendor/vexflow.js"></script><script src="../assets/notation/model.js"></script><script src="../assets/notation/score_renderer.js"></script><script>
+try {
+ const M=NotationModel,u=M.wholeUnits,s=M.fresh();
+ s.metadata.staves=[{clef:'treble'},{clef:'bass'}];
+ const note=(pitch,at,staff=1,voice=1,other={})=>({pitch,duration:'q',dots:0,staff,voice,at,...other});
+ M.add(s,0,note('C4',0));M.add(s,0,note('E4',u/4,1,1));
+ M.add(s,0,note('G3',0,1,2,{duration:'h'}));M.add(s,0,note('C3',0,2));
+ if(M.timeline(s).events.length!==4)throw Error('Missing voice or staff event');
+ const before=M.timeline(s);if(before.events.find(e=>e.voice===2).start!==0||before.events.find(e=>e.staff===2).start!==0)throw Error('Voices not simultaneous');
+ NotationRenderer.draw(document.getElementById('score'),s,{accent:'#0065ff',activeBar:0,activeNote:-1,selectedNotes:new Set()});
+ if(document.querySelectorAll('#score [data-note]').length!==4)throw Error('Multiple voices did not render');
+ M.compactDelete(s,new Set(['0:0']));
+ const after=M.timeline(s);if(after.events.find(e=>e.voice===2).start!==0||after.events.find(e=>e.staff===2).start!==0)throw Error('Deleting one voice moved another');
+ if(after.events.find(e=>Math.abs(e.hz-M.frequency('E4'))<.01)?.start!==0)throw Error('Compact delete failed to shift selected voice');
+ const t={pitch:'D4',duration:'8',dots:0,staff:1,voice:1,at:0,tuplet:{actual:3,normal:2}};
+ if(M.units(t)!==u/12)throw Error('Triplet duration is imprecise');
+ const triplets=M.fresh();for(let i=0;i<3;i++)M.add(triplets,0,{...t,at:i*u/12});
+ NotationRenderer.draw(document.getElementById('score'),triplets,{accent:'#0065ff',activeBar:0,activeNote:-1,selectedNotes:new Set()});
+ if(document.querySelectorAll('#score [data-note]').length!==3)throw Error('Triplet notes did not render');
+ const spaced=M.fresh();M.add(spaced,0,note('C4',0));M.add(spaced,0,note('D4',u/2));
+ M.insert(spaced,0,note('D4',u/2,1,1,{duration:'8'}),1);
+ if(spaced.score.measures[0].notes[1].at!==u/2)throw Error('Editing a note removed its intentional gap');
+ const clip=M.copySelection(s,new Set(['0:1','0:3'])),target=M.fresh();target.metadata.staves=[{clef:'treble'},{clef:'bass'}];
+ const pasted=M.pasteSelection(target,clip,0,1,0);
+ if(pasted.size!==2||target.score.measures[0].notes.length!==2||target.score.measures[0].notes[1].staff!==2)throw Error('Grouped cross-staff paste lost a note');
+ const unchanged=JSON.stringify(target.score);
+ try{M.pasteSelection(target,clip,0,1,0);throw Error('Overlap was accepted');}catch(e){if(e.message==='Overlap was accepted')throw e;}
+ if(JSON.stringify(target.score)!==unchanged)throw Error('Failed paste partially changed the score');
+ const multiBar=M.fresh();multiBar.score.measures=[{notes:[]},{notes:[]}];
+ M.add(multiBar,0,note('C4',u/4));M.add(multiBar,1,note('D4',0));
+ const moved=M.copySelection(multiBar,new Set(['0:0','1:0'])),destination=M.fresh();
+ M.pasteSelection(destination,moved,0,1,u/2);
+ if(destination.score.measures[0].notes[0].at!==u/2||destination.score.measures[1].notes[0].at!==u/4)throw Error('Cross-measure paste shifted the musical interval');
+ const pickup=M.fresh();pickup.score.measures[0].length=u/8;
+ if(M.measureUnits(pickup.metadata,pickup.score.measures[0])!==u/8)throw Error('Pickup length lost');
+ const changedTime=M.fresh();changedTime.score.measures=[{notes:[],time:'7/8'},{notes:[]}];
+ if(M.barUnits(changedTime,1)!==7*u/8)throw Error('Time-signature change did not carry forward');
+ if(M.trimmedMeasures(changedTime).length!==1)throw Error('A trailing time change was silently removed');
+ const symbols=M.fresh();symbols.score.measures=[{notes:[],time:'4/4',timeSymbol:'common'},{notes:[],time:'2/2',timeSymbol:'cut'}];
+ NotationRenderer.draw(document.getElementById('score'),symbols,{accent:'#0065ff',activeBar:0,activeNote:-1,selectedNotes:new Set()});
+ const repeat=M.fresh();repeat.score.measures=[
+  {notes:[note('C4',0)],repeat:{start:true}},
+  {notes:[note('D4',0)],repeat:{end:2,endings:[1]}},
+  {notes:[note('E4',0)],repeat:{endings:[2]}},
+ ];
+ if(M.performanceOrder(repeat).map(v=>v.sourceBar).join(',')!=='0,1,0,2')throw Error('Repeat endings played in the wrong order');
+ const twice=M.clone(repeat);twice.score.measures.push({notes:[],repeat:{start:true}},{notes:[],repeat:{end:2,endings:[1]}},{notes:[],repeat:{endings:[2]}});
+ if(M.performanceOrder(twice).map(v=>v.sourceBar).join(',')!=='0,1,0,2,3,4,3,5')throw Error('A later repeat section inherited the previous ending pass');
+ const three=M.fresh();three.score.measures=[{notes:[],repeat:{start:true}},{notes:[],repeat:{end:3,endings:[1]}},{notes:[],repeat:{end:3,endings:[2]}},{notes:[],repeat:{endings:[3]}}];
+ if(M.performanceOrder(three).map(v=>v.sourceBar).join(',')!=='0,1,0,2,0,3')throw Error('Third ending did not execute');
+ const oneBar=M.fresh();oneBar.score.measures=[{notes:[note('C4',0)]},{notes:[],repeat:{measure:1}}];
+ if(M.timeline(oneBar).events.length!==2||M.performanceOrder(oneBar)[1].sourceBar!==0)throw Error('One-bar repeat was not played');
+ oneBar.score.measures.push({notes:[],repeat:{measure:1}});
+ if(M.performanceOrder(oneBar)[2].sourceBar!==0)throw Error('Consecutive one-bar repeats lost their source');
+ const twoBar=M.fresh();twoBar.score.measures=[{notes:[note('C4',0)]},{notes:[note('D4',0)]},{notes:[],repeat:{measure:2}},{notes:[]}];
+ if(M.performanceOrder(twoBar).map(v=>v.sourceBar).join(',')!=='0,1,0,1'||M.timeline(twoBar).events.length!==4)throw Error('Two-bar repeat did not replay both source measures');
+ NotationRenderer.draw(document.getElementById('score'),repeat,{accent:'#0065ff',activeBar:0,activeNote:-1,selectedNotes:new Set()});
+ if(!document.querySelector('#score svg'))throw Error('Repeat barlines did not render');
+ repeat.score.measures.push({notes:[],repeat:{jump:'dcAlFine'}});
+ repeat.score.measures[0].repeat.marker='fine';
+ if(M.performanceOrder(repeat).map(v=>v.sourceBar).join(',')!=='0,1,0,2,3,0')throw Error('D.C. al Fine did not play and stop on Fine');
+ const ds=M.fresh();ds.score.measures=[{notes:[],repeat:{marker:'segno'}},{notes:[],repeat:{marker:'toCoda'}},{notes:[],repeat:{jump:'dsAlCoda'}},{notes:[],repeat:{marker:'coda'}}];
+ if(M.performanceOrder(ds).map(v=>v.sourceBar).join(',')!=='0,1,2,0,1,3')throw Error('D.S. al Coda skipped the To Coda measure');
+ document.body.dataset.result='passed';
+}catch(e){document.body.dataset.result='failed: '+e.message;}
+</script></body></html>

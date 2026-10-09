@@ -3,6 +3,8 @@
 'use strict';
 const VF=Vex.Flow,M=NotationModel;
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const gapDurations=Object.keys(M.durations).flatMap(duration=>[0,1,2].map(dots=>({duration,dots,value:M.units({duration,dots})}))).sort((a,b)=>b.value-a.value);
+function spacingNotes(length){const notes=[];while(length>0){const part=gapDurations.find(item=>item.value<=length);if(!part)break;notes.push(new VF.GhostNote({duration:part.duration,dots:part.dots}));length-=part.value;}return notes;}
 // Reserve at least 12 logical pixels around each note/group and stave edge.
 const estimate=bar=>Math.max(110,Math.max(...[1,2].map(staff=>M.lane(bar,staff).length))*34+82);
 function ottava(pitch,rest=false){
@@ -33,12 +35,16 @@ function renderRow(target,bars,start,options){
  svg.style.display='block';svg.style.maxWidth='100%';
  const leftInset=grand?30:4,barWidth=(width-leftInset-4)/bars.length;
  bars.forEach((bar,col)=>{
-  const index=start+col,x=leftInset+col*barWidth,staves=layout.map((entry,lane)=>new VF.Stave(x,6+lane*150,barWidth));
+  const index=start+col,x=leftInset+col*barWidth,barTime=M.effectiveTime(options.sheet,index),staves=layout.map((entry,lane)=>new VF.Stave(x,6+lane*150,barWidth));
   if(!options.printing&&index===options.activeBar){ctx.save();ctx.setFillStyle(options.accent+'14');staves.forEach(stave=>ctx.fillRect(x,stave.getY()+15,barWidth,94));ctx.restore();}
   staves.forEach((stave,lane)=>{
-   if(col===0){stave.addClef(layout[lane].clef);stave.addKeySignature(m.key);if(index===0)stave.addTimeSignature(m.time);
+   if(col===0){stave.addClef(layout[lane].clef);stave.addKeySignature(m.key);if(index===0||bar.time||bar.timeSymbol)stave.addTimeSignature(bar.timeSymbol==='common'?'C':bar.timeSymbol==='cut'?'C|':barTime);
     else if(lane===0){ctx.save();ctx.setFillStyle('#666');ctx.setFont('Arial',5.5);ctx.fillText(String(index+1),x+9,35);ctx.restore();}}
-   if(index===options.lastWritten)stave.setEndBarType(VF.Barline.type.END);
+   if(bar.repeat?.start)stave.setBegBarType(VF.Barline.type.REPEAT_BEGIN);
+   if(bar.repeat?.end)stave.setEndBarType(VF.Barline.type.REPEAT_END);
+   else if(bar.barline==='double')stave.setEndBarType(VF.Barline.type.DOUBLE);
+   else if(bar.barline==='final'||index===options.lastWritten)stave.setEndBarType(VF.Barline.type.END);
+   else if(bar.barline==='hidden')stave.setEndBarType(VF.Barline.type.NONE);
    stave.setContext(ctx).draw();
   });
   const noteStart=Math.max(...staves.map(stave=>stave.getNoteStartX()))+12;
@@ -47,11 +53,23 @@ function renderRow(target,bars,start,options){
    for(const type of [VF.StaveConnector.type.SINGLE_LEFT,...(col===0?[VF.StaveConnector.type.BRACE]:[]),VF.StaveConnector.type.SINGLE_RIGHT])
     new VF.StaveConnector(staves[0],staves[1]).setType(type).setContext(ctx).draw();
   }
-  const engravedNotes=Array(bar.notes.length),voices=[],beams=[];
+  const addLabel=(label,y,size=12)=>{const element=document.createElementNS('http://www.w3.org/2000/svg','text');for(const[key,value]of Object.entries({x:x+barWidth/2,y,'text-anchor':'middle','font-family':'NotationTheme, Arial','font-size':size,fill:'#111'}))element.setAttribute(key,value);element.textContent=label;svg.append(element);};
+  const repeat=bar.repeat||{};
+  if(repeat.endings?.length){const y=staves[0].getY()-8,line=document.createElementNS('http://www.w3.org/2000/svg','path');line.setAttribute('d',`M${x+14} ${y+7}V${y}H${x+barWidth-10}`);line.setAttribute('fill','none');line.setAttribute('stroke','#111');line.setAttribute('stroke-width','1');svg.append(line);addLabel(repeat.endings.join(',')+'.',y-2,10);}
+  if(repeat.marker)addLabel(({segno:'Segno',coda:'Coda',toCoda:'To Coda',fine:'Fine'})[repeat.marker],staves[0].getY()-18,10);
+  if(repeat.jump)addLabel(({dc:'D.C.',ds:'D.S.',dcAlFine:'D.C. al Fine',dsAlFine:'D.S. al Fine',dcAlCoda:'D.C. al Coda',dsAlCoda:'D.S. al Coda'})[repeat.jump],staves[0].getY()-30,10);
+  if(repeat.measure)addLabel(repeat.measure===1?'%':'% %',staves[0].getY()+58,24);
+  const engravedNotes=Array(bar.notes.length),voices=[],beams=[],tuplets=[];
   staves.forEach((stave,lane)=>{
-   const staff=lane+1,source=bar.notes.map((n,i)=>({...n,index:i})).filter(n=>M.staffOf(n)===staff);
-   if(!options.printing&&index===options.ghostBar&&options.ghost&&M.staffOf(options.ghost)===staff)source.push({...options.ghost,index:-1,ghost:true,rest:false});
-   const notes=source.map(n=>{
+   const staff=lane+1,all=bar.notes.map((n,i)=>({...n,index:i,at:M.positionOf(bar,i)})).filter(n=>M.staffOf(n)===staff),voiceIds=[...new Set(all.map(M.voiceOf))];
+   if(!voiceIds.length&&options.ghost&&M.staffOf(options.ghost)===staff)voiceIds.push(M.voiceOf(options.ghost));
+   for(const voiceId of voiceIds){
+   const source=all.filter(n=>M.voiceOf(n)===voiceId).sort((a,b)=>a.at-b.at||a.index-b.index);
+   if(!options.printing&&index===options.ghostBar&&options.ghost&&M.staffOf(options.ghost)===staff&&M.voiceOf(options.ghost)===voiceId)source.push({...options.ghost,index:-1,at:source.length?source.at(-1).at+M.units(source.at(-1)):0,ghost:true,rest:false});
+   const notes=[],actual=[];let cursor=0,tupletGroup=[],tupletRatio='';
+   const finishTuplet=()=>{if(tupletGroup.length){const[actualCount,normalCount]=tupletRatio.split(':').map(Number);tuplets.push(new VF.Tuplet(tupletGroup,{num_notes:actualCount,notes_occupied:normalCount}));tupletGroup=[];tupletRatio='';}};
+   source.forEach(n=>{
+    if(n.at>cursor)notes.push(...spacingNotes(n.at-cursor));
     const tones=[{pitch:n.pitch,accidental:n.accidental},...(n.pitches||[])],display=ottava(n.pitch,n.rest);
     const keys=n.rest?['b/4']:tones.map(tone=>{const shifted=ottava(tone.pitch);return shifted.pitch[0].toLowerCase()+'/'+shifted.pitch.slice(1);});
     const v=new VF.StaveNote({clef:layout[lane].clef,keys,duration:n.duration+(n.rest?'r':''),dots:n.dots||0,auto_stem:true});
@@ -66,11 +84,16 @@ function renderRow(target,bars,start,options){
     if(n.bow)v.addModifier(new VF.Annotation(n.bow==='up'?'∨':'⊓').setFont('Arial',13).setVerticalJustification(VF.Annotation.VerticalJustify.TOP),0);
     if(n.dynamic)v.addModifier(new VF.Annotation(n.dynamic).setFont('Times',12,'italic').setVerticalJustification(VF.Annotation.VerticalJustify.BOTTOM),0);
     const color=options.printing?'#111':n.ghost?'#d5d5d5':options.selectedNotes?.has(index+':'+n.index)||index===options.activeBar&&n.index===options.activeNote?options.accent:'#111';
-    v.setStyle({fillStyle:color,strokeStyle:color});if(n.index>=0)engravedNotes[n.index]=v;return v;
+    v.setStyle({fillStyle:color,strokeStyle:color});if(n.index>=0)engravedNotes[n.index]=v;notes.push(v);if(!n.ghost)actual.push(v);cursor=n.at+M.units(n);
+    const ratio=n.tuplet?`${n.tuplet.actual}:${n.tuplet.normal}`:'';
+    if(ratio!==tupletRatio)finishTuplet();
+    if(ratio){tupletRatio=ratio;tupletGroup.push(v);if(tupletGroup.length===n.tuplet.actual)finishTuplet();}
    });
-   if(notes.length){const[beats,beatValue]=m.time.split('/').map(Number),voice=new VF.Voice({num_beats:beats,beat_value:beatValue}).setStrict(false);voice.addTickables(notes);voices.push({voice,stave});beams.push(...VF.Beam.generateBeams(notes.slice(0,source.filter(n=>n.index>=0).length),{maintain_stem_directions:true}));}
+   finishTuplet();
+   if(notes.length){const[beats,beatValue]=barTime.split('/').map(Number),voice=new VF.Voice({num_beats:beats,beat_value:beatValue}).setStrict(false);voice.addTickables(notes);voices.push({voice,stave});beams.push(...VF.Beam.generateBeams(actual,{maintain_stem_directions:true}));}
+   }
   });
-  if(voices.length){const formatter=new VF.Formatter();voices.forEach(({voice})=>formatter.joinVoices([voice]));if(grand)formatter.format(voices.map(v=>v.voice),Math.max(20,staves[0].getNoteEndX()-noteStart-12));else formatter.formatToStave([voices[0].voice],staves[0]);voices.forEach(({voice,stave})=>voice.draw(ctx,stave));beams.forEach(beam=>beam.setContext(ctx).draw());}
+  if(voices.length){const formatter=new VF.Formatter();staves.forEach(stave=>{const same=voices.filter(v=>v.stave===stave).map(v=>v.voice);if(same.length)formatter.joinVoices(same);});formatter.format(voices.map(v=>v.voice),Math.max(20,staves[0].getNoteEndX()-noteStart-12));voices.forEach(({voice,stave})=>voice.draw(ctx,stave));beams.forEach(beam=>beam.setContext(ctx).draw());tuplets.forEach(tuplet=>tuplet.setContext(ctx).draw());}
   engraved.push({notes:engravedNotes,ctx,row:target});
   if(!options.printing){
    const hit=(attributes)=>{const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');for(const[k,v]of Object.entries({fill:'transparent',stroke:'none','class':'note-hit',...attributes}))rect.setAttribute(k,String(v));svg.append(rect);};
@@ -105,7 +128,7 @@ function draw(element,sheet,options={}){
  element.replaceChildren();const pixels=Math.max(280,element.clientWidth),width=pixels/.68,measures=sheet.score.measures,engraved=[];
  let index=0;for(const bars of groups(measures,width,false)){
   const row=document.createElement('div');row.className='staff-row';element.append(row);
-  engraved.push(...renderRow(row,bars,index,{...options,metadata:sheet.metadata,width,pixels}));index+=bars.length;
+  engraved.push(...renderRow(row,bars,index,{...options,sheet,metadata:sheet.metadata,width,pixels}));index+=bars.length;
  }ties(measures,engraved);
 }
 function printDocument(sheet,locale='en',symbols={}){
@@ -119,7 +142,7 @@ function printDocument(sheet,locale='en',symbols={}){
   const grand=M.staves(m).length===2,count=grand?(first?4:5):(first?10:12);
   for(const bars of rows.slice(cursor,cursor+count)){
    const row=document.createElement('div');row.className='print-staff';page.append(row);
-   engraved.push(...renderRow(row,bars,index,{metadata:m,width:1000,pixels:730,printing:true,lastWritten:measures.length-1}));index+=bars.length;
+   engraved.push(...renderRow(row,bars,index,{sheet,metadata:m,width:1000,pixels:730,printing:true,lastWritten:measures.length-1}));index+=bars.length;
   }cursor+=count;pages.push(page);
  }ties(measures,engraved);
  return `<!doctype html><html lang="${locale}"><head><meta charset="utf-8"><style>@font-face{font-family:Sornaz;src:url('../fonts/iran_sansx_fa/regular.ttf')}@page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;background:white;color:black;font:12px Sornaz,Arial,sans-serif}.print-page{width:210mm;height:297mm;padding:8mm;break-after:page;overflow:hidden}.print-page:last-child{break-after:auto}.print-page header{height:40mm}h1{text-align:center;font-size:20px;margin:0 0 4px}.subtitle{text-align:center;margin:0}.score-meta{display:flex;direction:rtl;justify-content:space-between;align-items:center;gap:12px}.credits{text-align:right;direction:${locale==='fa'?'rtl':'ltr'}}.credits p{margin:2px 0}.tempo{display:flex;gap:12px;direction:ltr;align-items:center}.print-staff{height:${M.staves(sheet.metadata).length===2?53:23}mm}.print-page:not(:first-child){padding-top:9mm}svg{width:100%;height:100%}</style></head><body>${pages.map(p=>p.outerHTML).join('')}</body></html>`;

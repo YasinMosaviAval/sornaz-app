@@ -62,6 +62,8 @@ body{font-size:calc(14px * var(--font-scale,1))} .field span{font-size:calc(12px
 .tempo .metronome-mark .tempo-number{font-size:12px}
 .keyboard-wrap .palette-key,.keyboard-wrap .rest-key{width:32px;height:32px;min-width:32px;min-height:32px;padding:4px;display:flex;align-items:center;justify-content:center;line-height:1}
 .keyboard-wrap .palette-key svg,.keyboard-wrap .rest-key svg{width:24px;height:24px;display:block;flex-shrink:0}
+.measure-controls{display:flex;gap:6px;overflow-x:auto;padding:4px 12px;white-space:nowrap}.measure-controls button{font-size:calc(12px * var(--font-scale,1));font-weight:var(--app-font-weight,400);border-radius:var(--app-corner-radius,4px)}.measure-controls button.is-active{color:var(--accent);border-color:var(--accent)}
+.measure-tools{margin:4px 12px;border:1px solid var(--line);border-radius:var(--app-corner-radius,4px);background:var(--panel)}.measure-tools summary{cursor:pointer;padding:8px 12px;font-size:calc(12px * var(--font-scale,1));font-weight:var(--app-font-weight,400)}.measure-tools>div{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;padding:8px}.measure-tools label{display:grid;gap:3px;min-width:0;font-size:calc(12px * var(--font-scale,1));font-weight:var(--app-font-weight,400)}.measure-tools select{border-radius:var(--app-corner-radius,4px);font-size:inherit;font-weight:inherit}
 .beat-field .beat-native{position:absolute;width:1px!important;height:1px!important;opacity:0;pointer-events:none}
 .beat-picker{position:relative;margin-top:0}
 .beat-picker summary{height:46px;display:flex;align-items:center;justify-content:space-between;list-style:none;border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:5px 8px;cursor:pointer}

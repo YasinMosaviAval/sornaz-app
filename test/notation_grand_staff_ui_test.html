@@ -81,6 +81,26 @@ setTimeout(async()=>{
   window.Notation.command('redo');await pause();
   click('#score [data-note][data-staff="2"]');
   if(document.querySelector('[data-action="chord-tone"]'))throw Error('Redo did not restore the bass rest');
+  const setMeasure=(key,value)=>{const control=document.querySelector(`[data-measure-choice="${key}"]`);if(!control)throw Error('Missing measure control '+key);control.value=value;control.dispatchEvent(new Event('change',{bubbles:true}));};
+  setMeasure('time','7/8');await pause();
+  if(document.querySelector('[data-measure-choice="time"]')?.value!=='7/8')throw Error('Time signature change was not retained');
+  setMeasure('repeatLine','start');await pause();
+  if(document.querySelector('[data-measure-choice="repeatLine"]')?.value!=='start')throw Error('Repeat start could not be edited');
+  click('[data-action="add-bar"]');await pause();
+  if(document.querySelector('.measure-tools summary')?.textContent.trim()!=='Measure tools 2')throw Error('Measure insertion was not exposed');
+  click('.staff-picker [data-staff="1"]');click('[data-action="voice"][data-voice="2"]');
+  click('[data-action="duration"][data-value="8"]');
+  const tuplet=document.querySelector('[data-tuplet]');if(!tuplet)throw Error('Tuplet control is missing');tuplet.value='3:2';tuplet.dispatchEvent(new Event('change',{bubbles:true}));await pause();
+  for(let i=0;i<3;i++)click('[data-pitch="C5"]');await pause();
+  if(document.querySelectorAll('#score [data-bar="1"][data-note]').length!==3)throw Error('Triplet notes in the second voice could not be written');
+  click('#score [data-bar="1"][data-note]');click('[data-action="copy-notes"]');await pause();
+  click('[data-action="add-bar"]');await pause();
+  click('[data-action="paste-notes"]');await pause();
+  if(document.querySelectorAll('#score [data-bar="2"][data-note]').length!==1)throw Error('Copied note was not pasted into a new measure');
+  window.Notation.command('undo');await pause();
+  if(document.querySelectorAll('#score [data-bar="2"][data-note]').length)throw Error('Paste did not undo as one operation');
+  window.Notation.command('redo');await pause();
+  if(document.querySelectorAll('#score [data-bar="2"][data-note]').length!==1)throw Error('Redo did not restore pasted notes');
   document.body.dataset.result='passed';
  } catch(error) {document.body.dataset.result='failed: '+error.message;}
 },100);
