@@ -62,7 +62,10 @@ setTimeout(async()=>{
   const singleForm=document.getElementById('metadata');singleForm.elements.instrument.value='guitar';
   singleForm.elements.instrument.dispatchEvent(new Event('change',{bubbles:true}));
   document.getElementById('metadata').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));await pause();
-  click('dialog [data-action="yes"]');await pause();
+  click('dialog [data-action="cancel-change"]');await pause();
+  if(!document.getElementById('metadata'))throw Error('Cancelling instrument change left the form');
+  document.getElementById('metadata').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));await pause();
+  click('dialog [data-action="keep-hidden"]');await pause();
   if(document.querySelector('#score [data-staff="2"]')||!document.querySelector('.hidden-staff-warning'))
    throw Error('Switch to a single staff did not preserve hidden bass notes');
   click('[data-action="metadata"]');await pause();
@@ -70,6 +73,14 @@ setTimeout(async()=>{
   grandForm.elements.instrument.dispatchEvent(new Event('change',{bubbles:true}));
   document.getElementById('metadata').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));await pause();
   if(!document.querySelector('#score [data-note][data-staff="2"]'))throw Error('Bass note did not return after switching back to piano');
+  click('[data-action="metadata"]');await pause();
+  const transferForm=document.getElementById('metadata');transferForm.elements.instrument.value='guitar';
+  transferForm.elements.instrument.dispatchEvent(new Event('change',{bubbles:true}));
+  document.getElementById('metadata').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));await pause();
+  click('dialog [data-action="transfer-notes"]');await pause();
+  if(document.querySelector('.hidden-staff-warning')||document.querySelectorAll('#score [data-note][data-staff="1"]').length<2)throw Error('Transferring bass notes to the upper staff failed');
+  window.Notation.command('undo');await pause();
+  if(!document.querySelector('#score [data-note][data-staff="2"]'))throw Error('Undo did not restore the bass staff after instrument change');
   click('#score [data-note][data-staff="2"]');window.Notation.command('delete-note-compact');await pause();
   if(!document.querySelector('#score [data-note][data-staff="2"]')||!document.querySelector('#score [data-note][data-staff="1"]'))
    throw Error('Compact deletion lost a staff or its timing rest');

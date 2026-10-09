@@ -14,6 +14,7 @@ const effectiveTime=(sheet,index)=>{let time=sheet.metadata.time;for(let i=0;i<=
 const barUnits=(sheet,index)=>measureUnits({...sheet.metadata,time:effectiveTime(sheet,index)},sheet.score.measures[index]||{});
 const capacity=(meta,bar={})=>measureUnits(meta,bar)/unitPerLegacyTick;
 const staves=m=>Array.isArray(m.staves)&&m.staves.length===2?m.staves.map(s=>({clef:s.clef||'treble'})):[{clef:m.clef||'treble'}];
+const effectiveClef=(sheet,index,staff)=>{let clef=staves(sheet.metadata)[staff-1]?.clef||'treble';for(let i=0;i<=index&&i<sheet.score.measures.length;i++)clef=sheet.score.measures[i].clefs?.[staff]||clef;return clef;};
 const staffOf=n=>n.staff===2?2:1;
 const voiceOf=n=>Number.isInteger(n.voice)&&n.voice>0?n.voice:1;
 const lane=(bar,staff,voice=null)=>bar.notes.filter(n=>staffOf(n)===staff&&(voice===null||voiceOf(n)===voice));
@@ -50,6 +51,23 @@ function pasteSelection(sheet,items,targetBar,targetStaff,targetAt=0){
  }
  sheet.score=draft.score;return new Set(locations);
 }
+// Move notes without changing their musical time. The score is replaced only after
+// every destination has been checked, so a collision cannot partially move a chord.
+function moveSelectionToStaff(sheet,selected,targetStaff,{reassignVoice=false}={}){
+ if(!sheet.editable)throw Error('This sheet is read-only.');
+ if(!Number.isInteger(targetStaff)||targetStaff<1||targetStaff>staves(sheet.metadata).length)throw Error('Paste target is outside the score.');
+ const draft=clone(sheet),entries=[];
+ for(const key of selected){const[bar,index]=key.split(':').map(Number),measure=sheet.score.measures[bar],note=measure?.notes[index];if(note)entries.push({bar,index,at:positionOf(measure,index),note:clone(note)});}
+ if(!entries.length)throw Error('No notes selected.');
+ for(const {bar,index} of [...entries].sort((a,b)=>b.bar-a.bar||b.index-a.index))draft.score.measures[bar].notes.splice(index,1);
+ const moved=[];
+ for(const entry of entries.sort((a,b)=>a.bar-b.bar||a.at-b.at||a.index-b.index)){
+  const voices=reassignVoice?[voiceOf(entry.note),...([1,2,3,4].filter(v=>v!==voiceOf(entry.note)))]:[voiceOf(entry.note)];let placed=false;
+  for(const voice of voices){try{const index=add(draft,entry.bar,{...entry.note,staff:targetStaff,voice,at:entry.at});moved.push(entry.bar+':'+index);placed=true;break;}catch(error){if(error.message!=='This measure is full.')throw error;}}
+  if(!placed)throw Error('No free voice on the destination staff.');
+ }
+ sheet.score=draft.score;return new Set(moved);
+}
 // Plan the complete insertion before mutating, including overflow into later bars.
 function insert(sheet,bar,note,replaceIndex=null){
  if(!sheet.editable)throw Error('This sheet is read-only.');
@@ -68,7 +86,7 @@ function insert(sheet,bar,note,replaceIndex=null){
    if(n.tuplet)throw Error('Tuplet crosses a measure boundary.');
    const first=[],remaining=[];let left=length,target=room;
    while(left>0){const part=values.find(v=>v.value<=Math.min(target||left,left));if(!part)throw Error('Invalid note duration.');const item={...n,duration:part.duration,dots:part.dots};delete item.at;(target>0?first:remaining).push(item);left-=part.value;if(target>0)target-=part.value;}
-   const parts=[...first,...remaining];if(!n.rest)parts.forEach((part,i)=>{part.tiePrevious=i>0||!!n.tiePrevious;part.tieNext=i<parts.length-1||!!n.tieNext;});
+   const parts=[...first,...remaining];if(!n.rest)parts.forEach((part,i)=>{part.tiePrevious=i>0||!!n.tiePrevious;part.tieNext=i<parts.length-1||!!n.tieNext;part.pitches=(n.pitches||[]).map(tone=>({...tone,tiePrevious:i>0||!!(tone.tiePrevious??n.tiePrevious),tieNext:i<parts.length-1||!!(tone.tieNext??n.tieNext)}));});
    cursor=at;for(const part of first){output.push({...part,at:cursor,voice});cursor+=units(part);}queue.unshift(...remaining);cursor=cap;
   }
   for(const n of output){if(n._inserted)lastBar=bar;delete n._inserted;}
@@ -79,8 +97,8 @@ function insert(sheet,bar,note,replaceIndex=null){
  sheet.score.measures=measures;return lastBar;
 }
 
-function trimmedMeasures(sheet){const measures=clone(sheet.score.measures);while(measures.length&&!measures.at(-1).notes.length&&!measures.at(-1).preserve&&!measures.at(-1).time&&!measures.at(-1).timeSymbol&&!measures.at(-1).length&&!measures.at(-1).barline&&!measures.at(-1).repeat)measures.pop();return measures;}
-function asRest(note){const rest={...clone(note),pitch:'B4',rest:true,accidental:'',dynamic:'',articulation:'',bow:'',finger:'',ornament:'',tieNext:false,tiePrevious:false};delete rest.pitches;return rest;}
+function trimmedMeasures(sheet){const measures=clone(sheet.score.measures);while(measures.length&&!measures.at(-1).notes.length&&!measures.at(-1).preserve&&!measures.at(-1).time&&!measures.at(-1).timeSymbol&&!measures.at(-1).length&&!measures.at(-1).barline&&!measures.at(-1).repeat&&!measures.at(-1).clefs)measures.pop();return measures;}
+function asRest(note){const rest={...clone(note),pitch:'B4',rest:true,accidental:'',dynamic:'',articulation:'',bow:'',finger:'',ornament:'',tieNext:false,tiePrevious:false,slurStart:false,slurEnd:false};delete rest.pitches;delete rest.pedal;return rest;}
 // Ripple only within the selected measure and staff. Fill the vacated time with rests.
 function compactDelete(sheet,selected){
  if(!sheet.editable)throw Error('This sheet is read-only.');
@@ -141,19 +159,21 @@ function performanceOrder(sheet){
  return order;
 }
 function timeline(sheet){
- const events=[],meta=sheet.metadata,beatUnits=units({duration:meta.tempo_note,dots:meta.tempo_dots||0}),unit=60/meta.bpm/beatUnits,lastByVoice=new Map();let elapsed=0,previousSource=-1;
+ const events=[],pedals=[],meta=sheet.metadata,beatUnits=units({duration:meta.tempo_note,dots:meta.tempo_dots||0}),unit=60/meta.bpm/beatUnits,lastByVoice=new Map();let elapsed=0,previousSource=-1;
  performanceOrder(sheet).forEach(({bar:barIndex,sourceBar})=>{const bar=sheet.score.measures[sourceBar];if(previousSource>=0&&sourceBar!==previousSource+1)lastByVoice.clear();previousSource=sourceBar;
   for(let staff=1;staff<=staves(meta).length;staff++){
    const carry={},notes=bar.notes.map((n,i)=>({n,i,at:positionOf(bar,i)})).filter(({n})=>staffOf(n)===staff).sort((a,b)=>a.at-b.at||voiceOf(a.n)-voiceOf(b.n));
    for(const {n,i} of notes){
     const voice=voiceOf(n),at=positionOf(bar,i),length=units(n)*unit,start=elapsed+at*unit,key=staff+':'+voice,previous=lastByVoice.get(key)||new Map();
-    for(const tone of [{pitch:n.pitch,accidental:n.accidental},...(n.pitches||[])]){
+    if(n.pedal)pedals.push({time:start,type:n.pedal});
+    for(const [toneIndex,tone] of [{pitch:n.pitch,accidental:n.accidental},...(n.pitches||[])].entries()){
      const pitch=typeof tone==='string'?tone:tone.pitch,accidental=typeof tone==='string'?'':tone.accidental;
      const hz=n.rest?0:frequency(pitch,accidental,meta.key,carry);
-     const event={bar:barIndex,note:i,staff,voice,start,length,hz,soundLength:length};
+     const event={bar:barIndex,note:i,tone:toneIndex,staff,voice,start,length,hz,soundLength:length};
      const last=previous.get(pitch);
-     if(n.tiePrevious&&last?.source.tieNext&&!n.rest){event.hz=0;last.attack.soundLength+=length;event.attack=last.attack;}else event.attack=event;
-     events.push(event);previous.set(pitch,{source:n,attack:event.attack});
+     const tiePrevious=toneIndex===0?n.tiePrevious:(tone.tiePrevious??n.tiePrevious),tieNext=toneIndex===0?n.tieNext:(tone.tieNext??n.tieNext);
+     if(tiePrevious&&last?.tieNext&&Math.abs(last.end-start)<.000001&&!n.rest){event.hz=0;last.attack.soundLength+=length;event.attack=last.attack;}else event.attack=event;
+     events.push(event);previous.set(pitch,{tieNext:!!tieNext,end:start+length,attack:event.attack});
     }
     if(n.rest)previous.clear();
     lastByVoice.set(key,previous);
@@ -163,6 +183,17 @@ function timeline(sheet){
   elapsed+=barUnits(sheet,sourceBar)*unit;
  });
  events.sort((a,b)=>a.start-b.start||a.staff-b.staff||a.note-b.note);
+ pedals.sort((a,b)=>a.time-b.time);const active=new Map(),intervals=[];
+ for(const marker of pedals){const type=marker.type;
+  if(type.endsWith('Down')||type==='unaCorda'){const kind=type==='unaCorda'?'unaCorda':type.slice(0,-4);if(active.has(kind))intervals.push({kind,start:active.get(kind),end:marker.time});active.set(kind,marker.time);}
+  else{const kind=type==='treCorde'?'unaCorda':type.slice(0,-2);if(active.has(kind)){intervals.push({kind,start:active.get(kind),end:marker.time});active.delete(kind);}}
+ }
+ for(const[kind,start]of active)intervals.push({kind,start,end:elapsed});
+ for(const interval of intervals)for(const event of events){if(!event.hz)continue;
+  if(interval.kind==='unaCorda'){if(event.start>=interval.start&&event.start<interval.end)event.velocity=.55;continue;}
+  const activeAtDown=event.start<=interval.start&&event.start+event.soundLength>interval.start;
+  if(interval.kind==='sustain'?event.start<interval.end&&event.start+event.length>interval.start:activeAtDown){const naturalEnd=event.start+event.soundLength;if(naturalEnd<interval.end)event.soundLength=interval.end-event.start;}
+ }
  return {events,duration:elapsed};
 }
 function frequency(pitch,accidental='',key='C',carry={}){
@@ -174,5 +205,5 @@ function frequency(pitch,accidental='',key='C',carry={}){
  if(accidental){delta={'#':1,b:-1,n:0,'##':2,bb:-2,'+':.5,d:-.5}[accidental];carry[pitch]=delta;}
  return 440*Math.pow(2,((octave+1)*12+base[letter]+delta-69)/12);
 }
-const api={durations,keys,wholeUnits,units,measureUnits,effectiveTime,barUnits,positionOf,voiceOf,normalizeBar,clone,ticks,capacity,staves,staffOf,lane,used,fresh,add,insert,copySelection,pasteSelection,trimmedMeasures,asRest,compactDelete,prepare,measureSource,performanceOrder,timeline,frequency};if(typeof module==='object')module.exports=api;root.NotationModel=api;
+const api={durations,keys,wholeUnits,units,measureUnits,effectiveTime,effectiveClef,barUnits,positionOf,voiceOf,normalizeBar,clone,ticks,capacity,staves,staffOf,lane,used,fresh,add,insert,copySelection,pasteSelection,moveSelectionToStaff,trimmedMeasures,asRest,compactDelete,prepare,measureSource,performanceOrder,timeline,frequency};if(typeof module==='object')module.exports=api;root.NotationModel=api;
 })(globalThis);

@@ -29,6 +29,18 @@ setTimeout(async()=>{try{
  if(doc.querySelectorAll('measure').length!==2||doc.querySelectorAll('measure:nth-of-type(2) rest[measure="yes"]').length!==2)throw Error('Preserved empty measure was lost in MusicXML');
   if(doc.querySelector('divisions').textContent!=='241920'||doc.querySelector('key fifths').textContent!=='1'||doc.querySelector('clef[number="2"] sign').textContent!=='F')throw Error('Wrong divisions, key or bass clef');
   if(doc.querySelector('note duration').textContent!=='6615'||doc.querySelector('note type').textContent!=='256th')throw Error('Short dotted note lost its duration');
+ const original=structuredClone(sheet.score.measures);sheet.score.measures=[{notes:[
+  {pitch:'C4',duration:'8',dots:0,rest:false,staff:1,at:0,crossBeam:1,slurStart:true,pedal:'sustainDown',pitches:[{pitch:'E4',accidental:'',tieNext:true}]},
+  {pitch:'C3',duration:'8',dots:0,rest:false,staff:2,at:120960,crossBeam:1},
+ ]},{notes:[{pitch:'E4',duration:'q',dots:0,rest:false,staff:1,at:0,slurEnd:true,pitches:[{pitch:'G4',accidental:'',tiePrevious:true}]}],clefs:{2:'alto'}}];
+ captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
+ const pianoDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ if(pianoDoc.querySelector('parsererror')||pianoDoc.querySelectorAll('beam[number="1"]').length!==2||!pianoDoc.querySelector('slur[type="start"]')||!pianoDoc.querySelector('slur[type="stop"]')||!pianoDoc.querySelector('pedal[type="start"]')||!pianoDoc.querySelector('measure:nth-of-type(2) clef[number="2"] sign')||!pianoDoc.querySelector('note:has(chord) tie[type="start"]'))throw Error('Piano markings were lost in MusicXML');
+ sheet.score.measures=original;
+ sheet.metadata.staves=[{clef:'treble'}];captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
+ const hiddenDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ if(!hiddenDoc.querySelector('staves')||![...hiddenDoc.querySelectorAll('note staff')].some(item=>item.textContent==='2'))throw Error('Hidden bass notes were silently dropped from MusicXML');
+ sheet.metadata.staves=[{clef:'treble'},{clef:'bass'}];
  sheet.score.measures[1]={notes:[],preserve:true,repeat:{measure:1}};captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
  const repeatDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
  if(!repeatDoc.querySelector('measure:nth-of-type(2) measure-repeat[type="start"]')||repeatDoc.querySelectorAll('measure:nth-of-type(2) note pitch').length!==4)throw Error('MusicXML measure repeat did not include actual repeated notes');
