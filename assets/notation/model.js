@@ -111,7 +111,7 @@ function measureSource(sheet,position){const bars=sheet.score.measures;let sourc
 function performanceOrder(sheet){
  const bars=sheet.score.measures,order=[],startForEnd=new Map(),starts=[];
  const append=(bar,sourceBar)=>{if(barUnits(sheet,bar)!==barUnits(sheet,sourceBar))throw Error('Repeated measures must have the same length.');order.push({bar,sourceBar});};
- bars.forEach((bar,i)=>{if(bar.repeat?.start)starts.push(i);if(bar.repeat?.end){startForEnd.set(i,starts.at(-1)??0);}});
+ bars.forEach((bar,i)=>{if(bar.repeat?.start)starts.push(i);if(bar.repeat?.end){startForEnd.set(i,starts.at(-1)??0);if(starts.length)starts.pop();}});
  const segno=bars.findIndex(bar=>bar.repeat?.marker==='segno'),coda=bars.findIndex(bar=>bar.repeat?.marker==='coda');
  const passes=new Map();let index=0,pass=1,jumpTaken=false,alFine=false,alCoda=false,codaTaken=false,steps=0;
  while(index<bars.length){

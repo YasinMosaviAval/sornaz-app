@@ -3,8 +3,9 @@
 <script>
 const sheet={id:1,version:1,editable:true,visibility:'private',metadata:{title:'XML & piano',composer:'Composer',instrument:'Piano',key:'G',time:'4/4',tempo_note:'q',tempo_dots:0,tempo_text:'Allegro',bpm:120,clef:'treble',staves:[{clef:'treble'},{clef:'bass'}]},score:{measures:[{notes:[
  {pitch:'F4',duration:'256',dots:2,rest:false,staff:1,accidental:'#',tieNext:true,dynamic:'mf',articulation:'staccato',ornament:'trill',finger:'2',bow:'up',pitches:[{pitch:'A4',accidental:''}]},
+  {pitch:'C5',duration:'8',dots:0,rest:false,staff:1,voice:2,at:0,tuplet:{actual:3,normal:2}},
  {pitch:'C3',duration:'q',dots:0,rest:false,staff:2,accidental:''}
-]},{notes:[],preserve:true}]}};
+ ],repeat:{start:true}},{notes:[],preserve:true,repeat:{end:2,endings:[1],marker:'fine',jump:'dcAlFine'},barline:'final'}]}};
 window.fetch=async url=>({ok:true,json:async()=>({success:true,data:String(url).endsWith('/instruments')?[]:String(url).endsWith('/1')?sheet:{items:[],has_more:false}})});
 window.NOTATION_BOOT={locale:'en',embedded:false,api:'/music-sheets/api',userId:1};
 let captured;
@@ -21,9 +22,20 @@ setTimeout(async()=>{try{
  if(doc.querySelector('parsererror'))throw Error('Invalid XML: '+doc.querySelector('parsererror').textContent);
  const find=selector=>{if(!doc.querySelector(selector))throw Error('Missing '+selector);};
  find('divisions');find('key fifths');find('clef[number="2"] sign');find('note chord');find('tie[type="start"]');find('notations tied[type="start"]');find('dynamics mf');find('articulations staccato');find('ornaments trill-mark');find('technical fingering');find('technical up-bow');find('creator[type="composer"]');find('note accidental');
+  find('barline[location="left"] repeat[direction="forward"]');find('barline[location="right"] repeat[direction="backward"]');find('ending[type="stop"]');
+  find('sound[dacapo="yes"]');find('sound[fine="yes"]');
+  find('note voice');find('note time-modification actual-notes');
+  if(![...doc.querySelectorAll('note voice')].some(voice=>voice.textContent==='2'))throw Error('Second voice was lost in MusicXML');
  if(doc.querySelectorAll('measure').length!==2||doc.querySelectorAll('measure:nth-of-type(2) rest[measure="yes"]').length!==2)throw Error('Preserved empty measure was lost in MusicXML');
- if(doc.querySelector('divisions').textContent!=='256'||doc.querySelector('key fifths').textContent!=='1'||doc.querySelector('clef[number="2"] sign').textContent!=='F')throw Error('Wrong divisions, key or bass clef');
- if(doc.querySelector('note duration').textContent!=='7'||doc.querySelector('note type').textContent!=='256th')throw Error('Short dotted note lost its duration');
+  if(doc.querySelector('divisions').textContent!=='241920'||doc.querySelector('key fifths').textContent!=='1'||doc.querySelector('clef[number="2"] sign').textContent!=='F')throw Error('Wrong divisions, key or bass clef');
+  if(doc.querySelector('note duration').textContent!=='6615'||doc.querySelector('note type').textContent!=='256th')throw Error('Short dotted note lost its duration');
+ sheet.score.measures[1]={notes:[],preserve:true,repeat:{measure:1}};captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
+ const repeatDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ if(!repeatDoc.querySelector('measure:nth-of-type(2) measure-repeat[type="start"]')||repeatDoc.querySelectorAll('measure:nth-of-type(2) note pitch').length!==4)throw Error('MusicXML measure repeat did not include actual repeated notes');
+ sheet.score.measures=[{notes:[],repeat:{start:true,endings:[1]}},{notes:[],repeat:{end:2,endings:[1]}},{notes:[],repeat:{endings:[2]}}];
+ captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
+ const endingDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ if(endingDoc.querySelectorAll('ending[number="1"][type="start"]').length!==1||endingDoc.querySelectorAll('ending[number="1"][type="stop"]').length!==1||!endingDoc.querySelector('measure:nth-of-type(1) ending[type="start"]')||!endingDoc.querySelector('measure:nth-of-type(2) ending[type="stop"]'))throw Error('Multi-measure volta did not span the selected measures');
  document.body.dataset.result='passed';
 }catch(error){document.body.dataset.result='failed: '+error.message;}} ,100);
 </script></body></html>

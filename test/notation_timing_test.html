@@ -47,6 +47,11 @@ try {
  if(M.performanceOrder(repeat).map(v=>v.sourceBar).join(',')!=='0,1,0,2')throw Error('Repeat endings played in the wrong order');
  const twice=M.clone(repeat);twice.score.measures.push({notes:[],repeat:{start:true}},{notes:[],repeat:{end:2,endings:[1]}},{notes:[],repeat:{endings:[2]}});
  if(M.performanceOrder(twice).map(v=>v.sourceBar).join(',')!=='0,1,0,2,3,4,3,5')throw Error('A later repeat section inherited the previous ending pass');
+ const nested=M.fresh();nested.score.measures=[
+  {notes:[],repeat:{start:true}},{notes:[]},{notes:[],repeat:{start:true}},
+  {notes:[],repeat:{end:2}},{notes:[],repeat:{end:2}},
+ ];
+ if(M.performanceOrder(nested).map(v=>v.sourceBar).join(',')!=='0,1,2,3,2,3,4,0,1,2,3,2,3,4')throw Error('Nested repeats used the inner starting bar for the outer repeat');
  const three=M.fresh();three.score.measures=[{notes:[],repeat:{start:true}},{notes:[],repeat:{end:3,endings:[1]}},{notes:[],repeat:{end:3,endings:[2]}},{notes:[],repeat:{endings:[3]}}];
  if(M.performanceOrder(three).map(v=>v.sourceBar).join(',')!=='0,1,0,2,0,3')throw Error('Third ending did not execute');
  const oneBar=M.fresh();oneBar.score.measures=[{notes:[note('C4',0)]},{notes:[],repeat:{measure:1}}];
@@ -57,6 +62,12 @@ try {
  if(M.performanceOrder(twoBar).map(v=>v.sourceBar).join(',')!=='0,1,0,1'||M.timeline(twoBar).events.length!==4)throw Error('Two-bar repeat did not replay both source measures');
  NotationRenderer.draw(document.getElementById('score'),repeat,{accent:'#0065ff',activeBar:0,activeNote:-1,selectedNotes:new Set()});
  if(!document.querySelector('#score svg'))throw Error('Repeat barlines did not render');
+ const volta=M.fresh();volta.score.measures=[{notes:[],repeat:{start:true}},{notes:[],repeat:{endings:[1]}},{notes:[],repeat:{end:2,endings:[1]}},{notes:[],repeat:{endings:[2]}}];
+ if(M.performanceOrder(volta).map(item=>item.sourceBar).join(',')!=='0,1,2,0,3')throw Error('Multi-measure first and second endings played in the wrong order');
+ const longVolta=M.fresh();longVolta.score.measures=[{notes:[],repeat:{start:true}},{notes:[],repeat:{endings:[1]}},{notes:[],repeat:{endings:[1],end:2}},{notes:[],repeat:{endings:[2]}},{notes:[],repeat:{endings:[2]}}];
+ if(M.performanceOrder(longVolta).map(item=>item.sourceBar).join(',')!=='0,1,2,0,3,4')throw Error('Two-measure volta was not played as one ending');
+ NotationRenderer.draw(document.getElementById('score'),volta,{accent:'#0065ff',activeBar:0,activeNote:-1,selectedNotes:new Set()});
+ if([...document.querySelectorAll('#score svg text')].filter(element=>element.textContent==='1.').length!==1)throw Error('Multi-measure first ending was labelled more than once');
  repeat.score.measures.push({notes:[],repeat:{jump:'dcAlFine'}});
  repeat.score.measures[0].repeat.marker='fine';
  if(M.performanceOrder(repeat).map(v=>v.sourceBar).join(',')!=='0,1,0,2,3,0')throw Error('D.C. al Fine did not play and stop on Fine');

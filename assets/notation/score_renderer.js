@@ -55,7 +55,12 @@ function renderRow(target,bars,start,options){
   }
   const addLabel=(label,y,size=12)=>{const element=document.createElementNS('http://www.w3.org/2000/svg','text');for(const[key,value]of Object.entries({x:x+barWidth/2,y,'text-anchor':'middle','font-family':'NotationTheme, Arial','font-size':size,fill:'#111'}))element.setAttribute(key,value);element.textContent=label;svg.append(element);};
   const repeat=bar.repeat||{};
-  if(repeat.endings?.length){const y=staves[0].getY()-8,line=document.createElementNS('http://www.w3.org/2000/svg','path');line.setAttribute('d',`M${x+14} ${y+7}V${y}H${x+barWidth-10}`);line.setAttribute('fill','none');line.setAttribute('stroke','#111');line.setAttribute('stroke-width','1');svg.append(line);addLabel(repeat.endings.join(',')+'.',y-2,10);}
+  if(repeat.endings?.length){
+   const ending=repeat.endings.join(','),previous=options.sheet.score.measures[index-1]?.repeat?.endings?.join(','),next=options.sheet.score.measures[index+1]?.repeat?.endings?.join(','),y=staves[0].getY()-8;
+   const left=x+(previous===ending&&col>0?0:14),right=x+barWidth-(next===ending&&col<bars.length-1?0:10),line=document.createElementNS('http://www.w3.org/2000/svg','path');
+   line.setAttribute('d',`M${left} ${y+7}V${y}H${right}${next===ending?'':`V${y+7}`}`);line.setAttribute('fill','none');line.setAttribute('stroke','#111');line.setAttribute('stroke-width','1');svg.append(line);
+   if(previous!==ending||col===0)addLabel(ending+'.',y-2,10);
+  }
   if(repeat.marker)addLabel(({segno:'Segno',coda:'Coda',toCoda:'To Coda',fine:'Fine'})[repeat.marker],staves[0].getY()-18,10);
   if(repeat.jump)addLabel(({dc:'D.C.',ds:'D.S.',dcAlFine:'D.C. al Fine',dsAlFine:'D.S. al Fine',dcAlCoda:'D.C. al Coda',dsAlCoda:'D.S. al Coda'})[repeat.jump],staves[0].getY()-30,10);
   if(repeat.measure)addLabel(repeat.measure===1?'%':'% %',staves[0].getY()+58,24);

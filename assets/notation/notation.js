@@ -130,7 +130,7 @@ function measureTools(){
   measureSelect('barline','Barline',[['','Normal'],['double','Double'],['final','Final'],['hidden','Hidden']],bar.barline||''),
   measureSelect('repeatLine','Repeat barline',[['','Normal'],['start','Repeat start'],['end','Repeat end'],['both','Repeat both']],repeatLine),
   measureSelect('repeatCount','Repeat count',[2,3,4,5,6,7,8].map(value=>[String(value),String(value)]),repeat.end||2),
-  measureSelect('ending','Ending',[['','No ending'],...[1,2,3,4].map(value=>[String(value),String(value)])],repeat.endings?.[0]||''),
+  measureSelect('ending','Ending',[['','No ending'],...[1,2,3,4,5,6,7,8].map(value=>[String(value),String(value)])],repeat.endings?.[0]||''),
   measureSelect('measureRepeat','Measure',[['','Normal'],['1','One-bar repeat'],['2','Two-bar repeat']],repeat.measure||''),
   measureSelect('marker','Marker',[['','Normal'],['segno','Segno'],['coda','Coda'],['toCoda','To Coda'],['fine','Fine']],repeat.marker||''),
   measureSelect('jump','Jump',[['','Normal'],['dc','D.C.'],['ds','D.S.'],['dcAlFine','D.C. al Fine'],['dsAlFine','D.S. al Fine'],['dcAlCoda','D.C. al Coda'],['dsAlCoda','D.S. al Coda']],repeat.jump||'')
@@ -253,10 +253,11 @@ function musicXml(sheet){
    }).join(''):`<note><rest measure="yes"/><duration>${barDuration}</duration><voice>${i*4+1}</voice>${layout.length===2?`<staff>${i+1}</staff>`:''}</note>`;
    return prefix+rendered;
   }).join('');
-  const repeat=measure.repeat||{},ending=repeat.endings?.join(',');
-  const left=(repeat.start||ending)?`<barline location="left">${ending?`<ending number="${h(ending)}" type="start"/>`:''}${repeat.start?'<repeat direction="forward"/>':''}</barline>`:'';
+  const repeat=measure.repeat||{},ending=repeat.endings?.join(','),previousEnding=sheet.score.measures[index-1]?.repeat?.endings?.join(','),nextEnding=sheet.score.measures[index+1]?.repeat?.endings?.join(',');
+  const endingStarts=ending&&ending!==previousEnding,endingStops=ending&&ending!==nextEnding;
+  const left=(repeat.start||endingStarts)?`<barline location="left">${endingStarts?`<ending number="${h(ending)}" type="start"/>`:''}${repeat.start?'<repeat direction="forward"/>':''}</barline>`:'';
   const style={double:'light-light',final:'light-heavy',hidden:'none'}[measure.barline];
-  const right=(repeat.end||ending||style)?`<barline location="right">${style?`<bar-style>${style}</bar-style>`:''}${ending?`<ending number="${h(ending)}" type="stop"/>`:''}${repeat.end?`<repeat direction="backward" times="${repeat.end}"/>`:''}</barline>`:'';
+  const right=(repeat.end||endingStops||style)?`<barline location="right">${style?`<bar-style>${style}</bar-style>`:''}${endingStops?`<ending number="${h(ending)}" type="stop"/>`:''}${repeat.end?`<repeat direction="backward" times="${repeat.end}"/>`:''}</barline>`:'';
   const markers={segno:'<segno/>',coda:'<coda/>',toCoda:'<words>To Coda</words>',fine:'<words>Fine</words>'};
   const jumps={dc:'D.C.',ds:'D.S.',dcAlFine:'D.C. al Fine',dsAlFine:'D.S. al Fine',dcAlCoda:'D.C. al Coda',dsAlCoda:'D.S. al Coda'};
   const markerSound={segno:'segno="segno1"',coda:'coda="coda1"',toCoda:'tocoda="coda1"',fine:'fine="yes"'};
