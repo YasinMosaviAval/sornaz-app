@@ -15,31 +15,66 @@ class NotationApi {
   final Map<int, Map<String, dynamic>> _fetched = {};
   final http.Client _client;
   String get _storageKey => 'notation_local_v3_$userId';
+  String get _backupStorageKey => 'notation_local_v3_backup_$userId';
   String get _listsStorageKey => 'notation_lists_v1_$userId';
   void close() => _client.close();
 
   Future<Map<String, dynamic>> _local() async {
     final prefs = await SharedPreferences.getInstance();
-    try {
-      final current = prefs.getString(_storageKey);
-      if (current != null) {
+    final current = prefs.getString(_storageKey);
+    final backup = prefs.getString(_backupStorageKey);
+    if (current != null) {
+      try {
         return Map<String, dynamic>.from(jsonDecode(current) as Map);
+      } catch (_) {
+        if (backup == null) {
+          throw const FormatException('Saved music sheets are damaged.');
+        }
       }
-      final legacy = prefs.getString('notation_local_v2_$userId');
-      if (legacy == null) return {};
-      final migrated = Map<String, dynamic>.from(jsonDecode(legacy) as Map);
-      await prefs.setString(_storageKey, jsonEncode(migrated));
-      return migrated;
-    } catch (_) {
-      return {};
     }
+    if (backup != null) {
+      try {
+        return Map<String, dynamic>.from(jsonDecode(backup) as Map);
+      } catch (_) {
+        throw const FormatException(
+          'Saved music sheets and backup are damaged.',
+        );
+      }
+    }
+    final legacy = prefs.getString('notation_local_v2_$userId');
+    if (legacy == null) return {};
+    late final Map<String, dynamic> migrated;
+    try {
+      migrated = Map<String, dynamic>.from(jsonDecode(legacy) as Map);
+    } catch (_) {
+      throw const FormatException('Saved music sheets are damaged.');
+    }
+    if (!await prefs.setString(_storageKey, jsonEncode(migrated))) {
+      throw const FormatException('Could not migrate saved music sheets.');
+    }
+    return migrated;
   }
 
-  Future<void> _write(Map<String, dynamic> entries) async =>
-      (await SharedPreferences.getInstance()).setString(
-        _storageKey,
-        jsonEncode(entries),
-      );
+  Future<void> _write(Map<String, dynamic> entries) async {
+    final prefs = await SharedPreferences.getInstance();
+    final previous = prefs.getString(_storageKey);
+    if (previous != null) {
+      var previousValid = false;
+      try {
+        Map<String, dynamic>.from(jsonDecode(previous) as Map);
+        previousValid = true;
+      } catch (_) {
+        // Keep the last valid backup when the primary entry is damaged.
+      }
+      if (previousValid &&
+          !await prefs.setString(_backupStorageKey, previous)) {
+        throw const FormatException('Could not back up saved music sheets.');
+      }
+    }
+    if (!await prefs.setString(_storageKey, jsonEncode(entries))) {
+      throw const FormatException('Could not save music sheets.');
+    }
+  }
 
   Future<Map<String, dynamic>> _lists() async {
     final value = (await SharedPreferences.getInstance()).getString(

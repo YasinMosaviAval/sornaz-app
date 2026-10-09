@@ -354,6 +354,8 @@ class _NotationHostState extends State<_NotationHost>
           null,
           error is PlatformException && error.code == 'NOTATION_STORAGE'
               ? 'Could not save the music sheet.'
+              : error is FormatException
+              ? error.message
               : error is SocialException
               ? error.message
               : 'Connection failed. Your changes are still here.',

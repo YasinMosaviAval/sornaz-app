@@ -272,7 +272,9 @@ window.addEventListener('message',(event)=>{
         result = await api.request(action as String, data);
       }
     } catch (e) {
-      error = 'Connection failed. Your changes are still here.';
+      error = e is FormatException
+          ? e.message
+          : 'Connection failed. Your changes are still here.';
     }
     if (mounted && id != null)
       frame?.contentWindow?.postMessage({

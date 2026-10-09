@@ -33,6 +33,17 @@ try {
   const restored = JSON.parse(JSON.stringify(sheet));
   if (restored.score.measures[0].notes[1].staff !== 2 || restored.score.measures[0].notes[1].pitches.length !== 2)
     throw Error('Second-staff chord was not serialized');
+  const compact=M.fresh();compact.metadata.staves=[{clef:'treble'},{clef:'bass'}];
+  compact.score.measures=[{notes:[{...upper,pitch:'C4'},{...upper,pitch:'D4'},{...lower,pitches:[]}]},{notes:[],preserve:true},{notes:[{...upper,pitch:'E4'}]}];
+  const beforeBass=JSON.stringify(M.lane(compact.score.measures[0],2)),beforeLater=JSON.stringify(compact.score.measures[2]);
+  M.compactDelete(compact,new Set(['0:0']));M.prepare(compact);
+  if(JSON.stringify(M.lane(compact.score.measures[0],2))!==beforeBass||JSON.stringify(compact.score.measures[2])!==beforeLater)
+    throw Error('Compact deletion moved the other staff or a later measure');
+  if(!compact.score.measures[1].preserve||M.lane(compact.score.measures[0],1)[1].rest!==true)
+    throw Error('Compact deletion did not preserve an empty measure or fill vacated time');
+  const rest=M.asRest(lower);
+  if(rest.pitches||!rest.rest||rest.staff!==2||M.ticks(rest)!==M.ticks(lower))
+    throw Error('Chord-to-rest conversion retained chord data or changed timing');
   const score = document.getElementById('score');
   const aligned=M.fresh();aligned.metadata.staves=[{clef:'treble'},{clef:'bass'}];
   for(const note of [{...upper,pitch:'C5'},{...upper,pitch:'D5'},{...lower,pitch:'C3',pitches:[]},{...lower,pitch:'D3',pitches:[]}])M.insert(aligned,0,note);

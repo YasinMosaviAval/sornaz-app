@@ -53,6 +53,11 @@ setTimeout(async()=>{
   await new Promise(resolve=>setTimeout(resolve,600));
   click('#score [data-note][data-staff="2"]');
   if(!document.querySelector('[data-action="chord-tone"]')?.textContent.includes('F3'))throw Error('Undo did not restore the dragged chord');
+  window.Notation.command('delete-note-rest');await pause();
+  if(document.querySelector('[data-action="chord-tone"]'))throw Error('Chord controls remained after conversion to rest');
+  window.Notation.command('undo');await pause();
+  click('#score [data-note][data-staff="2"]');
+  if(!document.querySelector('[data-action="chord-tone"]')?.textContent.includes('F3'))throw Error('Undo did not restore the chord from rest');
   click('[data-action="metadata"]');await pause();
   const singleForm=document.getElementById('metadata');singleForm.elements.instrument.value='guitar';
   singleForm.elements.instrument.dispatchEvent(new Event('change',{bubbles:true}));
@@ -66,12 +71,16 @@ setTimeout(async()=>{
   document.getElementById('metadata').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));await pause();
   if(!document.querySelector('#score [data-note][data-staff="2"]'))throw Error('Bass note did not return after switching back to piano');
   click('#score [data-note][data-staff="2"]');window.Notation.command('delete-note-compact');await pause();
-  if(document.querySelector('#score [data-note][data-staff="2"]')||!document.querySelector('#score [data-note][data-staff="1"]'))
-   throw Error('Deleting a bass note changed the treble staff');
+  if(!document.querySelector('#score [data-note][data-staff="2"]')||!document.querySelector('#score [data-note][data-staff="1"]'))
+   throw Error('Compact deletion lost a staff or its timing rest');
+  click('#score [data-note][data-staff="2"]');
+  if(document.querySelector('[data-action="chord-tone"]'))throw Error('Compact deletion retained the bass chord');
   window.Notation.command('undo');await pause();
-  if(!document.querySelector('#score [data-note][data-staff="2"]'))throw Error('Undo did not restore the bass note');
+  click('#score [data-note][data-staff="2"]');
+  if(!document.querySelector('[data-action="chord-tone"]'))throw Error('Undo did not restore the bass chord');
   window.Notation.command('redo');await pause();
-  if(document.querySelector('#score [data-note][data-staff="2"]'))throw Error('Redo did not remove the bass note again');
+  click('#score [data-note][data-staff="2"]');
+  if(document.querySelector('[data-action="chord-tone"]'))throw Error('Redo did not restore the bass rest');
   document.body.dataset.result='passed';
  } catch(error) {document.body.dataset.result='failed: '+error.message;}
 },100);

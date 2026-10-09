@@ -82,4 +82,59 @@ void main() {
     expect(reopened['score'], score['score']);
     api.close();
   });
+
+  test(
+    'damaged primary score storage restores its last valid backup',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final api = NotationApi('', userId: 71);
+      final first =
+          await api.request('save', {
+                'sheetId': 0,
+                'payload': {
+                  'metadata': {'title': 'First'},
+                  'score': {'measures': []},
+                },
+              })
+              as Map;
+      await api.request('save', {
+        'sheetId': first['id'],
+        'payload': {
+          'metadata': {'title': 'Second'},
+          'score': {'measures': []},
+        },
+      });
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('notation_local_v3_backup_71'), isNotNull);
+      await prefs.setString('notation_local_v3_71', '{broken');
+      final recovered =
+          await api.request('get', {'sheetId': first['id']}) as Map;
+      expect(recovered['metadata']['title'], 'First');
+      expect(prefs.getString('notation_local_v3_71'), '{broken');
+      await api.request('save', {
+        'sheetId': first['id'],
+        'payload': {
+          'metadata': {'title': 'Recovered'},
+          'score': {'measures': []},
+        },
+      });
+      expect(
+        (await api.request('get', {
+          'sheetId': first['id'],
+        }))['metadata']['title'],
+        'Recovered',
+      );
+      api.close();
+    },
+  );
+
+  test('damaged score storage without backup reports an error', () async {
+    SharedPreferences.setMockInitialValues({'notation_local_v3_72': '{broken'});
+    final api = NotationApi('', userId: 72);
+    await expectLater(
+      api.request('list', {'mode': 'mine', 'page': 1}),
+      throwsA(isA<FormatException>()),
+    );
+    api.close();
+  });
 }

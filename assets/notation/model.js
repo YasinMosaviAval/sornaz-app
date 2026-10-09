@@ -33,13 +33,28 @@ function insert(sheet,bar,note,replaceIndex=null){
   }
   for(const n of output){if(n._inserted)lastBar=bar;delete n._inserted;}
   const other=(measures[bar]?.notes||[]).filter(n=>staffOf(n)!==staff);
-  measures[bar]={notes:staff===1?[...output,...other]:[...other,...output]};bar++;
+  measures[bar]={...(measures[bar]||{}),notes:staff===1?[...output,...other]:[...other,...output]};bar++;
   if(queue.length)queue.push(...(measures[bar]?.notes||[]).filter(n=>staffOf(n)===staff));
  }
  sheet.score.measures=measures;return lastBar;
 }
 
-function trimmedMeasures(sheet){const measures=clone(sheet.score.measures);while(measures.length&&!measures.at(-1).notes.length)measures.pop();return measures;}
+function trimmedMeasures(sheet){const measures=clone(sheet.score.measures);while(measures.length&&!measures.at(-1).notes.length&&!measures.at(-1).preserve)measures.pop();return measures;}
+function asRest(note){const rest={...clone(note),pitch:'B4',rest:true,accidental:'',dynamic:'',articulation:'',bow:'',finger:'',ornament:'',tieNext:false,tiePrevious:false};delete rest.pitches;return rest;}
+// Ripple only within the selected measure and staff. Fill the vacated time with rests.
+function compactDelete(sheet,selected){
+ if(!sheet.editable)throw Error('This sheet is read-only.');
+ const values=Object.keys(durations).flatMap(duration=>[0,1,2].map(dots=>({duration,dots,value:ticks({duration,dots})}))).sort((a,b)=>b.value-a.value);
+ sheet.score.measures.forEach((bar,barIndex)=>{
+  const original=bar.notes;
+  const removed=[1,2].map(staff=>original.reduce((sum,n,i)=>sum+(staffOf(n)===staff&&selected.has(barIndex+':'+i)?ticks(n):0),0));
+  if(!removed.some(Boolean))return;
+  const lanes=[1,2].map(staff=>original.filter((n,i)=>staffOf(n)===staff&&!selected.has(barIndex+':'+i)));
+  lanes.forEach((notes,index)=>{let remaining=removed[index];while(remaining>0.0001){const part=values.find(v=>v.value<=remaining+0.0001);if(!part)throw Error('Invalid note duration.');notes.push({pitch:'B4',duration:part.duration,dots:part.dots,rest:true,staff:index+1,accidental:''});remaining-=part.value;}});
+  bar.notes=[...lanes[0],...lanes[1]];bar.preserve=true;
+ });
+ return sheet;
+}
 function prepare(sheet){
  const measures=trimmedMeasures(sheet);
  if(sheet.editable&&(!measures.length||staves(sheet.metadata).some((_,i)=>used(measures.at(-1),i+1)>=capacity(sheet.metadata)))){if(measures.length<64)measures.push({notes:[]});}
@@ -81,5 +96,5 @@ function frequency(pitch,accidental='',key='C',carry={}){
  if(accidental){delta={'#':1,b:-1,n:0,'##':2,bb:-2,'+':.5,d:-.5}[accidental];carry[pitch]=delta;}
  return 440*Math.pow(2,((octave+1)*12+base[letter]+delta-69)/12);
 }
-const api={durations,keys,clone,ticks,capacity,staves,staffOf,lane,used,fresh,add,insert,trimmedMeasures,prepare,timeline,frequency};if(typeof module==='object')module.exports=api;root.NotationModel=api;
+const api={durations,keys,clone,ticks,capacity,staves,staffOf,lane,used,fresh,add,insert,trimmedMeasures,asRest,compactDelete,prepare,timeline,frequency};if(typeof module==='object')module.exports=api;root.NotationModel=api;
 })(globalThis);

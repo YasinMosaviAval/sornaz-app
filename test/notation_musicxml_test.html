@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><body data-result="pending"><main id="app"></main><div id="toast"></div>
+<script>
+const sheet={id:1,version:1,editable:true,visibility:'private',metadata:{title:'XML & piano',composer:'Composer',instrument:'Piano',key:'G',time:'4/4',tempo_note:'q',tempo_dots:0,tempo_text:'Allegro',bpm:120,clef:'treble',staves:[{clef:'treble'},{clef:'bass'}]},score:{measures:[{notes:[
+ {pitch:'F4',duration:'256',dots:2,rest:false,staff:1,accidental:'#',tieNext:true,dynamic:'mf',articulation:'staccato',ornament:'trill',finger:'2',bow:'up',pitches:[{pitch:'A4',accidental:''}]},
+ {pitch:'C3',duration:'q',dots:0,rest:false,staff:2,accidental:''}
+]},{notes:[],preserve:true}]}};
+window.fetch=async url=>({ok:true,json:async()=>({success:true,data:String(url).endsWith('/instruments')?[]:String(url).endsWith('/1')?sheet:{items:[],has_more:false}})});
+window.NOTATION_BOOT={locale:'en',embedded:false,api:'/music-sheets/api',userId:1};
+let captured;
+URL.createObjectURL=blob=>{captured=blob;return 'blob:test'};
+HTMLAnchorElement.prototype.click=function(){};
+</script>
+<script src="../assets/notation/vendor/vexflow.js"></script><script src="../assets/notation/model.js"></script><script src="../assets/notation/ui_symbols.js"></script><script src="../assets/notation/score_renderer.js"></script><script src="../assets/notation/notation.js"></script>
+<script>
+setTimeout(async()=>{try{
+ const button=document.createElement('button');button.dataset.action='musicxml';button.dataset.id='1';document.getElementById('app').append(button);button.click();
+ await new Promise(resolve=>setTimeout(resolve,80));
+ if(!captured)throw Error('MusicXML was not exported');
+ const xml=await captured.text(),doc=new DOMParser().parseFromString(xml,'application/xml');
+ if(doc.querySelector('parsererror'))throw Error('Invalid XML: '+doc.querySelector('parsererror').textContent);
+ const find=selector=>{if(!doc.querySelector(selector))throw Error('Missing '+selector);};
+ find('divisions');find('key fifths');find('clef[number="2"] sign');find('note chord');find('tie[type="start"]');find('notations tied[type="start"]');find('dynamics mf');find('articulations staccato');find('ornaments trill-mark');find('technical fingering');find('technical up-bow');find('creator[type="composer"]');find('note accidental');
+ if(doc.querySelectorAll('measure').length!==2||doc.querySelectorAll('measure:nth-of-type(2) rest[measure="yes"]').length!==2)throw Error('Preserved empty measure was lost in MusicXML');
+ if(doc.querySelector('divisions').textContent!=='256'||doc.querySelector('key fifths').textContent!=='1'||doc.querySelector('clef[number="2"] sign').textContent!=='F')throw Error('Wrong divisions, key or bass clef');
+ if(doc.querySelector('note duration').textContent!=='7'||doc.querySelector('note type').textContent!=='256th')throw Error('Short dotted note lost its duration');
+ document.body.dataset.result='passed';
+}catch(error){document.body.dataset.result='failed: '+error.message;}} ,100);
+</script></body></html>
