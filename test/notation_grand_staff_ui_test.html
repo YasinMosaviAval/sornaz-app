@@ -41,6 +41,10 @@ setTimeout(async()=>{
   if(!document.querySelector('[data-action="chord-tone"]'))throw Error('Chord tone was not added or editable');
   click('[data-action="chord-tone"]');click('[data-pitch="F3"]');await pause();
   if(!document.querySelector('[data-action="chord-tone"]')?.textContent.includes('F3'))throw Error('Chord tone could not be edited');
+  const harmonic=document.querySelector('[data-harmonic]');if(!harmonic)throw Error('Natural harmonic editor is missing');harmonic.value='3';harmonic.dispatchEvent(new Event('change',{bubbles:true}));await pause();
+  if(document.querySelector('[data-harmonic]')?.value!=='3')throw Error('Natural harmonic was not retained');
+  window.Notation.command('undo');await pause();if(document.querySelector('[data-harmonic]')?.value==='3')throw Error('Natural harmonic did not undo');
+  click('#score [data-note][data-staff="2"]');await pause();
   const toneFinger=document.querySelector('[data-tone-finger="0"]');if(!toneFinger)throw Error('Chord-tone fingering control is missing');toneFinger.value='3';toneFinger.dispatchEvent(new Event('change',{bubbles:true}));await pause();
   if(document.querySelector('[data-tone-finger="0"]')?.value!=='3')throw Error('Chord-tone fingering was not retained');
   click('[data-action="note-mark"][data-field="arpeggio"]');await pause();
@@ -148,6 +152,13 @@ setTimeout(async()=>{
   if(document.querySelector('[data-measure-choice="multiRest"]')?.value!=='2'||!document.querySelector('#score .notation-multi-rest'))throw Error('Multi-measure rest could not be edited');
   window.Notation.command('undo');await pause();
   if(document.querySelector('[data-measure-choice="multiRest"]')?.value==='2')throw Error('Multi-measure rest did not undo');
+  click('.staff-picker [data-staff="1"]');click('[data-pitch="C4"]');await pause();click('[data-pitch="D4"]');await pause();
+  const lastTreble=[...document.querySelectorAll('#score [data-note][data-staff="1"]')].at(-1);lastTreble?.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true}));await pause();
+  const timedClef=document.querySelector('[data-clef-change]');if(!timedClef)throw Error('Timed clef editor was not available on a later note');timedClef.value='bass';timedClef.dispatchEvent(new Event('change',{bubbles:true}));await pause();
+  if(document.querySelector('[data-clef-change]')?.value!=='bass'||!document.querySelector('[data-action="remove-clef-change"]'))throw Error('Timed clef was not retained as an independent event');
+  window.Notation.command('undo');await pause();if(document.querySelector('[data-clef-change]')?.value==='bass')throw Error('Timed clef did not undo');
+  window.Notation.command('redo');await pause();click('[data-action="remove-clef-change"]');await pause();
+  if(document.querySelector('[data-action="remove-clef-change"]'))throw Error('Timed clef could not be removed');
   document.body.dataset.result='passed';
  } catch(error) {document.body.dataset.result='failed: '+error.message;}
 },100);

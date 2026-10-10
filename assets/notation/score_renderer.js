@@ -86,9 +86,9 @@ function renderRow(target,bars,start,options){
     if(n.at>cursor)notes.push(...spacingNotes(n.at-cursor));
     const tones=[{pitch:n.pitch,accidental:n.accidental},...(n.pitches||[])],display=ottava(n.pitch,n.rest);
     const keys=n.rest?['b/4']:tones.map(tone=>{const shifted=ottava(tone.pitch);return shifted.pitch[0].toLowerCase()+'/'+shifted.pitch.slice(1);});
-    const NoteClass=n.noteSize&&!n.rest?SmallStaveNote:VF.StaveNote;
-    const v=new NoteClass({clef:clefs[lane].split('_')[0],keys,duration:n.duration+(n.rest?'r':''),dots:n.dots||0,auto_stem:true});
-    if(n.graces?.length){const graceNotes=n.graces.map(grace=>{const p=ottava(grace.pitch).pitch,small=new VF.GraceNote({clef:clefs[lane].split('_')[0],keys:[p[0].toLowerCase()+'/'+p.slice(1)],duration:grace.duration||'8',slash:grace.kind==='acciaccatura'});if(grace.accidental)small.addModifier(new VF.Accidental(grace.accidental),0);return small;});v.addModifier(new VF.GraceNoteGroup(graceNotes,true).beamNotes(),0);}
+    const noteClef=M.clefAt(options.sheet,index,staff,n.at),NoteClass=n.noteSize&&!n.rest?SmallStaveNote:VF.StaveNote;
+    const v=new NoteClass({clef:noteClef.split('_')[0],keys,duration:n.duration+(n.rest?'r':''),dots:n.dots||0,auto_stem:true});
+    if(n.graces?.length){const graceNotes=n.graces.map(grace=>{const p=ottava(grace.pitch).pitch,small=new VF.GraceNote({clef:noteClef.split('_')[0],keys:[p[0].toLowerCase()+'/'+p.slice(1)],duration:grace.duration||'8',slash:grace.kind==='acciaccatura'});if(grace.accidental)small.addModifier(new VF.Accidental(grace.accidental),0);return small;});v.addModifier(new VF.GraceNoteGroup(graceNotes,true).beamNotes(),0);}
     octaveNotes.push({note:v,...display});
     if(!n.rest)v.setStemDirection(v.getKeyProps()[0].line<=3?VF.Stem.UP:VF.Stem.DOWN);
     if(!n.rest)tones.forEach((tone,i)=>{if(tone.accidental){const accidental=new VF.Accidental(tone.accidental);if((i===0?n.cautionary:tone.cautionary)&&accidental.setAsCautionary)accidental.setAsCautionary();v.addModifier(accidental,i);}});
@@ -98,6 +98,7 @@ function renderRow(target,bars,start,options){
     if(['fermata','breath','caesura'].includes(n.articulation))v.addModifier(new VF.Annotation(({fermata:'𝄐',breath:',',caesura:'//'})[n.articulation]).setFont('Arial',15).setVerticalJustification(VF.Annotation.VerticalJustify.TOP),0);
     if(n.ornament){const ornament={trill:'tr',mordent:'mordent',invertedMordent:'mordent_inverted',turn:'turn',invertedTurn:'turn_inverted'}[n.ornament];if(ornament){const symbol=new VF.Ornament(ornament);if(n.ornamentUpperAccidental)symbol.setUpperAccidental(n.ornamentUpperAccidental);if(n.ornamentLowerAccidental)symbol.setLowerAccidental(n.ornamentLowerAccidental);v.addModifier(symbol,0);}}
     if(n.tremolo)v.addModifier(new VF.Tremolo(n.tremolo),0);
+    if(n.harmonic?.kind==='natural')v.addModifier(new VF.Annotation('○').setFont('NotationTheme',16).setVerticalJustification(VF.Annotation.VerticalJustify.TOP),0);
     if(n.arpeggio&&n.pitches?.length)v.addModifier(new VF.Stroke(n.arpeggio==='down'?VF.Stroke.Type.ROLL_DOWN:VF.Stroke.Type.ROLL_UP),0);
     if(n.finger)v.addModifier(new VF.FretHandFinger(n.finger).setPosition(VF.Modifier.Position.ABOVE),0);
     (n.pitches||[]).forEach((tone,index)=>{if(tone.finger)v.addModifier(new VF.FretHandFinger(tone.finger).setPosition(VF.Modifier.Position.ABOVE),index+1);});
@@ -117,6 +118,7 @@ function renderRow(target,bars,start,options){
    }
   });
   if(voices.length){const formatter=new VF.Formatter();staves.forEach(stave=>{const same=voices.filter(v=>v.stave===stave).map(v=>v.voice);if(same.length)formatter.joinVoices(same);});formatter.format(voices.map(v=>v.voice),Math.max(20,staves[0].getNoteEndX()-noteStart-12));voices.forEach(({voice,stave})=>voice.draw(ctx,stave));for(const group of [...crossGroups.values(),...manualGroups.values()])if(group.length>1)beams.push(new VF.Beam(group.sort((a,b)=>a.at-b.at).map(item=>item.note)));beams.forEach(beam=>beam.setContext(ctx).draw());tuplets.forEach(tuplet=>tuplet.setContext(ctx).draw());}
+  for(const event of bar.clefChanges||[]){const stave=staves[event.staff-1];if(!stave)continue;const anchors=bar.notes.map((note,i)=>({note,at:M.positionOf(bar,i),box:engravedNotes[i]?.getBoundingBox()})).filter(item=>M.staffOf(item.note)===event.staff&&item.box).sort((a,b)=>a.at-b.at),after=anchors.find(item=>item.at>=event.at),before=[...anchors].reverse().find(item=>item.at<event.at),position=after?after.box.getX()-22:before?before.box.getX()+before.box.getW()+18:stave.getNoteStartX()+20,markerX=Math.max(stave.getNoteStartX()+2,Math.min(x+barWidth-24,position)),marker=new VF.ClefNote(event.clef.split('_')[0],'small',event.clef.split('_')[1]);marker.setStave(stave).setContext(ctx);marker.getAbsoluteX=()=>markerX;ctx.openGroup('notation-timed-clef');marker.draw();ctx.closeGroup();}
   engraved.push({notes:engravedNotes,ctx,row:target,svg});
   if(!options.printing){
    const hit=(attributes)=>{const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');for(const[k,v]of Object.entries({fill:'transparent',stroke:'none','class':'note-hit',...attributes}))rect.setAttribute(k,String(v));svg.append(rect);};

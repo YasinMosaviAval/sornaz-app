@@ -72,6 +72,14 @@ setTimeout(async()=>{try{
  delete sheet.score.measures[0].beamPattern;captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
  const defaultGroupedDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
  if([...defaultGroupedDoc.querySelectorAll('beam')].map(node=>node.textContent).join(',')!=='begin,continue,end,begin,continue,end')throw Error('Default compound grouping was lost in MusicXML');
+ sheet.score.measures=[{notes:[{pitch:'C4',duration:'q',dots:0,rest:false,staff:1,at:0},{pitch:'C3',duration:'q',dots:0,rest:false,staff:1,at:241920}],clefChanges:[{at:241920,staff:1,clef:'bass'}]}];
+ captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
+ const timedClefDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ if(timedClefDoc.querySelector('parsererror')||timedClefDoc.querySelectorAll('measure:first-of-type clef[number="1"] sign').length!==2||timedClefDoc.querySelectorAll('measure:first-of-type clef[number="1"] sign')[1]?.textContent!=='F')throw Error('Timed clef change was lost in MusicXML');
+ sheet.score.measures=[{notes:[{pitch:'C4',duration:'q',dots:0,rest:false,staff:1,harmonic:{kind:'natural',partial:3}}]}];
+ captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
+ const harmonicDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ if(harmonicDoc.querySelector('parsererror')||!harmonicDoc.querySelector('note technical harmonic base-pitch')||!harmonicDoc.querySelector('note[print-object="no"] technical harmonic sounding-pitch')||harmonicDoc.querySelector('note[print-object="no"] pitch step')?.textContent!=='G')throw Error('Natural harmonic base or sounding pitch was lost in MusicXML');
  sheet.score.measures=[{notes:[],preserve:true,multiRest:2},{notes:[],preserve:true}];
  captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
  const multiRestDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
