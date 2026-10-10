@@ -107,8 +107,11 @@ function insert(sheet,bar,note,replaceIndex=null){
  sheet.score.measures=measures;return lastBar;
 }
 
-function trimmedMeasures(sheet){const measures=clone(sheet.score.measures);while(measures.length&&!measures.at(-1).notes.length&&!measures.at(-1).preserve&&!measures.at(-1).time&&!measures.at(-1).timeSymbol&&!measures.at(-1).length&&!measures.at(-1).barline&&!measures.at(-1).repeat&&!measures.at(-1).clefs&&!measures.at(-1).key&&!measures.at(-1).tempo&&!measures.at(-1).rehearsal&&!measures.at(-1).text&&!measures.at(-1).displayNumber)measures.pop();return measures;}
-function asRest(note){const rest={...clone(note),pitch:'B4',rest:true,accidental:'',cautionary:false,dynamic:'',articulation:'',bow:'',finger:'',ornament:'',tieNext:false,tiePrevious:false,slurStart:false,slurEnd:false};delete rest.pitches;delete rest.pedal;delete rest.beamGroup;delete rest.crossBeam;delete rest.lyric;delete rest.hairpin;delete rest.chordSymbol;delete rest.tremolo;delete rest.graces;delete rest.octaveShift;delete rest.arpeggio;delete rest.slide;return rest;}
+function trimmedMeasures(sheet){const measures=clone(sheet.score.measures);while(measures.length&&!measures.at(-1).notes.length&&!measures.at(-1).preserve&&!measures.at(-1).time&&!measures.at(-1).timeSymbol&&!measures.at(-1).length&&!measures.at(-1).barline&&!measures.at(-1).repeat&&!measures.at(-1).clefs&&!measures.at(-1).key&&!measures.at(-1).tempo&&!measures.at(-1).rehearsal&&!measures.at(-1).text&&!measures.at(-1).displayNumber&&!measures.at(-1).multiRest)measures.pop();return measures;}
+function multiRestCompatible(bar,first=false){return !!bar&&!bar.notes.length&&!bar.time&&!bar.timeSymbol&&!bar.length&&!bar.barline&&!bar.repeat&&!bar.clefs&&!bar.key&&!bar.tempo&&!bar.rehearsal&&!bar.text&&(!bar.displayNumber||first)&&(!bar.multiRest||first);}
+function validMultiRest(bars,start,count){return Number.isInteger(count)&&count>=2&&count<=8&&start+count<=bars.length&&bars.slice(start,start+count).every((bar,offset)=>multiRestCompatible(bar,offset===0));}
+function multiRestAt(bars,index){for(let start=index;start>=Math.max(0,index-7);start--){const count=bars[start]?.multiRest;if(count&&validMultiRest(bars,start,count)&&index<start+count)return {start,count,end:start+count-1};}return null;}
+function asRest(note){const rest={...clone(note),pitch:'B4',rest:true,accidental:'',cautionary:false,dynamic:'',articulation:'',bow:'',finger:'',ornament:'',tieNext:false,tiePrevious:false,slurStart:false,slurEnd:false};delete rest.pitches;delete rest.pedal;delete rest.beamGroup;delete rest.crossBeam;delete rest.lyric;delete rest.hairpin;delete rest.chordSymbol;delete rest.tremolo;delete rest.graces;delete rest.octaveShift;delete rest.arpeggio;delete rest.slide;delete rest.noteSize;delete rest.ornamentUpperAccidental;delete rest.ornamentLowerAccidental;return rest;}
 // Ripple only within the selected measure and staff. Fill the vacated time with rests.
 function compactDelete(sheet,selected){
  if(!sheet.editable)throw Error('This sheet is read-only.');
@@ -129,6 +132,7 @@ function compactDelete(sheet,selected){
 }
 function prepare(sheet){
  const measures=trimmedMeasures(sheet);
+ for(let index=0;index<measures.length;index++)if(measures[index].multiRest&&!validMultiRest(measures,index,measures[index].multiRest))delete measures[index].multiRest;
  const full=measures.length&&staves(sheet.metadata).some((_,i)=>used(measures.at(-1),i+1)>=barUnits({...sheet,score:{measures}},measures.length-1)/unitPerLegacyTick);
  if(sheet.editable&&(!measures.length||full)&&measures.length<64)measures.push({notes:[]});
  sheet.score.measures=measures;return sheet;
@@ -182,16 +186,17 @@ function timeline(sheet){
     if(n.octaveShift==='stop')octaveShifts.delete(key);else if(n.octaveShift)octaveShifts.set(key,n.octaveShift);
     const clef=effectiveClef(sheet,sourceBar,staff),octaveMark=octaveShifts.get(key),octaveShift=(clef.endsWith('_8vb')?.5:clef.endsWith('_8va')?2:1)*({ '8va':2,'8vb':.5,'15ma':4,'15mb':.25}[octaveMark]||1);
     const graces=Array.isArray(n.graces)?n.graces:[],graceTotal=Math.min(length*.45,graces.reduce((sum,item)=>sum+(item.kind==='appoggiatura'?.14:.055),0));let graceCursor=start;
-    for(const grace of graces){const duration=graceTotal/graces.length;events.push({bar:barIndex,note:i,tone:-1,staff,voice,start:graceCursor,length:duration,hz:frequency(grace.pitch,grace.accidental||'',keySignature)*octaveShift,soundLength:duration*.88,velocity:.55,grace:true});graceCursor+=duration;}
+    for(const grace of graces){const duration=graceTotal/graces.length;events.push({bar:barIndex,note:i,tone:-1,staff,voice,start:graceCursor,length:duration,hz:n.noteSize==='cue'?0:frequency(grace.pitch,grace.accidental||'',keySignature)*octaveShift,soundLength:duration*.88,velocity:.55,grace:true});graceCursor+=duration;}
     const dynamics={ppp:.24,pp:.34,p:.45,mp:.6,mf:.75,f:.88,ff:1,fff:1.12,sf:1.08,sff:1.15,sfff:1.2,sfz:1.16,sffz:1.2,sfffz:1.25,fz:1.1,ffz:1.16,fffz:1.2,fp:.92};
     if(n.dynamic)voiceDynamics.set(key,n.dynamic==='fp'?'p':n.dynamic);
     const velocity=dynamics[n.dynamic]??dynamics[voiceDynamics.get(key)]??.75;
     if(n.pedal)pedals.push({time:start,type:n.pedal});
-    for(const [toneIndex,tone] of [{pitch:n.pitch,accidental:n.accidental},...(n.pitches||[])].entries()){
+    const chordTones=[{pitch:n.pitch,accidental:n.accidental},...(n.pitches||[])],rollOrder=n.arpeggio?chordTones.map((tone,index)=>({index,hz:frequency(tone.pitch,tone.accidental||'',keySignature,{...carry})})).sort((a,b)=>n.arpeggio==='down'?b.hz-a.hz:a.hz-b.hz).map(item=>item.index):[];
+    for(const [toneIndex,tone] of chordTones.entries()){
      const pitch=typeof tone==='string'?tone:tone.pitch,accidental=typeof tone==='string'?'':tone.accidental;
-     const hz=n.rest?0:frequency(pitch,accidental,keySignature,carry)*octaveShift;
-     const roll=n.arpeggio?Math.min(.035,length/(2*Math.max(2,1+(n.pitches||[]).length)))*toneIndex:0;
-     const event={bar:barIndex,note:i,tone:toneIndex,staff,voice,start:start+graceTotal+roll,length:length-graceTotal-roll,hz,soundLength:length-graceTotal-roll,velocity,hairpin:toneIndex===0?n.hairpin||'':'',dynamic:n.dynamic||'',ornament:toneIndex===0?n.ornament||'':'',tremolo:n.tremolo||0,slide:toneIndex===0?n.slide||'':'',pitch,accidental,keySignature};
+     const hz=n.rest||n.noteSize==='cue'?0:frequency(pitch,accidental,keySignature,carry)*octaveShift;
+     const roll=n.arpeggio?Math.min(.035,length/(2*Math.max(2,chordTones.length)))*rollOrder.indexOf(toneIndex):0;
+     const event={bar:barIndex,note:i,tone:toneIndex,staff,voice,start:start+graceTotal+roll,length:length-graceTotal-roll,hz,soundLength:length-graceTotal-roll,velocity,hairpin:toneIndex===0?n.hairpin||'':'',dynamic:n.dynamic||'',ornament:toneIndex===0?n.ornament||'':'',ornamentUpperAccidental:n.ornamentUpperAccidental||'',ornamentLowerAccidental:n.ornamentLowerAccidental||'',tremolo:n.tremolo||0,slide:toneIndex===0?n.slide||'':'',pitch,accidental,keySignature};
      if(n.articulation==='staccato')event.soundLength*=.5;
      else if(n.articulation==='staccatissimo')event.soundLength*=.25;
      else if(n.articulation==='tenuto')event.soundLength*=.98;
@@ -200,8 +205,8 @@ function timeline(sheet){
      else if(n.articulation==='marcato')event.velocity*=1.35;
      const last=previous.get(pitch);
      const tiePrevious=toneIndex===0?n.tiePrevious:(tone.tiePrevious??n.tiePrevious),tieNext=toneIndex===0?n.tieNext:(tone.tieNext??n.tieNext);
-     if(tiePrevious&&last?.tieNext&&Math.abs(last.end-start)<.000001&&!n.rest){event.hz=0;last.attack.soundLength+=length;event.attack=last.attack;}else event.attack=event;
-     events.push(event);previous.set(pitch,{tieNext:!!tieNext,end:start+length,attack:event.attack});
+     if(tiePrevious&&last?.tieNext&&Math.abs(last.end-start)<.000001&&!n.rest&&n.noteSize!=='cue'){event.hz=0;last.attack.soundLength+=length;event.attack=last.attack;}else event.attack=event;
+     events.push(event);previous.set(pitch,{tieNext:n.noteSize==='cue'?false:!!tieNext,end:start+length,attack:event.attack});
     }
     if(n.rest)previous.clear();
     lastByVoice.set(key,previous);
@@ -225,7 +230,7 @@ function timeline(sheet){
   if(interval.kind==='sustain'?event.start<interval.end&&event.start+event.length>interval.start:activeAtDown){const naturalEnd=event.start+event.soundLength;if(naturalEnd<interval.end)event.soundLength=interval.end-event.start;}
  }
  const nextPitch=(pitch,step)=>{const letters='CDEFGAB',index=letters.indexOf(pitch[0]),octave=Number(pitch.slice(1)),at=index+step;return letters[(at+7)%7]+(octave+Math.floor(at/7));};
- const expanded=[];for(const event of events){const patterns={trill:[0,1,0,1,0,1,0,1],mordent:[0,-1,0],invertedMordent:[0,1,0],turn:[1,0,-1,0],invertedTurn:[-1,0,1,0]};const motif=patterns[event.ornament],pattern=motif&&event.tremolo?Array(2**event.tremolo).fill(0).flatMap(()=>motif):motif||(event.tremolo?Array(2**event.tremolo).fill(0):null);if(!pattern||!event.hz||event.attack!==event||event.soundLength>event.length+.000001){expanded.push(event);continue;}const part=event.length/pattern.length;pattern.forEach((step,index)=>expanded.push({...event,start:event.start+index*part,length:part,soundLength:part*.9,hz:step?frequency(nextPitch(event.pitch,step),'',event.keySignature):event.hz,ornament:'',tremolo:0,ornamentPart:index}));}
+ const expanded=[];for(const event of events){const patterns={trill:[0,1,0,1,0,1,0,1],mordent:[0,-1,0],invertedMordent:[0,1,0],turn:[1,0,-1,0],invertedTurn:[-1,0,1,0]};const motif=patterns[event.ornament],pattern=motif&&event.tremolo?Array(2**event.tremolo).fill(0).flatMap(()=>motif):motif||(event.tremolo?Array(2**event.tremolo).fill(0):null);if(!pattern||!event.hz||event.attack!==event||event.soundLength>event.length+.000001){expanded.push(event);continue;}const part=event.length/pattern.length;pattern.forEach((step,index)=>expanded.push({...event,start:event.start+index*part,length:part,soundLength:part*.9,hz:step?frequency(nextPitch(event.pitch,step),step>0?event.ornamentUpperAccidental:event.ornamentLowerAccidental,event.keySignature):event.hz,ornament:'',tremolo:0,ornamentPart:index}));}
  expanded.sort((a,b)=>a.start-b.start||a.staff-b.staff||a.note-b.note);
  return {events:expanded,duration:elapsed};
 }
@@ -238,6 +243,6 @@ function frequency(pitch,accidental='',key='C',carry={}){
  if(accidental){delta={'#':1,b:-1,n:0,'##':2,bb:-2,'+':.5,d:-.5}[accidental];carry[pitch]=delta;}
  return 440*Math.pow(2,((octave+1)*12+base[letter]+delta-69)/12);
 }
-const api={durations,keys,wholeUnits,units,measureUnits,effectiveTime,effectiveKey,tempoSegment,effectiveClef,barUnits,positionOf,voiceOf,normalizeBar,clone,ticks,capacity,staves,staffOf,lane,used,fresh,add,insert,copySelection,pasteSelection,moveSelectionToStaff,trimmedMeasures,asRest,compactDelete,prepare,measureSource,performanceOrder,timeline,frequency};if(typeof module==='object')module.exports=api;
+const api={durations,keys,wholeUnits,units,measureUnits,effectiveTime,effectiveKey,tempoSegment,effectiveClef,barUnits,positionOf,voiceOf,normalizeBar,clone,ticks,capacity,staves,staffOf,lane,used,fresh,add,insert,copySelection,pasteSelection,moveSelectionToStaff,trimmedMeasures,validMultiRest,multiRestAt,asRest,compactDelete,prepare,measureSource,performanceOrder,timeline,frequency};if(typeof module==='object')module.exports=api;
 root.NotationModel=api;
 })(globalThis);

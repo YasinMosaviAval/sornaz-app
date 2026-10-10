@@ -41,6 +41,11 @@ setTimeout(async()=>{
   if(!document.querySelector('[data-action="chord-tone"]'))throw Error('Chord tone was not added or editable');
   click('[data-action="chord-tone"]');click('[data-pitch="F3"]');await pause();
   if(!document.querySelector('[data-action="chord-tone"]')?.textContent.includes('F3'))throw Error('Chord tone could not be edited');
+  const toneFinger=document.querySelector('[data-tone-finger="0"]');if(!toneFinger)throw Error('Chord-tone fingering control is missing');toneFinger.value='3';toneFinger.dispatchEvent(new Event('change',{bubbles:true}));await pause();
+  if(document.querySelector('[data-tone-finger="0"]')?.value!=='3')throw Error('Chord-tone fingering was not retained');
+  click('[data-action="note-mark"][data-field="arpeggio"]');await pause();
+  const direction=document.querySelector('[data-arpeggio-direction]');if(!direction)throw Error('Arpeggio direction control is missing');direction.value='down';direction.dispatchEvent(new Event('change',{bubbles:true}));await pause();
+  if(document.querySelector('[data-arpeggio-direction]')?.value!=='down')throw Error('Arpeggio direction was not retained');
   await new Promise(resolve=>setTimeout(resolve,600));
   click('#score [data-note][data-staff="2"]');
   const bassHit=document.querySelector('#score [data-note][data-staff="2"]'),bounds=bassHit.getBoundingClientRect();
@@ -127,6 +132,18 @@ setTimeout(async()=>{
   if(document.querySelector('[data-action="remove-grace"]'))throw Error('Grace note could not be removed');
   const octave=document.querySelector('[data-note-octave-shift]');octave.value='8va';octave.dispatchEvent(new Event('change',{bubbles:true}));await pause();
   if(document.querySelector('[data-note-octave-shift]')?.value!=='8va')throw Error('Octave shift edit was not retained');
+  const size=document.querySelector('[data-note-size]');size.value='cue';size.dispatchEvent(new Event('change',{bubbles:true}));await pause();
+  if(document.querySelector('[data-note-size]')?.value!=='cue')throw Error('Cue note edit was not retained');
+  document.querySelector('[data-note-size]').value='small';document.querySelector('[data-note-size]').dispatchEvent(new Event('change',{bubbles:true}));await pause();
+  if(document.querySelector('[data-note-size]')?.value!=='small')throw Error('Small note edit was not retained');
+  const ornament=document.querySelector('[data-choice="ornament"]');ornament.value='trill';ornament.dispatchEvent(new Event('change',{bubbles:true}));await pause();
+  const upperAccidental=document.querySelector('[data-ornament-accidental="ornamentUpperAccidental"]');if(!upperAccidental)throw Error('Ornament accidental control is missing');upperAccidental.value='#';upperAccidental.dispatchEvent(new Event('change',{bubbles:true}));await pause();
+  if(document.querySelector('[data-ornament-accidental="ornamentUpperAccidental"]')?.value!=='#')throw Error('Ornament accidental was not retained');
+  click('[data-action="add-bar"]');await pause();
+  const multiRest=document.querySelector('[data-measure-choice="multiRest"]');multiRest.value='2';multiRest.dispatchEvent(new Event('change',{bubbles:true}));await pause();
+  if(document.querySelector('[data-measure-choice="multiRest"]')?.value!=='2'||!document.querySelector('#score .notation-multi-rest'))throw Error('Multi-measure rest could not be edited');
+  window.Notation.command('undo');await pause();
+  if(document.querySelector('[data-measure-choice="multiRest"]')?.value==='2')throw Error('Multi-measure rest did not undo');
   document.body.dataset.result='passed';
  } catch(error) {document.body.dataset.result='failed: '+error.message;}
 },100);

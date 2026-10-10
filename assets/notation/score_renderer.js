@@ -2,6 +2,7 @@
 (function(root){
 'use strict';
 const VF=Vex.Flow,M=NotationModel;
+class SmallStaveNote extends VF.StaveNote {getStaveNoteScale(){return .7;}}
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const gapDurations=Object.keys(M.durations).flatMap(duration=>[0,1,2].map(dots=>({duration,dots,value:M.units({duration,dots})}))).sort((a,b)=>b.value-a.value);
 function spacingNotes(length){const notes=[];while(length>0){const part=gapDurations.find(item=>item.value<=length);if(!part)break;notes.push(new VF.GhostNote({duration:part.duration,dots:part.dots}));length-=part.value;}return notes;}
@@ -35,14 +36,15 @@ function renderRow(target,bars,start,options){
  svg.style.display='block';svg.style.maxWidth='100%';
  const leftInset=grand?30:4,barWidth=(width-leftInset-4)/bars.length;
  bars.forEach((bar,col)=>{
-  const index=start+col,x=leftInset+col*barWidth,barTime=M.effectiveTime(options.sheet,index),barKey=M.effectiveKey(options.sheet,index),clefs=layout.map((_,lane)=>M.effectiveClef(options.sheet,index,lane+1)),staves=layout.map((entry,lane)=>new VF.Stave(x,6+lane*150,barWidth));
+  const index=start+col,x=leftInset+col*barWidth,barTime=M.effectiveTime(options.sheet,index),barKey=M.effectiveKey(options.sheet,index),clefs=layout.map((_,lane)=>M.effectiveClef(options.sheet,index,lane+1)),staves=layout.map((entry,lane)=>new VF.Stave(x,6+lane*150,barWidth)),multiRest=M.multiRestAt(options.sheet.score.measures,index);
   if(!options.printing&&index===options.activeBar){ctx.save();ctx.setFillStyle(options.accent+'14');staves.forEach(stave=>ctx.fillRect(x,stave.getY()+15,barWidth,94));ctx.restore();}
   staves.forEach((stave,lane)=>{
    if(col===0||bar.clefs?.[lane+1]||bar.time||bar.timeSymbol||bar.key){if(col===0||bar.clefs?.[lane+1])stave.addClef(clefs[lane].split('_')[0],undefined,clefs[lane].split('_')[1]);if(col===0||bar.key)stave.addKeySignature(barKey);if(index===0||bar.time||bar.timeSymbol)stave.addTimeSignature(bar.timeSymbol==='common'?'C':bar.timeSymbol==='cut'?'C|':barTime);
    }
    if(lane===0&&(bar.displayNumber||index>0)){ctx.save();ctx.setFillStyle('#666');ctx.setFont('Arial',5.5);ctx.fillText(String(bar.displayNumber||index+1),x+9,35);ctx.restore();}
    if(bar.repeat?.start)stave.setBegBarType(VF.Barline.type.REPEAT_BEGIN);
-   if(bar.repeat?.end)stave.setEndBarType(VF.Barline.type.REPEAT_END);
+   if(multiRest&&index<multiRest.end)stave.setEndBarType(VF.Barline.type.NONE);
+   else if(bar.repeat?.end)stave.setEndBarType(VF.Barline.type.REPEAT_END);
    else if(bar.barline==='double')stave.setEndBarType(VF.Barline.type.DOUBLE);
    else if(bar.barline==='final'||index===options.lastWritten)stave.setEndBarType(VF.Barline.type.END);
    else if(bar.barline==='hidden')stave.setEndBarType(VF.Barline.type.NONE);
@@ -55,6 +57,7 @@ function renderRow(target,bars,start,options){
     new VF.StaveConnector(staves[0],staves[1]).setType(type).setContext(ctx).draw();
   }
   const addLabel=(label,y,size=12)=>{const element=document.createElementNS('http://www.w3.org/2000/svg','text');for(const[key,value]of Object.entries({x:x+barWidth/2,y,'text-anchor':'middle','font-family':'NotationTheme, Arial','font-size':size,fill:'#111'}))element.setAttribute(key,value);element.textContent=label;svg.append(element);};
+  if(multiRest){staves.forEach(stave=>{const y=stave.getYForLine(2),left=index===multiRest.start?x+Math.min(25,barWidth/5):x,right=index===multiRest.end?x+barWidth-Math.min(25,barWidth/5):x+barWidth;const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d',`M${left} ${y}H${right}${index===multiRest.start?`M${left} ${y-7}V${y+7}`:''}${index===multiRest.end?`M${right} ${y-7}V${y+7}`:''}`);path.setAttribute('fill','none');path.setAttribute('stroke','#111');path.setAttribute('stroke-width','4');path.setAttribute('class','notation-multi-rest');svg.append(path);});if(index===multiRest.start)addLabel(String(multiRest.count),staves[0].getYForLine(0)-8,12);}
   const repeat=bar.repeat||{};
   if(repeat.endings?.length){
    const ending=repeat.endings.join(','),previous=options.sheet.score.measures[index-1]?.repeat?.endings?.join(','),next=options.sheet.score.measures[index+1]?.repeat?.endings?.join(','),y=staves[0].getY()-8;
@@ -83,7 +86,8 @@ function renderRow(target,bars,start,options){
     if(n.at>cursor)notes.push(...spacingNotes(n.at-cursor));
     const tones=[{pitch:n.pitch,accidental:n.accidental},...(n.pitches||[])],display=ottava(n.pitch,n.rest);
     const keys=n.rest?['b/4']:tones.map(tone=>{const shifted=ottava(tone.pitch);return shifted.pitch[0].toLowerCase()+'/'+shifted.pitch.slice(1);});
-    const v=new VF.StaveNote({clef:clefs[lane].split('_')[0],keys,duration:n.duration+(n.rest?'r':''),dots:n.dots||0,auto_stem:true});
+    const NoteClass=n.noteSize&&!n.rest?SmallStaveNote:VF.StaveNote;
+    const v=new NoteClass({clef:clefs[lane].split('_')[0],keys,duration:n.duration+(n.rest?'r':''),dots:n.dots||0,auto_stem:true});
     if(n.graces?.length){const graceNotes=n.graces.map(grace=>{const p=ottava(grace.pitch).pitch,small=new VF.GraceNote({clef:clefs[lane].split('_')[0],keys:[p[0].toLowerCase()+'/'+p.slice(1)],duration:grace.duration||'8',slash:grace.kind==='acciaccatura'});if(grace.accidental)small.addModifier(new VF.Accidental(grace.accidental),0);return small;});v.addModifier(new VF.GraceNoteGroup(graceNotes,true).beamNotes(),0);}
     octaveNotes.push({note:v,...display});
     if(!n.rest)v.setStemDirection(v.getKeyProps()[0].line<=3?VF.Stem.UP:VF.Stem.DOWN);
@@ -92,10 +96,11 @@ function renderRow(target,bars,start,options){
     const art={staccato:'a.',tenuto:'a-',accent:'a>',marcato:'a^',staccatissimo:'av'};
     if(art[n.articulation])v.addModifier(new VF.Articulation(art[n.articulation]).setPosition(VF.Modifier.Position.ABOVE),0);
     if(['fermata','breath','caesura'].includes(n.articulation))v.addModifier(new VF.Annotation(({fermata:'𝄐',breath:',',caesura:'//'})[n.articulation]).setFont('Arial',15).setVerticalJustification(VF.Annotation.VerticalJustify.TOP),0);
-    if(n.ornament){const ornament={trill:'tr',mordent:'mordent',invertedMordent:'mordent_inverted',turn:'turn',invertedTurn:'turn_inverted'}[n.ornament];if(ornament)v.addModifier(new VF.Ornament(ornament),0);}
+    if(n.ornament){const ornament={trill:'tr',mordent:'mordent',invertedMordent:'mordent_inverted',turn:'turn',invertedTurn:'turn_inverted'}[n.ornament];if(ornament){const symbol=new VF.Ornament(ornament);if(n.ornamentUpperAccidental)symbol.setUpperAccidental(n.ornamentUpperAccidental);if(n.ornamentLowerAccidental)symbol.setLowerAccidental(n.ornamentLowerAccidental);v.addModifier(symbol,0);}}
     if(n.tremolo)v.addModifier(new VF.Tremolo(n.tremolo),0);
-    if(n.arpeggio&&n.pitches?.length)v.addModifier(new VF.Stroke(VF.Stroke.Type.ROLL_UP),0);
+    if(n.arpeggio&&n.pitches?.length)v.addModifier(new VF.Stroke(n.arpeggio==='down'?VF.Stroke.Type.ROLL_DOWN:VF.Stroke.Type.ROLL_UP),0);
     if(n.finger)v.addModifier(new VF.FretHandFinger(n.finger).setPosition(VF.Modifier.Position.ABOVE),0);
+    (n.pitches||[]).forEach((tone,index)=>{if(tone.finger)v.addModifier(new VF.FretHandFinger(tone.finger).setPosition(VF.Modifier.Position.ABOVE),index+1);});
     if(n.bow)v.addModifier(new VF.Annotation(n.bow==='up'?'∨':'⊓').setFont('Arial',13).setVerticalJustification(VF.Annotation.VerticalJustify.TOP),0);
     if(n.dynamic)v.addModifier(new VF.Annotation(n.dynamic).setFont('Times',12,'italic').setVerticalJustification(VF.Annotation.VerticalJustify.BOTTOM),0);
     if(n.lyric)v.addModifier(new VF.Annotation(n.lyric).setFont('NotationTheme',11).setVerticalJustification(VF.Annotation.VerticalJustify.BOTTOM),0);
