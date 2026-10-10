@@ -61,6 +61,10 @@ setTimeout(async()=>{try{
  captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
  const cueDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
  if(cueDoc.querySelector('parsererror')||cueDoc.querySelectorAll('note cue').length!==1||cueDoc.querySelectorAll('note type[size="cue"]').length!==2)throw Error('Cue or small note was lost in MusicXML');
+ sheet.score.measures=[{notes:[{pitch:'C4',duration:'8',dots:0,rest:false,staff:1,beamGroup:7},{pitch:'D4',duration:'q',dots:0,rest:false,staff:1}]}];
+ captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
+ const orphanBeamDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ if(orphanBeamDoc.querySelector('parsererror')||orphanBeamDoc.querySelector('beam'))throw Error('A single remaining note exported an unclosed beam');
  sheet.score.measures=[{notes:[],preserve:true,multiRest:2},{notes:[],preserve:true}];
  captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
  const multiRestDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');

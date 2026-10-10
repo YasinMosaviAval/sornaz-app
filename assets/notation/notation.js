@@ -305,7 +305,7 @@ function musicXml(sheet){
  const xmlOctaves=new Map();const measures=M.trimmedMeasures(sheet).map((measure,index)=>{
   const barTime=M.effectiveTime(sheet,index),barDuration=M.barUnits(sheet,index),barKey=M.effectiveKey(sheet,index),barFifths=fifths[barKey]??0;
   const sourceMeasure=sheet.score.measures[M.measureSource(sheet,index)];
-  const beamLabels=new Map(),beamGroups=new Map();sourceMeasure.notes.forEach((note,i)=>{const id=note.crossBeam?'cross:'+note.crossBeam:note.beamGroup?'manual:'+note.beamGroup:'';if(id){const group=beamGroups.get(id)||[];group.push({note,at:M.positionOf(sourceMeasure,i)});beamGroups.set(id,group);}});for(const group of beamGroups.values()){group.sort((a,b)=>a.at-b.at);group.forEach(({note},i)=>beamLabels.set(note,i===0?'begin':i===group.length-1?'end':'continue'));}
+  const beamLabels=new Map(),beamGroups=new Map();sourceMeasure.notes.forEach((note,i)=>{const id=note.crossBeam?'cross:'+note.crossBeam:note.beamGroup?'manual:'+note.beamGroup:'';if(id&&!note.rest&&M.units(note)<=M.wholeUnits/8){const group=beamGroups.get(id)||[];group.push({note,at:M.positionOf(sourceMeasure,i)});beamGroups.set(id,group);}});for(const group of beamGroups.values()){if(group.length<2)continue;group.sort((a,b)=>a.at-b.at);group.forEach(({note},i)=>beamLabels.set(note,i===0?'begin':i===group.length-1?'end':'continue'));}
   const timeSymbol=measure.timeSymbol?` symbol="${measure.timeSymbol==='cut'?'cut':'common'}"`:'';
   const changedClefs=Object.entries(measure.clefs||{}).map(([staff,value])=>clef(value,Number(staff))).join('');
   const keyXml=`<key><fifths>${barFifths}</fifths><mode>${String(barKey).endsWith('m')?'minor':'major'}</mode></key>`;
