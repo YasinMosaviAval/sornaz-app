@@ -112,6 +112,21 @@ setTimeout(async()=>{
   if(document.querySelectorAll('#score [data-bar="2"][data-note]').length)throw Error('Paste did not undo as one operation');
   window.Notation.command('redo');await pause();
   if(document.querySelectorAll('#score [data-bar="2"][data-note]').length!==1)throw Error('Redo did not restore pasted notes');
+  click('#score [data-bar="2"][data-note]');await pause();
+  const lyric=document.querySelector('[data-note-lyric]');if(!lyric)throw Error('Lyric editor is missing');lyric.value='Hello';lyric.dispatchEvent(new Event('change',{bubbles:true}));await pause();
+  if(document.querySelector('[data-note-lyric]')?.value!=='Hello')throw Error('Lyric edit was not retained');
+  const chord=document.querySelector('[data-note-chord-symbol]');chord.value='Cm7';chord.dispatchEvent(new Event('change',{bubbles:true}));await pause();
+  if(document.querySelector('[data-note-chord-symbol]')?.value!=='Cm7')throw Error('Chord symbol edit was not retained');
+  const rehearsal=document.querySelector('[data-measure-text="rehearsal"]');rehearsal.value='B';rehearsal.dispatchEvent(new Event('change',{bubbles:true}));await pause();
+  if(document.querySelector('[data-measure-text="rehearsal"]')?.value!=='B')throw Error('Rehearsal mark edit was not retained');
+  const displayNumber=document.querySelector('[data-measure-number="displayNumber"]');displayNumber.value='42';displayNumber.dispatchEvent(new Event('change',{bubbles:true}));await pause();
+  if(document.querySelector('[data-measure-number="displayNumber"]')?.value!=='42')throw Error('Measure number edit was not retained');
+  click('[data-action="grace-mode"]');click('[data-pitch="D4"]');await pause();
+  if(document.querySelectorAll('[data-action="remove-grace"]').length!==1)throw Error('Grace note was not attached to selected note');
+  click('[data-action="remove-grace"]');await pause();
+  if(document.querySelector('[data-action="remove-grace"]'))throw Error('Grace note could not be removed');
+  const octave=document.querySelector('[data-note-octave-shift]');octave.value='8va';octave.dispatchEvent(new Event('change',{bubbles:true}));await pause();
+  if(document.querySelector('[data-note-octave-shift]')?.value!=='8va')throw Error('Octave shift edit was not retained');
   document.body.dataset.result='passed';
  } catch(error) {document.body.dataset.result='failed: '+error.message;}
 },100);
