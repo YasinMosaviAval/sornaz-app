@@ -139,6 +139,10 @@ setTimeout(async()=>{
   const ornament=document.querySelector('[data-choice="ornament"]');ornament.value='trill';ornament.dispatchEvent(new Event('change',{bubbles:true}));await pause();
   const upperAccidental=document.querySelector('[data-ornament-accidental="ornamentUpperAccidental"]');if(!upperAccidental)throw Error('Ornament accidental control is missing');upperAccidental.value='#';upperAccidental.dispatchEvent(new Event('change',{bubbles:true}));await pause();
   if(document.querySelector('[data-ornament-accidental="ornamentUpperAccidental"]')?.value!=='#')throw Error('Ornament accidental was not retained');
+  const beamPattern=document.querySelector('[data-measure-text="beamPattern"]');beamPattern.value='2+2';beamPattern.dispatchEvent(new Event('change',{bubbles:true}));await pause();
+  if(document.querySelector('[data-measure-text="beamPattern"]')?.value!=='2+2')throw Error('Beam grouping was not retained');
+  window.Notation.command('undo');await pause();
+  if(document.querySelector('[data-measure-text="beamPattern"]')?.value==='2+2')throw Error('Beam grouping did not undo');
   click('[data-action="add-bar"]');await pause();
   const multiRest=document.querySelector('[data-measure-choice="multiRest"]');multiRest.value='2';multiRest.dispatchEvent(new Event('change',{bubbles:true}));await pause();
   if(document.querySelector('[data-measure-choice="multiRest"]')?.value!=='2'||!document.querySelector('#score .notation-multi-rest'))throw Error('Multi-measure rest could not be edited');

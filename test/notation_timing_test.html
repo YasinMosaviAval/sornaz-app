@@ -22,6 +22,15 @@ try {
  const cueEvents=M.timeline(cueScore).events;if(cueEvents.length!==2||cueEvents[0].hz!==0||cueEvents[1].hz<=0||cueEvents[1].start<=cueEvents[0].start)throw Error('Cue and small notes lost their playback semantics');
  NotationRenderer.draw(document.getElementById('score'),cueScore,{accent:'#0065ff',activeBar:0,activeNote:-1,selectedNotes:new Set()});
  if(document.querySelectorAll('#score [data-note]').length!==2)throw Error('Cue or small note did not render');
+ const compound=M.fresh();compound.metadata.time='6/8';compound.score.measures[0].beamPattern='3+3';for(let i=0;i<6;i++)M.add(compound,0,{pitch:'C4',duration:'8',dots:0,rest:false,staff:1,voice:1,at:i*u/8});
+ if(M.beamPattern(compound,0)?.parts.join('+')!=='3+3')throw Error('Compound beam grouping was not retained');
+ NotationRenderer.draw(document.getElementById('score'),compound,{accent:'#0065ff',activeBar:0,activeNote:-1,selectedNotes:new Set()});
+ if(document.querySelectorAll('#score [data-note]').length!==6||document.querySelectorAll('#score .vf-beam').length!==2)throw Error('Compound beam grouping did not render as two groups');
+ delete compound.score.measures[0].beamPattern;
+ if(M.beamPattern(compound,0)?.parts.join('+')!=='3+3')throw Error('Default compound beat grouping was not applied');
+ NotationRenderer.draw(document.getElementById('score'),compound,{accent:'#0065ff',activeBar:0,activeNote:-1,selectedNotes:new Set()});
+ if(document.querySelectorAll('#score .vf-beam').length!==2)throw Error('Default compound beaming drew the wrong groups');
+ compound.score.measures[0].beamPattern='2+3';try{M.beamPattern(compound,0);throw Error('Invalid beam grouping was accepted');}catch(error){if(error.message==='Invalid beam grouping was accepted')throw error;}
  const cueWithGrace=M.fresh();cueWithGrace.score.measures=[{notes:[note('C4',0,1,1,{noteSize:'cue',graces:[{pitch:'B3',accidental:'',kind:'acciaccatura',duration:'8'}]})]}];
  if(M.timeline(cueWithGrace).events.some(event=>event.hz))throw Error('Cue note grace sounded during playback');
  const silent=M.fresh();silent.score.measures=[{notes:[],preserve:true,multiRest:2},{notes:[],preserve:true}];

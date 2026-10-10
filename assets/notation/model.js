@@ -22,6 +22,7 @@ function tempoSegment(sheet,index){
  return {initial,final,secondsAt,duration:secondsAt(limit)};
 }
 const barUnits=(sheet,index)=>measureUnits({...sheet.metadata,time:effectiveTime(sheet,index)},sheet.score.measures[index]||{});
+function beamPattern(sheet,index){const raw=sheet.score.measures[index]?.beamPattern,[numerator,denominator]=effectiveTime(sheet,index).split('/').map(Number);if(!raw)return denominator===8&&numerator>=6&&numerator%3===0?{parts:Array(numerator/3).fill(3),denominator}:null;const parts=String(raw).split('+').map(Number);if(parts.length<2||parts.length>16||parts.some(part=>!Number.isInteger(part)||part<1)||parts.reduce((sum,part)=>sum+part,0)!==numerator)throw Error('Beam grouping must match the time signature.');return {parts,denominator};}
 const capacity=(meta,bar={})=>measureUnits(meta,bar)/unitPerLegacyTick;
 const staves=m=>Array.isArray(m.staves)&&m.staves.length===2?m.staves.map(s=>({clef:s.clef||'treble'})):[{clef:m.clef||'treble'}];
 const effectiveClef=(sheet,index,staff)=>{let clef=staves(sheet.metadata)[staff-1]?.clef||'treble';for(let i=0;i<=index&&i<sheet.score.measures.length;i++)clef=sheet.score.measures[i].clefs?.[staff]||clef;return clef;};
@@ -107,7 +108,7 @@ function insert(sheet,bar,note,replaceIndex=null){
  sheet.score.measures=measures;return lastBar;
 }
 
-function trimmedMeasures(sheet){const measures=clone(sheet.score.measures);while(measures.length&&!measures.at(-1).notes.length&&!measures.at(-1).preserve&&!measures.at(-1).time&&!measures.at(-1).timeSymbol&&!measures.at(-1).length&&!measures.at(-1).barline&&!measures.at(-1).repeat&&!measures.at(-1).clefs&&!measures.at(-1).key&&!measures.at(-1).tempo&&!measures.at(-1).rehearsal&&!measures.at(-1).text&&!measures.at(-1).displayNumber&&!measures.at(-1).multiRest)measures.pop();return measures;}
+function trimmedMeasures(sheet){const measures=clone(sheet.score.measures);while(measures.length&&!measures.at(-1).notes.length&&!measures.at(-1).preserve&&!measures.at(-1).time&&!measures.at(-1).timeSymbol&&!measures.at(-1).length&&!measures.at(-1).barline&&!measures.at(-1).repeat&&!measures.at(-1).clefs&&!measures.at(-1).key&&!measures.at(-1).tempo&&!measures.at(-1).rehearsal&&!measures.at(-1).text&&!measures.at(-1).displayNumber&&!measures.at(-1).multiRest&&!measures.at(-1).beamPattern)measures.pop();return measures;}
 function multiRestCompatible(bar,first=false){return !!bar&&!bar.notes.length&&!bar.time&&!bar.timeSymbol&&!bar.length&&!bar.barline&&!bar.repeat&&!bar.clefs&&!bar.key&&!bar.tempo&&!bar.rehearsal&&!bar.text&&(!bar.displayNumber||first)&&(!bar.multiRest||first);}
 function validMultiRest(bars,start,count){return Number.isInteger(count)&&count>=2&&count<=8&&start+count<=bars.length&&bars.slice(start,start+count).every((bar,offset)=>multiRestCompatible(bar,offset===0));}
 function multiRestAt(bars,index){for(let start=index;start>=Math.max(0,index-7);start--){const count=bars[start]?.multiRest;if(count&&validMultiRest(bars,start,count)&&index<start+count)return {start,count,end:start+count-1};}return null;}
@@ -243,6 +244,6 @@ function frequency(pitch,accidental='',key='C',carry={}){
  if(accidental){delta={'#':1,b:-1,n:0,'##':2,bb:-2,'+':.5,d:-.5}[accidental];carry[pitch]=delta;}
  return 440*Math.pow(2,((octave+1)*12+base[letter]+delta-69)/12);
 }
-const api={durations,keys,wholeUnits,units,measureUnits,effectiveTime,effectiveKey,tempoSegment,effectiveClef,barUnits,positionOf,voiceOf,normalizeBar,clone,ticks,capacity,staves,staffOf,lane,used,fresh,add,insert,copySelection,pasteSelection,moveSelectionToStaff,trimmedMeasures,validMultiRest,multiRestAt,asRest,compactDelete,prepare,measureSource,performanceOrder,timeline,frequency};if(typeof module==='object')module.exports=api;
+const api={durations,keys,wholeUnits,units,measureUnits,effectiveTime,effectiveKey,tempoSegment,effectiveClef,barUnits,beamPattern,positionOf,voiceOf,normalizeBar,clone,ticks,capacity,staves,staffOf,lane,used,fresh,add,insert,copySelection,pasteSelection,moveSelectionToStaff,trimmedMeasures,validMultiRest,multiRestAt,asRest,compactDelete,prepare,measureSource,performanceOrder,timeline,frequency};if(typeof module==='object')module.exports=api;
 root.NotationModel=api;
 })(globalThis);

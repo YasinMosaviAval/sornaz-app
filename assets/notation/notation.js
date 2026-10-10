@@ -34,6 +34,7 @@ Object.assign(fa,{'Piano pedal':'پدال پیانو','No pedal':'بدون پد�
 Object.assign(fa,{'Remove cross-staff beam':'حذف اتصال میان حامل‌ها','Beam across staves':'اتصال چنگ میان حامل‌ها','Select at least two short notes on both staves of one measure.':'دست‌کم دو نت کوتاه در دو حامل یک میزان انتخاب کنید.'});
 Object.assign(fa,{'Key change':'تغییر سرکلید','Inherit key':'سرکلید قبلی','Tempo change':'تغییر تمپو','No tempo change':'بدون تغییر تمپو','Immediate tempo':'تغییر فوری تمپو',Ritardando:'ریتارداندو',Accelerando:'اکسلراندو','A Tempo':'بازگشت به تمپوی اصلی','Target BPM':'سرعت مقصد'});
 Object.assign(fa,{'Group beams':'اتصال چنگ‌های انتخابی','Remove beam group':'حذف اتصال چنگ‌ها','Select short notes in one voice and measure.':'نت‌های کوتاه یک صدا و یک میزان را انتخاب کنید.'});
+Object.assign(fa,{'Beam grouping':'گروه‌بندی چنگ‌ها','Beam grouping must match the time signature.':'جمع گروه‌های چنگ باید با میزان‌نما برابر باشد.'});
 Object.assign(fa,{'Cautionary accidental':'علامت تغییر احتیاطی'});
 Object.assign(fa,{'treble_8vb':'کلید سل یک اکتاو پایین‌تر','treble_8va':'کلید سل یک اکتاو بالاتر','bass_8vb':'کلید فا یک اکتاو پایین‌تر','bass_8va':'کلید فا یک اکتاو بالاتر'});
 Object.assign(fa,{Lyric:'متن ترانه','Rehearsal mark':'علامت تمرین','Chord symbol':'نماد آکورد','Measure note':'توضیح میزان'});
@@ -156,6 +157,7 @@ function measureTools(){
   measureSelect('tempoMode','Tempo change',[['','No tempo change'],['instant','Immediate tempo'],['ritardando','Ritardando'],['accelerando','Accelerando'],['aTempo','A Tempo']],bar.tempo?.mode||''),
   `<label><span>${h(t('Target BPM'))}</span><input type="number" min="20" max="300" data-measure-number="tempoBpm" value="${bar.tempo?.bpm||state.sheet.metadata.bpm}" ${bar.tempo&&bar.tempo.mode!=='aTempo'?'':'disabled'}></label>`,
   measureSelect('time','Time Signature',[['','Inherit time'],...times],bar.time||''),
+  `<label><span>${h(t('Beam grouping'))}</span><input data-measure-text="beamPattern" maxlength="40" inputmode="text" value="${h(bar.beamPattern||'')}" placeholder="${h(M.effectiveTime(state.sheet,state.bar)==='6/8'?'3+3':'2+2')}"></label>`,
   measureSelect('timeSymbol','Time symbol',[['','Normal'],['common','Common time'],['cut','Alla breve']],bar.timeSymbol||''),
   measureSelect('length','Pickup length',lengths,bar.length||''),
   measureSelect('barline','Barline',[['','Normal'],['double','Double'],['final','Final'],['hidden','Hidden']],bar.barline||''),
@@ -184,6 +186,7 @@ function changeMeasure(key,value){
   else if(key==='rehearsal'){if(value.trim())bar.rehearsal=value.trim().slice(0,32);else delete bar.rehearsal;}
   else if(key==='displayNumber'){if(value==='')delete bar.displayNumber;else{const number=Number(value);if(!Number.isInteger(number)||number<1||number>9999)throw Error('Invalid measure number.');bar.displayNumber=number;}}
   else if(key==='text'){if(value.trim())bar.text=value.trim().slice(0,160);else delete bar.text;}
+  else if(key==='beamPattern'){if(value.trim())bar.beamPattern=value.trim().replace(/\s+/g,'');else delete bar.beamPattern;}
   else if(key==='tempoMode'){if(value){const current=M.tempoSegment(state.sheet,state.bar).initial;bar.tempo={mode:value,bpm:value==='aTempo'?Number(state.sheet.metadata.bpm):value==='ritardando'?Math.max(20,current-20):value==='accelerando'?Math.min(300,current+20):Number(bar.tempo?.bpm||current)};}else delete bar.tempo;}
   else if(key==='tempoBpm'){const bpm=Number(value);if(!Number.isInteger(bpm)||bpm<20||bpm>300)throw Error('Tempo must be between 20 and 300.');if(bar.tempo)bar.tempo.bpm=bpm;}
   else if(/^clef[12]$/.test(key)){bar.clefs??={};if(value)bar.clefs[Number(key.slice(-1))]=value;else delete bar.clefs[Number(key.slice(-1))];if(!Object.keys(bar.clefs).length)delete bar.clefs;}
@@ -199,6 +202,7 @@ function changeMeasure(key,value){
    M.performanceOrder(state.sheet);
   }
   state.sheet.score.measures.forEach((measure,index)=>{const capacity=M.barUnits(state.sheet,index);if(measure.notes.some((note,noteIndex)=>M.positionOf(measure,noteIndex)+M.units(note)>capacity))throw Error('This measure is full.');});
+  state.sheet.score.measures.forEach((_,index)=>M.beamPattern(state.sheet,index));
   state.sheet.score.measures.forEach((_,index)=>M.tempoSegment(state.sheet,index));
  });
 }
@@ -306,6 +310,7 @@ function musicXml(sheet){
   const barTime=M.effectiveTime(sheet,index),barDuration=M.barUnits(sheet,index),barKey=M.effectiveKey(sheet,index),barFifths=fifths[barKey]??0;
   const sourceMeasure=sheet.score.measures[M.measureSource(sheet,index)];
   const beamLabels=new Map(),beamGroups=new Map();sourceMeasure.notes.forEach((note,i)=>{const id=note.crossBeam?'cross:'+note.crossBeam:note.beamGroup?'manual:'+note.beamGroup:'';if(id&&!note.rest&&M.units(note)<=M.wholeUnits/8){const group=beamGroups.get(id)||[];group.push({note,at:M.positionOf(sourceMeasure,i)});beamGroups.set(id,group);}});for(const group of beamGroups.values()){if(group.length<2)continue;group.sort((a,b)=>a.at-b.at);group.forEach(({note},i)=>beamLabels.set(note,i===0?'begin':i===group.length-1?'end':'continue'));}
+  const pattern=M.beamPattern(sheet,index);if(pattern){const boundaries=[],step=M.wholeUnits/pattern.denominator;let cursor=0;for(const part of pattern.parts){cursor+=part*step;boundaries.push(cursor);}const flush=run=>{if(run.length>1)run.forEach((note,i)=>beamLabels.set(note,i===0?'begin':i===run.length-1?'end':'continue'));};for(let staff=1;staff<=layout.length;staff++)for(const voice of [1,2,3,4]){const entries=sourceMeasure.notes.map((note,i)=>({note,at:M.positionOf(sourceMeasure,i)})).filter(({note})=>M.staffOf(note)===staff&&M.voiceOf(note)===voice).sort((a,b)=>a.at-b.at),run=[];let group=-1,end=-1;for(const {note,at} of entries){const length=M.units(note),nextGroup=boundaries.findIndex(boundary=>at<boundary);if(note.rest||length>M.wholeUnits/8||beamLabels.has(note)||note.crossBeam||note.beamGroup||nextGroup<0||at+length>boundaries[nextGroup]){flush(run);run.length=0;group=-1;continue;}if(run.length&&(nextGroup!==group||at!==end)){flush(run);run.length=0;}run.push(note);group=nextGroup;end=at+length;}flush(run);}}
   const timeSymbol=measure.timeSymbol?` symbol="${measure.timeSymbol==='cut'?'cut':'common'}"`:'';
   const changedClefs=Object.entries(measure.clefs||{}).map(([staff,value])=>clef(value,Number(staff))).join('');
   const keyXml=`<key><fifths>${barFifths}</fifths><mode>${String(barKey).endsWith('m')?'minor':'major'}</mode></key>`;
@@ -361,6 +366,7 @@ root.addEventListener('submit',async e=>{
  const previous=state.formOrigin||snapshot(),nextStaves=instrumentStaves(f.instrument)||[{clef:f.clef||previous.metadata.clef||'treble'}];
  f.staves=nextStaves;f.clef=nextStaves[0].clef;
  if(state.sheet.score.measures.some((bar,index)=>bar.notes.some((note,noteIndex)=>M.positionOf(bar,noteIndex)+M.units(note)>M.barUnits({metadata:f,score:state.sheet.score},index))))return toast('This measure is full.');
+ try{state.sheet.score.measures.forEach((_,index)=>M.beamPattern({metadata:f,score:state.sheet.score},index));}catch(error){return toast(error.message);}
  const leavingGrand=M.staves(previous.metadata).length===2&&nextStaves.length===1&&state.sheet.score.measures.some(b=>M.lane(b,2).length);
  const decision=leavingGrand?await chooseStaffChange():'keep';if(!decision)return;
  if(decision==='transfer'){

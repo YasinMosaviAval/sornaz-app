@@ -65,6 +65,13 @@ setTimeout(async()=>{try{
  captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
  const orphanBeamDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
  if(orphanBeamDoc.querySelector('parsererror')||orphanBeamDoc.querySelector('beam'))throw Error('A single remaining note exported an unclosed beam');
+ sheet.score.measures=[{time:'6/8',beamPattern:'3+3',notes:Array.from({length:6},(_,at)=>({pitch:'C4',duration:'8',dots:0,rest:false,staff:1,at:at*120960}))}];
+ captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
+ const groupedDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ if(groupedDoc.querySelector('parsererror')||[...groupedDoc.querySelectorAll('beam')].map(node=>node.textContent).join(',')!=='begin,continue,end,begin,continue,end')throw Error('Compound beam grouping was lost in MusicXML');
+ delete sheet.score.measures[0].beamPattern;captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
+ const defaultGroupedDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ if([...defaultGroupedDoc.querySelectorAll('beam')].map(node=>node.textContent).join(',')!=='begin,continue,end,begin,continue,end')throw Error('Default compound grouping was lost in MusicXML');
  sheet.score.measures=[{notes:[],preserve:true,multiRest:2},{notes:[],preserve:true}];
  captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
  const multiRestDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
