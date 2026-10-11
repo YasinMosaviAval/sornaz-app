@@ -84,6 +84,65 @@ void main() {
   });
 
   test(
+    'sheet search filters local scores and forwards query to server',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final api = NotationApi(
+        '',
+        userId: 7,
+        client: MockClient((request) async {
+          expect(request.url.queryParameters['q'], 'Sonata');
+          return http.Response(
+            jsonEncode({
+              'success': true,
+              'data': {'items': [], 'has_more': false},
+            }),
+            200,
+          );
+        }),
+      );
+      final ids = <String, int>{};
+      for (final title in ['Sonata', 'Prelude']) {
+        final saved =
+            await api.request('save', {
+                  'sheetId': 0,
+                  'payload': {
+                    'metadata': {'title': title},
+                    'score': {'measures': []},
+                  },
+                })
+                as Map;
+        ids[title] = saved['id'] as int;
+      }
+      final result =
+          await api.request('list', {
+                'mode': 'all',
+                'page': 1,
+                'query': 'Sonata',
+              })
+              as Map;
+      expect((result['items'] as List).map((item) => item['title']), [
+        'Sonata',
+      ]);
+      await api.request('create-list', {'name': 'Practice'});
+      await api.request('add-to-list', {
+        'name': 'Practice',
+        'sheetIds': ids.values.toList(),
+      });
+      final matchingList =
+          await api.request('list', {
+                'mode': 'lists',
+                'page': 1,
+                'query': 'Sonata',
+              })
+              as Map;
+      expect((matchingList['items'] as List).length, 1);
+      expect((matchingList['items'][0]['items'] as List).length, 1);
+      api.close();
+    },
+  );
+
+  test(
     'damaged primary score storage restores its last valid backup',
     () async {
       SharedPreferences.setMockInitialValues({});

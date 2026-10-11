@@ -142,11 +142,39 @@ class NotationApi {
     if (action == 'list') {
       final local = await _local();
       final mode = message['mode'];
+      final query = '${message['query'] ?? ''}'.trim().toLowerCase();
+      bool matches(Map<String, dynamic> item) {
+        if (query.isEmpty) return true;
+        final metadata = item['metadata'];
+        final fields = [
+          item['title'],
+          item['author'],
+          if (metadata is Map) ...[
+            metadata['composer'],
+            metadata['arranger'],
+            metadata['lyricist'],
+          ],
+        ];
+        return fields.any(
+          (value) => value is String && value.toLowerCase().contains(query),
+        );
+      }
+
       if (mode == 'lists') {
         final lists = await _lists();
+        final matchingLists = lists.entries.where((entry) {
+          if (query.isEmpty || entry.key.toLowerCase().contains(query)) {
+            return true;
+          }
+          return (entry.value as List? ?? const []).any((id) {
+            final item = local['$id'];
+            return item is Map &&
+                matches(_summary(Map<String, dynamic>.from(item)));
+          });
+        });
         return {
           'items': [
-            for (final entry in lists.entries)
+            for (final entry in matchingLists)
               {
                 'id': entry.key,
                 'title': entry.key == favoriteList ? 'Favorite' : entry.key,
@@ -156,7 +184,16 @@ class NotationApi {
                 'items': [
                   for (final id in (entry.value as List? ?? const []))
                     if (local['$id'] is Map)
-                      _summary(Map<String, dynamic>.from(local['$id'] as Map)),
+                      if (query.isEmpty ||
+                          entry.key.toLowerCase().contains(query) ||
+                          matches(
+                            _summary(
+                              Map<String, dynamic>.from(local['$id'] as Map),
+                            ),
+                          ))
+                        _summary(
+                          Map<String, dynamic>.from(local['$id'] as Map),
+                        ),
                 ],
               },
           ],
@@ -167,6 +204,7 @@ class NotationApi {
           .whereType<Map>()
           .map((item) => _summary(Map<String, dynamic>.from(item)))
           .where((item) => mode != 'mine' || item['editable'] == true)
+          .where(matches)
           .toList();
       if (mode == 'all' || mode == 'mine') {
         try {
@@ -391,7 +429,8 @@ class NotationApi {
     if (action == 'list') {
       final page = (message['page'] as num?)?.toInt() ?? 1;
       final mode = message['mode'] == 'mine' ? 'mine' : 'all';
-      suffix = '?mode=$mode&page=$page';
+      final query = '${message['query'] ?? ''}'.trim();
+      suffix = '?mode=$mode&page=$page&q=${Uri.encodeQueryComponent(query)}';
     }
     if (action == 'get' || (action == 'save' && id != 0)) suffix = '/$id';
     final url = Uri.parse(

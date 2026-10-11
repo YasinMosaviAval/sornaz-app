@@ -12,6 +12,7 @@
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		A10000000000000000000001 /* AnalysisAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* AnalysisAudio.swift */; };
+		A10000000000000000000003 /* NotationStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000004 /* NotationStorage.swift */; };
 		B20000000000000000000001 /* music_analysis_dsp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000001 /* music_analysis_dsp.cpp */; };
 		B2000000000000000000003E /* dsp_engine_open.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000003E /* dsp_engine_open.cpp */; };
 		B2000000000000000000003F /* dsp_engine_aubio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000003F /* dsp_engine_aubio.cpp */; };
@@ -112,6 +113,7 @@
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A10000000000000000000002 /* AnalysisAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisAudio.swift; sourceTree = "<group>"; };
+		A10000000000000000000004 /* NotationStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotationStorage.swift; sourceTree = "<group>"; };
 		B10000000000000000000001 /* music_analysis_dsp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ../../native/music_analysis_dsp.cpp; sourceTree = "<group>"; };
 		B1000000000000000000003E /* dsp_engine_open.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ../../native/dsp_engine_open.cpp; sourceTree = "<group>"; };
 		B1000000000000000000003F /* dsp_engine_aubio.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ../../native/dsp_engine_aubio.cpp; sourceTree = "<group>"; };
@@ -245,6 +247,7 @@
 				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				A10000000000000000000002 /* AnalysisAudio.swift */,
+				A10000000000000000000004 /* NotationStorage.swift */,
 				B10000000000000000000001 /* music_analysis_dsp.cpp */,
 				B1000000000000000000003E /* dsp_engine_open.cpp */,
 				B1000000000000000000003F /* dsp_engine_aubio.cpp */,
@@ -462,6 +465,7 @@
 			files = (
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				A10000000000000000000001 /* AnalysisAudio.swift in Sources */,
+				A10000000000000000000003 /* NotationStorage.swift in Sources */,
 				B20000000000000000000001 /* music_analysis_dsp.cpp in Sources */,
 				B2000000000000000000003E /* dsp_engine_open.cpp in Sources */,
 				B2000000000000000000003F /* dsp_engine_aubio.cpp in Sources */,

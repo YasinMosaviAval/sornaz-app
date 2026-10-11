@@ -1,0 +1,16 @@
+<!doctype html><html><meta charset="utf-8"><body data-result="pending"><div id="score" style="width:320px"></div>
+<script src="../assets/notation/vendor/vexflow.js"></script><script src="../assets/notation/model.js"></script><script src="../assets/notation/score_renderer.js"></script><script>
+try {
+ const M=NotationModel,s=M.fresh(),notes=s.score.measures[0].notes;
+ for(let index=0;index<8;index++)notes.push({pitch:['C4','D4','E4','F4','G4','A4','B4','C5'][index],duration:'8',dots:0,staff:1,voice:1,at:index*M.wholeUnits/8,accidental:index%2?'#':'b',cautionary:index%2===0});
+ const score=document.getElementById('score');
+ for(const width of [320,768]){
+  score.style.width=width+'px';NotationRenderer.draw(score,s,{accent:'#0065ff',activeBar:0,activeNote:-1,selectedNotes:new Set()});
+  const hits=[...score.querySelectorAll('[data-note]')].map(item=>item.getBoundingClientRect());
+  if(hits.length!==8)throw Error('Notes are missing at '+width+'px');
+  if(hits.some((box,index)=>index&&box.left<hits[index-1].right-2))throw Error('Adjacent note targets overlap at '+width+'px');
+  const box=score.getBoundingClientRect();if(hits.some(hit=>hit.left<box.left-2||hit.right>box.right+2))throw Error('Note target escaped score at '+width+'px');
+ }
+ document.body.dataset.result='passed';
+} catch(error){document.body.dataset.result='failed: '+error.message;}
+</script></body></html>

@@ -7,8 +7,8 @@
 window.onerror = (_, __, ___, ____, error) => document.body.dataset.result = 'failed: ' + (error?.message || _);
 const piano = {id:'piano',en:'Piano',fa:'پیانو',staves:[{clef:'treble'},{clef:'bass'}]};
 const guitar = {id:'guitar',en:'Guitar',fa:'گیتار'};
-window.fetch = async url => ({ok:true,json:async()=>({success:true,data:
-  String(url).endsWith('/instruments')?[piano,guitar]:{items:[],has_more:false}})});
+window.fetch = async url => {window.lastNotationUrl=String(url);return {ok:true,json:async()=>({success:true,data:
+  String(url).endsWith('/instruments')?[piano,guitar]:{items:[],has_more:false}})}};
 window.NOTATION_BOOT = {locale:'en',embedded:false,api:'/music-sheets/api',userId:1};
 </script>
 <script src="../assets/notation/vendor/vexflow.js"></script>
@@ -21,6 +21,9 @@ const pause = () => new Promise(resolve => setTimeout(resolve, 40));
 const click = selector => {const item=document.querySelector(selector);if(!item)throw Error('Missing '+selector);item.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true}));};
 setTimeout(async()=>{
  try {
+  if(typeof window.Notation.search!=='function')throw Error('List search API is missing');
+  window.Notation.search('Grand');await new Promise(resolve=>setTimeout(resolve,320));
+  if(!window.lastNotationUrl.includes('q=Grand'))throw Error('List search was not sent to the API');
   click('[data-action="new"]');await pause();
   const form=document.getElementById('metadata');if(!form)throw Error('New score form did not open');
   form.elements.title.value='Grand staff test';
@@ -29,6 +32,10 @@ setTimeout(async()=>{
   pianoForm.elements.scale_type.value='major';pianoForm.elements.scale_type.dispatchEvent(new Event('change',{bubbles:true}));
   const ready=document.getElementById('metadata');ready.elements.key.value='C';ready.elements.tempo_unit.value='q:0';ready.elements.bpm.value='100';
   ready.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));await pause();
+  click('[data-action="palette"]');
+  if(document.querySelectorAll('.palette-group').length<5)throw Error('Notation tools are not grouped');
+  click('[data-action="measure-tools-open"]');
+  if(!document.querySelector('.measure-tools')?.open)throw Error('Measure tools did not open from the palette');
   if(document.querySelectorAll('.staff-picker button').length!==2)throw Error('Piano staff selector is missing');
   click('[data-staff="1"][data-bar="0"]');click('[data-pitch="C4"]');await pause();
   click('.staff-picker [data-staff="2"]');click('[data-pitch="C3"]');await pause();

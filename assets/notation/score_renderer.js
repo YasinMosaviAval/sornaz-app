@@ -6,8 +6,12 @@ class SmallStaveNote extends VF.StaveNote {getStaveNoteScale(){return .7;}}
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const gapDurations=Object.keys(M.durations).flatMap(duration=>[0,1,2].map(dots=>({duration,dots,value:M.units({duration,dots})}))).sort((a,b)=>b.value-a.value);
 function spacingNotes(length){const notes=[];while(length>0){const part=gapDurations.find(item=>item.value<=length);if(!part)break;notes.push(new VF.GhostNote({duration:part.duration,dots:part.dots}));length-=part.value;}return notes;}
-// Reserve at least 12 logical pixels around each note/group and stave edge.
-const estimate=bar=>Math.max(110,Math.max(...[1,2].map(staff=>M.lane(bar,staff).length))*34+82);
+// Reserve horizontal space for modifiers before grouping measures into rows.
+const estimate=bar=>{
+ const lanes=[1,2].map(staff=>M.lane(bar,staff).reduce((width,n)=>width+38+(n.accidental?18:0)+(n.cautionary?10:0)+(n.pitches||[]).filter(tone=>tone.accidental).length*12+(n.graces?.length||0)*13+(n.chordSymbol?30:0),0));
+ const prefix=(bar.time||bar.timeSymbol?32:0)+(bar.key?35:0)+(bar.clefs?38:0)+(bar.repeat?.start?18:0);
+ return Math.max(150,Math.max(...lanes)+100+prefix+(bar.clefChanges?.length||0)*24);
+};
 function ottava(pitch,rest=false){
  if(rest)return {pitch,label:''};
  const octave=Number(pitch.slice(1)),letter=pitch[0];
