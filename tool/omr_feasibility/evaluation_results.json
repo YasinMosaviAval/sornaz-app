@@ -21,8 +21,8 @@
       "observedSystems": 1,
       "pianoCandidate": false,
       "deskewDegrees": 0,
-      "elapsedMs": 874,
-      "peakRssBytes": 348000256,
+      "elapsedMs": 483,
+      "peakRssBytes": 351391744,
       "expectedPitchList": [
         67,
         69,
@@ -61,8 +61,8 @@
       "observedSystems": 1,
       "pianoCandidate": false,
       "deskewDegrees": 0,
-      "elapsedMs": 840,
-      "peakRssBytes": 347127808,
+      "elapsedMs": 478,
+      "peakRssBytes": 351756288,
       "expectedPitchList": [
         43,
         47,
@@ -101,8 +101,8 @@
       "observedSystems": 1,
       "pianoCandidate": false,
       "deskewDegrees": 0,
-      "elapsedMs": 640,
-      "peakRssBytes": 348626944,
+      "elapsedMs": 395,
+      "peakRssBytes": 351440896,
       "expectedPitchList": [
         72,
         74,
@@ -137,8 +137,8 @@
       "observedSystems": 1,
       "pianoCandidate": false,
       "deskewDegrees": 0,
-      "elapsedMs": 656,
-      "peakRssBytes": 348655616,
+      "elapsedMs": 432,
+      "peakRssBytes": 351866880,
       "expectedPitchList": [
         66,
         70,
@@ -170,8 +170,8 @@
       "observedSystems": 1,
       "pianoCandidate": true,
       "deskewDegrees": 0,
-      "elapsedMs": 1509,
-      "peakRssBytes": 348160000,
+      "elapsedMs": 752,
+      "peakRssBytes": 353583104,
       "expectedPitchList": [
         72,
         74,
@@ -222,8 +222,8 @@
       "observedSystems": 1,
       "pianoCandidate": true,
       "deskewDegrees": 0,
-      "elapsedMs": 1028,
-      "peakRssBytes": 348893184,
+      "elapsedMs": 649,
+      "peakRssBytes": 351752192,
       "expectedPitchList": [
         72,
         76,
@@ -274,8 +274,8 @@
       "observedSystems": 2,
       "pianoCandidate": false,
       "deskewDegrees": 0,
-      "elapsedMs": 892,
-      "peakRssBytes": 348176384,
+      "elapsedMs": 530,
+      "peakRssBytes": 352399360,
       "expectedPitchList": [
         72,
         74,
@@ -318,8 +318,8 @@
       "observedSystems": 1,
       "pianoCandidate": false,
       "deskewDegrees": -3,
-      "elapsedMs": 2033,
-      "peakRssBytes": 368705536,
+      "elapsedMs": 1334,
+      "peakRssBytes": 356691968,
       "expectedPitchList": [
         67,
         69,
@@ -357,8 +357,8 @@
       "observedSystems": 0,
       "pianoCandidate": false,
       "deskewDegrees": 0,
-      "elapsedMs": 1523,
-      "peakRssBytes": 365182976,
+      "elapsedMs": 1039,
+      "peakRssBytes": 367992832,
       "expectedPitchList": [],
       "observedPitchList": []
     }

@@ -14,6 +14,7 @@ import 'browser_notation_host.dart';
 import 'package:sornaz/helpers/app_platform.dart';
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -28,6 +29,7 @@ import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'package:sornaz/screens/Players/ui/components/player_dialog.dart';
 import 'notation_api.dart';
 import 'desktop_notation_host.dart';
+import 'omr_review_page.dart';
 
 class MusicSheetsPage extends StatelessWidget {
   const MusicSheetsPage({super.key});
@@ -246,6 +248,105 @@ class _NotationHostState extends State<_NotationHost>
     await _loadDurationMode();
   }
 
+  Future<void> _openOmr() async {
+    final source = await showModalBottomSheet<String>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (Platform.isAndroid)
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined),
+                title: Text(socialText(context, 'گرفتن عکس', 'Take photo')),
+                onTap: () => Navigator.pop(sheetContext, 'camera'),
+              ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: Text(
+                socialText(context, 'انتخاب از گالری', 'Choose from gallery'),
+              ),
+              onTap: () => Navigator.pop(sheetContext, 'gallery'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || source == null) return;
+    try {
+      Uint8List? bytes;
+      if (source == 'camera') {
+        if (!Platform.isAndroid) {
+          throw const FormatException(
+            'Camera is currently available on Android only.',
+          );
+        }
+        const media = MethodChannel('sornaz/story_media');
+        final captured = await media.invokeMapMethod<String, dynamic>('camera');
+        if (captured == null) return;
+        final path = captured['path'];
+        if (path is! String)
+          throw const FormatException('Camera image unavailable.');
+        try {
+          final file = File(path);
+          if (await file.length() > 12000000)
+            throw const FormatException('Image is too large.');
+          bytes = await file.readAsBytes();
+        } finally {
+          await media.invokeMethod<void>('delete', {
+            'paths': [path],
+          });
+        }
+      } else {
+        final picked = await FilePicker.platform.pickFiles(
+          type: FileType.image,
+          withData: true,
+        );
+        if (picked == null || picked.files.isEmpty) return;
+        final file = picked.files.single;
+        if (file.size > 12000000)
+          throw const FormatException('Image is too large.');
+        bytes =
+            file.bytes ??
+            (file.path == null ? null : await File(file.path!).readAsBytes());
+      }
+      if (!mounted || bytes == null) return;
+      final score = await Navigator.push<Map<String, Object?>>(
+        context,
+        MaterialPageRoute(builder: (_) => OmrReviewPage(imageBytes: bytes!)),
+      );
+      if (!mounted || score == null || !_ready) return;
+      // The existing importer validates, previews and requests confirmation before
+      // replacing the open score. No OMR data is written before that confirmation.
+      await _controller.runJavaScript(
+        'window.Notation.importContent(${jsonEncode(jsonEncode(score))},"omr.json")'
+        '.catch(error=>window.alert(error.message));',
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error is FormatException
+                ? switch (error.message) {
+                    'Image is too large.' => socialText(context,
+                      'حجم تصویر بیش از حد مجاز است.', 'Image is too large.'),
+                    'Camera image unavailable.' => socialText(context,
+                      'عکس دوربین در دسترس نیست.', 'Camera image unavailable.'),
+                    _ => socialText(context,
+                      'تصویر قابل استفاده نیست.', 'The image cannot be used.'),
+                  }
+                : socialText(
+                    context,
+                    'دریافت یا خواندن تصویر انجام نشد.',
+                    'Could not read the image.',
+                  ),
+          ),
+        ),
+      );
+    }
+  }
+
   Future<void> _createList() async {
     final name = await createNotationList(context);
     if (!mounted || name == null || name.isEmpty) return;
@@ -430,6 +531,7 @@ class _NotationHostState extends State<_NotationHost>
                 editor: _route == 'editor',
                 signedIn: widget.userId > 0,
                 data: _toolbar,
+                onOmr: _route == 'editor' ? _openOmr : null,
                 command: (action) => _controller.runJavaScript(
                   'window.Notation.command(${jsonEncode(action)});',
                 ),
@@ -438,6 +540,15 @@ class _NotationHostState extends State<_NotationHost>
                 searchOnly: true,
                 pageTitle: socialText(context, 'نت نویسی', 'Notation'),
                 extraActions: [
+                  IconButton(
+                    tooltip: socialText(
+                      context,
+                      'تشخیص نت از تصویر',
+                      'Recognize notes from image',
+                    ),
+                    icon: const Icon(Icons.camera_alt_outlined),
+                    onPressed: _openOmr,
+                  ),
                   IconButton(
                     tooltip: socialText(context, 'لیست جدید', 'New list'),
                     icon: const Icon(Icons.playlist_add),

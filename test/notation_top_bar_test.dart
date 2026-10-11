@@ -4,6 +4,21 @@ import 'package:sornaz/screens/Notation/notation_top_bar.dart';
 import 'social_widget_test.dart' as fixture;
 
 void main() {
+  testWidgets('OMR camera action stays accessible in a narrow editor bar', (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    var opened = false;
+    await tester.pumpWidget(fixture.host(Scaffold(appBar: NotationTopBar(
+      editor: true, signedIn: true, data: const {'editable': true},
+      command: (_) {}, onOmr: () => opened = true,
+    ))));
+    await tester.ensureVisible(find.byIcon(Icons.camera_alt_outlined));
+    await tester.tap(find.byIcon(Icons.camera_alt_outlined));
+    expect(opened, isTrue);
+    expect(tester.takeException(), isNull);
+  });
   testWidgets(
     'notation actions share the top bar and dispatch editor commands',
     (tester) async {
