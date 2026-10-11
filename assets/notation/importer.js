@@ -5,23 +5,37 @@ const M=root.NotationModel||require('./model.js');
 const fail=message=>{throw Error(message);};
 const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
 const clefs=new Set(['treble','bass','alto','tenor','soprano','mezzo-soprano','baritone-f','treble_8va','treble_8vb','bass_8va','bass_8vb']);
+// Keep these limits aligned with NotationService::validate in sornaz-web.
+const validPitch=M.validPitch;
+const maxChordTones=M.maxChordTones;
+const accidentalValues=new Set(['','#','b','n','##','bb','+','d']);
+const markingValues={dynamic:new Set(['','ppp','pp','p','mp','mf','f','ff','fff','sf','sff','sfff','sfz','sffz','sfffz','fz','ffz','fffz','fp']),articulation:new Set(['','staccato','accent','tenuto','marcato','staccatissimo','fermata','breath','caesura']),ornament:new Set(['','trill','mordent','invertedMordent','turn','invertedTurn'])};
+const knownBar=new Set(['notes','preserve','time','timeSymbol','length','barline','repeat','clefs','clefChanges','key','tempo','rehearsal','text','displayNumber','multiRest','beamPattern']);
+const knownMeta=new Set(['title','subtitle','composer','arranger','lyricist','tempo_text','instrument','key','tempo_note','clef','time','staves','bpm','scale_type','tempo_dots']);
+const knownNote=new Set(['pitch','duration','dots','rest','accidental','staff','voice','at','tuplet','pitches','cautionary','tieNext','tiePrevious','slurStart','slurEnd','pedal','crossBeam','beamGroup','dynamic','articulation','bow','ornament','finger','ornamentUpperAccidental','ornamentLowerAccidental','slide','lyric','hairpin','chordSymbol','tremolo','graces','octaveShift','noteSize','harmonic','arpeggio']);
+const knownTone=new Set(['pitch','accidental','tieNext','tiePrevious','cautionary','finger']);
+const hasUnknown=(value,allowed)=>Object.keys(value).some(key=>!allowed.has(key));
 function validate(raw){
  if(!object(raw)||raw.format!=='sornaz-notation'||raw.version!==1||!object(raw.metadata)||!object(raw.score)||!Array.isArray(raw.score.measures))fail('Unsupported score format.');
  const sheet=M.fresh(),meta=raw.metadata,bars=raw.score.measures;
- if(!bars.length||bars.length>64||typeof meta.title!=='string'||!meta.title.trim()||meta.title.length>200||typeof meta.instrument!=='string'||!meta.instrument||!M.keys.includes(meta.key)||!Number.isInteger(Number(meta.bpm))||Number(meta.bpm)<20||Number(meta.bpm)>300)fail('Invalid score metadata.');
+ if(!bars.length||bars.length>64||hasUnknown(meta,knownMeta)||typeof meta.title!=='string'||!meta.title.trim()||meta.title.length>180||typeof meta.instrument!=='string'||!meta.instrument||!M.keys.includes(meta.key)||!Number.isInteger(Number(meta.bpm))||Number(meta.bpm)<20||Number(meta.bpm)>300)fail('Invalid score metadata.');
  if(meta.staves!==undefined&&(!Array.isArray(meta.staves)||![1,2].includes(meta.staves.length)||meta.staves.some(s=>!object(s)||!clefs.has(s.clef))))fail('Invalid staff layout.');
  if(meta.clef!==undefined&&!clefs.has(meta.clef))fail('Invalid clef.');
  sheet.metadata=M.clone(meta);sheet.metadata.staves??=meta.instrument.toLowerCase()==='piano'?[{clef:'treble'},{clef:'bass'}]:[{clef:meta.clef||'treble'}];
  try{if(!Number.isInteger(M.measureUnits(meta))||!Number.isInteger(M.units({duration:meta.tempo_note||'q',dots:meta.tempo_dots||0})))fail('Invalid score metadata.');}catch(_){fail('Invalid score metadata.');}
  sheet.score.measures=[];let count=0,rests=0,chords=0;
  for(const source of bars){
-  if(!object(source)||!Array.isArray(source.notes)||source.notes.length>256)fail('Invalid measure.');
+  if(!object(source)||hasUnknown(source,knownBar)||!Array.isArray(source.notes)||source.notes.length>128)fail('Invalid measure.');
   const bar=M.clone(source);bar.notes=[];bar.preserve=true;sheet.score.measures.push(bar);
   try{const capacity=M.barUnits(sheet,sheet.score.measures.length-1);if(!Number.isInteger(capacity)||capacity<=0||capacity>M.wholeUnits*4)fail('Invalid measure length.');}catch(_){fail('Invalid measure length.');}
   const cursors=new Map();
   for(const note of source.notes){
-   if(!object(note)||!M.durations[note.duration]||!Number.isInteger(note.dots||0)||(note.dots||0)>2||!Number.isInteger(note.staff||1)||(note.staff||1)<1||(note.staff||1)>sheet.metadata.staves.length||!Number.isInteger(note.voice||1)||(note.voice||1)<1||(note.voice||1)>4||!note.rest&&!/^[A-G][0-8]$/.test(note.pitch||''))fail('Invalid note.');
-   if(note.rest&&note.pitches?.length||note.pitches!==undefined&&(!Array.isArray(note.pitches)||note.pitches.length>12||note.pitches.some(t=>!object(t)||!/^[A-G][0-8]$/.test(t.pitch||''))))fail('Invalid chord.');
+   if(!object(note)||hasUnknown(note,knownNote)||!M.durations[note.duration]||!Number.isInteger(note.dots||0)||(note.dots||0)>2||!Number.isInteger(note.staff||1)||(note.staff||1)<1||(note.staff||1)>sheet.metadata.staves.length||!Number.isInteger(note.voice||1)||(note.voice||1)<1||(note.voice||1)>4||!validPitch(note.pitch))fail('Invalid note.');
+   if(note.rest&&note.pitches?.length||note.pitches!==undefined&&(!Array.isArray(note.pitches)||note.pitches.length>maxChordTones||note.pitches.some(t=>!object(t)||hasUnknown(t,knownTone)||!validPitch(t.pitch))))fail('Invalid chord.');
+   if(!accidentalValues.has(note.accidental||'')||note.pitches?.some(t=>!accidentalValues.has(t.accidental||'')))fail('Invalid accidental.');
+   if(Object.entries(markingValues).some(([field,values])=>!values.has(note[field]||'')))fail('Invalid note marking.');
+   if(['tieNext','tiePrevious','slurStart','slurEnd'].some(field=>note[field]!==undefined&&typeof note[field]!=='boolean')||note.pitches?.some(t=>['tieNext','tiePrevious'].some(field=>t[field]!==undefined&&typeof t[field]!=='boolean')))fail('Invalid tie.');
+   if(note.rest&&['tieNext','tiePrevious','slurStart','slurEnd'].some(field=>note[field]===true))fail('Invalid rest markings.');
    const lane=(note.staff||1)+':'+(note.voice||1),at=note.at===undefined?(cursors.get(lane)||0):note.at;
    if(!Number.isInteger(at)||at<0)fail('Invalid note timing.');
    try{M.add(sheet,sheet.score.measures.length-1,{...note,at});cursors.set(lane,Math.max(cursors.get(lane)||0,at+M.units(note)));}catch(_){fail('Overlapping or out-of-range notes.');}
@@ -70,8 +84,10 @@ function fromMusicXml(content,name){
     fail('Unsupported MusicXML notation.');
    }
    if(item.localName==='barline'||item.localName==='harmony')fail('Unsupported MusicXML notation.');
-   if(item.localName!=='note')continue;
-   if(one(item,'grace')||one(item,'time-modification')||one(item,'notations')||one(item,'lyric')||one(item,'tie')||one(item,'cue'))fail('Unsupported MusicXML notation.');
+   if(item.localName!=='note')fail('Unsupported MusicXML notation.');
+   const notation=one(item,'notations'),ties=children(item,'tie').map(t=>t.getAttribute('type'));
+   const tied=children(notation,'tied').map(t=>t.getAttribute('type'));
+   if(one(item,'grace')||one(item,'time-modification')||one(item,'lyric')||one(item,'cue')||(notation&&notation.children.length!==tied.length)||ties.some(type=>!['start','stop'].includes(type))||tied.some(type=>!['start','stop'].includes(type))||(tied.length&&ties.length!==tied.length)||ties.some(type=>tied.length&&!tied.includes(type)))fail('Unsupported MusicXML notation.');
    if(one(item,'rest')?.getAttribute('measure')==='yes'){
     const full=Number(value(item,'duration'));if(!Number.isInteger(full)||full<1||full*M.wholeUnits/(divisions*4)!==M.barUnits({...sheet,score:{measures:sheet.score.measures}},sheet.score.measures.length-1))fail('Invalid MusicXML rest.');cursor+=full;last=null;continue;
    }
@@ -79,13 +95,16 @@ function fromMusicXml(content,name){
    if(!duration||!Number.isInteger(d)||d!==expected||dots>2)fail('Unsupported MusicXML duration.');
    const staff=Number(value(item,'staff')||1),rawVoice=Number(value(item,'voice')||1),voice=staff===2&&rawVoice>=5&&rawVoice<=8?rawVoice-4:rawVoice,chord=!!one(item,'chord'),at=chord?last?.at:cursor;
    if(!Number.isInteger(at)||at<0||!Number.isInteger(at*M.wholeUnits/(divisions*4)))fail('Invalid MusicXML timing.');
-   const pitch=one(item,'pitch'),step=value(pitch,'step'),alter=Number(value(pitch,'alter')||0),octave=value(pitch,'octave');if(!one(item,'rest')&&(!/^[A-G]$/.test(step||'')||!['-1','0','1'].includes(String(alter))||!/^[0-8]$/.test(octave||'')))fail('Unsupported MusicXML pitch.');
+   const pitch=one(item,'pitch'),step=value(pitch,'step'),alter=Number(value(pitch,'alter')||0),octave=value(pitch,'octave');if(!one(item,'rest')&&(!/^[A-G]$/.test(step||'')||!['-1','0','1'].includes(String(alter))||!validPitch((step||'')+(octave||''))))fail('Unsupported MusicXML pitch.');
    if(one(item,'accidental')&&!['sharp','flat','natural'].includes(value(item,'accidental')))fail('Unsupported MusicXML accidental.');
    const keyOrder=currentFifths>=0?'FCGDAEB':'BEADGCF',implicit=keyOrder.slice(0,Math.abs(currentFifths)).includes(step)?Math.sign(currentFifths):0;
    const symbol=value(item,'accidental'),accidental=symbol==='natural'?'n':symbol==='sharp'?'#':symbol==='flat'?'b':alter===1?'#':alter===-1?'b':one(pitch,'alter')&&implicit?'n':'';
    const tone={pitch:step+octave,accidental};
+   if(ties.includes('start'))tone.tieNext=true;if(ties.includes('stop'))tone.tiePrevious=true;
    if(chord){if(!last||last.staff!==staff||last.voice!==voice||last.at!==at||last.duration!==duration||last.dots!==dots)fail('Invalid MusicXML chord.');last.note.pitches??=[];last.note.pitches.push(tone);continue;}
-   const note={pitch:pitch?tone.pitch:'B4',duration,dots,rest:!!one(item,'rest'),staff,voice,at:at*M.wholeUnits/(divisions*4),accidental:pitch?tone.accidental:''};bar.notes.push(note);last={note,staff,voice,at,duration,dots};cursor+=d;
+   const note={pitch:pitch?tone.pitch:'B4',duration,dots,rest:!!one(item,'rest'),staff,voice,at:at*M.wholeUnits/(divisions*4),accidental:pitch?tone.accidental:''};
+   if(tone.tieNext)note.tieNext=true;if(tone.tiePrevious)note.tiePrevious=true;
+   bar.notes.push(note);last={note,staff,voice,at,duration,dots};cursor+=d;
   }
  }
  return {format:'sornaz-notation',version:1,metadata:sheet.metadata,score:sheet.score};

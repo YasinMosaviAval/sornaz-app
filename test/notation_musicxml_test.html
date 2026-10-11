@@ -12,13 +12,13 @@ let captured;
 URL.createObjectURL=blob=>{captured=blob;return 'blob:test'};
 HTMLAnchorElement.prototype.click=function(){};
 </script>
-<script src="../assets/notation/vendor/vexflow.js"></script><script src="../assets/notation/model.js"></script><script src="../assets/notation/ui_symbols.js"></script><script src="../assets/notation/score_renderer.js"></script><script src="../assets/notation/notation.js"></script>
+<script src="../assets/notation/vendor/vexflow.js"></script><script src="../assets/notation/model.js"></script><script src="../assets/notation/importer.js"></script><script src="../assets/notation/ui_symbols.js"></script><script src="../assets/notation/score_renderer.js"></script><script src="../assets/notation/notation.js"></script>
 <script>
 setTimeout(async()=>{try{
  const button=document.createElement('button');button.dataset.action='musicxml';button.dataset.id='1';document.getElementById('app').append(button);button.click();
  await new Promise(resolve=>setTimeout(resolve,80));
  if(!captured)throw Error('MusicXML was not exported');
- const xml=await captured.text(),doc=new DOMParser().parseFromString(xml,'application/xml');
+ const xml=window.Notation.musicXml(sheet),doc=new DOMParser().parseFromString(xml,'application/xml');
  if(doc.querySelector('parsererror'))throw Error('Invalid XML: '+doc.querySelector('parsererror').textContent);
  const find=selector=>{if(!doc.querySelector(selector))throw Error('Missing '+selector);};
  find('divisions');find('key fifths');find('clef[number="2"] sign');find('note chord');find('tie[type="start"]');find('notations tied[type="start"]');find('dynamics mf');find('articulations staccato');find('ornaments trill-mark');find('technical fingering');find('technical up-bow');find('creator[type="composer"]');find('note accidental[parentheses="yes"]');find('note lyric text');find('direction rehearsal');if(doc.querySelectorAll('arpeggiate').length!==2||doc.querySelectorAll('technical fingering').length!==2)throw Error('Arpeggio or chord-tone fingering was lost');
@@ -34,67 +34,72 @@ setTimeout(async()=>{try{
   {pitch:'C3',duration:'8',dots:0,rest:false,staff:2,at:120960,crossBeam:1},
  ]},{notes:[{pitch:'E4',duration:'q',dots:0,rest:false,staff:1,at:0,slurEnd:true,pitches:[{pitch:'G4',accidental:'',tiePrevious:true}]}],clefs:{2:'alto'}}];
  captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
- const pianoDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ const pianoDoc=new DOMParser().parseFromString(window.Notation.musicXml(sheet),'application/xml');
  if(pianoDoc.querySelector('parsererror')||pianoDoc.querySelectorAll('beam[number="1"]').length!==2||!pianoDoc.querySelector('slur[type="start"]')||!pianoDoc.querySelector('slur[type="stop"]')||!pianoDoc.querySelector('pedal[type="start"]')||!pianoDoc.querySelector('measure:nth-of-type(2) clef[number="2"] sign')||!pianoDoc.querySelector('note:has(chord) tie[type="start"]'))throw Error('Piano markings were lost in MusicXML');
  sheet.score.measures=original;
  sheet.metadata.staves=[{clef:'treble'}];captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
- const hiddenDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ const hiddenDoc=new DOMParser().parseFromString(window.Notation.musicXml(sheet),'application/xml');
  if(!hiddenDoc.querySelector('staves')||![...hiddenDoc.querySelectorAll('note staff')].some(item=>item.textContent==='2'))throw Error('Hidden bass notes were silently dropped from MusicXML');
  sheet.metadata.staves=[{clef:'treble'},{clef:'bass'}];
  sheet.score.measures=[{notes:[{pitch:'F4',duration:'q',dots:0,rest:false,staff:1}]},{notes:[{pitch:'F4',duration:'q',dots:0,rest:false,staff:1}],key:'G',tempo:{mode:'ritardando',bpm:60}}];
  captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
- const tempoDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ const tempoDoc=new DOMParser().parseFromString(window.Notation.musicXml(sheet),'application/xml');
  if(tempoDoc.querySelector('parsererror')||tempoDoc.querySelector('measure:nth-of-type(2) key fifths')?.textContent!=='1'||![...tempoDoc.querySelectorAll('measure:nth-of-type(2) direction words')].some(node=>node.textContent==='ritardando')||!tempoDoc.querySelector('measure:nth-of-type(2) sound[tempo="60"]'))throw Error('Key or gradual tempo was lost in MusicXML');
  sheet.score.measures=[{notes:[{pitch:'C4',duration:'q',dots:0,rest:false,staff:1,hairpin:'crescendo',octaveShift:'8va',articulation:'fermata',lyric:'Hello',chordSymbol:'Cm7',ornament:'turn',ornamentUpperAccidental:'#',tremolo:2,graces:[{pitch:'D4',accidental:'',kind:'acciaccatura',duration:'8'}]},{pitch:'D4',duration:'q',dots:0,rest:false,staff:1,hairpin:'stop',octaveShift:'stop'}],rehearsal:'A',text:'Verse'}];
  captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
- const expressiveDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ const expressiveDoc=new DOMParser().parseFromString(window.Notation.musicXml(sheet),'application/xml');
  if(expressiveDoc.querySelector('parsererror')||!expressiveDoc.querySelector('wedge[type="crescendo"]')||!expressiveDoc.querySelector('wedge[type="stop"]')||!expressiveDoc.querySelector('octave-shift[type="down"][size="8"]')||!expressiveDoc.querySelector('octave-shift[type="stop"]')||expressiveDoc.querySelector('note:has(lyric) pitch octave')?.textContent!=='5'||!expressiveDoc.querySelector('notations fermata')||!expressiveDoc.querySelector('notations ornaments turn')||expressiveDoc.querySelector('ornaments accidental-mark[placement="above"]')?.textContent!=='sharp'||expressiveDoc.querySelector('tremolo[type="single"]')?.textContent!=='2'||!expressiveDoc.querySelector('note grace[slash="yes"]')||!expressiveDoc.querySelector('lyric text')||!expressiveDoc.querySelector('rehearsal')||expressiveDoc.querySelector('harmony kind')?.textContent!=='minor-seventh'||![...expressiveDoc.querySelectorAll('direction words')].some(node=>node.textContent==='Verse'))throw Error('Expression or text markings were lost in MusicXML');
  sheet.score.measures=[{notes:[{pitch:'C4',duration:'q',dots:0,rest:false,staff:1,slide:'glissando'},{pitch:'D4',duration:'q',dots:0,rest:false,staff:1,slide:'portamento'},{pitch:'E4',duration:'q',dots:0,rest:false,staff:1}],displayNumber:42}];
  captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
- const slidesDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ const slidesDoc=new DOMParser().parseFromString(window.Notation.musicXml(sheet),'application/xml');
  if(slidesDoc.querySelector('parsererror')||slidesDoc.querySelector('measure')?.getAttribute('number')!=='42'||slidesDoc.querySelectorAll('glissando[type="start"]').length!==1||slidesDoc.querySelectorAll('glissando[type="stop"]').length!==1||slidesDoc.querySelectorAll('slide[type="start"]').length!==1||slidesDoc.querySelectorAll('slide[type="stop"]').length!==1)throw Error('Glissando, portamento or measure number was lost in MusicXML');
  sheet.score.measures=[{notes:[{pitch:'C4',duration:'q',dots:0,rest:false,staff:1,arpeggio:'down',pitches:[{pitch:'E4',accidental:''}]}]}];
  captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
- const arpeggioDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ const arpeggioDoc=new DOMParser().parseFromString(window.Notation.musicXml(sheet),'application/xml');
  if(arpeggioDoc.querySelector('parsererror')||arpeggioDoc.querySelectorAll('arpeggiate[direction="down"]').length!==2)throw Error('Arpeggio direction was lost in MusicXML');
  sheet.score.measures=[{notes:[{pitch:'C4',duration:'q',dots:0,rest:false,staff:1,noteSize:'cue'},{pitch:'D4',duration:'q',dots:0,rest:false,staff:1,noteSize:'small'}]}];
  captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
- const cueDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ const cueDoc=new DOMParser().parseFromString(window.Notation.musicXml(sheet),'application/xml');
  if(cueDoc.querySelector('parsererror')||cueDoc.querySelectorAll('note cue').length!==1||cueDoc.querySelectorAll('note type[size="cue"]').length!==2)throw Error('Cue or small note was lost in MusicXML');
  sheet.score.measures=[{notes:[{pitch:'C4',duration:'8',dots:0,rest:false,staff:1,beamGroup:7},{pitch:'D4',duration:'q',dots:0,rest:false,staff:1}]}];
  captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
- const orphanBeamDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ const orphanBeamDoc=new DOMParser().parseFromString(window.Notation.musicXml(sheet),'application/xml');
  if(orphanBeamDoc.querySelector('parsererror')||orphanBeamDoc.querySelector('beam'))throw Error('A single remaining note exported an unclosed beam');
  sheet.score.measures=[{time:'6/8',beamPattern:'3+3',notes:Array.from({length:6},(_,at)=>({pitch:'C4',duration:'8',dots:0,rest:false,staff:1,at:at*120960}))}];
  captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
- const groupedDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ const groupedDoc=new DOMParser().parseFromString(window.Notation.musicXml(sheet),'application/xml');
  if(groupedDoc.querySelector('parsererror')||[...groupedDoc.querySelectorAll('beam')].map(node=>node.textContent).join(',')!=='begin,continue,end,begin,continue,end')throw Error('Compound beam grouping was lost in MusicXML');
  delete sheet.score.measures[0].beamPattern;captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
- const defaultGroupedDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ const defaultGroupedDoc=new DOMParser().parseFromString(window.Notation.musicXml(sheet),'application/xml');
  if([...defaultGroupedDoc.querySelectorAll('beam')].map(node=>node.textContent).join(',')!=='begin,continue,end,begin,continue,end')throw Error('Default compound grouping was lost in MusicXML');
  sheet.score.measures=[{notes:[{pitch:'C4',duration:'q',dots:0,rest:false,staff:1,at:0},{pitch:'C3',duration:'q',dots:0,rest:false,staff:1,at:241920}],clefChanges:[{at:241920,staff:1,clef:'bass'}]}];
  captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
- const timedClefDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ const timedClefDoc=new DOMParser().parseFromString(window.Notation.musicXml(sheet),'application/xml');
  if(timedClefDoc.querySelector('parsererror')||timedClefDoc.querySelectorAll('measure:first-of-type clef[number="1"] sign').length!==2||timedClefDoc.querySelectorAll('measure:first-of-type clef[number="1"] sign')[1]?.textContent!=='F')throw Error('Timed clef change was lost in MusicXML');
  sheet.score.measures=[{notes:[{pitch:'C4',duration:'q',dots:0,rest:false,staff:1,harmonic:{kind:'natural',partial:3}}]}];
  captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
- const harmonicDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ const harmonicDoc=new DOMParser().parseFromString(window.Notation.musicXml(sheet),'application/xml');
  if(harmonicDoc.querySelector('parsererror')||!harmonicDoc.querySelector('note technical harmonic base-pitch')||!harmonicDoc.querySelector('note[print-object="no"] technical harmonic sounding-pitch')||harmonicDoc.querySelector('note[print-object="no"] pitch step')?.textContent!=='G')throw Error('Natural harmonic base or sounding pitch was lost in MusicXML');
  sheet.score.measures=[{notes:[],preserve:true,multiRest:2},{notes:[],preserve:true}];
  captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
- const multiRestDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ const multiRestDoc=new DOMParser().parseFromString(window.Notation.musicXml(sheet),'application/xml');
  if(multiRestDoc.querySelector('parsererror')||multiRestDoc.querySelector('measure:first-of-type multiple-rest')?.textContent!=='2'||multiRestDoc.querySelectorAll('measure note rest[measure="yes"]').length!==4)throw Error('Multi-measure rest was lost in MusicXML');
  sheet.score.measures=[{notes:[{pitch:'C4',duration:'q',dots:0,rest:false,staff:1,octaveShift:'8va'}]}];
  captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
  if(captured)throw Error('Unclosed octave shift was exported silently');
  sheet.score.measures=original;
  sheet.score.measures[1]={notes:[],preserve:true,repeat:{measure:1}};captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
- const repeatDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ const repeatDoc=new DOMParser().parseFromString(window.Notation.musicXml(sheet),'application/xml');
  if(!repeatDoc.querySelector('measure:nth-of-type(2) measure-repeat[type="start"]')||repeatDoc.querySelectorAll('measure:nth-of-type(2) note pitch').length!==4)throw Error('MusicXML measure repeat did not include actual repeated notes');
  sheet.score.measures=[{notes:[],repeat:{start:true,endings:[1]}},{notes:[],repeat:{end:2,endings:[1]}},{notes:[],repeat:{endings:[2]}}];
  captured=null;button.click();await new Promise(resolve=>setTimeout(resolve,80));
- const endingDoc=new DOMParser().parseFromString(await captured.text(),'application/xml');
+ const endingDoc=new DOMParser().parseFromString(window.Notation.musicXml(sheet),'application/xml');
  if(endingDoc.querySelectorAll('ending[number="1"][type="start"]').length!==1||endingDoc.querySelectorAll('ending[number="1"][type="stop"]').length!==1||!endingDoc.querySelector('measure:nth-of-type(1) ending[type="start"]')||!endingDoc.querySelector('measure:nth-of-type(2) ending[type="stop"]'))throw Error('Multi-measure volta did not span the selected measures');
+ const roundtrip=structuredClone(sheet);roundtrip.metadata.key='C';roundtrip.score.measures=[
+  {notes:[{pitch:'C4',duration:'q',dots:0,rest:false,staff:1,at:0,tieNext:true,pitches:[{pitch:'E4',accidental:'',tieNext:true}]},{pitch:'C3',duration:'q',dots:0,rest:false,staff:2,at:0}]},
+  {notes:[{pitch:'C4',duration:'q',dots:0,rest:false,staff:1,at:0,tiePrevious:true,pitches:[{pitch:'E4',accidental:'',tiePrevious:true}]},{pitch:'C3',duration:'q',dots:0,rest:false,staff:2,at:0}]}];
+ const imported=NotationImporter.parse(window.Notation.musicXml(roundtrip),'roundtrip.musicxml').sheet;
+ if(imported.metadata.staves.length!==2||imported.score.measures.length!==2||!imported.score.measures[0].notes[0].tieNext||!imported.score.measures[0].notes[0].pitches[0].tieNext||!imported.score.measures[1].notes[0].tiePrevious||!imported.score.measures[1].notes[0].pitches[0].tiePrevious)throw Error('Piano ties or chord tones were lost on MusicXML roundtrip');
  document.body.dataset.result='passed';
 }catch(error){document.body.dataset.result='failed: '+error.message;}} ,100);
 </script></body></html>

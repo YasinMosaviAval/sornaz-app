@@ -80,7 +80,7 @@ try {
  if(secondChord.hz!==0||tiedEvents.find(event=>event.note===2&&event.tone===0).hz===0)throw Error('Tie did not apply to one chord tone only');
  NotationRenderer.draw(document.getElementById('score'),tied,{accent:'#0065ff',activeBar:0,activeNote:-1,selectedNotes:new Set()});
  if(document.querySelectorAll('#score .vf-stavetie').length!==1)throw Error('Per-tone chord tie was not engraved');
- const crossRow=M.fresh();crossRow.score.measures=[{notes:[note('C4',0)]},{notes:[note('D4',0)]},{notes:[note('E4',3*u/4,1,1,{tieNext:true})]},{notes:[note('E4',0,1,1,{tiePrevious:true})]}];
+ const crossRow=M.fresh();crossRow.score.measures=[{notes:[note('C4',0)]},{notes:[note('E4',3*u/4,1,1,{tieNext:true})]},{notes:[note('E4',0,1,1,{tiePrevious:true})]},{notes:[note('D4',0)]}];
  document.getElementById('score').style.width='300px';
  NotationRenderer.draw(document.getElementById('score'),crossRow,{accent:'#0065ff',activeBar:0,activeNote:-1,selectedNotes:new Set()});
  if(document.querySelectorAll('#score .vf-stavetie').length<2)throw Error('Tie crossing score rows was not engraved');

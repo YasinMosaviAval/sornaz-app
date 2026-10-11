@@ -4,6 +4,8 @@
 const durations={w:64,h:32,q:16,'8':8,'16':4,'32':2,'64':1,'128':.5,'256':.25};
 // A whole note has 967680 units: exact for double dots and common 3/5/7/9 tuplets.
 const wholeUnits=967680,unitPerLegacyTick=wholeUnits/64;
+const maxChordTones=7;
+const validPitch=pitch=>typeof pitch==='string'&&/^(?:[A-G][1-7]|[AB]0|C8)$/.test(pitch);
 const tuplets={'3:2':true,'5:4':true,'7:4':true,'4:3':true,'6:4':true,'9:8':true};
 const keys=['C','G','D','A','E','B','F#','C#','F','Bb','Eb','Ab','Db','Gb','Cb','Am','Em','Bm','F#m','C#m','G#m','D#m','A#m','Dm','Gm','Cm','Fm','Bbm','Ebm','Abm'];
 const clone=v=>JSON.parse(JSON.stringify(v));
@@ -36,6 +38,8 @@ function normalizeBar(bar){const cursors=new Map();for(const n of bar.notes){con
 function fresh(){return {id:0,version:0,editable:true,visibility:'private',metadata:{title:'',subtitle:'',composer:'',arranger:'',lyricist:'',instrument:'Tar',scale_type:'major',key:'C',time:'4/4',tempo_text:'Allegro',tempo_note:'q',tempo_dots:0,bpm:100,clef:'treble'},score:{measures:[{notes:[]}]}};}
 function add(sheet,bar,note){
  if(!sheet.editable)throw Error('This sheet is read-only.');
+ if(!validPitch(note.pitch))throw Error('Invalid note.');
+ if(note.pitches!==undefined&&(!Array.isArray(note.pitches)||note.pitches.length>maxChordTones||note.pitches.some(tone=>!validPitch(tone.pitch))))throw Error('Invalid chord.');
  const measure=sheet.score.measures[bar],staff=staffOf(note),voice=voiceOf(note),length=units(note);
  const intervals=lane(measure,staff,voice).map(n=>{const i=measure.notes.indexOf(n),start=positionOf(measure,i);return [start,start+units(n)];});
  const at=Number.isInteger(note.at)?note.at:Math.max(0,...intervals.map(([,end])=>end));
@@ -245,6 +249,6 @@ function frequency(pitch,accidental='',key='C',carry={}){
  if(accidental){delta={'#':1,b:-1,n:0,'##':2,bb:-2,'+':.5,d:-.5}[accidental];carry[pitch]=delta;}
  return 440*Math.pow(2,((octave+1)*12+base[letter]+delta-69)/12);
 }
-const api={durations,keys,wholeUnits,units,measureUnits,effectiveTime,effectiveKey,tempoSegment,effectiveClef,clefAt,barUnits,beamPattern,positionOf,voiceOf,normalizeBar,clone,ticks,capacity,staves,staffOf,lane,used,fresh,add,insert,copySelection,pasteSelection,moveSelectionToStaff,trimmedMeasures,validMultiRest,multiRestAt,asRest,compactDelete,prepare,measureSource,performanceOrder,timeline,frequency};if(typeof module==='object')module.exports=api;
+const api={durations,keys,wholeUnits,maxChordTones,validPitch,units,measureUnits,effectiveTime,effectiveKey,tempoSegment,effectiveClef,clefAt,barUnits,beamPattern,positionOf,voiceOf,normalizeBar,clone,ticks,capacity,staves,staffOf,lane,used,fresh,add,insert,copySelection,pasteSelection,moveSelectionToStaff,trimmedMeasures,validMultiRest,multiRestAt,asRest,compactDelete,prepare,measureSource,performanceOrder,timeline,frequency};if(typeof module==='object')module.exports=api;
 root.NotationModel=api;
 })(globalThis);
