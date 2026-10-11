@@ -29,6 +29,11 @@ void main() {
   testWidgets('blank image keeps review empty and allows retry', (tester) async {
     final bytes = File('tool/omr_feasibility/invalid.png').readAsBytesSync();
     await tester.pumpWidget(fixture.host(OmrReviewPage(imageBytes: bytes)));
+    await tester.tap(find.byIcon(Icons.crop));
+    await tester.pumpAndSettle();
+    expect(find.text('برش تصویر'), findsOneWidget);
+    Navigator.of(tester.element(find.text('برش تصویر'))).pop();
+    await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.auto_fix_high));
     await tester.pump();
     await tester.runAsync(() async {
@@ -36,7 +41,7 @@ void main() {
     });
     await tester.pump();
     expect(find.byIcon(Icons.auto_fix_high), findsOneWidget);
-    expect(find.textContaining('فقط تصویر نت'), findsOneWidget);
+    expect(find.textContaining('یک حامل پنج‌خطیِ مستقل لازم است'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

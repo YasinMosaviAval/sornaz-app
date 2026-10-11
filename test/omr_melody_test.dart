@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:image/image.dart' as img;
 import 'package:sornaz/services/omr/omr_melody.dart';
 import 'package:sornaz/services/omr/printed_score_engine.dart';
 
@@ -79,6 +80,34 @@ void main() {
       File('tool/omr_feasibility/invalid.png').readAsBytesSync(),
     );
     expect(result['staffCount'], 0);
+    expect(() => OmrMelody.fromProbe(result), throwsFormatException);
+  });
+
+  test('phone-shaped PNG screenshot around a score is accepted', () {
+    final source = img.decodePng(
+      File('tool/omr_feasibility/treble.png').readAsBytesSync(),
+    )!;
+    final screenshot = img.Image(width: 1080, height: 2400);
+    img.fill(screenshot, color: img.ColorRgb8(255, 255, 255));
+    final score = img.copyResize(source, width: 1000);
+    img.compositeImage(screenshot, score, dstX: 40, dstY: 700);
+    final result = analyzePrintedScore(img.encodePng(screenshot));
+    expect(result['staffCount'], 1);
+    // The clean source has six notes. The scaled screenshot still produces a
+    // reviewable draft; the missing note can be added in the review screen.
+    expect(OmrMelody.fromProbe(result).length, greaterThanOrEqualTo(5));
+  });
+
+  test('a screenshot with two score rows asks for a single-staff crop', () {
+    final source = img.decodePng(
+      File('tool/omr_feasibility/treble.png').readAsBytesSync(),
+    )!;
+    final screenshot = img.Image(width: 1200, height: 1800);
+    img.fill(screenshot, color: img.ColorRgb8(255, 255, 255));
+    img.compositeImage(screenshot, source, dstY: 200);
+    img.compositeImage(screenshot, source, dstY: 900);
+    final result = analyzePrintedScore(img.encodePng(screenshot));
+    expect(result['staffCount'], 2);
     expect(() => OmrMelody.fromProbe(result), throwsFormatException);
   });
 }

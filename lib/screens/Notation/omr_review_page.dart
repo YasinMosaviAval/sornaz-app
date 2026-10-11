@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:sornaz/screens/Social/media_picker.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:provider/provider.dart';
@@ -17,12 +19,31 @@ class OmrReviewPage extends StatefulWidget {
 class _OmrReviewPageState extends State<OmrReviewPage> {
   final _title = TextEditingController();
   final _scroll = ScrollController();
+  late Uint8List _imageBytes;
   List<OmrDraftNote>? _notes;
   String _clef = 'treble';
   int _numerator = 4;
   int _denominator = 4;
   bool _busy = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _imageBytes = widget.imageBytes;
+  }
+
+  Future<void> _cropImage() async {
+    if (_busy) return;
+    final cropped = await Navigator.push<PlatformFile>(context,
+      MaterialPageRoute(builder: (_) => ImageCropPage(bytes: _imageBytes)));
+    if (!mounted || cropped?.bytes == null) return;
+    setState(() {
+      _imageBytes = cropped!.bytes!;
+      _notes = null;
+      _error = null;
+    });
+  }
 
   @override
   void dispose() {
@@ -37,7 +58,7 @@ class _OmrReviewPageState extends State<OmrReviewPage> {
       _error = null;
     });
     try {
-      final result = await compute(analyzePrintedScore, widget.imageBytes);
+      final result = await compute(analyzePrintedScore, _imageBytes);
       final notes = OmrMelody.fromProbe(result);
       final staff = (result['staffs'] as List).single as Map<String, dynamic>;
       if (!mounted) return;
@@ -56,19 +77,27 @@ class _OmrReviewPageState extends State<OmrReviewPage> {
       });
     } catch (error) {
       if (!mounted) return;
-      setState(
-        () => _error = error is FormatException
-            ? socialText(
-                context,
-                'فقط تصویر نت با یک حامل و سرنت‌های قابل تشخیص پشتیبانی می‌شود.',
-                'Only a score with one detectable staff and noteheads is supported.',
-              )
-            : socialText(
-                context,
-                'پردازش تصویر انجام نشد. تصویر دیگری انتخاب کنید.',
-                'Image processing failed. Try another image.',
-              ),
-      );
+      setState(() => _error = error is FormatException
+          ? switch (error.message) {
+              'Unsupported image' => socialText(context,
+                'فرمت تصویر پشتیبانی نمی‌شود. PNG یا JPEG انتخاب کنید.',
+                'Unsupported image format. Choose PNG or JPEG.'),
+              'Image dimensions are too large' => socialText(context,
+                'ابعاد تصویر بسیار بزرگ است. بخش نت را برش دهید.',
+                'Image dimensions are too large. Crop to the score.'),
+              'Exactly one staff is required.' => socialText(context,
+                'یک حامل پنج‌خطیِ مستقل لازم است. تصویر را به یک ردیف نت برش دهید.',
+                'One five-line staff is required. Crop to a single score row.'),
+              'No noteheads found.' => socialText(context,
+                'حامل پیدا شد اما سرنتی شناسایی نشد. تصویر واضح‌تر یا برش نزدیک‌تر را امتحان کنید.',
+                'Staff found, but no noteheads detected. Try a clearer, closer crop.'),
+              _ => socialText(context,
+                'نت تصویر قابل تشخیص نیست. بخش نت را برش دهید و دوباره تلاش کنید.',
+                'The score cannot be recognized. Crop to the score and retry.'),
+            }
+          : socialText(context,
+              'پردازش تصویر انجام نشد. تصویر دیگری انتخاب کنید.',
+              'Image processing failed. Try another image.'));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -125,12 +154,20 @@ class _OmrReviewPageState extends State<OmrReviewPage> {
                 context.watch<AppData>().cornerRadius,
               ),
               child: Image.memory(
-                widget.imageBytes,
+                _imageBytes,
                 height: 210,
                 fit: BoxFit.contain,
               ),
             ),
             const SizedBox(height: 12),
+            Text(socialText(context,
+              'برای نتیجهٔ بهتر، اسکرین‌شات PNG یا JPEG را به یک حامل پنج‌خطیِ افقی با کلید سل یا فا برش دهید. نوشته‌ها و بخش‌های اضافی صفحه را حذف کنید.',
+              'For better results, crop a PNG or JPEG screenshot to one horizontal five-line staff with a treble or bass clef. Remove surrounding screen content.')),
+            Align(alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(onPressed: _cropImage,
+                icon: const Icon(Icons.crop),
+                label: Text(socialText(context, 'برش و بزرگ‌نمایی نت', 'Crop and zoom score')))),
+            const SizedBox(height: 4),
             Text(
               socialText(
                 context,
