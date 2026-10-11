@@ -182,6 +182,7 @@ class _BrowserNotationHostState extends State<BrowserNotationHost> {
         '''<base href="${Uri.base.resolve('assets/assets/notation/')}">
 <script>
 window.NOTATION_BOOT=${jsonEncode(configuration)};
+window.NOTATION_BROWSER_HOST=true;
 window.SornazNotation={postMessage:(data)=>parent.postMessage({channel:'$channel',data},${jsonEncode(Uri.base.origin)})};
 window.addEventListener('message',(event)=>{
  if(event.source!==parent||event.origin!==${jsonEncode(Uri.base.origin)}||event.data.channel!=='$channel')return;

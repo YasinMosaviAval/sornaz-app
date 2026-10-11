@@ -4,6 +4,7 @@ import 'notation_settings.dart';
 import 'notation_list_dialog.dart';
 import 'notation_top_bar.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:sornaz/components/main_tabs.dart';
 import 'package:sornaz/components/join_community.dart';
 import 'package:sornaz/components/home_top_bar.dart';
@@ -294,7 +295,21 @@ class _NotationHostState extends State<_NotationHost>
         return;
       }
       dynamic result;
-      if (action == 'choose-list') {
+      if (action == 'pick-import') {
+        final picked = await FilePicker.platform.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: const ['json', 'musicxml', 'xml'],
+          withData: true,
+        );
+        if (picked != null && picked.files.isNotEmpty) {
+          final file = picked.files.single;
+          final bytes = file.bytes;
+          if (bytes == null || bytes.length > 1000000) {
+            throw const FormatException('Score file is too large.');
+          }
+          result = {'name': file.name, 'content': utf8.decode(bytes)};
+        }
+      } else if (action == 'choose-list') {
         result = await _chooseList();
         if (result == '__new__') {
           result = await createNotationList(context);
