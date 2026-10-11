@@ -7,7 +7,7 @@ $outputText = & $DartExe $probePath $imagePath | Out-String
 if ($LASTEXITCODE -ne 0) { throw "Probe failed with exit code $LASTEXITCODE" }
 $actual = $outputText | ConvertFrom-Json
 $expected = Get-Content -LiteralPath $expectedPath -Raw | ConvertFrom-Json
-$actualMidi = @($actual.staffs[0].notes | ForEach-Object { $_.midiIfTreble })
+$actualMidi = @($actual.staffs[0].notes | ForEach-Object { $_.midi })
 if ($actual.staffCount -ne 1) { throw "Expected one staff, got $($actual.staffCount)" }
 if (($actualMidi -join ',') -ne ($expected.midi -join ',')) {
   throw "Pitch mismatch: $($actualMidi -join ',')"
