@@ -14,6 +14,8 @@ class LabeledSlider extends StatelessWidget {
   final int? divisions;
   final ValueChanged<double> onChanged;
   final bool enabled;
+  final String? valueLabel;
+  final EdgeInsetsGeometry? labelPadding;
 
   const LabeledSlider({
     super.key,
@@ -27,6 +29,8 @@ class LabeledSlider extends StatelessWidget {
     this.max = 100,
     this.divisions = 100,
     this.enabled = true,
+    this.valueLabel,
+    this.labelPadding,
   });
 
   @override
@@ -43,19 +47,23 @@ class LabeledSlider extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.space_24,
-              AppSpacing.space_12,
-              AppSpacing.space_24,
-              AppSpacing.space_0,
-            ),
+            padding:
+                labelPadding ??
+                const EdgeInsets.fromLTRB(
+                  AppSpacing.space_24,
+                  AppSpacing.space_12,
+                  AppSpacing.space_24,
+                  AppSpacing.space_0,
+                ),
             child: Row(
               children: [
                 leadingIcon,
                 AppSpacing.sizedBoxW4(),
-                Text(
-                  label == '' ? ' ${value.round()}$unit' : label,
-                  style: AppTypography.metronomeLabeledSlider(context),
+                Expanded(
+                  child: Text(
+                    label == '' ? ' ${value.round()}$unit' : label,
+                    style: AppTypography.metronomeLabeledSlider(context),
+                  ),
                 ),
               ],
             ),
@@ -69,7 +77,7 @@ class LabeledSlider extends StatelessWidget {
             inactiveColor: AppColors.labled_slider_inactive_color(
               isDark: isDark,
             ),
-            label: '$displayValue$unit',
+            label: valueLabel ?? '$displayValue$unit',
             onChanged: enabled ? onChanged : null,
           ),
         ],

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:sornaz/components/app_bar.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
+import 'package:sornaz/screens/IntervalRecognition/levels_screen.dart';
+import 'package:sornaz/screens/IntervalRecognition/text.dart';
 
 class SolfegePracticePage extends StatelessWidget {
   const SolfegePracticePage({super.key});
@@ -22,8 +24,13 @@ class SolfegePracticePage extends StatelessWidget {
           ('تشخیص هارمونی', 'Harmony recognition'),
         ])
           ListTile(
+            onTap: section.$2 == 'Interval recognition'
+                ? () => socialPush(context, const IntervalLevelsScreen())
+                : null,
             title: Text(
-              socialText(context, section.$1, section.$2),
+              section.$2 == 'Interval recognition'
+                  ? IntervalText(context)('interval.title')
+                  : socialText(context, section.$1, section.$2),
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),

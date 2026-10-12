@@ -89,6 +89,12 @@ flutter:
     - assets/audio/accent.wav
     - assets/audio/tick.wav
     - assets/audio/sub_tick.wav
+    - assets/audio/interval_piano/
+    - assets/audio/interval_guitar/
+    - assets/audio/interval_violin/
+    - assets/audio/interval_viola/
+    - assets/audio/interval_cello/
+    - assets/audio/INTERVAL_INSTRUMENTS_NOTICE.md
   fonts:
     - family: iran_sansx_fa
       fonts:
