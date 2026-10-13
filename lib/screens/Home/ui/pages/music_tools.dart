@@ -12,7 +12,6 @@ import 'package:sornaz/screens/Players/ui/pages/video_player_page.dart';
 import 'package:sornaz/screens/Metronome/ui/pages/metronome_page.dart';
 import 'package:sornaz/screens/Tuner/ui/pages/tuner_page.dart';
 import 'package:sornaz/screens/Voice%20Recorder/ui/pages/voice_recorder.dart';
-import 'package:sornaz/screens/Notation/music_analysis_test_page.dart';
 import 'solfege_practice_page.dart';
 
 class MusicToolsPage extends StatelessWidget {
@@ -69,12 +68,6 @@ class MusicToolsPage extends StatelessWidget {
                   'تمرین سولفژ',
                   'Solfege practice',
                   const SolfegePracticePage(),
-                ),
-                (
-                  Icons.analytics_outlined,
-                  'آزمایش تحلیل اجرا',
-                  'Performance analysis test',
-                  const MusicAnalysisTestPage(),
                 ),
               ])
                 ListTile(

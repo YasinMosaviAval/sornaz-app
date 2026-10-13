@@ -3,7 +3,6 @@ import UIKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
-  private var analysisAudio: AnalysisAudio?
   private var notationStorage: NotationStorage?
   override func application(
     _ application: UIApplication,
@@ -18,7 +17,6 @@ import UIKit
         result("\(version) (\(build))")
       } else { result(FlutterMethodNotImplemented) }
     }
-    analysisAudio = AnalysisAudio(messenger: registrar(forPlugin: "AnalysisAudio")!.messenger())
     notationStorage = NotationStorage(messenger: registrar(forPlugin: "NotationStorage")!.messenger())
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }

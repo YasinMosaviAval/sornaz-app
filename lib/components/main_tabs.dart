@@ -11,7 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/screens/Home/ui/pages/home.dart';
 import 'package:sornaz/screens/Home/ui/pages/music_tools.dart';
-import 'package:sornaz/screens/Social/my_profile_page.dart';
+import 'package:sornaz/screens/Social/chat_tab_page.dart';
 import 'package:sornaz/screens/Site/site_panel_page.dart';
 import 'package:sornaz/screens/Social/user_panel.dart';
 
@@ -62,9 +62,9 @@ class _MainTabsState extends State<MainTabs> {
               : const [
                   HomePage(),
                   SitePanelPage(),
-                  UserPanelPage(),
+                  ChatTabPage(),
                   MusicToolsPage(),
-                  MyProfilePage(),
+                  UserPanelPage(initialTab: 2, mainTabIndex: 4),
                 ][i],
       ];
   void setChrome(int page, PreferredSizeWidget? bar) {

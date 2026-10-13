@@ -9,12 +9,10 @@ class NotationTopBar extends StatelessWidget implements PreferredSizeWidget {
     required this.signedIn,
     required this.data,
     required this.command,
-    this.onOmr,
   });
   final bool editor, signedIn;
   final Map<String, dynamic> data;
   final ValueChanged<String> command;
-  final VoidCallback? onOmr;
   @override
   Size get preferredSize => const Size.fromHeight(48);
 
@@ -24,21 +22,6 @@ class NotationTopBar extends StatelessWidget implements PreferredSizeWidget {
     final selected = (data['selectedNotes'] as num?)?.toInt() ?? 0;
     final disabledColor = Theme.of(context).disabledColor;
     final actions = <Widget>[
-      if (editor && onOmr != null)
-        SizedBox(
-          width: 32,
-          child: IconButton(
-            constraints: const BoxConstraints.tightFor(width: 32, height: 40),
-            padding: EdgeInsets.zero,
-            tooltip: socialText(
-              context,
-              'تشخیص نت از تصویر',
-              'Recognize notes from image',
-            ),
-            onPressed: onOmr,
-            icon: const Icon(Icons.camera_alt_outlined, size: 22),
-          ),
-        ),
       if (editor && editable) ...[
         _action(
           Icons.undo,

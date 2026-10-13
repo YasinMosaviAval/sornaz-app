@@ -44,7 +44,6 @@ class MainActivity : AudioServiceActivity() {
         deviceVideos = DeviceVideos(this, flutterEngine.dartExecutor.binaryMessenger)
         MusicEqualizer(flutterEngine.dartExecutor.binaryMessenger)
         PublicRecordings(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
-        AnalysisAudio(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "sornaz/video_controls")
             .setMethodCallHandler { call, result ->
                 when (call.method) {

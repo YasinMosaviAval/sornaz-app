@@ -24,20 +24,24 @@ import 'social_learning.dart';
 import 'package:sornaz/components/bottom_nav.dart';
 
 class UserPanelPage extends StatelessWidget {
-  const UserPanelPage({super.key, this.initialTab = 0});
+  const UserPanelPage({super.key, this.initialTab = 0, this.mainTabIndex});
   final int initialTab;
+  final int? mainTabIndex;
   @override
   Widget build(BuildContext context) {
-    if (initialTab != 2 && MainTabsScope.maybeOf(context) == null)
-      return MainTabs(initialIndex: 2, initialChild: this);
+    if ((initialTab != 2 || mainTabIndex != null) &&
+        MainTabsScope.maybeOf(context) == null)
+      return MainTabs(initialIndex: mainTabIndex ?? 2, initialChild: this);
     final auth = context.watch<AuthSession>();
     if (!auth.isAuthenticated)
       return SocialScaffold(
-        tabIndex: 2,
-        title: socialText(context, 'صحنه', 'Stage'),
+        tabIndex: mainTabIndex ?? 2,
+        title: mainTabIndex == 4
+            ? socialText(context, 'حساب کاربری', 'Account')
+            : socialText(context, 'صحنه', 'Stage'),
         appBar: const GuestStageBar(),
         drawer: const AppDrawer(),
-        bottom: const BottomNavBarWidget(selectedIndex: 2),
+        bottom: BottomNavBarWidget(selectedIndex: mainTabIndex ?? 2),
         body: const JoinCommunity(),
       );
     return _Panel(
@@ -45,6 +49,7 @@ class UserPanelPage extends StatelessWidget {
       token: auth.token!,
       userId: auth.user!.id,
       initialTab: initialTab,
+      mainTabIndex: mainTabIndex,
     );
   }
 }
@@ -88,8 +93,10 @@ class _Panel extends StatefulWidget {
     required this.token,
     required this.userId,
     required this.initialTab,
+    this.mainTabIndex,
   });
   final int initialTab;
+  final int? mainTabIndex;
   final String token;
   final int userId;
   @override
@@ -246,7 +253,7 @@ class _PanelState extends State<_Panel> {
 
   @override
   Widget build(BuildContext context) => SocialScaffold(
-    tabIndex: tab == 2 ? null : 2,
+    tabIndex: tab == 2 ? widget.mainTabIndex : 2,
     appBar: tab == 2
         ? null
         : HomeTopBar(
@@ -285,7 +292,7 @@ class _PanelState extends State<_Panel> {
               ),
             ],
           ),
-    drawer: tab == 2 ? null : const AppDrawer(),
+    drawer: const AppDrawer(),
     title: socialText(
       context,
       tab == 2 ? 'حساب کاربری' : 'صحنه',

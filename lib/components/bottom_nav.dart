@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/screens/Home/ui/pages/home.dart';
-import 'package:sornaz/screens/Social/my_profile_page.dart';
+import 'package:sornaz/screens/Social/chat_tab_page.dart';
 import 'package:sornaz/screens/Home/ui/pages/music_tools.dart';
 import 'package:sornaz/screens/Social/user_panel.dart';
 import 'package:sornaz/screens/Site/site_panel_page.dart';
@@ -24,9 +24,9 @@ class BottomNavBarWidget extends StatelessWidget {
     const items = [
       (Icons.home_outlined, Icons.home, 'خانه', 'Home'),
       (Icons.dashboard_outlined, Icons.dashboard, 'پنل کاربری', 'User panel'),
-      (Icons.dynamic_feed_outlined, Icons.dynamic_feed, 'صحنه', 'Stage'),
+      (Icons.chat_bubble_outline, Icons.chat_bubble, 'گفتگو', 'Chat'),
       (Icons.tune, Icons.tune, 'ابزار موسیقی', 'Music tools'),
-      (Icons.person_outline, Icons.person, 'پروفایل', 'Profile'),
+      (Icons.manage_accounts_outlined, Icons.manage_accounts, 'حساب کاربری', 'Account'),
     ];
     void select(int index) {
       if (index == current) return;
@@ -41,9 +41,9 @@ class BottomNavBarWidget extends StatelessWidget {
           builder: (_) => const [
             HomePage(),
             SitePanelPage(),
-            UserPanelPage(),
+            ChatTabPage(),
             MusicToolsPage(),
-            MyProfilePage(),
+            UserPanelPage(initialTab: 2, mainTabIndex: 4),
           ][index],
         ),
       );
