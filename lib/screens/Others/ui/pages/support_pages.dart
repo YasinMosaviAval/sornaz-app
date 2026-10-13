@@ -261,7 +261,16 @@ class _ContactUsPageState extends State<ContactUsPage> {
                                       strokeWidth: 2,
                                     ),
                                   )
-                                : const AppText('ارسال پیام'),
+                                : AppText(
+                                    'ارسال پیام',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelLarge
+                                        ?.copyWith(
+                                          fontSize: 14 +
+                                              context.watch<AppData>().fontSize,
+                                        ),
+                                  ),
                           ),
                         ),
                       ],

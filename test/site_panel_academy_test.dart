@@ -237,7 +237,7 @@ void main() {
     },
   );
   testWidgets(
-    'second tab is the panel, guests can join, and profile remains a separate destination',
+    'second tab is the panel, guests can join, and account remains a separate destination',
     (tester) async {
       await tester.pumpWidget(
         fixture.host(
@@ -273,7 +273,7 @@ void main() {
         findsOneWidget,
       );
       expect(find.byType(BottomNavBarWidget), findsOneWidget);
-      await tester.tap(find.text('پروفایل'));
+      await tester.tap(find.text('حساب کاربری'));
       await tester.pumpAndSettle();
       expect(find.text('profile body'), findsOneWidget);
       expect(tester.takeException(), isNull);

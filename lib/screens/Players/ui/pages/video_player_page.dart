@@ -672,7 +672,9 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
       );
     else if (settings.videoSort == 'added')
       orderedGroups.sort(
-        (a, b) => a.value.first.addedAt.compareTo(b.value.first.addedAt),
+        (a, b) => (a.value.isEmpty ? 0 : a.value.first.addedAt).compareTo(
+          b.value.isEmpty ? 0 : b.value.first.addedAt,
+        ),
       );
     else
       orderedGroups.sort(

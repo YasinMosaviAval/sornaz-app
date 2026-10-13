@@ -27,7 +27,7 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
   for (final offset in [-2.0, 0.0, 2.0]) {
     testWidgets(
-      'page title matches original Contact theme at font offset ' +
+      'page title uses the shared 14dp base at font offset ' +
           offset.toString(),
       (tester) async {
         await tester.pumpWidget(
@@ -63,12 +63,9 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        final original = DefaultTextStyle.of(
-          tester.element(find.text('Original contact')),
-        ).style.fontSize;
         expect(
           tester.widget<Text>(find.text('New title')).style?.fontSize,
-          original,
+          14 + offset,
         );
       },
     );

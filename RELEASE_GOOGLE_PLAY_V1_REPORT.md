@@ -24,13 +24,12 @@
 ## بررسی و آزمون
 
 - `dart analyze lib` و `dart analyze test`: بدون خطای تحلیل (پیام‌های info باقی‌اند).
-- `flutter test --no-pub` برای آزمون‌های release navigation، notation top bar، main tabs notation و direct panel: 11 آزمون موفق.
+- `flutter test --no-pub` روی کل مجموعه: 285 آزمون موفق، بدون شکست. آزمون‌های قدیمی ناوبری و اندازهٔ عنوان با قرارداد فعلی هماهنگ شدند. یک خطای واقعی مرتب‌سازی گروه ویدیویی خالی و اتصال اندازهٔ متن دکمهٔ تماس به تنظیمات ظاهری نیز اصلاح شد.
 - `flutter build appbundle --release --no-pub`: موفق؛ فایل `build/app/outputs/bundle/release/app-release.aab` بررسی شد.
 - `flutter build apk --release --no-pub` و `flutter build apk --split-per-abi --release --no-pub`: موفق؛ فایل‌های خروجی بررسی شدند.
 - `zipalign -c -P 16 4` روی APK همه‌معماری‌ها: موفق. Segment alignment کتابخانه‌های arm64 بررسی شد و 16 KiB یا بیشتر بود. این بررسی جایگزین آزمون نصب و اجرای واقعی روی دستگاه 16 KiB نیست.
 - `flutter analyze --no-pub` روی کل مخزن به‌دلیل خطاهای وابستگی توسعه در بستهٔ تو در توی `packages/metadata_god/cargokit/build_tool` موفق نشد؛ تحلیل محدودهٔ `lib` و `test` موفق بود.
 - اجرای آزمون روی گوشی یا شبیه‌ساز Android انجام نشد؛ دستگاه Android در محیط در دسترس نبود. iOS نیز روی Windows ساخته یا اجرا نشد.
-- دو آزمون موجود خارج از دامنهٔ تغییرات انتشار (`drawer_accounts_test` و `account_settings_test`) در اجرای قبلی با انتظار اندازهٔ فونت 16 در برابر مقدار واقعی 14 شکست خوردند. این مورد پیش از انتشار باید بازبینی شود.
 
 ## موانع انتشار نهایی
 

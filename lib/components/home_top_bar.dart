@@ -60,9 +60,10 @@ class HomeTopBar extends StatelessWidget implements PreferredSizeWidget {
       else if (showLogo || trailingWidget != null)
         SizedBox(
           width: AppTopBarDirection.leadingWidth,
-          child:
-              trailingWidget ??
-              const Center(child: AppLogo(size: 40, withBackground: false)),
+          child: Center(
+            child: trailingWidget ??
+                const AppLogo(size: 40, withBackground: false),
+          ),
         ),
   ];
 
