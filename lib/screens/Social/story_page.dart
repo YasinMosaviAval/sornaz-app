@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:sornaz/components/page_source_info.dart';
 import 'package:video_player/video_player.dart';
 import 'social_api.dart';
 import 'social_widgets.dart';
@@ -569,6 +570,7 @@ class _StoryPageState extends State<StoryPage>
                             ],
                           ),
                         ),
+                        const PageSourceInfoButton(color: Colors.white),
                         IconButton(
                           onPressed: () => Navigator.pop(context),
                           icon: const Icon(Icons.close, color: Colors.white),

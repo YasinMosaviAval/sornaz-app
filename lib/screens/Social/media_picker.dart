@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -164,7 +165,7 @@ class _DeviceMediaPickerState extends State<DeviceMediaPicker> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
+    appBar: AppTopBarDirection.standard(
       title: Text(socialText(context, 'انتخاب رسانه', 'Choose media')),
     ),
     body: Column(
@@ -255,7 +256,7 @@ class _ImageCropPageState extends State<ImageCropPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
+    appBar: AppTopBarDirection.standard(
       title: Text(socialText(context, 'برش تصویر', 'Crop image')),
       actions: [
         IconButton(

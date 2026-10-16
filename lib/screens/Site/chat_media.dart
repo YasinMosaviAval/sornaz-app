@@ -1,4 +1,5 @@
-﻿import 'package:sornaz/helpers/app_appearance.dart';
+import 'package:sornaz/components/app_top_bar_direction.dart';
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -204,7 +205,7 @@ class _ChatMediaState extends State<ChatMedia> {
                   localMedia: {if (cached != null) number(post['id']): cached},
                 )
               : Scaffold(
-                  appBar: AppBar(),
+                  appBar: AppTopBarDirection.standard(),
                   body: ListView(
                     children: [
                       PostCard(api: social, post: post, localMedia: cached),
@@ -339,7 +340,7 @@ class _ChatMediaState extends State<ChatMedia> {
             context,
             Scaffold(
               backgroundColor: Colors.black,
-              appBar: AppBar(),
+              appBar: AppTopBarDirection.standard(),
               body: Center(
                 child: video
                     ? SocialVideo(
@@ -393,7 +394,7 @@ class _ChatReferenceAccessState extends State<ChatReferenceAccess> {
   @override
   Widget build(BuildContext context) => expired
       ? Scaffold(
-          appBar: AppBar(),
+          appBar: AppTopBarDirection.standard(),
           body: Center(
             child: Text(
               socialText(

@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:sornaz/screens/Players/services/sleep_timer_status.dart';
+import 'page_source_info.dart';
 
 /// Fits in the lower strip of the toolbar without taking space from its actions.
 class SleepTimerChrome extends StatefulWidget {
@@ -45,7 +46,7 @@ class _SleepTimerChromeState extends State<SleepTimerChrome> {
     final seconds = (status.remaining.inMilliseconds + 999) ~/ 1000;
     return Stack(
       children: [
-        widget.child,
+        PageSourceToolbar(child: widget.child),
         if (status.active)
           Positioned(
             top: MediaQuery.paddingOf(context).top + 38,

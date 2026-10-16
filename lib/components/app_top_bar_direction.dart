@@ -8,6 +8,10 @@ import 'package:sornaz/helpers/app_data.dart';
 class AppTopBarDirection extends StatelessWidget
     implements PreferredSizeWidget {
   const AppTopBarDirection({super.key, required this.child});
+  factory AppTopBarDirection.standard({Widget? title, List<Widget>? actions}) =>
+      AppTopBarDirection(
+        child: AppBar(title: title, actions: actions),
+      );
   static const double contentInset = 12;
   static const double leadingWidth = 48;
   static const double iconSize = 24;

@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -138,7 +139,7 @@ class _OmrReviewPageState extends State<OmrReviewPage> {
     final notes = _notes;
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(
+      appBar: AppTopBarDirection.standard(
         title: Text(
           socialText(context, 'بررسی نت‌های تصویر', 'Review scanned notes'),
         ),
