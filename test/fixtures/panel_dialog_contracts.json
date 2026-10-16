@@ -1,0 +1,1685 @@
+{
+    "members": {
+        "label": "افزودن",
+        "fields": [
+            {
+                "key": "name",
+                "label": "نام و نام خانوادگی",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "gender",
+                "label": "جنسیت",
+                "type": "select",
+                "options": {
+                    "male": "مرد",
+                    "female": "زن",
+                    "other": "سایر"
+                },
+                "required": true,
+                "default": "male"
+            },
+            {
+                "key": "nationalId",
+                "label": "کد ملی",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "birthDate",
+                "label": "تاریخ تولد",
+                "type": "date",
+                "required": true
+            },
+            {
+                "key": "phone",
+                "label": "شماره تماس",
+                "type": "phone",
+                "required": true
+            },
+            {
+                "key": "profileVisibility",
+                "label": "نمایش پروفایل",
+                "type": "select",
+                "options": {
+                    "public": "عمومی",
+                    "private": "خصوصی"
+                },
+                "required": false,
+                "default": "public"
+            },
+            {
+                "key": "organizationUserId",
+                "label": "سازمان",
+                "type": "select",
+                "options": {
+                    "source": "staff_catalog.organizations",
+                    "id": "user_id"
+                },
+                "required": true,
+                "defaultFirstOption": true,
+                "hiddenWhen": {
+                    "staff_catalog.organization_selection": "fixed"
+                },
+                "submitWhenHidden": true
+            },
+            {
+                "key": "type",
+                "label": "نوع قرارداد",
+                "type": "select",
+                "options": {
+                    "teacher": "مدرس",
+                    "receptionist": "پذیرش",
+                    "manager": "مدیر",
+                    "other": "سایر"
+                },
+                "required": true,
+                "default": "teacher"
+            },
+            {
+                "key": "roleId",
+                "label": "نقش",
+                "type": "select",
+                "options": {
+                    "source": "staff_catalog.roles",
+                    "staffRoles": true
+                },
+                "required": true,
+                "dependsOn": [
+                    "organizationUserId",
+                    "type"
+                ]
+            },
+            {
+                "key": "contractTitle",
+                "label": "عنوان قرارداد",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "startDate",
+                "label": "تاریخ شروع قرارداد",
+                "type": "date",
+                "required": true
+            },
+            {
+                "key": "endDate",
+                "label": "تاریخ خاتمه قرارداد",
+                "type": "date",
+                "required": true
+            },
+            {
+                "key": "currencyId",
+                "label": "نوع پول پرداختی",
+                "type": "select",
+                "options": {
+                    "source": "staff_catalog.currencies",
+                    "id": "id"
+                },
+                "required": true,
+                "defaultFirstOption": true
+            },
+            {
+                "key": "price",
+                "label": "مبلغ قرارداد",
+                "type": "number",
+                "required": false,
+                "default": 5000000,
+                "min": 0
+            },
+            {
+                "key": "lessonId",
+                "label": "نوع درس",
+                "type": "select",
+                "options": {
+                    "source": "staff_catalog.lessons",
+                    "id": "lesson_id",
+                    "match": {
+                        "organization_user_id": "organizationUserId"
+                    },
+                    "requireMatch": true
+                },
+                "required": true,
+                "visibleWhen": {
+                    "_form.type": "teacher"
+                },
+                "dependsOn": [
+                    "organizationUserId"
+                ]
+            },
+            {
+                "key": "levelId",
+                "label": "سطح درس",
+                "type": "select",
+                "options": {
+                    "source": "staff_catalog.levels",
+                    "allowedIdsFrom": {
+                        "source": "staff_catalog.lessons",
+                        "field": "level_ids",
+                        "match": {
+                            "organization_user_id": "organizationUserId",
+                            "lesson_id": "lessonId"
+                        }
+                    }
+                },
+                "required": true,
+                "visibleWhen": {
+                    "_form.type": "teacher"
+                },
+                "dependsOn": [
+                    "organizationUserId",
+                    "lessonId"
+                ]
+            },
+            {
+                "key": "contractDescription",
+                "label": "شرح قرارداد",
+                "type": "multiline",
+                "required": false
+            }
+        ],
+        "formContractVersion": 2
+    },
+    "students": {
+        "label": "ثبت‌نام هنرجو",
+        "fields": [
+            {
+                "key": "organizationUserId",
+                "label": "سازمان",
+                "type": "select",
+                "options": {
+                    "source": "organizations",
+                    "id": "user_id"
+                },
+                "required": true,
+                "defaultFirstOption": true,
+                "hiddenWhen": {
+                    "permissions.isBranchContext": true
+                },
+                "submitWhenHidden": true
+            },
+            {
+                "key": "name",
+                "label": "نام و نام خانوادگی",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "nationalId",
+                "label": "کد ملی",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "fatherName",
+                "label": "نام پدر",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "birthDate",
+                "label": "تاریخ تولد",
+                "type": "date",
+                "required": true
+            },
+            {
+                "key": "phone",
+                "label": "شماره تماس",
+                "type": "phone",
+                "required": true
+            },
+            {
+                "key": "registrationDate",
+                "label": "تاریخ ثبت‌نام",
+                "type": "date",
+                "required": false,
+                "defaultToday": true
+            },
+            {
+                "key": "addresses",
+                "label": "نشانی",
+                "type": "rows",
+                "options": [
+                    {
+                        "key": "province",
+                        "label": "استان",
+                        "type": "select",
+                        "options": {
+                            "source": "provinces",
+                            "id": "province_name",
+                            "label": "province_name"
+                        },
+                        "required": false
+                    },
+                    {
+                        "key": "city",
+                        "label": "شهر",
+                        "type": "select",
+                        "options": {
+                            "source": "counties",
+                            "id": "county_name",
+                            "label": "county_name",
+                            "match": {
+                                "province_id": "_selected.province.province_id"
+                            },
+                            "requireMatch": true
+                        },
+                        "required": false,
+                        "dependsOn": [
+                            "province"
+                        ]
+                    },
+                    {
+                        "key": "address",
+                        "label": "نشانی",
+                        "type": "multiline",
+                        "required": false
+                    },
+                    {
+                        "key": "postal_code",
+                        "label": "کد پستی",
+                        "type": "text",
+                        "required": false
+                    },
+                    {
+                        "key": "lat",
+                        "label": "عرض جغرافیایی",
+                        "type": "number",
+                        "required": false
+                    },
+                    {
+                        "key": "lng",
+                        "label": "طول جغرافیایی",
+                        "type": "number",
+                        "required": false
+                    },
+                    {
+                        "key": "is_main",
+                        "label": "نشانی اصلی",
+                        "type": "bool",
+                        "required": false,
+                        "default": true
+                    }
+                ],
+                "required": false,
+                "maxItems": 1
+            },
+            {
+                "key": "parentName",
+                "label": "نام و نام خانوادگی والد",
+                "type": "text",
+                "required": true,
+                "visibleWhen": {
+                    "_form.birthDate": {
+                        "underAge": 18
+                    }
+                }
+            },
+            {
+                "key": "parentNationalId",
+                "label": "شماره ملی والد",
+                "type": "text",
+                "required": true,
+                "visibleWhen": {
+                    "_form.birthDate": {
+                        "underAge": 18
+                    }
+                }
+            },
+            {
+                "key": "parentFatherName",
+                "label": "نام پدر والد",
+                "type": "text",
+                "required": true,
+                "visibleWhen": {
+                    "_form.birthDate": {
+                        "underAge": 18
+                    }
+                }
+            },
+            {
+                "key": "parentBirthDate",
+                "label": "تاریخ تولد والد",
+                "type": "date",
+                "required": true,
+                "visibleWhen": {
+                    "_form.birthDate": {
+                        "underAge": 18
+                    }
+                }
+            },
+            {
+                "key": "parentPhone",
+                "label": "شماره تماس والد",
+                "type": "phone",
+                "required": true,
+                "visibleWhen": {
+                    "_form.birthDate": {
+                        "underAge": 18
+                    }
+                }
+            },
+            {
+                "key": "termId",
+                "label": "ترم آموزشی",
+                "type": "select",
+                "options": {
+                    "source": "terms",
+                    "match": {
+                        "organizationUserId": "organizationUserId"
+                    },
+                    "requireMatch": true
+                },
+                "required": true,
+                "dependsOn": [
+                    "organizationUserId"
+                ]
+            },
+            {
+                "key": "availabilities",
+                "label": "افزودن برنامه زمانی هنرجو",
+                "type": "rows",
+                "options": [
+                    {
+                        "key": "day",
+                        "label": "روز",
+                        "type": "select",
+                        "options": {
+                            "saturday": "شنبه",
+                            "sunday": "یکشنبه",
+                            "monday": "دوشنبه",
+                            "tuesday": "سه‌شنبه",
+                            "wednesday": "چهارشنبه",
+                            "thursday": "پنجشنبه",
+                            "friday": "جمعه"
+                        },
+                        "required": true,
+                        "default": "saturday"
+                    },
+                    {
+                        "key": "timezoneId",
+                        "label": "منطقه زمانی",
+                        "type": "select",
+                        "options": {
+                            "source": "timezones",
+                            "id": "timezone_id",
+                            "label": "timezone"
+                        },
+                        "required": true
+                    },
+                    {
+                        "key": "startTime",
+                        "label": "ساعت شروع",
+                        "type": "time",
+                        "required": true
+                    },
+                    {
+                        "key": "endTime",
+                        "label": "ساعت پایان",
+                        "type": "time",
+                        "required": true
+                    }
+                ],
+                "required": true,
+                "visibleWhen": {
+                    "_selected.termId.status": "ongoing"
+                }
+            },
+            {
+                "key": "availabilitySummary",
+                "label": "خلاصه",
+                "type": "text",
+                "required": false,
+                "visibleWhen": {
+                    "_selected.termId.status": "ongoing"
+                }
+            },
+            {
+                "key": "availabilityDescription",
+                "label": "توضیحات",
+                "type": "multiline",
+                "required": false,
+                "visibleWhen": {
+                    "_selected.termId.status": "ongoing"
+                }
+            }
+        ],
+        "formContractVersion": 2
+    },
+    "classrooms": {
+        "label": "افزودن",
+        "fields": [
+            {
+                "key": "name",
+                "label": "نام کلاس",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "deliveryMode",
+                "label": "نوع برگزاری",
+                "type": "select",
+                "options": {
+                    "in_person": "حضوری",
+                    "online": "آنلاین"
+                },
+                "required": false,
+                "default": "in_person"
+            },
+            {
+                "key": "onlineUrl",
+                "label": "لینک کلاس آنلاین",
+                "type": "url",
+                "required": true,
+                "visibleWhen": {
+                    "_form.deliveryMode": "online"
+                },
+                "maxLength": 2048
+            },
+            {
+                "key": "typeId",
+                "label": "نوع کلاس",
+                "type": "select",
+                "options": {
+                    "source": "classroomTypes",
+                    "id": "id"
+                },
+                "required": true,
+                "defaultFirstOption": true
+            },
+            {
+                "key": "organizationUserId",
+                "label": "سازمان",
+                "type": "select",
+                "options": {
+                    "source": "organizations",
+                    "id": "user_id"
+                },
+                "required": true,
+                "defaultFirstOption": true,
+                "hiddenWhen": {
+                    "permissions.isBranchContext": true
+                },
+                "submitWhenHidden": true
+            },
+            {
+                "key": "capacity",
+                "label": "ظرفیت",
+                "type": "number",
+                "required": false,
+                "default": 1,
+                "min": 1
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "type": "select",
+                "options": {
+                    "available": "در دسترس",
+                    "unavailable": "خارج از دسترس"
+                },
+                "required": false,
+                "initial": "statusValue",
+                "default": "available",
+                "hiddenWhen": {
+                    "permissions.isReceptionist": true
+                }
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "description",
+                "label": "توضیحات",
+                "type": "multiline",
+                "required": false
+            },
+            {
+                "key": "equipment",
+                "label": "تجهیزات",
+                "type": "rows",
+                "options": [
+                    {
+                        "key": "name",
+                        "label": "نام تجهیز",
+                        "type": "text",
+                        "required": false
+                    },
+                    {
+                        "key": "qty",
+                        "label": "تعداد",
+                        "type": "number",
+                        "required": false,
+                        "default": 1,
+                        "min": 1
+                    }
+                ],
+                "required": false
+            }
+        ],
+        "formContractVersion": 2
+    },
+    "courses": {
+        "label": "افزودن",
+        "fields": [
+            {
+                "key": "name",
+                "label": "نام دوره",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "organizationUserId",
+                "label": "سازمان",
+                "type": "select",
+                "options": {
+                    "source": "organizations",
+                    "id": "user_id"
+                },
+                "required": true,
+                "defaultFirstOption": true,
+                "hiddenWhen": {
+                    "permissions.isBranchContext": true
+                },
+                "submitWhenHidden": true
+            },
+            {
+                "key": "lesson_id",
+                "label": "درس",
+                "type": "select",
+                "options": {
+                    "source": "lessons",
+                    "match": {
+                        "organizationUserId": "organizationUserId"
+                    },
+                    "requireMatch": true
+                },
+                "required": false,
+                "dependsOn": [
+                    "organizationUserId"
+                ]
+            },
+            {
+                "key": "teacher_capacity",
+                "label": "ظرفیت اساتید",
+                "type": "number",
+                "required": false,
+                "default": 1,
+                "min": 1
+            },
+            {
+                "key": "student_capacity",
+                "label": "ظرفیت هنرجوها",
+                "type": "number",
+                "required": false,
+                "default": 1,
+                "min": 1
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "type": "select",
+                "options": {
+                    "open": "باز",
+                    "ongoing": "در حال برگزاری",
+                    "finished": "پایان یافته"
+                },
+                "required": false,
+                "default": "open",
+                "hiddenWhen": {
+                    "permissions.isReceptionist": true
+                }
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "description",
+                "label": "توضیحات",
+                "type": "multiline",
+                "required": false
+            }
+        ],
+        "formContractVersion": 2
+    },
+    "terms": {
+        "label": "افزودن",
+        "fields": [
+            {
+                "key": "name",
+                "label": "نام ترم",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "organizationUserId",
+                "label": "سازمان",
+                "type": "select",
+                "options": {
+                    "source": "organizations",
+                    "id": "user_id"
+                },
+                "required": true,
+                "defaultFirstOption": true,
+                "initialLookup": {
+                    "source": "courses",
+                    "by": "courseId",
+                    "field": "organizationUserId"
+                },
+                "hiddenWhen": {
+                    "permissions.isBranchContext": true
+                },
+                "submitWhenHidden": true
+            },
+            {
+                "key": "courseId",
+                "label": "دوره مرتبط",
+                "type": "select",
+                "options": {
+                    "source": "courses",
+                    "match": {
+                        "organizationUserId": "organizationUserId"
+                    },
+                    "requireMatch": true
+                },
+                "required": true,
+                "dependsOn": [
+                    "organizationUserId"
+                ]
+            },
+            {
+                "key": "classroomId",
+                "label": "کلاس برگزاری",
+                "type": "select",
+                "options": {
+                    "source": "classrooms",
+                    "termRooms": true
+                },
+                "required": true,
+                "dependsOn": [
+                    "organizationUserId"
+                ]
+            },
+            {
+                "key": "currencyId",
+                "label": "نوع پول",
+                "type": "select",
+                "options": {
+                    "source": "currencies"
+                },
+                "required": true,
+                "defaultFirstOption": true
+            },
+            {
+                "key": "cost",
+                "label": "هزینه ترم",
+                "type": "number",
+                "required": false,
+                "default": 15000000,
+                "min": 0
+            },
+            {
+                "key": "installmentCount",
+                "label": "تعداد اقساط",
+                "type": "number",
+                "required": false,
+                "default": 1,
+                "min": 1
+            },
+            {
+                "key": "discountId",
+                "label": "تخفیف",
+                "type": "select",
+                "options": {
+                    "source": "discounts"
+                },
+                "required": false
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "type": "select",
+                "options": {
+                    "open": "باز",
+                    "ongoing": "در حال برگزاری"
+                },
+                "required": false,
+                "default": "open",
+                "hiddenWhen": {
+                    "permissions.isReceptionist": true
+                },
+                "valueWhen": {
+                    "when": {
+                        "permissions.isReceptionist": true
+                    },
+                    "value": "pending"
+                },
+                "submitWhenHidden": true
+            },
+            {
+                "key": "sessionCount",
+                "label": "تعداد جلسات",
+                "type": "number",
+                "required": false,
+                "default": 8,
+                "min": 1,
+                "max": 100
+            },
+            {
+                "key": "repeatType",
+                "label": "دوره تکرار",
+                "type": "select",
+                "options": {
+                    "week": "هفتگی",
+                    "2-week": "دو هفته یک‌بار",
+                    "3-week": "سه هفته یک‌بار",
+                    "4-week": "چهار هفته یک‌بار",
+                    "month": "ماهانه",
+                    "year": "سالانه",
+                    "no-period": "سایر (تاریخ دقیق)"
+                },
+                "required": false,
+                "default": "week"
+            },
+            {
+                "key": "recurrence",
+                "label": "زمان تکرار",
+                "type": "object",
+                "options": [
+                    {
+                        "key": "weekday",
+                        "label": "روز هفته",
+                        "type": "select",
+                        "options": {
+                            "6": "شنبه",
+                            "0": "یکشنبه",
+                            "1": "دوشنبه",
+                            "2": "سه‌شنبه",
+                            "3": "چهارشنبه",
+                            "4": "پنجشنبه",
+                            "5": "جمعه"
+                        },
+                        "required": false,
+                        "visibleWhen": {
+                            "_root.repeatType": {
+                                "in": [
+                                    "week",
+                                    "2-week",
+                                    "3-week",
+                                    "4-week"
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "key": "day",
+                        "label": "روز ماه شمسی",
+                        "type": "number",
+                        "required": false,
+                        "min": 1,
+                        "max": 31,
+                        "visibleWhen": {
+                            "_root.repeatType": {
+                                "in": [
+                                    "month",
+                                    "year"
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "key": "month",
+                        "label": "ماه شمسی",
+                        "type": "select",
+                        "options": {
+                            "1": "فروردین",
+                            "2": "اردیبهشت",
+                            "3": "خرداد",
+                            "4": "تیر",
+                            "5": "مرداد",
+                            "6": "شهریور",
+                            "7": "مهر",
+                            "8": "آبان",
+                            "9": "آذر",
+                            "10": "دی",
+                            "11": "بهمن",
+                            "12": "اسفند"
+                        },
+                        "required": false,
+                        "visibleWhen": {
+                            "_root.repeatType": "year"
+                        }
+                    },
+                    {
+                        "key": "exactDate",
+                        "label": "تاریخ دقیق",
+                        "type": "date",
+                        "required": false,
+                        "visibleWhen": {
+                            "_root.repeatType": "no-period"
+                        }
+                    }
+                ],
+                "required": false,
+                "visibleWhen": {
+                    "operation": "create",
+                    "_form.status": "open"
+                }
+            },
+            {
+                "key": "sessions",
+                "label": "جلسه‌ها",
+                "type": "rows",
+                "options": [
+                    {
+                        "key": "date",
+                        "label": "تاریخ",
+                        "type": "date",
+                        "required": true,
+                        "hiddenWhen": {
+                            "operation": "create",
+                            "_root.status": "open"
+                        }
+                    },
+                    {
+                        "key": "timezoneId",
+                        "label": "منطقه زمانی",
+                        "type": "select",
+                        "options": {
+                            "source": "timezones"
+                        },
+                        "required": true,
+                        "defaultFirstOption": true
+                    },
+                    {
+                        "key": "startTime",
+                        "label": "ساعت شروع",
+                        "type": "time",
+                        "required": true,
+                        "default": "10:00"
+                    },
+                    {
+                        "key": "durationMinutes",
+                        "label": "مدت جلسه (دقیقه)",
+                        "type": "number",
+                        "required": true,
+                        "default": 90,
+                        "durationFrom": [
+                            "startTime",
+                            "endTime"
+                        ],
+                        "min": 5,
+                        "max": 1440,
+                        "step": 5
+                    }
+                ],
+                "required": true,
+                "rowsCountFrom": "sessionCount",
+                "singleWhen": {
+                    "operation": "create",
+                    "_form.status": "open"
+                }
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه ترم",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "description",
+                "label": "شرح ترم",
+                "type": "multiline",
+                "required": false
+            },
+            {
+                "key": "teachers",
+                "label": "استادها",
+                "type": "multi",
+                "options": {
+                    "source": "members",
+                    "where": {
+                        "type": "teacher"
+                    },
+                    "match": {
+                        "lessonId": "_selected.courseId.lessonId"
+                    },
+                    "requireMatch": true,
+                    "termPeople": true
+                },
+                "required": true,
+                "initial": "teachers",
+                "dependsOn": [
+                    "organizationUserId",
+                    "courseId",
+                    "classroomId"
+                ],
+                "maxItemsFrom": "_selected.courseId.teacher_capacity"
+            },
+            {
+                "key": "students",
+                "label": "هنرجویان",
+                "type": "multi",
+                "options": {
+                    "source": "members",
+                    "where": {
+                        "type": "student"
+                    },
+                    "match": [],
+                    "termPeople": true
+                },
+                "required": false,
+                "initial": "students",
+                "dependsOn": [
+                    "organizationUserId",
+                    "courseId",
+                    "classroomId"
+                ],
+                "hiddenWhen": {
+                    "_form.status": {
+                        "in": [
+                            "open",
+                            "pending"
+                        ]
+                    }
+                },
+                "maxItemsFrom": "_selected.courseId.student_capacity"
+            }
+        ],
+        "formContractVersion": 2
+    },
+    "points": {
+        "label": "افزودن",
+        "fields": [
+            {
+                "key": "title",
+                "label": "عنوان",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "points",
+                "label": "امتیاز",
+                "type": "number",
+                "required": false,
+                "default": 10,
+                "min": 1,
+                "max": 100000
+            },
+            {
+                "key": "type",
+                "label": "نوع امتیاز",
+                "type": "select",
+                "options": {
+                    "general": "عمومی",
+                    "professional": "حرفه‌ای"
+                },
+                "required": false,
+                "default": "general"
+            },
+            {
+                "key": "category",
+                "label": "دسته",
+                "type": "select",
+                "options": {
+                    "attendance": "حضور",
+                    "academic": "آموزشی",
+                    "event": "رویداد",
+                    "social": "اجتماعی",
+                    "financial": "مالی",
+                    "profile": "پروفایل",
+                    "achievement": "دستاورد",
+                    "engagement": "تعامل",
+                    "management": "مدیریت"
+                },
+                "required": false,
+                "default": "engagement"
+            },
+            {
+                "key": "source",
+                "label": "منبع رویداد",
+                "type": "select",
+                "options": {
+                    "database": "رویداد قطعی دیتابیس",
+                    "tracking": "رفتار کاربر",
+                    "manual": "اعطای دستی"
+                },
+                "required": false,
+                "default": "database"
+            },
+            {
+                "key": "action",
+                "label": "کد عملیات",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "repeatMode",
+                "label": "روش تکرار",
+                "type": "select",
+                "options": {
+                    "event": "هر رویداد یکتا",
+                    "daily": "دارای سقف روزانه",
+                    "once": "فقط یک‌بار"
+                },
+                "required": false,
+                "default": "event"
+            },
+            {
+                "key": "dailyCap",
+                "label": "سقف روزانه (۰ = بدون سقف)",
+                "type": "number",
+                "required": false,
+                "default": 0,
+                "min": 0
+            },
+            {
+                "key": "cooldownMinutes",
+                "label": "فاصله تکرار (دقیقه)",
+                "type": "number",
+                "required": false,
+                "default": 0,
+                "min": 0
+            },
+            {
+                "key": "branchId",
+                "label": "سازمان",
+                "type": "select",
+                "options": {
+                    "source": "organizations",
+                    "id": "id"
+                },
+                "required": false,
+                "defaultFirstOption": true
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "type": "select",
+                "options": {
+                    "active": "فعال",
+                    "inactive": "غیرفعال"
+                },
+                "required": false,
+                "default": "active"
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "description",
+                "label": "توضیحات",
+                "type": "multiline",
+                "required": false
+            }
+        ],
+        "formContractVersion": 2,
+        "admin": true
+    },
+    "roles": {
+        "label": "افزودن",
+        "fields": [
+            {
+                "key": "name",
+                "label": "نام",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "translations",
+                "label": "عنوان‌ها",
+                "type": "object",
+                "options": [
+                    {
+                        "key": "fa",
+                        "label": "فارسی",
+                        "type": "object",
+                        "options": [
+                            {
+                                "key": "title",
+                                "label": "عنوان",
+                                "type": "text",
+                                "required": false
+                            },
+                            {
+                                "key": "summary",
+                                "label": "خلاصه",
+                                "type": "multiline",
+                                "required": false
+                            },
+                            {
+                                "key": "description",
+                                "label": "توضیحات",
+                                "type": "multiline",
+                                "required": false
+                            }
+                        ],
+                        "required": false
+                    },
+                    {
+                        "key": "en",
+                        "label": "English",
+                        "type": "object",
+                        "options": [
+                            {
+                                "key": "title",
+                                "label": "Title",
+                                "type": "text",
+                                "required": false
+                            },
+                            {
+                                "key": "summary",
+                                "label": "Summary",
+                                "type": "multiline",
+                                "required": false
+                            },
+                            {
+                                "key": "description",
+                                "label": "Description",
+                                "type": "multiline",
+                                "required": false
+                            }
+                        ],
+                        "required": false
+                    }
+                ],
+                "required": false
+            },
+            {
+                "key": "scope",
+                "label": "محدوده",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "platform": "سامانه",
+                    "website": "وب‌سایت",
+                    "academy": "آموزشگاه",
+                    "branch": "شعبه",
+                    "self": "خود کاربر"
+                },
+                "default": "website"
+            },
+            {
+                "key": "type",
+                "label": "نوع",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "system": "سیستمی",
+                    "academy": "آموزشگاه",
+                    "other": "سایر"
+                },
+                "default": "system"
+            },
+            {
+                "key": "level",
+                "label": "سطح",
+                "type": "select",
+                "options": {
+                    "1": "۱",
+                    "2": "۲",
+                    "3": "۳"
+                },
+                "required": false,
+                "default": 1
+            },
+            {
+                "key": "parentId",
+                "label": "نقش بالاتر",
+                "type": "select",
+                "options": {
+                    "source": "roles",
+                    "excludeSource": "_form.id"
+                },
+                "required": false
+            },
+            {
+                "key": "color",
+                "label": "رنگ",
+                "type": "color",
+                "required": false,
+                "default": "#4f46e5"
+            },
+            {
+                "key": "permissionIds",
+                "label": "مجوزها",
+                "type": "multi",
+                "options": {
+                    "source": "permissions"
+                },
+                "required": false
+            },
+            {
+                "key": "panelVisible",
+                "label": "نمایش در پنل آموزشگاه و شعبه",
+                "type": "bool",
+                "required": false,
+                "en": "Visible in academy and branch panels"
+            }
+        ],
+        "formContractVersion": 2,
+        "admin": true
+    },
+    "permissions": {
+        "label": "افزودن",
+        "fields": [
+            {
+                "key": "translations",
+                "label": "عنوان‌ها",
+                "type": "object",
+                "options": [
+                    {
+                        "key": "fa",
+                        "label": "فارسی",
+                        "type": "object",
+                        "options": [
+                            {
+                                "key": "title",
+                                "label": "عنوان",
+                                "type": "text",
+                                "required": false
+                            },
+                            {
+                                "key": "summary",
+                                "label": "خلاصه",
+                                "type": "multiline",
+                                "required": false
+                            },
+                            {
+                                "key": "description",
+                                "label": "توضیحات",
+                                "type": "multiline",
+                                "required": false
+                            }
+                        ],
+                        "required": false
+                    },
+                    {
+                        "key": "en",
+                        "label": "English",
+                        "type": "object",
+                        "options": [
+                            {
+                                "key": "title",
+                                "label": "Title",
+                                "type": "text",
+                                "required": false
+                            },
+                            {
+                                "key": "summary",
+                                "label": "Summary",
+                                "type": "multiline",
+                                "required": false
+                            },
+                            {
+                                "key": "description",
+                                "label": "Description",
+                                "type": "multiline",
+                                "required": false
+                            }
+                        ],
+                        "required": false
+                    }
+                ],
+                "required": false
+            },
+            {
+                "key": "scope",
+                "label": "محدوده",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "platform": "سامانه",
+                    "website": "وب‌سایت",
+                    "academy": "آموزشگاه",
+                    "branch": "شعبه",
+                    "self": "خود کاربر"
+                },
+                "default": "website"
+            },
+            {
+                "key": "type",
+                "label": "نوع",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "menu": "منو",
+                    "sidebar": "منوی کناری",
+                    "topbar": "نوار بالا",
+                    "header": "سربرگ"
+                },
+                "default": "sidebar"
+            },
+            {
+                "key": "resource",
+                "label": "بخش",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "action",
+                "label": "عملیات",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "risk",
+                "label": "درجه حساسیت",
+                "type": "select",
+                "options": {
+                    "1": "۱",
+                    "2": "۲",
+                    "3": "۳",
+                    "4": "۴",
+                    "5": "۵"
+                },
+                "required": false,
+                "default": 1
+            },
+            {
+                "key": "approval",
+                "label": "نیاز به تأیید",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "confirm": "تأییدشده",
+                    "pending": "در انتظار"
+                },
+                "default": "confirm"
+            },
+            {
+                "key": "panelVisible",
+                "label": "نمایش در پنل آموزشگاه و شعبه",
+                "type": "bool",
+                "required": false,
+                "en": "Visible in academy and branch panels"
+            }
+        ],
+        "formContractVersion": 2,
+        "admin": true
+    },
+    "notifications": {
+        "label": "افزودن",
+        "fields": [
+            {
+                "key": "audience",
+                "label": "مخاطبان",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "همه": "همه",
+                    "هنرجویان": "هنرجویان",
+                    "اساتید": "اساتید",
+                    "والدین": "والدین",
+                    "پرسنل": "پرسنل"
+                },
+                "default": "همه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "body",
+                "label": "متن",
+                "type": "multiline",
+                "required": true
+            }
+        ],
+        "access": "management",
+        "formContractVersion": 2,
+        "submitButtons": [
+            {
+                "label": "انتشار اعلان",
+                "en": "Publish notification",
+                "values": {
+                    "asDraft": false
+                }
+            },
+            {
+                "label": "ذخیره پیش‌نویس",
+                "en": "Save draft",
+                "values": {
+                    "asDraft": true
+                }
+            }
+        ]
+    },
+    "availability-exceptions": {
+        "label": "افزودن",
+        "fields": [
+            {
+                "key": "organizationUserId",
+                "label": "آموزشگاه یا شعبه",
+                "type": "select",
+                "options": {
+                    "source": "staff_catalog.organizations",
+                    "id": "user_id"
+                },
+                "required": false
+            },
+            {
+                "key": "targetValue",
+                "label": "شخص یا سازمان",
+                "type": "select",
+                "options": {
+                    "sources": [
+                        {
+                            "source": "staff_catalog.organizations",
+                            "id": "user_id",
+                            "prefix": "organization:",
+                            "match": {
+                                "user_id": "organizationUserId"
+                            },
+                            "requireMatch": true
+                        },
+                        {
+                            "source": "members",
+                            "prefix": "member:",
+                            "match": {
+                                "organizationUserId": "organizationUserId"
+                            },
+                            "requireMatch": true
+                        }
+                    ]
+                },
+                "required": true,
+                "dependsOn": [
+                    "organizationUserId"
+                ]
+            },
+            {
+                "key": "date",
+                "label": "تاریخ",
+                "type": "date",
+                "required": false
+            },
+            {
+                "key": "allDay",
+                "label": "تمام روز",
+                "type": "bool",
+                "required": false,
+                "initial": "fullDay"
+            },
+            {
+                "key": "timezone",
+                "label": "منطقه زمانی",
+                "type": "select",
+                "options": {
+                    "Asia\/Tehran": "Asia\/Tehran",
+                    "Asia\/Dubai": "Asia\/Dubai",
+                    "Asia\/Istanbul": "Asia\/Istanbul",
+                    "Europe\/London": "Europe\/London",
+                    "Europe\/Paris": "Europe\/Paris",
+                    "Europe\/Berlin": "Europe\/Berlin",
+                    "Europe\/Rome": "Europe\/Rome",
+                    "Europe\/Amsterdam": "Europe\/Amsterdam",
+                    "America\/New_York": "America\/New_York",
+                    "America\/Chicago": "America\/Chicago",
+                    "America\/Los_Angeles": "America\/Los_Angeles",
+                    "America\/Toronto": "America\/Toronto",
+                    "UTC": "UTC"
+                },
+                "required": false,
+                "default": "Asia\/Tehran"
+            },
+            {
+                "key": "type",
+                "label": "نوع استثنا",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "holiday": "تعطیلی",
+                    "closed": "بسته",
+                    "unavailable": "عدم حضور",
+                    "busy": "مشغول",
+                    "vacation": "مرخصی",
+                    "blocked": "مسدود"
+                }
+            },
+            {
+                "key": "ranges",
+                "label": "بازه‌های زمانی",
+                "type": "rows",
+                "options": [
+                    {
+                        "key": "start",
+                        "label": "شروع",
+                        "type": "time",
+                        "required": false
+                    },
+                    {
+                        "key": "end",
+                        "label": "پایان",
+                        "type": "time",
+                        "required": false
+                    },
+                    {
+                        "key": "status",
+                        "label": "وضعیت",
+                        "type": "select",
+                        "options": {
+                            "فعال": "فعال",
+                            "غیرفعال": "غیرفعال"
+                        },
+                        "required": false
+                    }
+                ],
+                "required": false,
+                "hiddenWhen": {
+                    "_form.allDay": true
+                }
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه",
+                "type": "multiline",
+                "required": false
+            },
+            {
+                "key": "description",
+                "label": "توضیحات",
+                "type": "multiline",
+                "required": false
+            }
+        ],
+        "formContractVersion": 2
+    },
+    "polls": {
+        "label": "افزودن",
+        "fields": [
+            {
+                "key": "owner_id",
+                "label": "سازمان",
+                "type": "select",
+                "options": {
+                    "source": "organizations"
+                },
+                "required": false,
+                "defaultFirstOption": true,
+                "hiddenWhen": {
+                    "hideOrganizationField": true
+                },
+                "submitWhenHidden": true
+            },
+            {
+                "key": "question",
+                "label": "پرسش",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "description",
+                "label": "توضیحات",
+                "type": "multiline",
+                "required": false
+            },
+            {
+                "key": "type",
+                "label": "نوع",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "single": "تک‌گزینه‌ای",
+                    "multiple": "چندگزینه‌ای"
+                },
+                "default": "single"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "active": "فعال",
+                    "deactive": "غیرفعال",
+                    "closed": "بسته"
+                },
+                "default": "active"
+            },
+            {
+                "key": "expires_at",
+                "label": "تاریخ انقضا",
+                "type": "datetime",
+                "required": false
+            },
+            {
+                "key": "target_type",
+                "label": "نوع هدف",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "target_id",
+                "label": "شناسه هدف",
+                "type": "number",
+                "required": false
+            },
+            {
+                "key": "is_anonymous",
+                "label": "ناشناس",
+                "type": "bool",
+                "required": false
+            },
+            {
+                "key": "options",
+                "label": "گزینه‌ها",
+                "type": "strings",
+                "required": true
+            }
+        ],
+        "formContractVersion": 2
+    }
+}

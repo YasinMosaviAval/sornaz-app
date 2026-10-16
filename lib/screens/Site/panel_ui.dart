@@ -92,7 +92,10 @@ class PanelValueRow extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                  child: Text(title, style: const TextStyle(fontSize: 13)),
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Flexible(
@@ -100,7 +103,7 @@ class PanelValueRow extends StatelessWidget {
                   child: Text(
                     value,
                     textAlign: TextAlign.end,
-                    style: const TextStyle(fontSize: 12),
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
               ],

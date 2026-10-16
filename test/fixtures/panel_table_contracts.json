@@ -1,0 +1,5656 @@
+{
+    "my-courses": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "course_title",
+                "label": "دوره"
+            },
+            {
+                "key": "enrollment_type",
+                "label": "نقش"
+            },
+            {
+                "key": "branch_title",
+                "label": "شعبه"
+            }
+        ],
+        "rowActions": [],
+        "showActions": false,
+        "filters": [],
+        "organizationMode": "branch",
+        "organizationFilter": false,
+        "detailFields": [
+            {
+                "key": "course_title",
+                "label": "دوره"
+            },
+            {
+                "key": "enrollment_type",
+                "label": "نقش"
+            },
+            {
+                "key": "branch_title",
+                "label": "شعبه"
+            }
+        ]
+    },
+    "my-terms": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "term_title",
+                "label": "ترم"
+            },
+            {
+                "key": "course_title",
+                "label": "دوره"
+            },
+            {
+                "key": "enrollment_type",
+                "label": "نقش"
+            },
+            {
+                "key": "start_date",
+                "label": "شروع"
+            },
+            {
+                "key": "end_date",
+                "label": "پایان"
+            }
+        ],
+        "rowActions": [],
+        "showActions": false,
+        "filters": [],
+        "organizationMode": "branch",
+        "organizationFilter": false,
+        "detailFields": [
+            {
+                "key": "term_title",
+                "label": "ترم"
+            },
+            {
+                "key": "course_title",
+                "label": "دوره"
+            },
+            {
+                "key": "enrollment_type",
+                "label": "نقش"
+            },
+            {
+                "key": "start_date",
+                "label": "شروع"
+            },
+            {
+                "key": "end_date",
+                "label": "پایان"
+            }
+        ]
+    },
+    "my-classrooms": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "course_title",
+                "label": "دوره"
+            },
+            {
+                "key": "term_title",
+                "label": "ترم"
+            },
+            {
+                "key": "classroom_title",
+                "label": "کلاس"
+            },
+            {
+                "key": "enrollment_type",
+                "label": "نقش"
+            },
+            {
+                "key": "requested_date",
+                "label": "تاریخ"
+            },
+            {
+                "key": "start_time",
+                "label": "شروع"
+            },
+            {
+                "key": "end_time",
+                "label": "پایان"
+            },
+            {
+                "key": "branch_title",
+                "label": "شعبه"
+            }
+        ],
+        "rowActions": [],
+        "showActions": false,
+        "filters": [],
+        "organizationMode": "branch",
+        "organizationFilter": false,
+        "detailFields": [
+            {
+                "key": "course_title",
+                "label": "دوره"
+            },
+            {
+                "key": "term_title",
+                "label": "ترم"
+            },
+            {
+                "key": "classroom_title",
+                "label": "کلاس"
+            },
+            {
+                "key": "enrollment_type",
+                "label": "نقش"
+            },
+            {
+                "key": "requested_date",
+                "label": "تاریخ"
+            },
+            {
+                "key": "start_time",
+                "label": "شروع"
+            },
+            {
+                "key": "end_time",
+                "label": "پایان"
+            },
+            {
+                "key": "branch_title",
+                "label": "شعبه"
+            }
+        ]
+    },
+    "messages": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان"
+            },
+            {
+                "key": "sender",
+                "label": "فرستنده"
+            },
+            {
+                "key": "receiver",
+                "label": "گیرنده"
+            },
+            {
+                "key": "type",
+                "label": "نوع"
+            },
+            {
+                "key": "date",
+                "label": "تاریخ"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "action": "status"
+            },
+            {
+                "key": "readStatus",
+                "label": "وضعیت خواندن",
+                "type": "badge"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "delete"
+        ],
+        "detailFields": [
+            {
+                "key": "title",
+                "label": "عنوان"
+            },
+            {
+                "key": "sender",
+                "label": "فرستنده"
+            },
+            {
+                "key": "receiver",
+                "label": "گیرنده"
+            },
+            {
+                "key": "date",
+                "label": "تاریخ"
+            },
+            {
+                "key": "body",
+                "label": "متن پیام"
+            }
+        ],
+        "filters": [
+            {
+                "key": "filterMessageStatus",
+                "webId": "filterMessageStatus",
+                "label": "همه وضعیت‌های مطالعه",
+                "type": "select",
+                "rowPath": "status",
+                "options": {
+                    "خوانده‌نشده": "خوانده‌نشده",
+                    "خوانده‌شده": "خوانده‌شده"
+                },
+                "optionSource": null,
+                "distinct": false
+            }
+        ],
+        "organizationMode": "branch",
+        "organizationFilter": true
+    },
+    "notifications": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان اعلان"
+            },
+            {
+                "key": "recipientUsername",
+                "label": "گیرنده"
+            },
+            {
+                "key": "branchName",
+                "label": "فرستنده"
+            },
+            {
+                "key": "audience",
+                "label": "مخاطب"
+            },
+            {
+                "key": "priority",
+                "label": "اولویت"
+            },
+            {
+                "key": "date",
+                "label": "تاریخ انتشار"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "action": "status"
+            },
+            {
+                "key": "readStatus",
+                "label": "وضعیت خواندن",
+                "type": "badge"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "delete",
+            "read",
+            "publish",
+            "expire"
+        ],
+        "detailFields": [
+            {
+                "key": "title",
+                "label": "عنوان"
+            },
+            {
+                "key": "branchName",
+                "label": "فرستنده"
+            },
+            {
+                "key": "recipientUsername",
+                "label": "گیرنده"
+            },
+            {
+                "key": "audience",
+                "label": "مخاطبان"
+            },
+            {
+                "key": "priority",
+                "label": "اولویت"
+            },
+            {
+                "key": "date",
+                "label": "تاریخ انتشار"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت"
+            },
+            {
+                "key": "body",
+                "label": "متن اعلان"
+            }
+        ],
+        "filters": [
+            {
+                "key": "filterNotificationStatus",
+                "webId": "filterNotificationStatus",
+                "label": "همه وضعیت‌ها",
+                "type": "select",
+                "rowPath": "status",
+                "options": {
+                    "در انتظار": "در انتظار",
+                    "منتشر شده": "منتشر شده",
+                    "پیش‌نویس": "پیش‌نویس",
+                    "خصوصی": "خصوصی",
+                    "زباله‌دان": "زباله‌دان"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterNotificationPriority",
+                "webId": "filterNotificationPriority",
+                "label": "همه اولویت‌ها",
+                "type": "select",
+                "rowPath": "priority",
+                "options": {
+                    "بالا": "بالا",
+                    "متوسط": "متوسط",
+                    "کم": "کم"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterNotificationAudience",
+                "webId": "filterNotificationAudience",
+                "label": "همه مخاطبان",
+                "type": "select",
+                "rowPath": "audience",
+                "options": {
+                    "همه": "همه",
+                    "هنرجویان": "هنرجویان",
+                    "اساتید": "اساتید",
+                    "والدین": "والدین",
+                    "پرسنل": "پرسنل"
+                },
+                "optionSource": null,
+                "distinct": false
+            }
+        ],
+        "organizationMode": "branch",
+        "organizationFilter": true
+    },
+    "members": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "name",
+                "label": "نام"
+            },
+            {
+                "key": "typeLabel",
+                "label": "نوع قرارداد"
+            },
+            {
+                "key": "contractTitle",
+                "label": "عنوان قرارداد"
+            },
+            {
+                "key": "branch",
+                "label": "سازمان"
+            },
+            {
+                "key": "lessonName",
+                "label": "درس"
+            },
+            {
+                "key": "startDate",
+                "label": "تاریخ شروع"
+            },
+            {
+                "key": "endDate",
+                "label": "تاریخ خاتمه"
+            },
+            {
+                "key": "price",
+                "label": "مبلغ قرارداد"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "action": "status"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete"
+        ],
+        "detailFields": [
+            {
+                "key": "name",
+                "label": "نام"
+            },
+            {
+                "key": "gender",
+                "label": "جنسیت"
+            },
+            {
+                "key": "nationalId",
+                "label": "کد ملی"
+            },
+            {
+                "key": "birthDate",
+                "label": "تاریخ تولد"
+            },
+            {
+                "key": "phone",
+                "label": "شماره تماس"
+            },
+            {
+                "key": "typeLabel",
+                "label": "نوع قرارداد"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت"
+            },
+            {
+                "key": "profileVisibility",
+                "label": "نمایش پروفایل"
+            },
+            {
+                "key": "lessonName",
+                "label": "درس"
+            },
+            {
+                "key": "level",
+                "label": "سطح"
+            },
+            {
+                "key": "contractTitle",
+                "label": "عنوان قرارداد"
+            },
+            {
+                "key": "branch",
+                "label": "سازمان"
+            },
+            {
+                "key": "startDate",
+                "label": "تاریخ شروع"
+            },
+            {
+                "key": "endDate",
+                "label": "تاریخ خاتمه"
+            },
+            {
+                "key": "price",
+                "label": "مبلغ قرارداد"
+            },
+            {
+                "key": "currency",
+                "label": "نوع پول"
+            },
+            {
+                "key": "contractDescription",
+                "label": "شرح قرارداد"
+            }
+        ],
+        "filters": [
+            {
+                "key": "filterStaffType",
+                "webId": "filterStaffType",
+                "label": "همه نوع قرارداد",
+                "type": "select",
+                "rowPath": "type",
+                "options": {
+                    "teacher": "استاد",
+                    "receptionist": "پذیرش",
+                    "manager": "مدیر",
+                    "other": "سایر"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterStaffStatus",
+                "webId": "filterStaffStatus",
+                "label": "همه وضعیت‌ها",
+                "type": "select",
+                "rowPath": "status",
+                "options": {
+                    "در انتظار تأیید": "در انتظار تأیید",
+                    "فعال": "فعال",
+                    "غیرفعال": "غیرفعال",
+                    "حذف شده": "حذف شده",
+                    "رد شده": "رد شده"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterStaffCurrency",
+                "webId": "filterStaffCurrency",
+                "label": "همه انواع پول",
+                "type": "select",
+                "rowPath": "currency",
+                "options": {
+                    "تومان": "تومان",
+                    "دلار": "دلار",
+                    "یورو": "یورو"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterStaffLesson",
+                "webId": "filterStaffLesson",
+                "label": "همه درس‌های شعبه‌ها",
+                "type": "select",
+                "rowPath": "lessonId",
+                "options": [],
+                "optionSource": {
+                    "source": "staff_catalog.lessons",
+                    "id": "id",
+                    "label": "name"
+                },
+                "distinct": true
+            }
+        ],
+        "organizationMode": "branch",
+        "organizationFilter": true
+    },
+    "students": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "name",
+                "label": "نام هنرجو"
+            },
+            {
+                "key": "instrument",
+                "label": "ترم آموزشی"
+            },
+            {
+                "key": "level",
+                "label": "سطح"
+            },
+            {
+                "key": "teacher",
+                "label": "استاد"
+            },
+            {
+                "key": "branch",
+                "label": "سازمان"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete"
+        ],
+        "detailFields": [
+            {
+                "key": "name",
+                "label": "نام هنرجو"
+            },
+            {
+                "key": "gender",
+                "label": "جنسیت"
+            },
+            {
+                "key": "nationalId",
+                "label": "کد ملی"
+            },
+            {
+                "key": "birthDate",
+                "label": "تاریخ تولد"
+            },
+            {
+                "key": "phone",
+                "label": "شماره تماس"
+            },
+            {
+                "key": "instrument",
+                "label": "ترم آموزشی"
+            },
+            {
+                "key": "level",
+                "label": "سطح"
+            },
+            {
+                "key": "teacher",
+                "label": "استاد"
+            },
+            {
+                "key": "branch",
+                "label": "سازمان"
+            },
+            {
+                "key": "fatherName",
+                "label": "نام پدر"
+            },
+            {
+                "key": "parentName",
+                "label": "نام سرپرست"
+            },
+            {
+                "key": "parentPhone",
+                "label": "تماس سرپرست"
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه"
+            },
+            {
+                "key": "description",
+                "label": "توضیحات"
+            }
+        ],
+        "filters": [
+            {
+                "key": "filterStudentAgeGroup",
+                "webId": "filterStudentAgeGroup",
+                "label": "همه رده‌های سنی",
+                "type": "select",
+                "rowPath": "_ageGroup",
+                "options": {
+                    "child": "زیر ۱۸ سال",
+                    "adult": "۱۸ سال و بالاتر"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterStudentLevel",
+                "webId": "filterStudentLevel",
+                "label": "همه سطوح",
+                "type": "select",
+                "rowPath": "level",
+                "options": {
+                    "مبتدی": "مبتدی",
+                    "متوسط": "متوسط",
+                    "پیشرفته": "پیشرفته"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterStudentInstrument",
+                "webId": "filterStudentInstrument",
+                "label": "همه سازها",
+                "type": "select",
+                "rowPath": "instrument",
+                "options": {
+                    "پیانو": "پیانو",
+                    "گیتار": "گیتار",
+                    "ویولن": "ویولن",
+                    "آواز": "آواز",
+                    "درام": "درام",
+                    "سنتور": "سنتور",
+                    "کمانچه": "کمانچه"
+                },
+                "optionSource": null,
+                "distinct": false
+            }
+        ],
+        "organizationMode": "branch",
+        "organizationFilter": true
+    },
+    "classrooms": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "name",
+                "label": "نام کلاس"
+            },
+            {
+                "key": "typeLabel",
+                "label": "نوع کلاس"
+            },
+            {
+                "key": "branchName",
+                "label": "شعبه"
+            },
+            {
+                "key": "capacity",
+                "label": "ظرفیت"
+            },
+            {
+                "key": "equipment",
+                "label": "تجهیزات"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "action": "status"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete"
+        ],
+        "detailFields": [
+            {
+                "key": "name",
+                "label": "نام کلاس"
+            },
+            {
+                "key": "typeLabel",
+                "label": "نوع کلاس"
+            },
+            {
+                "key": "deliveryMode",
+                "label": "شیوه برگزاری"
+            },
+            {
+                "key": "branchName",
+                "label": "سازمان"
+            },
+            {
+                "key": "capacity",
+                "label": "ظرفیت"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت"
+            },
+            {
+                "key": "onlineUrl",
+                "label": "پیوند کلاس آنلاین"
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه"
+            },
+            {
+                "key": "description",
+                "label": "توضیحات"
+            },
+            {
+                "key": "equipment",
+                "label": "تجهیزات",
+                "type": "rows",
+                "options": [
+                    {
+                        "key": "name",
+                        "label": "تجهیز"
+                    },
+                    {
+                        "key": "qty",
+                        "label": "تعداد"
+                    }
+                ]
+            }
+        ],
+        "filters": [
+            {
+                "key": "filterClassroomStatus",
+                "webId": "filterClassroomStatus",
+                "label": "همه وضعیت‌ها",
+                "type": "select",
+                "rowPath": "status",
+                "options": {
+                    "در انتظار تأیید": "در انتظار تأیید",
+                    "در دسترس": "در دسترس",
+                    "خارج از دسترس": "خارج از دسترس"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterClassroomType",
+                "webId": "filterClassroomType",
+                "label": "همه انواع",
+                "type": "select",
+                "rowPath": "typeLabel",
+                "options": [],
+                "optionSource": null,
+                "distinct": true
+            },
+            {
+                "key": "filterClassroomCapacity",
+                "webId": "filterClassroomCapacity",
+                "label": "همه ظرفیت‌ها",
+                "type": "select",
+                "rowPath": "capacity",
+                "options": [],
+                "optionSource": null,
+                "distinct": true
+            },
+            {
+                "key": "filterClassroomEquipment",
+                "webId": "filterClassroomEquipment",
+                "label": "همه تجهیزات",
+                "type": "select",
+                "rowPath": "equipment",
+                "options": [],
+                "optionSource": null,
+                "distinct": true
+            }
+        ],
+        "organizationMode": "branch",
+        "organizationFilter": true
+    },
+    "classroom-types": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "createdByName",
+                "label": "ایجادکننده"
+            },
+            {
+                "key": "title",
+                "label": "عنوان"
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه"
+            },
+            {
+                "key": "typeLabel",
+                "label": "دسته",
+                "permission": "showCategory"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "permission": "showStatus",
+                "action": "status"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete"
+        ],
+        "detailFields": [
+            {
+                "key": "title",
+                "label": "عنوان"
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه"
+            },
+            {
+                "key": "typeLabel",
+                "label": "دسته",
+                "permission": "showCategory"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "permission": "showStatus"
+            },
+            {
+                "key": "createdByName",
+                "label": "ایجادکننده"
+            },
+            {
+                "key": "description",
+                "label": "توضیحات"
+            }
+        ],
+        "filters": [
+            {
+                "key": "classroomTypeStatusFilter",
+                "webId": "classroomTypeStatusFilter",
+                "label": "همه وضعیت‌ها",
+                "type": "select",
+                "rowPath": "status",
+                "options": {
+                    "approved": "تأیید شده",
+                    "pending": "در انتظار تأیید",
+                    "rejected": "رد شده"
+                },
+                "optionSource": null,
+                "distinct": false,
+                "permission": "showStatus"
+            },
+            {
+                "key": "classroomTypeCategoryFilter",
+                "webId": "classroomTypeCategoryFilter",
+                "label": "همه دسته‌ها",
+                "type": "select",
+                "rowPath": "type",
+                "options": [],
+                "optionSource": {
+                    "source": "typeOptions",
+                    "id": "value"
+                },
+                "distinct": true,
+                "permission": "showCategory"
+            }
+        ],
+        "organizationMode": "branch",
+        "organizationFilter": false
+    },
+    "courses": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "name",
+                "label": "نام دوره"
+            },
+            {
+                "key": "level",
+                "label": "سطح"
+            },
+            {
+                "key": "branchName",
+                "label": "سازمان"
+            },
+            {
+                "key": "instrument",
+                "label": "درس"
+            },
+            {
+                "key": "teacher_capacity",
+                "label": "ظرفیت اساتید"
+            },
+            {
+                "key": "student_capacity",
+                "label": "ظرفیت هنرجوها"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "action": "status"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete"
+        ],
+        "detailFields": [
+            {
+                "key": "name",
+                "label": "نام دوره"
+            },
+            {
+                "key": "instrument",
+                "label": "درس"
+            },
+            {
+                "key": "level",
+                "label": "سطح"
+            },
+            {
+                "key": "branchName",
+                "label": "سازمان"
+            },
+            {
+                "key": "teacher_capacity",
+                "label": "ظرفیت اساتید"
+            },
+            {
+                "key": "student_capacity",
+                "label": "ظرفیت هنرجوها"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت"
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه"
+            },
+            {
+                "key": "description",
+                "label": "توضیحات"
+            }
+        ],
+        "filters": [
+            {
+                "key": "filterCourseStatus",
+                "webId": "filterCourseStatus",
+                "label": "همه وضعیت‌ها",
+                "type": "select",
+                "rowPath": "status",
+                "options": {
+                    "pending": "در انتظار تأیید",
+                    "open": "باز",
+                    "ongoing": "در حال برگزاری",
+                    "finished": "پایان یافته"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterCourseInstrument",
+                "webId": "filterCourseInstrument",
+                "label": "همه درس‌ها",
+                "type": "select",
+                "rowPath": "instrument",
+                "options": [],
+                "optionSource": null,
+                "distinct": true
+            },
+            {
+                "key": "filterCourseLevel",
+                "webId": "filterCourseLevel",
+                "label": "همه سطح‌ها",
+                "type": "select",
+                "rowPath": "level_id",
+                "options": [],
+                "optionSource": {
+                    "source": "levels"
+                },
+                "distinct": true
+            }
+        ],
+        "organizationMode": "branch",
+        "organizationFilter": true
+    },
+    "course-levels": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "name",
+                "label": "عنوان"
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه"
+            }
+        ],
+        "rowActions": [
+            "details"
+        ],
+        "detailTitle": "جزئیات سطح درس",
+        "detailFields": [
+            {
+                "key": "name",
+                "label": "عنوان"
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه"
+            },
+            {
+                "key": "description",
+                "label": "توضیحات"
+            }
+        ],
+        "filters": [],
+        "organizationMode": "branch",
+        "organizationFilter": false
+    },
+    "terms": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "name",
+                "label": "نام"
+            },
+            {
+                "key": "branchName",
+                "label": "شعبه"
+            },
+            {
+                "key": "course",
+                "label": "دوره مرتبط"
+            },
+            {
+                "key": "start",
+                "label": "تاریخ شروع"
+            },
+            {
+                "key": "end",
+                "label": "تاریخ پایان"
+            },
+            {
+                "key": "days",
+                "label": "روز برگزاری"
+            },
+            {
+                "key": "timeLabel",
+                "label": "ساعت برگزاری"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "action": "status"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete",
+            "cancel",
+            "cancel-approve",
+            "cancel-reject",
+            "restore",
+            "available-times"
+        ],
+        "detailFields": [
+            {
+                "key": "name",
+                "label": "نام ترم"
+            },
+            {
+                "key": "branchName",
+                "label": "سازمان"
+            },
+            {
+                "key": "course",
+                "label": "دوره مرتبط"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت"
+            },
+            {
+                "key": "start",
+                "label": "شروع"
+            },
+            {
+                "key": "end",
+                "label": "پایان"
+            },
+            {
+                "key": "repeatType",
+                "label": "دوره تکرار"
+            },
+            {
+                "key": "sessionCount",
+                "label": "تعداد جلسات"
+            },
+            {
+                "key": "cost",
+                "label": "هزینه ترم"
+            },
+            {
+                "key": "currencyId",
+                "label": "نوع پول"
+            },
+            {
+                "key": "installmentCount",
+                "label": "تعداد اقساط"
+            },
+            {
+                "key": "teachers",
+                "label": "استادها"
+            },
+            {
+                "key": "students",
+                "label": "هنرجویان"
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه"
+            },
+            {
+                "key": "description",
+                "label": "توضیحات"
+            }
+        ],
+        "filters": [
+            {
+                "key": "filterTermStatus",
+                "webId": "filterTermStatus",
+                "label": "همه وضعیت‌ها",
+                "type": "select",
+                "rowPath": "status",
+                "options": {
+                    "در حال برگزاری": "در حال برگزاری",
+                    "در انتظار تأیید": "در انتظار تأیید",
+                    "پایان یافته": "پایان یافته",
+                    "باز": "باز"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterTermCourse",
+                "webId": "filterTermCourse",
+                "label": "همه دوره‌ها",
+                "type": "select",
+                "rowPath": "courseId",
+                "options": [],
+                "optionSource": {
+                    "source": "courses"
+                },
+                "distinct": true
+            },
+            {
+                "key": "filterTermCurrency",
+                "webId": "filterTermCurrency",
+                "label": "همه نوع پول",
+                "type": "select",
+                "rowPath": "currencyId",
+                "options": [],
+                "optionSource": {
+                    "source": "currencies"
+                },
+                "distinct": true
+            },
+            {
+                "key": "filterTermDiscount",
+                "webId": "filterTermDiscount",
+                "label": "همه تخفیف‌ها",
+                "type": "select",
+                "rowPath": "discountId",
+                "options": [],
+                "optionSource": {
+                    "source": "discounts"
+                },
+                "distinct": true
+            },
+            {
+                "key": "filterTermClassroom",
+                "webId": "filterTermClassroom",
+                "label": "همه کلاس‌ها",
+                "type": "select",
+                "rowPath": "classroomId",
+                "options": [],
+                "optionSource": {
+                    "source": "classrooms"
+                },
+                "distinct": true
+            },
+            {
+                "key": "filterTermInstallmentCount",
+                "webId": "filterTermInstallmentCount",
+                "label": "همه تعداد اقساط",
+                "type": "select",
+                "rowPath": "installmentCount",
+                "options": [],
+                "optionSource": null,
+                "distinct": true
+            },
+            {
+                "key": "filterTermWeekday",
+                "webId": "filterTermWeekday",
+                "label": "همه روزهای هفته",
+                "type": "select",
+                "rowPath": "_weekday",
+                "options": {
+                    "6": "شنبه",
+                    "0": "یکشنبه",
+                    "1": "دوشنبه",
+                    "2": "سه‌شنبه",
+                    "3": "چهارشنبه",
+                    "4": "پنجشنبه",
+                    "5": "جمعه"
+                },
+                "optionSource": null,
+                "distinct": false
+            }
+        ],
+        "organizationMode": "branch",
+        "organizationFilter": true
+    },
+    "finance": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "فاکتور"
+            },
+            {
+                "key": "branchName",
+                "label": "شعبه"
+            },
+            {
+                "key": "course",
+                "label": "دوره"
+            },
+            {
+                "key": "amount",
+                "label": "مبلغ"
+            },
+            {
+                "key": "date",
+                "label": "تاریخ"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "pay",
+            "offline"
+        ],
+        "filters": [
+            {
+                "key": "filterFinanceStatus",
+                "webId": "filterFinanceStatus",
+                "label": "همه وضعیت‌ها",
+                "type": "select",
+                "rowPath": "status",
+                "options": {
+                    "پیش‌نویس": "پیش‌نویس",
+                    "صادرشده": "صادرشده",
+                    "پرداخت جزئی": "پرداخت جزئی",
+                    "پرداخت‌شده": "پرداخت‌شده",
+                    "ماه اول رایگان": "ماه اول رایگان",
+                    "در انتظار پرداخت": "در انتظار پرداخت",
+                    "منقضی‌شده": "منقضی‌شده",
+                    "لغوشده": "لغوشده"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterFinanceType",
+                "webId": "filterFinanceType",
+                "label": "همه انواع",
+                "type": "select",
+                "rowPath": "type",
+                "options": {
+                    "فاکتور ترم": "فاکتور ترم",
+                    "اشتراک سامانه": "اشتراک سامانه"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterFinanceRange",
+                "webId": "filterFinanceRange",
+                "label": "همه زمان‌ها",
+                "type": "select",
+                "rowPath": "range",
+                "options": {
+                    "weekly": "هفتگی",
+                    "monthly": "ماهانه",
+                    "yearly": "سالانه",
+                    "custom": "انتخابی"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterFinanceFrom",
+                "webId": "filterFinanceFrom",
+                "label": "از تاریخ",
+                "type": "date",
+                "rowPath": "_dateFrom",
+                "visibleWhen": {
+                    "_form.filterFinanceRange": "custom"
+                }
+            },
+            {
+                "key": "filterFinanceTo",
+                "webId": "filterFinanceTo",
+                "label": "تا تاریخ",
+                "type": "date",
+                "rowPath": "_dateTo",
+                "visibleWhen": {
+                    "_form.filterFinanceRange": "custom"
+                }
+            }
+        ],
+        "organizationMode": "branch",
+        "organizationFilter": true,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "branchName",
+                "label": "شعبه"
+            },
+            {
+                "key": "course",
+                "label": "دوره"
+            },
+            {
+                "key": "amount",
+                "label": "مبلغ",
+                "type": "number",
+                "required": false
+            },
+            {
+                "key": "date",
+                "label": "تاریخ"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت"
+            },
+            {
+                "key": "statusCode",
+                "label": "وضعیت",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "dueDate",
+                "label": "سررسید",
+                "type": "date",
+                "required": false
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه",
+                "type": "multiline",
+                "required": false
+            },
+            {
+                "key": "description",
+                "label": "توضیحات",
+                "type": "multiline",
+                "required": false
+            }
+        ]
+    },
+    "schedules": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان"
+            },
+            {
+                "key": "day",
+                "label": "روز"
+            },
+            {
+                "key": "time",
+                "label": "ساعت"
+            },
+            {
+                "key": "student",
+                "label": "هنرجو"
+            },
+            {
+                "key": "teacher",
+                "label": "استاد"
+            },
+            {
+                "key": "lesson",
+                "label": "درس"
+            },
+            {
+                "key": "classroom",
+                "label": "کلاس"
+            },
+            {
+                "key": "type",
+                "label": "نوع"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "attendance"
+        ],
+        "filters": [
+            {
+                "key": "filterScheduleDay",
+                "webId": "filterScheduleDay",
+                "label": "همه روزها",
+                "type": "select",
+                "rowPath": "day",
+                "options": {
+                    "5": "شنبه",
+                    "6": "یکشنبه",
+                    "0": "دوشنبه",
+                    "1": "سه‌شنبه",
+                    "2": "چهارشنبه",
+                    "3": "پنجشنبه",
+                    "4": "جمعه"
+                },
+                "optionSource": null,
+                "distinct": false,
+                "queryKey": "day"
+            },
+            {
+                "key": "filterScheduleType",
+                "webId": "filterScheduleType",
+                "label": "همه انواع",
+                "type": "select",
+                "rowPath": "type",
+                "options": {
+                    "in_person": "حضوری",
+                    "online": "آنلاین"
+                },
+                "optionSource": null,
+                "distinct": false,
+                "queryKey": "mode"
+            },
+            {
+                "key": "filterScheduleStatus",
+                "webId": "filterScheduleStatus",
+                "label": "همه وضعیت‌ها",
+                "type": "select",
+                "rowPath": "status",
+                "options": {
+                    "pending": "در انتظار تأیید",
+                    "approved": "تأیید شده",
+                    "rejected": "رد شده",
+                    "completed": "پایان یافته",
+                    "canceled": "لغو شده",
+                    "rescheduled": "زمان‌بندی مجدد",
+                    "held": "برگزار شده",
+                    "postponed": "به تعویق افتاده"
+                },
+                "optionSource": null,
+                "distinct": false,
+                "queryKey": "status"
+            },
+            {
+                "key": "filterScheduleInstrument",
+                "webId": "filterScheduleInstrument",
+                "label": "همه درس‌ها",
+                "type": "select",
+                "rowPath": "lesson",
+                "options": [],
+                "optionSource": {
+                    "source": "lessons"
+                },
+                "distinct": true,
+                "queryKey": "lesson"
+            },
+            {
+                "key": "filterScheduleClassroom",
+                "webId": "filterScheduleClassroom",
+                "label": "همه کلاس‌ها",
+                "type": "select",
+                "rowPath": "classroom",
+                "options": [],
+                "optionSource": {
+                    "source": "classrooms"
+                },
+                "distinct": true,
+                "queryKey": "classroom"
+            },
+            {
+                "key": "filterScheduleTimeFrom",
+                "webId": "filterScheduleTimeFrom",
+                "label": "همه ساعت‌ها",
+                "type": "select",
+                "rowPath": "timeFrom",
+                "options": [],
+                "optionSource": null,
+                "distinct": true,
+                "queryKey": "timeFrom"
+            },
+            {
+                "key": "filterScheduleTimeTo",
+                "webId": "filterScheduleTimeTo",
+                "label": "همه ساعت‌ها",
+                "type": "select",
+                "rowPath": "timeTo",
+                "options": [],
+                "optionSource": null,
+                "distinct": true,
+                "queryKey": "timeTo"
+            }
+        ],
+        "organizationMode": "branch",
+        "organizationFilter": true,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان"
+            },
+            {
+                "key": "day",
+                "label": "روز"
+            },
+            {
+                "key": "time",
+                "label": "ساعت"
+            },
+            {
+                "key": "student",
+                "label": "هنرجو"
+            },
+            {
+                "key": "teacher",
+                "label": "استاد"
+            },
+            {
+                "key": "lesson",
+                "label": "درس"
+            },
+            {
+                "key": "classroom",
+                "label": "کلاس"
+            },
+            {
+                "key": "type",
+                "label": "نوع"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت"
+            }
+        ]
+    },
+    "member-schedules": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "name",
+                "label": "نام عضو"
+            },
+            {
+                "key": "role",
+                "label": "نقش"
+            },
+            {
+                "key": "day",
+                "label": "روز"
+            },
+            {
+                "key": "timeLabel",
+                "label": "ساعت"
+            },
+            {
+                "key": "repeatPeriod",
+                "label": "دوره تکرار"
+            },
+            {
+                "key": "timezone",
+                "label": "منطقه زمانی"
+            },
+            {
+                "key": "branchName",
+                "label": "شعبه"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "action": "status"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete"
+        ],
+        "filters": [
+            {
+                "key": "filterMemberRole",
+                "webId": "filterMemberRole",
+                "label": "همه نقش‌ها",
+                "type": "select",
+                "rowPath": "role",
+                "options": {
+                    "استاد": "استاد",
+                    "منشی": "منشی",
+                    "مدیر": "مدیر",
+                    "پرسنل": "پرسنل"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterMemberDay",
+                "webId": "filterMemberDay",
+                "label": "همه روزها",
+                "type": "select",
+                "rowPath": "day",
+                "options": {
+                    "شنبه": "شنبه",
+                    "یکشنبه": "یکشنبه",
+                    "دوشنبه": "دوشنبه",
+                    "سه‌شنبه": "سه‌شنبه",
+                    "چهارشنبه": "چهارشنبه",
+                    "پنجشنبه": "پنجشنبه",
+                    "جمعه": "جمعه"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterMemberRepeat",
+                "webId": "filterMemberRepeat",
+                "label": "همه دوره‌های تکرار",
+                "type": "select",
+                "rowPath": "repeatPeriod",
+                "options": {
+                    "هفتگی": "هفتگی",
+                    "دو هفته": "دو هفته",
+                    "سه هفته": "سه هفته",
+                    "چهار هفته": "چهار هفته",
+                    "ماهانه": "ماهانه",
+                    "سالانه": "سالانه",
+                    "بی‌تکرار": "بی‌تکرار"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterMemberTimezone",
+                "webId": "filterMemberTimezone",
+                "label": "همه مناطق زمانی",
+                "type": "select",
+                "rowPath": "timezone",
+                "options": {
+                    "Asia\/Tehran": "تهران",
+                    "Asia\/Dubai": "دبی",
+                    "Asia\/Istanbul": "استانبول",
+                    "Europe\/London": "لندن",
+                    "Europe\/Paris": "پاریس",
+                    "Europe\/Berlin": "برلین",
+                    "Europe\/Rome": "رم",
+                    "Europe\/Amsterdam": "آمستردام",
+                    "America\/New_York": "نیویورک",
+                    "America\/Chicago": "شیکاگو",
+                    "America\/Los_Angeles": "لس‌آنجلس",
+                    "America\/Toronto": "تورنتو",
+                    "UTC": "UTC"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterMemberStatus",
+                "webId": "filterMemberStatus",
+                "label": "همه وضعیت‌ها",
+                "type": "select",
+                "rowPath": "status",
+                "options": {
+                    "فعال": "فعال",
+                    "غیرفعال": "غیرفعال",
+                    "پر شده": "پر شده",
+                    "در انتظار تأیید": "در انتظار تأیید"
+                },
+                "optionSource": null,
+                "distinct": false
+            }
+        ],
+        "organizationMode": "branch",
+        "organizationFilter": true,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "name",
+                "label": "نام عضو"
+            },
+            {
+                "key": "role",
+                "label": "نقش"
+            },
+            {
+                "key": "day",
+                "label": "روز هفته",
+                "type": "select",
+                "options": {
+                    "شنبه": "شنبه",
+                    "یکشنبه": "یکشنبه",
+                    "دوشنبه": "دوشنبه",
+                    "سه‌شنبه": "سه‌شنبه",
+                    "چهارشنبه": "چهارشنبه",
+                    "پنجشنبه": "پنجشنبه",
+                    "جمعه": "جمعه"
+                },
+                "required": false,
+                "default": "شنبه",
+                "hiddenWhen": {
+                    "_form.repeatPeriod": {
+                        "in": [
+                            "ماهانه",
+                            "سالانه",
+                            "بی‌تکرار"
+                        ]
+                    }
+                }
+            },
+            {
+                "key": "timeLabel",
+                "label": "ساعت"
+            },
+            {
+                "key": "repeatPeriod",
+                "label": "تکرار",
+                "type": "select",
+                "options": {
+                    "هفتگی": "هفتگی",
+                    "دو هفته": "دو هفته",
+                    "سه هفته": "سه هفته",
+                    "چهار هفته": "چهار هفته",
+                    "ماهانه": "ماهانه",
+                    "سالانه": "سالانه",
+                    "بی‌تکرار": "بی‌تکرار"
+                },
+                "required": false,
+                "default": "هفتگی"
+            },
+            {
+                "key": "timezone",
+                "label": "منطقه زمانی",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "Asia\/Tehran": "Asia\/Tehran",
+                    "Asia\/Dubai": "Asia\/Dubai",
+                    "Asia\/Istanbul": "Asia\/Istanbul",
+                    "Europe\/London": "Europe\/London",
+                    "Europe\/Paris": "Europe\/Paris",
+                    "Europe\/Berlin": "Europe\/Berlin",
+                    "Europe\/Rome": "Europe\/Rome",
+                    "Europe\/Amsterdam": "Europe\/Amsterdam",
+                    "America\/New_York": "America\/New_York",
+                    "America\/Chicago": "America\/Chicago",
+                    "America\/Los_Angeles": "America\/Los_Angeles",
+                    "America\/Toronto": "America\/Toronto",
+                    "UTC": "UTC"
+                },
+                "default": "Asia\/Tehran"
+            },
+            {
+                "key": "branchName",
+                "label": "شعبه"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "action": "status"
+            },
+            {
+                "key": "organizationUserId",
+                "label": "سازمان",
+                "type": "select",
+                "options": {
+                    "source": "staff_catalog.organizations",
+                    "id": "user_id"
+                },
+                "required": true,
+                "defaultFirstOption": true,
+                "initialLookup": {
+                    "source": "members",
+                    "by": "membershipId",
+                    "id": "id",
+                    "field": "organizationUserId"
+                },
+                "hiddenWhen": {
+                    "staff_catalog.organization_selection": "fixed"
+                },
+                "submitWhenHidden": true
+            },
+            {
+                "key": "membershipId",
+                "label": "عضو",
+                "type": "select",
+                "options": {
+                    "source": "members",
+                    "match": {
+                        "organizationUserId": "organizationUserId"
+                    }
+                },
+                "required": false,
+                "dependsOn": [
+                    "organizationUserId"
+                ]
+            },
+            {
+                "key": "repeatDate",
+                "label": "تاریخ",
+                "type": "date",
+                "required": false,
+                "visibleWhen": {
+                    "_form.repeatPeriod": {
+                        "not": "هفتگی"
+                    }
+                }
+            },
+            {
+                "key": "ranges",
+                "label": "بازه‌های زمانی",
+                "type": "rows",
+                "options": [
+                    {
+                        "key": "start",
+                        "label": "شروع",
+                        "type": "time",
+                        "required": false
+                    },
+                    {
+                        "key": "end",
+                        "label": "پایان",
+                        "type": "time",
+                        "required": false
+                    },
+                    {
+                        "key": "status",
+                        "label": "وضعیت",
+                        "type": "select",
+                        "options": {
+                            "فعال": "فعال",
+                            "غیرفعال": "غیرفعال"
+                        },
+                        "required": false
+                    }
+                ],
+                "required": false
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه",
+                "type": "multiline",
+                "required": false
+            },
+            {
+                "key": "description",
+                "label": "توضیحات",
+                "type": "multiline",
+                "required": false
+            }
+        ]
+    },
+    "availability-exceptions": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "name",
+                "label": "نام"
+            },
+            {
+                "key": "date",
+                "label": "تاریخ"
+            },
+            {
+                "key": "timeLabel",
+                "label": "ساعت"
+            },
+            {
+                "key": "typeLabel",
+                "label": "نوع"
+            },
+            {
+                "key": "timezone",
+                "label": "منطقه زمانی"
+            },
+            {
+                "key": "branchName",
+                "label": "شعبه"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "action": "status"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete"
+        ],
+        "filters": [
+            {
+                "key": "filterHolidayLeaveTimezone",
+                "webId": "filterHolidayLeaveTimezone",
+                "label": "همه مناطق زمانی",
+                "type": "select",
+                "rowPath": "timezone",
+                "options": {
+                    "Asia\/Tehran": "تهران",
+                    "Asia\/Dubai": "دبی",
+                    "Asia\/Istanbul": "استانبول",
+                    "Europe\/London": "لندن",
+                    "Europe\/Paris": "پاریس",
+                    "Europe\/Berlin": "برلین",
+                    "Europe\/Rome": "رم",
+                    "Europe\/Amsterdam": "آمستردام",
+                    "America\/New_York": "نیویورک",
+                    "America\/Chicago": "شیکاگو",
+                    "America\/Los_Angeles": "لس‌آنجلس",
+                    "America\/Toronto": "تورنتو",
+                    "UTC": "UTC"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterHolidayLeaveStatus",
+                "webId": "filterHolidayLeaveStatus",
+                "label": "همه وضعیت‌ها",
+                "type": "select",
+                "rowPath": "status",
+                "options": {
+                    "فعال": "فعال",
+                    "غیرفعال": "غیرفعال",
+                    "در انتظار تأیید": "در انتظار تأیید"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterHolidayLeaveType",
+                "webId": "filterHolidayLeaveType",
+                "label": "همه انواع",
+                "type": "select",
+                "rowPath": "type",
+                "options": {
+                    "holiday": "تعطیل رسمی",
+                    "closed": "تعطیل",
+                    "unavailable": "عدم دسترسی",
+                    "busy": "مشغول",
+                    "vacation": "مرخصی",
+                    "blocked": "مسدود"
+                },
+                "optionSource": null,
+                "distinct": false
+            }
+        ],
+        "organizationMode": "branch",
+        "organizationFilter": true,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "name",
+                "label": "نام"
+            },
+            {
+                "key": "date",
+                "label": "تاریخ",
+                "type": "date",
+                "required": false
+            },
+            {
+                "key": "timeLabel",
+                "label": "ساعت"
+            },
+            {
+                "key": "typeLabel",
+                "label": "نوع"
+            },
+            {
+                "key": "timezone",
+                "label": "منطقه زمانی",
+                "type": "select",
+                "options": {
+                    "Asia\/Tehran": "Asia\/Tehran",
+                    "Asia\/Dubai": "Asia\/Dubai",
+                    "Asia\/Istanbul": "Asia\/Istanbul",
+                    "Europe\/London": "Europe\/London",
+                    "Europe\/Paris": "Europe\/Paris",
+                    "Europe\/Berlin": "Europe\/Berlin",
+                    "Europe\/Rome": "Europe\/Rome",
+                    "Europe\/Amsterdam": "Europe\/Amsterdam",
+                    "America\/New_York": "America\/New_York",
+                    "America\/Chicago": "America\/Chicago",
+                    "America\/Los_Angeles": "America\/Los_Angeles",
+                    "America\/Toronto": "America\/Toronto",
+                    "UTC": "UTC"
+                },
+                "required": false,
+                "default": "Asia\/Tehran"
+            },
+            {
+                "key": "branchName",
+                "label": "شعبه"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "action": "status"
+            },
+            {
+                "key": "organizationUserId",
+                "label": "آموزشگاه یا شعبه",
+                "type": "select",
+                "options": {
+                    "source": "staff_catalog.organizations",
+                    "id": "user_id"
+                },
+                "required": false
+            },
+            {
+                "key": "targetValue",
+                "label": "شخص یا سازمان",
+                "type": "select",
+                "options": {
+                    "sources": [
+                        {
+                            "source": "staff_catalog.organizations",
+                            "id": "user_id",
+                            "prefix": "organization:",
+                            "match": {
+                                "user_id": "organizationUserId"
+                            },
+                            "requireMatch": true
+                        },
+                        {
+                            "source": "members",
+                            "prefix": "member:",
+                            "match": {
+                                "organizationUserId": "organizationUserId"
+                            },
+                            "requireMatch": true
+                        }
+                    ]
+                },
+                "required": true,
+                "dependsOn": [
+                    "organizationUserId"
+                ]
+            },
+            {
+                "key": "allDay",
+                "label": "تمام روز",
+                "type": "bool",
+                "required": false,
+                "initial": "fullDay"
+            },
+            {
+                "key": "type",
+                "label": "نوع استثنا",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "holiday": "تعطیلی",
+                    "closed": "بسته",
+                    "unavailable": "عدم حضور",
+                    "busy": "مشغول",
+                    "vacation": "مرخصی",
+                    "blocked": "مسدود"
+                }
+            },
+            {
+                "key": "ranges",
+                "label": "بازه‌های زمانی",
+                "type": "rows",
+                "options": [
+                    {
+                        "key": "start",
+                        "label": "شروع",
+                        "type": "time",
+                        "required": false
+                    },
+                    {
+                        "key": "end",
+                        "label": "پایان",
+                        "type": "time",
+                        "required": false
+                    },
+                    {
+                        "key": "status",
+                        "label": "وضعیت",
+                        "type": "select",
+                        "options": {
+                            "فعال": "فعال",
+                            "غیرفعال": "غیرفعال"
+                        },
+                        "required": false
+                    }
+                ],
+                "required": false,
+                "hiddenWhen": {
+                    "_form.allDay": true
+                }
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه",
+                "type": "multiline",
+                "required": false
+            },
+            {
+                "key": "description",
+                "label": "توضیحات",
+                "type": "multiline",
+                "required": false
+            }
+        ]
+    },
+    "scheduling-rules": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان قانون"
+            },
+            {
+                "key": "branchName",
+                "label": "سازمان"
+            },
+            {
+                "key": "type",
+                "label": "نوع"
+            },
+            {
+                "key": "value",
+                "label": "مقدار"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "action": "status"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete"
+        ],
+        "filters": [
+            {
+                "key": "filterRuleStatus",
+                "webId": "filterRuleStatus",
+                "label": "همه وضعیت‌ها",
+                "type": "select",
+                "rowPath": "status",
+                "options": {
+                    "در انتظار تأیید": "در انتظار تأیید",
+                    "فعال": "فعال",
+                    "غیرفعال": "غیرفعال",
+                    "حذف‌شده": "حذف‌شده"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterRuleType",
+                "webId": "filterRuleType",
+                "label": "همه انواع",
+                "type": "select",
+                "rowPath": "type",
+                "options": [],
+                "optionSource": null,
+                "distinct": true
+            }
+        ],
+        "organizationMode": "branch",
+        "organizationFilter": true,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "branchName",
+                "label": "سازمان"
+            },
+            {
+                "key": "type",
+                "label": "نوع قانون",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "لغو": "لغو",
+                    "جبرانی": "جبرانی",
+                    "رزرو": "رزرو",
+                    "زمان‌بندی": "زمان‌بندی"
+                }
+            },
+            {
+                "key": "value",
+                "label": "مقدار",
+                "type": "number",
+                "required": false
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "type": "select",
+                "options": {
+                    "فعال": "فعال",
+                    "غیرفعال": "غیرفعال"
+                },
+                "required": false,
+                "hiddenWhen": {
+                    "show_status_field": false
+                }
+            },
+            {
+                "key": "organizationKey",
+                "label": "سازمان",
+                "type": "select",
+                "options": {
+                    "source": "organizations",
+                    "id": "key"
+                },
+                "required": false,
+                "defaultFirstOption": true,
+                "hiddenWhen": {
+                    "organization_selection": "fixed"
+                },
+                "submitWhenHidden": true
+            },
+            {
+                "key": "valueUnit",
+                "label": "واحد",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "ساعت": "ساعت",
+                    "دقیقه": "دقیقه",
+                    "روز": "روز",
+                    "جلسه": "جلسه",
+                    "غیبت": "غیبت",
+                    "نفر": "نفر",
+                    "سال": "سال",
+                    "بله\/خیر": "بله\/خیر",
+                    "درصد": "درصد",
+                    "مبلغ": "مبلغ"
+                }
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه",
+                "type": "multiline",
+                "required": false
+            },
+            {
+                "key": "description",
+                "label": "توضیحات",
+                "type": "multiline",
+                "required": false
+            }
+        ]
+    },
+    "lessons": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان \/ درس"
+            },
+            {
+                "key": "levelTitle",
+                "label": "سطح"
+            },
+            {
+                "key": "start_date",
+                "label": "زمان شروع"
+            },
+            {
+                "key": "is_primary",
+                "label": "اصلی"
+            },
+            {
+                "key": "branchName",
+                "label": "سازمان"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "action": "status"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete",
+            "usage"
+        ],
+        "detailFields": [
+            {
+                "key": "summary",
+                "label": "خلاصه"
+            },
+            {
+                "key": "description",
+                "label": "توضیحات"
+            },
+            {
+                "key": "levelTitle",
+                "label": "سطح"
+            },
+            {
+                "key": "start_date",
+                "label": "زمان شروع"
+            },
+            {
+                "key": "is_primary",
+                "label": "اصلی"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت"
+            },
+            {
+                "key": "branchName",
+                "label": "سازمان"
+            }
+        ],
+        "filters": [
+            {
+                "key": "filterLessonStatus",
+                "webId": "filterLessonStatus",
+                "label": "همه وضعیت‌ها",
+                "type": "select",
+                "rowPath": "status",
+                "options": {
+                    "active": "فعال",
+                    "inactive": "غیرفعال",
+                    "pending": "در انتظار تأیید"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterLessonLevel",
+                "webId": "filterLessonLevel",
+                "label": "همه سطوح",
+                "type": "select",
+                "rowPath": "level_id",
+                "options": [],
+                "optionSource": {
+                    "source": "levels",
+                    "id": "level_id"
+                },
+                "distinct": true
+            }
+        ],
+        "organizationMode": "branch",
+        "organizationFilter": true
+    },
+    "points": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان"
+            },
+            {
+                "key": "type",
+                "label": "نوع"
+            },
+            {
+                "key": "category",
+                "label": "دسته"
+            },
+            {
+                "key": "points",
+                "label": "امتیاز"
+            },
+            {
+                "key": "source",
+                "label": "منبع \/ عملیات",
+                "dataPermission": "canManage"
+            },
+            {
+                "key": "branchName",
+                "label": "سازمان",
+                "dataPermission": "canManage"
+            },
+            {
+                "key": "repeatMode",
+                "label": "کنترل تکرار"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "dataPermission": "canManage",
+                "action": "status"
+            }
+        ],
+        "rowActions": [
+            "update",
+            "delete"
+        ],
+        "actionsPermission": "canManage",
+        "summaries": [
+            {
+                "label": "قوانین فعال",
+                "countRows": "rules",
+                "where": {
+                    "status": "active"
+                },
+                "description": "اعمال خودکار با سقف و کنترل تکرار"
+            }
+        ],
+        "filters": [
+            {
+                "key": "filterPointType",
+                "webId": "filterPointType",
+                "label": "همه انواع",
+                "type": "select",
+                "rowPath": "type",
+                "options": {
+                    "general": "عمومی",
+                    "professional": "حرفه‌ای"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterPointCategory",
+                "webId": "filterPointCategory",
+                "label": "همه دسته‌ها",
+                "type": "select",
+                "rowPath": "category",
+                "options": {
+                    "attendance": "حضور",
+                    "academic": "آموزشی",
+                    "event": "رویداد",
+                    "social": "اجتماعی",
+                    "financial": "مالی",
+                    "profile": "پروفایل",
+                    "achievement": "دستاورد",
+                    "engagement": "تعامل",
+                    "management": "مدیریت"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterPointStatus",
+                "webId": "filterPointStatus",
+                "label": "همه وضعیت‌ها",
+                "type": "select",
+                "rowPath": "status",
+                "options": {
+                    "فعال": "فعال",
+                    "غیرفعال": "غیرفعال"
+                },
+                "optionSource": null,
+                "distinct": false
+            }
+        ],
+        "organizationMode": "points",
+        "organizationFilter": true,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "type",
+                "label": "نوع امتیاز",
+                "type": "select",
+                "options": {
+                    "general": "عمومی",
+                    "professional": "حرفه‌ای"
+                },
+                "required": false,
+                "default": "general"
+            },
+            {
+                "key": "category",
+                "label": "دسته",
+                "type": "select",
+                "options": {
+                    "attendance": "حضور",
+                    "academic": "آموزشی",
+                    "event": "رویداد",
+                    "social": "اجتماعی",
+                    "financial": "مالی",
+                    "profile": "پروفایل",
+                    "achievement": "دستاورد",
+                    "engagement": "تعامل",
+                    "management": "مدیریت"
+                },
+                "required": false,
+                "default": "engagement"
+            },
+            {
+                "key": "points",
+                "label": "امتیاز",
+                "type": "number",
+                "required": false,
+                "default": 10,
+                "min": 1,
+                "max": 100000
+            },
+            {
+                "key": "source",
+                "label": "منبع رویداد",
+                "type": "select",
+                "options": {
+                    "database": "رویداد قطعی دیتابیس",
+                    "tracking": "رفتار کاربر",
+                    "manual": "اعطای دستی"
+                },
+                "required": false,
+                "default": "database"
+            },
+            {
+                "key": "branchName",
+                "label": "سازمان",
+                "dataPermission": "canManage"
+            },
+            {
+                "key": "repeatMode",
+                "label": "روش تکرار",
+                "type": "select",
+                "options": {
+                    "event": "هر رویداد یکتا",
+                    "daily": "دارای سقف روزانه",
+                    "once": "فقط یک‌بار"
+                },
+                "required": false,
+                "default": "event"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "type": "select",
+                "options": {
+                    "active": "فعال",
+                    "inactive": "غیرفعال"
+                },
+                "required": false,
+                "default": "active"
+            },
+            {
+                "key": "action",
+                "label": "کد عملیات",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "dailyCap",
+                "label": "سقف روزانه (۰ = بدون سقف)",
+                "type": "number",
+                "required": false,
+                "default": 0,
+                "min": 0
+            },
+            {
+                "key": "cooldownMinutes",
+                "label": "فاصله تکرار (دقیقه)",
+                "type": "number",
+                "required": false,
+                "default": 0,
+                "min": 0
+            },
+            {
+                "key": "branchId",
+                "label": "سازمان",
+                "type": "select",
+                "options": {
+                    "source": "organizations",
+                    "id": "id"
+                },
+                "required": false,
+                "defaultFirstOption": true
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "description",
+                "label": "توضیحات",
+                "type": "multiline",
+                "required": false
+            }
+        ]
+    },
+    "users": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "name",
+                "label": "کاربر"
+            },
+            {
+                "key": "roles",
+                "label": "نقش‌ها"
+            },
+            {
+                "key": "permissions",
+                "label": "مجوزهای اختصاصی"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "type": "text"
+            }
+        ],
+        "rowActions": [
+            "roles",
+            "permissions",
+            "details"
+        ],
+        "detailFields": [
+            {
+                "key": "name",
+                "label": "کاربر"
+            },
+            {
+                "key": "roles",
+                "label": "نقش‌ها"
+            },
+            {
+                "key": "rolePermissions",
+                "label": "مجوزهای نقش‌ها"
+            },
+            {
+                "key": "directPermissions",
+                "label": "مجوزهای اختصاصی"
+            }
+        ],
+        "filters": [
+            {
+                "key": "accessUserStatus",
+                "webId": "accessUserStatus",
+                "label": "همه وضعیت‌ها",
+                "type": "select",
+                "rowPath": "status",
+                "options": {
+                    "pending": "در انتظار",
+                    "approved": "تأییدشده",
+                    "rejected": "ردشده",
+                    "inactive": "غیرفعال",
+                    "banned": "مسدود"
+                },
+                "optionSource": null,
+                "distinct": false,
+                "queryKey": "status"
+            }
+        ],
+        "organizationMode": "branch",
+        "organizationFilter": true
+    },
+    "awards": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان"
+            },
+            {
+                "key": "issuer",
+                "label": "اعطاکننده"
+            },
+            {
+                "key": "date",
+                "label": "تاریخ"
+            },
+            {
+                "key": "user_name",
+                "label": "سازمان"
+            },
+            {
+                "key": "approved_at",
+                "label": "وضعیت تأیید",
+                "type": "approval",
+                "action": "status"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete"
+        ],
+        "filters": [],
+        "organizationMode": "owner",
+        "organizationFilter": true,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "issuer",
+                "label": "صادرکننده",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "date",
+                "label": "تاریخ",
+                "type": "date",
+                "required": false
+            },
+            {
+                "key": "user_name",
+                "label": "سازمان"
+            },
+            {
+                "key": "approved_at",
+                "label": "وضعیت تأیید",
+                "type": "approval",
+                "action": "status"
+            },
+            {
+                "key": "user_id",
+                "label": "سازمان",
+                "type": "select",
+                "options": {
+                    "source": "organizations"
+                },
+                "required": false,
+                "defaultFirstOption": true,
+                "hiddenWhen": {
+                    "hideOrganizationField": true
+                },
+                "submitWhenHidden": true
+            },
+            {
+                "key": "description",
+                "label": "توضیحات",
+                "type": "multiline",
+                "required": false
+            }
+        ]
+    },
+    "certificates": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان"
+            },
+            {
+                "key": "issuer",
+                "label": "صادرکننده"
+            },
+            {
+                "key": "issue_date",
+                "label": "صدور"
+            },
+            {
+                "key": "expire_date",
+                "label": "انقضا"
+            },
+            {
+                "key": "user_name",
+                "label": "سازمان"
+            },
+            {
+                "key": "approved_at",
+                "label": "وضعیت تأیید",
+                "type": "approval",
+                "action": "status"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete"
+        ],
+        "filters": [],
+        "organizationMode": "owner",
+        "organizationFilter": true,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "issuer",
+                "label": "صادرکننده",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "issue_date",
+                "label": "تاریخ صدور",
+                "type": "date",
+                "required": false
+            },
+            {
+                "key": "expire_date",
+                "label": "تاریخ انقضا",
+                "type": "date",
+                "required": false
+            },
+            {
+                "key": "user_name",
+                "label": "سازمان"
+            },
+            {
+                "key": "approved_at",
+                "label": "وضعیت تأیید",
+                "type": "approval",
+                "action": "status"
+            },
+            {
+                "key": "user_id",
+                "label": "سازمان",
+                "type": "select",
+                "options": {
+                    "source": "organizations"
+                },
+                "required": false,
+                "defaultFirstOption": true,
+                "hiddenWhen": {
+                    "hideOrganizationField": true
+                },
+                "submitWhenHidden": true
+            },
+            {
+                "key": "certificate_url",
+                "label": "نشانی گواهی",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "file_path",
+                "label": "مسیر فایل",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "description",
+                "label": "توضیحات",
+                "type": "multiline",
+                "required": false
+            }
+        ]
+    },
+    "experiences": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان"
+            },
+            {
+                "key": "organization",
+                "label": "محل فعالیت"
+            },
+            {
+                "key": "start_date",
+                "label": "شروع"
+            },
+            {
+                "key": "end_date",
+                "label": "پایان"
+            },
+            {
+                "key": "user_name",
+                "label": "سازمان"
+            },
+            {
+                "key": "approved_at",
+                "label": "وضعیت تأیید",
+                "type": "approval",
+                "action": "status"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete"
+        ],
+        "filters": [],
+        "organizationMode": "owner",
+        "organizationFilter": true,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "organization",
+                "label": "سازمان",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "start_date",
+                "label": "شروع",
+                "type": "date",
+                "required": false
+            },
+            {
+                "key": "end_date",
+                "label": "پایان",
+                "type": "date",
+                "required": false
+            },
+            {
+                "key": "user_name",
+                "label": "سازمان"
+            },
+            {
+                "key": "approved_at",
+                "label": "وضعیت تأیید",
+                "type": "approval",
+                "action": "status"
+            },
+            {
+                "key": "user_id",
+                "label": "سازمان",
+                "type": "select",
+                "options": {
+                    "source": "organizations"
+                },
+                "required": false,
+                "defaultFirstOption": true,
+                "hiddenWhen": {
+                    "hideOrganizationField": true
+                },
+                "submitWhenHidden": true
+            },
+            {
+                "key": "address_id",
+                "label": "نشانی",
+                "type": "select",
+                "options": {
+                    "source": "addresses",
+                    "match": {
+                        "userId": "user_id"
+                    }
+                },
+                "required": false,
+                "dependsOn": [
+                    "user_id"
+                ]
+            },
+            {
+                "key": "description",
+                "label": "توضیحات",
+                "type": "multiline",
+                "required": false
+            }
+        ]
+    },
+    "educations": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "degree",
+                "label": "مدرک"
+            },
+            {
+                "key": "institution",
+                "label": "مرکز آموزشی"
+            },
+            {
+                "key": "field",
+                "label": "رشته"
+            },
+            {
+                "key": "start_date",
+                "label": "شروع"
+            },
+            {
+                "key": "end_date",
+                "label": "پایان"
+            },
+            {
+                "key": "user_name",
+                "label": "سازمان"
+            },
+            {
+                "key": "approved_at",
+                "label": "وضعیت تأیید",
+                "type": "approval",
+                "action": "status"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete"
+        ],
+        "filters": [],
+        "organizationMode": "owner",
+        "organizationFilter": true,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "degree",
+                "label": "مدرک",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "institution",
+                "label": "مؤسسه",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "field",
+                "label": "رشته",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "start_date",
+                "label": "شروع",
+                "type": "date",
+                "required": false
+            },
+            {
+                "key": "end_date",
+                "label": "پایان",
+                "type": "date",
+                "required": false
+            },
+            {
+                "key": "user_name",
+                "label": "سازمان"
+            },
+            {
+                "key": "approved_at",
+                "label": "وضعیت تأیید",
+                "type": "approval",
+                "action": "status"
+            },
+            {
+                "key": "user_id",
+                "label": "سازمان",
+                "type": "select",
+                "options": {
+                    "source": "organizations"
+                },
+                "required": false,
+                "defaultFirstOption": true,
+                "hiddenWhen": {
+                    "hideOrganizationField": true
+                },
+                "submitWhenHidden": true
+            },
+            {
+                "key": "description",
+                "label": "توضیحات",
+                "type": "multiline",
+                "required": false
+            }
+        ]
+    },
+    "events": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان"
+            },
+            {
+                "key": "event_type",
+                "label": "نوع"
+            },
+            {
+                "key": "event_date",
+                "label": "تاریخ"
+            },
+            {
+                "key": "user_name",
+                "label": "سازمان"
+            },
+            {
+                "key": "approved_at",
+                "label": "وضعیت تأیید",
+                "type": "approval",
+                "action": "status"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete"
+        ],
+        "filters": [],
+        "organizationMode": "owner",
+        "organizationFilter": true,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "event_type",
+                "label": "نوع رویداد",
+                "type": "select",
+                "options": {
+                    "concert": "کنسرت",
+                    "festival": "جشنواره",
+                    "competition": "مسابقه",
+                    "workshop": "کارگاه",
+                    "other": "سایر"
+                },
+                "required": false,
+                "default": "concert"
+            },
+            {
+                "key": "event_date",
+                "label": "زمان رویداد",
+                "type": "date",
+                "required": false
+            },
+            {
+                "key": "user_name",
+                "label": "سازمان"
+            },
+            {
+                "key": "approved_at",
+                "label": "وضعیت تأیید",
+                "type": "approval",
+                "action": "status"
+            },
+            {
+                "key": "user_id",
+                "label": "سازمان",
+                "type": "select",
+                "options": {
+                    "source": "organizations"
+                },
+                "required": false,
+                "defaultFirstOption": true,
+                "hiddenWhen": {
+                    "hideOrganizationField": true
+                },
+                "submitWhenHidden": true
+            },
+            {
+                "key": "address_id",
+                "label": "نشانی",
+                "type": "select",
+                "options": {
+                    "source": "addresses",
+                    "match": {
+                        "userId": "user_id"
+                    }
+                },
+                "required": false,
+                "dependsOn": [
+                    "user_id"
+                ]
+            },
+            {
+                "key": "description",
+                "label": "توضیحات",
+                "type": "multiline",
+                "required": false
+            }
+        ]
+    },
+    "publications": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان"
+            },
+            {
+                "key": "publisher",
+                "label": "ناشر"
+            },
+            {
+                "key": "published_date",
+                "label": "تاریخ انتشار"
+            },
+            {
+                "key": "is_peer_reviewed",
+                "label": "داوری‌شده"
+            },
+            {
+                "key": "user_name",
+                "label": "سازمان"
+            },
+            {
+                "key": "approved_at",
+                "label": "وضعیت تأیید",
+                "type": "approval",
+                "action": "status"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete"
+        ],
+        "filters": [],
+        "organizationMode": "owner",
+        "organizationFilter": true,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "publisher",
+                "label": "ناشر",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "published_date",
+                "label": "تاریخ انتشار",
+                "type": "date",
+                "required": false
+            },
+            {
+                "key": "is_peer_reviewed",
+                "label": "داوری علمی",
+                "type": "bool",
+                "required": false
+            },
+            {
+                "key": "user_name",
+                "label": "سازمان"
+            },
+            {
+                "key": "approved_at",
+                "label": "وضعیت تأیید",
+                "type": "approval",
+                "action": "status"
+            },
+            {
+                "key": "user_id",
+                "label": "سازمان",
+                "type": "select",
+                "options": {
+                    "source": "organizations"
+                },
+                "required": false,
+                "defaultFirstOption": true,
+                "hiddenWhen": {
+                    "hideOrganizationField": true
+                },
+                "submitWhenHidden": true
+            },
+            {
+                "key": "url",
+                "label": "نشانی اینترنتی",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "content",
+                "label": "متن",
+                "type": "multiline",
+                "required": false
+            }
+        ]
+    },
+    "badges": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "badge_title",
+                "label": "نشان"
+            },
+            {
+                "key": "granted_at",
+                "label": "زمان اعطا"
+            },
+            {
+                "key": "expires_at",
+                "label": "انقضا"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت نشان"
+            },
+            {
+                "key": "user_name",
+                "label": "سازمان"
+            },
+            {
+                "key": "approved_at",
+                "label": "وضعیت تأیید",
+                "type": "approval",
+                "action": "status"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete"
+        ],
+        "filters": [],
+        "organizationMode": "owner",
+        "organizationFilter": true,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "badge_title",
+                "label": "نشان"
+            },
+            {
+                "key": "granted_at",
+                "label": "تاریخ اعطا",
+                "type": "datetime",
+                "required": false
+            },
+            {
+                "key": "expires_at",
+                "label": "تاریخ انقضا",
+                "type": "datetime",
+                "required": false
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "active": "فعال",
+                    "expired": "منقضی",
+                    "revoked": "لغوشده"
+                },
+                "default": "active"
+            },
+            {
+                "key": "user_name",
+                "label": "سازمان"
+            },
+            {
+                "key": "approved_at",
+                "label": "وضعیت تأیید",
+                "type": "approval",
+                "action": "status"
+            },
+            {
+                "key": "user_id",
+                "label": "سازمان",
+                "type": "select",
+                "options": {
+                    "source": "organizations"
+                },
+                "required": false,
+                "defaultFirstOption": true,
+                "hiddenWhen": {
+                    "hideOrganizationField": true
+                },
+                "submitWhenHidden": true
+            },
+            {
+                "key": "verification_level_id",
+                "label": "نشان",
+                "type": "select",
+                "options": {
+                    "source": "levels"
+                },
+                "required": true
+            }
+        ]
+    },
+    "polls": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "question",
+                "label": "پرسش"
+            },
+            {
+                "key": "type",
+                "label": "نوع"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت نظرسنجی"
+            },
+            {
+                "key": "votes_count",
+                "label": "رأی"
+            },
+            {
+                "key": "expires_at",
+                "label": "انقضا"
+            },
+            {
+                "key": "user_name",
+                "label": "سازمان"
+            },
+            {
+                "key": "approved_at",
+                "label": "وضعیت تأیید",
+                "type": "approval",
+                "action": "status"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete",
+            "vote"
+        ],
+        "filters": [],
+        "organizationMode": "owner",
+        "organizationFilter": true,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "question",
+                "label": "پرسش",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "type",
+                "label": "نوع",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "single": "تک‌گزینه‌ای",
+                    "multiple": "چندگزینه‌ای"
+                },
+                "default": "single"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "active": "فعال",
+                    "deactive": "غیرفعال",
+                    "closed": "بسته"
+                },
+                "default": "active"
+            },
+            {
+                "key": "votes_count",
+                "label": "رأی"
+            },
+            {
+                "key": "expires_at",
+                "label": "تاریخ انقضا",
+                "type": "datetime",
+                "required": false
+            },
+            {
+                "key": "user_name",
+                "label": "سازمان"
+            },
+            {
+                "key": "approved_at",
+                "label": "وضعیت تأیید",
+                "type": "approval",
+                "action": "status"
+            },
+            {
+                "key": "owner_id",
+                "label": "سازمان",
+                "type": "select",
+                "options": {
+                    "source": "organizations"
+                },
+                "required": false,
+                "defaultFirstOption": true,
+                "hiddenWhen": {
+                    "hideOrganizationField": true
+                },
+                "submitWhenHidden": true
+            },
+            {
+                "key": "description",
+                "label": "توضیحات",
+                "type": "multiline",
+                "required": false
+            },
+            {
+                "key": "target_type",
+                "label": "نوع هدف",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "target_id",
+                "label": "شناسه هدف",
+                "type": "number",
+                "required": false
+            },
+            {
+                "key": "is_anonymous",
+                "label": "ناشناس",
+                "type": "bool",
+                "required": false
+            },
+            {
+                "key": "options",
+                "label": "گزینه‌ها",
+                "type": "strings",
+                "required": true
+            }
+        ]
+    },
+    "posts": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان"
+            },
+            {
+                "key": "author_name",
+                "label": "نویسنده"
+            },
+            {
+                "key": "categories",
+                "label": "دسته‌ها"
+            },
+            {
+                "key": "type",
+                "label": "نوع"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت"
+            },
+            {
+                "key": "views_count",
+                "label": "بازدید"
+            },
+            {
+                "key": "published_at",
+                "label": "تاریخ"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete",
+            "trash",
+            "restore"
+        ],
+        "detailFields": [
+            {
+                "key": "summary",
+                "label": "خلاصه"
+            },
+            {
+                "key": "description",
+                "label": "توضیحات"
+            },
+            {
+                "key": "content",
+                "label": "محتوا"
+            },
+            {
+                "key": "author_name",
+                "label": "نویسنده"
+            },
+            {
+                "key": "slug",
+                "label": "نامک"
+            },
+            {
+                "key": "categories",
+                "label": "دسته‌ها"
+            },
+            {
+                "key": "published_at",
+                "label": "تاریخ انتشار"
+            },
+            {
+                "key": "views_count",
+                "label": "بازدید"
+            },
+            {
+                "key": "comment_count",
+                "label": "دیدگاه‌ها"
+            }
+        ],
+        "filters": [
+            {
+                "key": "postTypeFilter",
+                "webId": "postTypeFilter",
+                "label": "همه انواع",
+                "type": "select",
+                "rowPath": "type",
+                "options": {
+                    "post": "نوشته",
+                    "product": "محصول",
+                    "music_theory": "تئوری موسیقی"
+                },
+                "optionSource": null,
+                "distinct": false,
+                "queryKey": "type"
+            },
+            {
+                "key": "postVisibilityFilter",
+                "webId": "postVisibilityFilter",
+                "label": "همه سطوح دسترسی",
+                "type": "select",
+                "rowPath": "visibility",
+                "options": {
+                    "public": "عمومی",
+                    "private": "خصوصی",
+                    "followers": "دنبال‌کنندگان",
+                    "premium": "ویژه"
+                },
+                "optionSource": null,
+                "distinct": false,
+                "queryKey": "visibility"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "type": "select",
+                "rowPath": "status",
+                "queryKey": "status",
+                "options": {
+                    "published": "منتشرشده",
+                    "draft": "پیش‌نویس",
+                    "pending": "در انتظار بررسی",
+                    "private": "خصوصی",
+                    "trash": "زباله‌دان",
+                    "future": "زمان‌بندی‌شده"
+                }
+            }
+        ],
+        "organizationMode": "branch",
+        "organizationFilter": false
+    },
+    "post-categories": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title_fa",
+                "label": "عنوان فارسی"
+            },
+            {
+                "key": "title_en",
+                "label": "عنوان انگلیسی"
+            },
+            {
+                "key": "slug",
+                "label": "نامک"
+            },
+            {
+                "key": "group",
+                "label": "گروه"
+            },
+            {
+                "key": "posts_count",
+                "label": "تعداد نوشته‌ها"
+            }
+        ],
+        "rowActions": [
+            "update",
+            "delete"
+        ],
+        "filters": [],
+        "organizationMode": "branch",
+        "organizationFilter": false,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title_fa",
+                "label": "عنوان فارسی",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "title_en",
+                "label": "عنوان انگلیسی",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "slug",
+                "label": "نامک",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "group",
+                "label": "گروه",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "posts_count",
+                "label": "تعداد نوشته‌ها"
+            }
+        ]
+    },
+    "comments": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "author",
+                "label": "نویسنده"
+            },
+            {
+                "key": "content",
+                "label": "دیدگاه"
+            },
+            {
+                "key": "postTitle",
+                "label": "نوشته"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت"
+            },
+            {
+                "key": "createdAt",
+                "label": "تاریخ"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete",
+            "reply"
+        ],
+        "filters": [
+            {
+                "key": "commentPostFilter",
+                "webId": "commentPostFilter",
+                "label": "همه نوشته‌ها",
+                "type": "select",
+                "rowPath": "postId",
+                "options": [],
+                "optionSource": {
+                    "source": "posts"
+                },
+                "distinct": true,
+                "queryKey": "post"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "type": "select",
+                "rowPath": "status",
+                "queryKey": "status",
+                "options": {
+                    "approved": "تأیید شده",
+                    "pending": "در انتظار",
+                    "rejected": "رد شده",
+                    "trash": "زباله‌دان"
+                }
+            }
+        ],
+        "organizationMode": "branch",
+        "organizationFilter": false,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "author",
+                "label": "نویسنده"
+            },
+            {
+                "key": "content",
+                "label": "متن دیدگاه",
+                "type": "multiline",
+                "required": false
+            },
+            {
+                "key": "postTitle",
+                "label": "نوشته"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "type": "select",
+                "options": {
+                    "pending": "در انتظار تأیید",
+                    "active": "فعال",
+                    "inactive": "غیرفعال"
+                },
+                "required": false
+            },
+            {
+                "key": "createdAt",
+                "label": "تاریخ"
+            }
+        ]
+    },
+    "media": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "فایل"
+            },
+            {
+                "key": "mime",
+                "label": "نوع"
+            },
+            {
+                "key": "size",
+                "label": "حجم"
+            },
+            {
+                "key": "createdAt",
+                "label": "تاریخ"
+            }
+        ],
+        "rowActions": [
+            "update"
+        ],
+        "filters": [
+            {
+                "key": "mediaType",
+                "webId": "mediaType",
+                "label": "همه رسانه‌ها",
+                "type": "select",
+                "rowPath": "type",
+                "options": {
+                    "image": "تصویر",
+                    "video": "ویدیو",
+                    "audio": "صوت",
+                    "document": "سند",
+                    "archive": "فایل فشرده"
+                },
+                "optionSource": null,
+                "distinct": false,
+                "queryKey": "type"
+            },
+            {
+                "key": "mediaMonth",
+                "webId": "mediaMonth",
+                "label": "همه تاریخ‌ها",
+                "type": "select",
+                "rowPath": "month",
+                "options": [],
+                "optionSource": null,
+                "distinct": true,
+                "queryKey": "month"
+            }
+        ],
+        "organizationMode": "branch",
+        "organizationFilter": false,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "mime",
+                "label": "نوع"
+            },
+            {
+                "key": "size",
+                "label": "حجم"
+            },
+            {
+                "key": "createdAt",
+                "label": "تاریخ"
+            },
+            {
+                "key": "file",
+                "label": "فایل",
+                "type": "file",
+                "required": false
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه",
+                "type": "multiline",
+                "required": false
+            },
+            {
+                "key": "description",
+                "label": "توضیحات",
+                "type": "multiline",
+                "required": false
+            }
+        ]
+    },
+    "national-holidays": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان"
+            },
+            {
+                "key": "date",
+                "label": "تاریخ"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "action": "status"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete"
+        ],
+        "filters": [],
+        "organizationMode": "branch",
+        "organizationFilter": false,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "date",
+                "label": "تاریخ",
+                "type": "date",
+                "required": false
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "action": "status"
+            },
+            {
+                "key": "is_closed",
+                "label": "تعطیل",
+                "type": "bool",
+                "required": false
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه",
+                "type": "multiline",
+                "required": false
+            },
+            {
+                "key": "description",
+                "label": "توضیحات",
+                "type": "multiline",
+                "required": false
+            }
+        ]
+    },
+    "roles": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان \/ نام"
+            },
+            {
+                "key": "scope",
+                "label": "دامنه"
+            },
+            {
+                "key": "level",
+                "label": "درجه"
+            },
+            {
+                "key": "parent",
+                "label": "والد"
+            },
+            {
+                "key": "permissionIds",
+                "label": "مجوزها"
+            },
+            {
+                "key": "panelVisible",
+                "label": "نمایش در پنل"
+            }
+        ],
+        "rowActions": [
+            "update",
+            "delete"
+        ],
+        "filters": [
+            {
+                "key": "accessRoleScope",
+                "webId": "accessRoleScope",
+                "label": "همه دامنه‌ها",
+                "type": "select",
+                "rowPath": "scope",
+                "options": {
+                    "platform": "پلتفرم",
+                    "website": "سایت",
+                    "academy": "آموزشگاه",
+                    "branch": "شعبه",
+                    "self": "شخصی"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "accessRoleLevel",
+                "webId": "accessRoleLevel",
+                "label": "همه سطوح",
+                "type": "select",
+                "rowPath": "level",
+                "options": {
+                    "1": "درجه ۱",
+                    "2": "درجه ۲",
+                    "3": "درجه ۳"
+                },
+                "optionSource": null,
+                "distinct": false
+            }
+        ],
+        "organizationMode": "branch",
+        "organizationFilter": false,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان \/ نام"
+            },
+            {
+                "key": "scope",
+                "label": "محدوده",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "platform": "سامانه",
+                    "website": "وب‌سایت",
+                    "academy": "آموزشگاه",
+                    "branch": "شعبه",
+                    "self": "خود کاربر"
+                },
+                "default": "website"
+            },
+            {
+                "key": "level",
+                "label": "سطح",
+                "type": "select",
+                "options": {
+                    "1": "۱",
+                    "2": "۲",
+                    "3": "۳"
+                },
+                "required": false,
+                "default": 1
+            },
+            {
+                "key": "parent",
+                "label": "والد"
+            },
+            {
+                "key": "permissionIds",
+                "label": "مجوزها",
+                "type": "multi",
+                "options": {
+                    "source": "permissions"
+                },
+                "required": false
+            },
+            {
+                "key": "panelVisible",
+                "label": "نمایش در پنل آموزشگاه و شعبه",
+                "type": "bool",
+                "required": false,
+                "en": "Visible in academy and branch panels"
+            },
+            {
+                "key": "name",
+                "label": "نام",
+                "type": "text",
+                "required": true
+            },
+            {
+                "key": "translations",
+                "label": "عنوان‌ها",
+                "type": "object",
+                "options": [
+                    {
+                        "key": "fa",
+                        "label": "فارسی",
+                        "type": "object",
+                        "options": [
+                            {
+                                "key": "title",
+                                "label": "عنوان",
+                                "type": "text",
+                                "required": false
+                            },
+                            {
+                                "key": "summary",
+                                "label": "خلاصه",
+                                "type": "multiline",
+                                "required": false
+                            },
+                            {
+                                "key": "description",
+                                "label": "توضیحات",
+                                "type": "multiline",
+                                "required": false
+                            }
+                        ],
+                        "required": false
+                    },
+                    {
+                        "key": "en",
+                        "label": "English",
+                        "type": "object",
+                        "options": [
+                            {
+                                "key": "title",
+                                "label": "Title",
+                                "type": "text",
+                                "required": false
+                            },
+                            {
+                                "key": "summary",
+                                "label": "Summary",
+                                "type": "multiline",
+                                "required": false
+                            },
+                            {
+                                "key": "description",
+                                "label": "Description",
+                                "type": "multiline",
+                                "required": false
+                            }
+                        ],
+                        "required": false
+                    }
+                ],
+                "required": false
+            },
+            {
+                "key": "type",
+                "label": "نوع",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "system": "سیستمی",
+                    "academy": "آموزشگاه",
+                    "other": "سایر"
+                },
+                "default": "system"
+            },
+            {
+                "key": "parentId",
+                "label": "نقش بالاتر",
+                "type": "select",
+                "options": {
+                    "source": "roles",
+                    "excludeSource": "_form.id"
+                },
+                "required": false
+            },
+            {
+                "key": "color",
+                "label": "رنگ",
+                "type": "color",
+                "required": false,
+                "default": "#4f46e5"
+            }
+        ]
+    },
+    "permissions": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان \/ نام"
+            },
+            {
+                "key": "resource",
+                "label": "منبع"
+            },
+            {
+                "key": "action",
+                "label": "عملیات"
+            },
+            {
+                "key": "scope",
+                "label": "دامنه"
+            },
+            {
+                "key": "risk",
+                "label": "خطر"
+            },
+            {
+                "key": "panelVisible",
+                "label": "نمایش در پنل"
+            }
+        ],
+        "rowActions": [
+            "update",
+            "delete"
+        ],
+        "filters": [
+            {
+                "key": "accessPermissionScope",
+                "webId": "accessPermissionScope",
+                "label": "همه دامنه‌ها",
+                "type": "select",
+                "rowPath": "scope",
+                "options": {
+                    "platform": "پلتفرم",
+                    "website": "سایت",
+                    "academy": "آموزشگاه",
+                    "branch": "شعبه",
+                    "self": "شخصی"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "accessPermissionRisk",
+                "webId": "accessPermissionRisk",
+                "label": "همه سطوح خطر",
+                "type": "select",
+                "rowPath": "risk",
+                "options": {
+                    "1": "1",
+                    "2": "2",
+                    "3": "3",
+                    "4": "4",
+                    "5": "5"
+                },
+                "optionSource": null,
+                "distinct": false
+            }
+        ],
+        "organizationMode": "branch",
+        "organizationFilter": false,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان \/ نام"
+            },
+            {
+                "key": "resource",
+                "label": "بخش",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "action",
+                "label": "عملیات",
+                "type": "text",
+                "required": false
+            },
+            {
+                "key": "scope",
+                "label": "محدوده",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "platform": "سامانه",
+                    "website": "وب‌سایت",
+                    "academy": "آموزشگاه",
+                    "branch": "شعبه",
+                    "self": "خود کاربر"
+                },
+                "default": "website"
+            },
+            {
+                "key": "risk",
+                "label": "درجه حساسیت",
+                "type": "select",
+                "options": {
+                    "1": "۱",
+                    "2": "۲",
+                    "3": "۳",
+                    "4": "۴",
+                    "5": "۵"
+                },
+                "required": false,
+                "default": 1
+            },
+            {
+                "key": "panelVisible",
+                "label": "نمایش در پنل آموزشگاه و شعبه",
+                "type": "bool",
+                "required": false,
+                "en": "Visible in academy and branch panels"
+            },
+            {
+                "key": "translations",
+                "label": "عنوان‌ها",
+                "type": "object",
+                "options": [
+                    {
+                        "key": "fa",
+                        "label": "فارسی",
+                        "type": "object",
+                        "options": [
+                            {
+                                "key": "title",
+                                "label": "عنوان",
+                                "type": "text",
+                                "required": false
+                            },
+                            {
+                                "key": "summary",
+                                "label": "خلاصه",
+                                "type": "multiline",
+                                "required": false
+                            },
+                            {
+                                "key": "description",
+                                "label": "توضیحات",
+                                "type": "multiline",
+                                "required": false
+                            }
+                        ],
+                        "required": false
+                    },
+                    {
+                        "key": "en",
+                        "label": "English",
+                        "type": "object",
+                        "options": [
+                            {
+                                "key": "title",
+                                "label": "Title",
+                                "type": "text",
+                                "required": false
+                            },
+                            {
+                                "key": "summary",
+                                "label": "Summary",
+                                "type": "multiline",
+                                "required": false
+                            },
+                            {
+                                "key": "description",
+                                "label": "Description",
+                                "type": "multiline",
+                                "required": false
+                            }
+                        ],
+                        "required": false
+                    }
+                ],
+                "required": false
+            },
+            {
+                "key": "type",
+                "label": "نوع",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "menu": "منو",
+                    "sidebar": "منوی کناری",
+                    "topbar": "نوار بالا",
+                    "header": "سربرگ"
+                },
+                "default": "sidebar"
+            },
+            {
+                "key": "approval",
+                "label": "نیاز به تأیید",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "confirm": "تأییدشده",
+                    "pending": "در انتظار"
+                },
+                "default": "confirm"
+            }
+        ]
+    },
+    "guides": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان"
+            },
+            {
+                "key": "content",
+                "label": "متن راهنما"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update"
+        ],
+        "filters": [],
+        "organizationMode": "branch",
+        "organizationFilter": false,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان"
+            },
+            {
+                "key": "content",
+                "label": "متن راهنما"
+            }
+        ]
+    },
+    "pages": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان"
+            },
+            {
+                "key": "texts",
+                "label": "متن‌های ویرایش‌شده"
+            },
+            {
+                "key": "images",
+                "label": "تصاویر"
+            },
+            {
+                "key": "icons",
+                "label": "آیکن‌ها"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت"
+            }
+        ],
+        "rowActions": [
+            "details"
+        ],
+        "filters": [],
+        "organizationMode": "branch",
+        "organizationFilter": false,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "عنوان"
+            },
+            {
+                "key": "texts",
+                "label": "متن‌های ویرایش‌شده"
+            },
+            {
+                "key": "images",
+                "label": "تصاویر"
+            },
+            {
+                "key": "icons",
+                "label": "آیکن‌ها"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت"
+            }
+        ]
+    },
+    "availabilities": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "branchName",
+                "label": "سازمان"
+            },
+            {
+                "key": "day",
+                "label": "روز"
+            },
+            {
+                "key": "timeLabel",
+                "label": "ساعت"
+            },
+            {
+                "key": "repeatPeriod",
+                "label": "دوره تکرار"
+            },
+            {
+                "key": "timezone",
+                "label": "منطقه زمانی"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "action": "status"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete"
+        ],
+        "filters": [
+            {
+                "key": "filterBranchDay",
+                "webId": "filterBranchDay",
+                "label": "همه روزها",
+                "type": "select",
+                "rowPath": "day",
+                "options": {
+                    "شنبه": "شنبه",
+                    "یکشنبه": "یکشنبه",
+                    "دوشنبه": "دوشنبه",
+                    "سه‌شنبه": "سه‌شنبه",
+                    "چهارشنبه": "چهارشنبه",
+                    "پنجشنبه": "پنجشنبه",
+                    "جمعه": "جمعه"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterBranchRepeat",
+                "webId": "filterBranchRepeat",
+                "label": "همه دوره‌های تکرار",
+                "type": "select",
+                "rowPath": "repeatPeriod",
+                "options": {
+                    "هفتگی": "هفتگی",
+                    "دو هفته": "دو هفته",
+                    "سه هفته": "سه هفته",
+                    "چهار هفته": "چهار هفته",
+                    "ماهانه": "ماهانه",
+                    "سالانه": "سالانه",
+                    "بی‌تکرار": "بی‌تکرار"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterBranchTimezone",
+                "webId": "filterBranchTimezone",
+                "label": "همه مناطق زمانی",
+                "type": "select",
+                "rowPath": "timezone",
+                "options": {
+                    "Asia\/Tehran": "تهران",
+                    "Asia\/Dubai": "دبی",
+                    "Asia\/Istanbul": "استانبول",
+                    "Europe\/London": "لندن",
+                    "Europe\/Paris": "پاریس",
+                    "Europe\/Berlin": "برلین",
+                    "Europe\/Rome": "رم",
+                    "Europe\/Amsterdam": "آمستردام",
+                    "America\/New_York": "نیویورک",
+                    "America\/Chicago": "شیکاگو",
+                    "America\/Los_Angeles": "لس‌آنجلس",
+                    "America\/Toronto": "تورنتو",
+                    "UTC": "UTC"
+                },
+                "optionSource": null,
+                "distinct": false
+            },
+            {
+                "key": "filterBranchStatus",
+                "webId": "filterBranchStatus",
+                "label": "همه وضعیت‌ها",
+                "type": "select",
+                "rowPath": "status",
+                "options": {
+                    "فعال": "فعال",
+                    "غیرفعال": "غیرفعال",
+                    "در انتظار تأیید": "در انتظار تأیید"
+                },
+                "optionSource": null,
+                "distinct": false
+            }
+        ],
+        "organizationMode": "branch",
+        "organizationFilter": true,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "branchName",
+                "label": "سازمان"
+            },
+            {
+                "key": "day",
+                "label": "روز هفته",
+                "type": "select",
+                "options": {
+                    "شنبه": "شنبه",
+                    "یکشنبه": "یکشنبه",
+                    "دوشنبه": "دوشنبه",
+                    "سه‌شنبه": "سه‌شنبه",
+                    "چهارشنبه": "چهارشنبه",
+                    "پنجشنبه": "پنجشنبه",
+                    "جمعه": "جمعه"
+                },
+                "required": false,
+                "default": "شنبه",
+                "hiddenWhen": {
+                    "_form.repeatPeriod": {
+                        "in": [
+                            "ماهانه",
+                            "سالانه",
+                            "بی‌تکرار"
+                        ]
+                    }
+                }
+            },
+            {
+                "key": "timeLabel",
+                "label": "ساعت"
+            },
+            {
+                "key": "repeatPeriod",
+                "label": "تکرار",
+                "type": "select",
+                "options": {
+                    "هفتگی": "هفتگی",
+                    "دو هفته": "دو هفته",
+                    "سه هفته": "سه هفته",
+                    "چهار هفته": "چهار هفته",
+                    "ماهانه": "ماهانه",
+                    "سالانه": "سالانه",
+                    "بی‌تکرار": "بی‌تکرار"
+                },
+                "required": false,
+                "default": "هفتگی"
+            },
+            {
+                "key": "timezone",
+                "label": "منطقه زمانی",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "Asia\/Tehran": "Asia\/Tehran",
+                    "Asia\/Dubai": "Asia\/Dubai",
+                    "Asia\/Istanbul": "Asia\/Istanbul",
+                    "Europe\/London": "Europe\/London",
+                    "Europe\/Paris": "Europe\/Paris",
+                    "Europe\/Berlin": "Europe\/Berlin",
+                    "Europe\/Rome": "Europe\/Rome",
+                    "Europe\/Amsterdam": "Europe\/Amsterdam",
+                    "America\/New_York": "America\/New_York",
+                    "America\/Chicago": "America\/Chicago",
+                    "America\/Los_Angeles": "America\/Los_Angeles",
+                    "America\/Toronto": "America\/Toronto",
+                    "UTC": "UTC"
+                },
+                "default": "Asia\/Tehran"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "action": "status"
+            },
+            {
+                "key": "organizationUserId",
+                "label": "آموزشگاه یا شعبه",
+                "type": "select",
+                "options": {
+                    "source": "organizations",
+                    "id": "user_id"
+                },
+                "required": false
+            },
+            {
+                "key": "repeatDate",
+                "label": "تاریخ شروع",
+                "type": "date",
+                "required": false,
+                "visibleWhen": {
+                    "_form.repeatPeriod": {
+                        "not": "هفتگی"
+                    }
+                }
+            },
+            {
+                "key": "ranges",
+                "label": "بازه‌های زمانی",
+                "type": "rows",
+                "options": [
+                    {
+                        "key": "start",
+                        "label": "شروع",
+                        "type": "time",
+                        "required": false
+                    },
+                    {
+                        "key": "end",
+                        "label": "پایان",
+                        "type": "time",
+                        "required": false
+                    },
+                    {
+                        "key": "status",
+                        "label": "وضعیت",
+                        "type": "select",
+                        "options": {
+                            "فعال": "فعال",
+                            "غیرفعال": "غیرفعال"
+                        },
+                        "required": false
+                    }
+                ],
+                "required": false
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه",
+                "type": "multiline",
+                "required": false
+            },
+            {
+                "key": "description",
+                "label": "توضیحات",
+                "type": "multiline",
+                "required": false
+            }
+        ]
+    },
+    "my-points": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "_index",
+                "label": "ردیف"
+            },
+            {
+                "key": "type",
+                "label": "نوع"
+            },
+            {
+                "key": "points",
+                "label": "امتیاز"
+            },
+            {
+                "key": "action",
+                "label": "عملیات"
+            },
+            {
+                "key": "rule_id",
+                "label": "قانون امتیاز"
+            },
+            {
+                "key": "updated_at",
+                "label": "تاریخ ویرایش"
+            }
+        ],
+        "rowActions": [],
+        "showActions": false,
+        "summaries": [
+            {
+                "label": "امتیاز عمومی من",
+                "path": "balance.general"
+            },
+            {
+                "label": "امتیاز حرفه‌ای من",
+                "path": "balance.professional"
+            }
+        ],
+        "filters": [
+            {
+                "key": "type",
+                "label": "نوع امتیاز",
+                "type": "select",
+                "rowPath": "type",
+                "distinct": true,
+                "options": []
+            },
+            {
+                "key": "action",
+                "label": "عملیات",
+                "type": "select",
+                "rowPath": "action",
+                "distinct": true,
+                "options": []
+            }
+        ],
+        "organizationMode": "branch",
+        "organizationFilter": false,
+        "views": {
+            "rules": {
+                "version": 2,
+                "columns": [
+                    {
+                        "key": "id",
+                        "label": "شناسه"
+                    },
+                    {
+                        "key": "title",
+                        "label": "عنوان"
+                    },
+                    {
+                        "key": "type",
+                        "label": "نوع"
+                    },
+                    {
+                        "key": "category",
+                        "label": "دسته"
+                    },
+                    {
+                        "key": "points",
+                        "label": "امتیاز"
+                    },
+                    {
+                        "key": "source",
+                        "label": "منبع \/ عملیات",
+                        "dataPermission": "canManage"
+                    },
+                    {
+                        "key": "branchName",
+                        "label": "سازمان",
+                        "dataPermission": "canManage"
+                    },
+                    {
+                        "key": "repeatMode",
+                        "label": "کنترل تکرار"
+                    },
+                    {
+                        "key": "status",
+                        "label": "وضعیت",
+                        "dataPermission": "canManage",
+                        "action": "status"
+                    }
+                ],
+                "rowActions": [],
+                "actionsPermission": "canManage",
+                "summaries": [
+                    {
+                        "label": "قوانین فعال",
+                        "countRows": "rules",
+                        "where": {
+                            "status": "active"
+                        },
+                        "description": "اعمال خودکار با سقف و کنترل تکرار"
+                    }
+                ],
+                "filters": [
+                    {
+                        "key": "filterPointType",
+                        "webId": "filterPointType",
+                        "label": "همه انواع",
+                        "type": "select",
+                        "rowPath": "type",
+                        "options": {
+                            "general": "عمومی",
+                            "professional": "حرفه‌ای"
+                        },
+                        "optionSource": null,
+                        "distinct": false
+                    },
+                    {
+                        "key": "filterPointCategory",
+                        "webId": "filterPointCategory",
+                        "label": "همه دسته‌ها",
+                        "type": "select",
+                        "rowPath": "category",
+                        "options": {
+                            "attendance": "حضور",
+                            "academic": "آموزشی",
+                            "event": "رویداد",
+                            "social": "اجتماعی",
+                            "financial": "مالی",
+                            "profile": "پروفایل",
+                            "achievement": "دستاورد",
+                            "engagement": "تعامل",
+                            "management": "مدیریت"
+                        },
+                        "optionSource": null,
+                        "distinct": false
+                    },
+                    {
+                        "key": "filterPointStatus",
+                        "webId": "filterPointStatus",
+                        "label": "همه وضعیت‌ها",
+                        "type": "select",
+                        "rowPath": "status",
+                        "options": {
+                            "فعال": "فعال",
+                            "غیرفعال": "غیرفعال"
+                        },
+                        "optionSource": null,
+                        "distinct": false
+                    }
+                ],
+                "organizationMode": "points",
+                "organizationFilter": true,
+                "showActions": false
+            }
+        },
+        "detailFields": [
+            {
+                "key": "_index",
+                "label": "ردیف"
+            },
+            {
+                "key": "type",
+                "label": "نوع"
+            },
+            {
+                "key": "points",
+                "label": "امتیاز"
+            },
+            {
+                "key": "action",
+                "label": "عملیات"
+            },
+            {
+                "key": "rule_id",
+                "label": "قانون امتیاز"
+            },
+            {
+                "key": "updated_at",
+                "label": "تاریخ ویرایش"
+            }
+        ]
+    },
+    "my-lessons": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "درس"
+            },
+            {
+                "key": "level",
+                "label": "سطح"
+            },
+            {
+                "key": "is_primary",
+                "label": "اصلی"
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت"
+            },
+            {
+                "key": "start_date",
+                "label": "زمان شروع"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete"
+        ],
+        "filters": [],
+        "organizationMode": "branch",
+        "organizationFilter": false,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "title",
+                "label": "درس"
+            },
+            {
+                "key": "level",
+                "label": "سطح"
+            },
+            {
+                "key": "is_primary",
+                "label": "درس اصلی",
+                "type": "bool",
+                "required": false
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه",
+                "type": "multiline",
+                "required": false
+            },
+            {
+                "key": "status",
+                "label": "وضعیت"
+            },
+            {
+                "key": "start_date",
+                "label": "تاریخ شروع",
+                "type": "date",
+                "required": true
+            },
+            {
+                "key": "lesson_id",
+                "label": "درس",
+                "type": "select",
+                "options": {
+                    "source": "lessons",
+                    "id": "lesson_id"
+                },
+                "required": true
+            },
+            {
+                "key": "level_id",
+                "label": "سطح",
+                "type": "select",
+                "options": {
+                    "source": "levels",
+                    "id": "level_id"
+                },
+                "required": false
+            },
+            {
+                "key": "description",
+                "label": "توضیحات",
+                "type": "multiline",
+                "required": false
+            }
+        ]
+    },
+    "my-schedule": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "day",
+                "label": "روز یا تاریخ"
+            },
+            {
+                "key": "start",
+                "label": "شروع"
+            },
+            {
+                "key": "end",
+                "label": "پایان"
+            },
+            {
+                "key": "repeatPeriod",
+                "label": "تکرار"
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update",
+            "delete"
+        ],
+        "filters": [],
+        "organizationMode": "branch",
+        "organizationFilter": false,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "day",
+                "label": "روز",
+                "type": "text",
+                "required": false,
+                "default": "شنبه",
+                "hiddenWhen": {
+                    "_form.repeatPeriod": {
+                        "in": [
+                            "ماهانه",
+                            "سالانه",
+                            "بی‌تکرار"
+                        ]
+                    }
+                }
+            },
+            {
+                "key": "start",
+                "label": "شروع"
+            },
+            {
+                "key": "end",
+                "label": "پایان"
+            },
+            {
+                "key": "repeatPeriod",
+                "label": "تکرار",
+                "type": "select",
+                "options": {
+                    "هفتگی": "هفتگی",
+                    "دو هفته": "دو هفته",
+                    "سه هفته": "سه هفته",
+                    "چهار هفته": "چهار هفته",
+                    "ماهانه": "ماهانه",
+                    "سالانه": "سالانه",
+                    "بی‌تکرار": "بی‌تکرار"
+                },
+                "required": false,
+                "default": "هفتگی"
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه",
+                "type": "multiline",
+                "required": false
+            },
+            {
+                "key": "status",
+                "label": "وضعیت"
+            },
+            {
+                "key": "repeatDate",
+                "label": "تاریخ شروع",
+                "type": "date",
+                "required": false,
+                "visibleWhen": {
+                    "_form.repeatPeriod": {
+                        "not": "هفتگی"
+                    }
+                }
+            },
+            {
+                "key": "timezone",
+                "label": "منطقه زمانی",
+                "type": "select",
+                "required": false,
+                "options": {
+                    "source": "timezones",
+                    "id": "timezone",
+                    "label": "timezone"
+                },
+                "default": "Asia\/Tehran"
+            },
+            {
+                "key": "ranges",
+                "label": "بازه‌ها",
+                "type": "rows",
+                "options": [
+                    {
+                        "key": "start",
+                        "label": "شروع",
+                        "type": "time",
+                        "required": false
+                    },
+                    {
+                        "key": "end",
+                        "label": "پایان",
+                        "type": "time",
+                        "required": false
+                    },
+                    {
+                        "key": "status",
+                        "label": "وضعیت",
+                        "type": "text",
+                        "required": false
+                    }
+                ],
+                "required": false
+            },
+            {
+                "key": "description",
+                "label": "توضیحات",
+                "type": "multiline",
+                "required": false
+            }
+        ]
+    },
+    "my-finance": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "term",
+                "label": "ترم"
+            },
+            {
+                "key": "amount",
+                "label": "مبلغ قابل پرداخت"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت"
+            },
+            {
+                "key": "dueDate",
+                "label": "سررسید"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update"
+        ],
+        "filters": [],
+        "organizationMode": "branch",
+        "organizationFilter": false,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "term",
+                "label": "ترم"
+            },
+            {
+                "key": "amount",
+                "label": "مبلغ قابل پرداخت"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت"
+            },
+            {
+                "key": "dueDate",
+                "label": "سررسید"
+            }
+        ]
+    },
+    "waiting-approvals": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "studentName",
+                "label": "هنرجو"
+            },
+            {
+                "key": "termName",
+                "label": "ترم"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "chat",
+            "approve"
+        ],
+        "filters": [],
+        "organizationMode": "branch",
+        "organizationFilter": false,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "studentName",
+                "label": "هنرجو"
+            },
+            {
+                "key": "termName",
+                "label": "ترم"
+            }
+        ]
+    },
+    "waiting-schedules": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "studentName",
+                "label": "هنرجو"
+            },
+            {
+                "key": "termName",
+                "label": "ترم"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "chat",
+            "finalize"
+        ],
+        "filters": [],
+        "organizationMode": "branch",
+        "organizationFilter": false,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "studentName",
+                "label": "هنرجو"
+            },
+            {
+                "key": "termName",
+                "label": "ترم"
+            }
+        ]
+    },
+    "my-waiting": {
+        "version": 2,
+        "columns": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "studentName",
+                "label": "هنرجو"
+            },
+            {
+                "key": "termName",
+                "label": "ترم"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت"
+            }
+        ],
+        "rowActions": [
+            "details",
+            "update"
+        ],
+        "filters": [],
+        "organizationMode": "branch",
+        "organizationFilter": false,
+        "detailFields": [
+            {
+                "key": "id",
+                "label": "شناسه"
+            },
+            {
+                "key": "studentName",
+                "label": "هنرجو"
+            },
+            {
+                "key": "termName",
+                "label": "ترم"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت"
+            }
+        ]
+    }
+}

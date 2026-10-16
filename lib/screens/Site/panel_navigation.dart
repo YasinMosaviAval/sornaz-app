@@ -1,16 +1,149 @@
 import '../Social/social_api.dart';
 
+class PanelNavigationUnavailable implements Exception {}
+
+/// Internal website page groups, restricted to the server-authorized catalog.
+Json panelSectionWithTabs(Json section, List<Json> sections) {
+  final catalog = {
+    for (final item in sections)
+      if (item['hidden'] != true) '${item['key']}': item,
+  };
+  final key = '${section['key']}';
+  Json readOnlyView(String viewKey, String rows, String fa, String en) => {
+    ...section,
+    'key': viewKey,
+    'resourceKey': key,
+    'rows': rows,
+    'label': fa,
+    'en': en,
+    'actions': {'list': optionalObject(section['actions'])['list'] ?? {}},
+    'filters': <Json>[],
+    'optionActions': <String>[],
+    'presentation': optionalObject(
+      optionalObject(section['presentation'])['views'],
+    )[rows],
+  };
+  if (key == 'my-lessons') {
+    return {
+      ...section,
+      'pageTabs': [
+        readOnlyView(
+          'my-lesson-levels',
+          'levels',
+          'سطح درس‌ها',
+          'Lesson levels',
+        ),
+        {...section, 'label': 'درس‌ها', 'en': 'Lessons'},
+      ],
+    };
+  }
+  if (key == 'my-points' && !catalog.containsKey('points')) {
+    return {
+      ...section,
+      'pageTabs': [
+        section,
+        readOnlyView(
+          'my-point-rules',
+          'rules',
+          'قوانین امتیازها',
+          'Point rules',
+        ),
+      ],
+    };
+  }
+  final personalLearning = !catalog.containsKey('members');
+  final groups = [
+    ['course-levels', 'lessons', 'courses'],
+    ['members', 'users'],
+    ['classroom-types', 'classrooms'],
+    if (personalLearning) ['dashboard', 'my-terms', 'my-classrooms'],
+    ['my-points', 'points'],
+  ];
+  final group = groups.where((keys) => keys.contains(key)).firstOrNull;
+  if (group == null) return section;
+  const labels = {
+    'course-levels': ('سطح درس‌ها', 'Lesson levels'),
+    'lessons': ('درس‌ها', 'Lessons'),
+    'courses': ('دوره‌ها', 'Courses'),
+    'members': ('قراردادها', 'Contracts'),
+    'users': ('نقش‌ها و دسترسی‌ها', 'Roles and permissions'),
+    'classroom-types': ('انواع کلاس', 'Classroom types'),
+    'classrooms': ('کلاس‌ها', 'Classrooms'),
+    'dashboard': ('داشبورد من', 'My dashboard'),
+    'my-terms': ('ترم‌های من', 'My terms'),
+    'my-classrooms': ('کلاس‌های من', 'My classes'),
+    'my-points': ('امتیازهای من', 'My points'),
+    'points': ('قوانین امتیازها', 'Point rules'),
+  };
+  return {
+    ...section,
+    'pageTabs': [
+      for (final target in group)
+        if (catalog.containsKey(target))
+          {
+            ...(target == key ? section : catalog[target]!),
+            if (target == 'dashboard' && personalLearning)
+              'relatedSections': [
+                for (final link in [
+                  'my-classrooms',
+                  'my-courses',
+                  'my-terms',
+                  'my-waiting',
+                ])
+                  if (catalog.containsKey(link)) {...catalog[link]!},
+              ],
+            'label': labels[target]!.$1,
+            'en': labels[target]!.$2,
+          },
+    ],
+  };
+}
+
+/// Hydrate only the website's authorized menu; the operation catalog is not a menu.
+List<Json> websitePanelNavigation(Json response) {
+  if (response['navigationVersion'] != 1 || response['navigation'] is! List) {
+    throw PanelNavigationUnavailable();
+  }
+  final catalog = {
+    for (final section in objects(response['sections']))
+      '${section['key']}': section,
+  };
+  List<Json> resolve(List<Json> nodes) => [
+    for (final node in nodes)
+      if (node['section'] != 'my-settings' && node['destination'] != 'settings')
+        if (node['children'] is List)
+          {...node, 'children': resolve(objects(node['children']))}
+        else if (['notation', 'website-example'].contains(node['destination']))
+          {...node}
+        else if (catalog.containsKey(node['section']))
+          {
+            ...panelSectionWithTabs(
+              catalog[node['section']]!,
+              catalog.values.toList(),
+            ),
+            if (node['links'] is List)
+              'relatedSections': [
+                for (final key in node['links'])
+                  if (catalog.containsKey(key)) {...catalog[key]!},
+              ],
+            'navigationKey': node['key'],
+            for (final key in ['label', 'en', 'where', 'initialParams'])
+              if (node.containsKey(key)) key: node[key],
+          }
+        else
+          throw PanelNavigationUnavailable(),
+  ];
+  return resolve(objects(response['navigation']));
+}
+
 /// Groups only sections authorized by the server; navigation never fetches data.
 List<Json> panelNavigation(List<Json> sections) {
   final remaining = {
     for (final s in sections)
       if (![
         'account',
+        'my-settings',
         'chat',
-        'settings',
-        'site-settings',
-        'pages',
-        'guides',
         'messages',
         'notifications',
         'points',
@@ -99,6 +232,12 @@ List<Json> panelNavigation(List<Json> sections) {
     'availability-exceptions',
     'schedules',
   ]);
+  final siteManagement = group(
+    'site-management-menu',
+    'مدیریت سایت',
+    'Site management',
+    ['pages', 'settings', 'site-settings', 'inline-translations', 'guides'],
+  );
   // Match the website sidebar while retaining only server-authorized entries.
   List<Json> take(List<String> keys) => [
     for (final key in keys)
@@ -114,7 +253,15 @@ List<Json> panelNavigation(List<Json> sections) {
       'chart-gallery',
       'reports',
     ]),
-    ...take(['dashboard', 'my-classrooms', 'my-courses', 'my-terms']),
+    ...take([
+      'dashboard',
+      'waiting-approvals',
+      'waiting-schedules',
+      'my-waiting',
+      'my-classrooms',
+      'my-courses',
+      'my-terms',
+    ]),
     ?achievements,
     ...take(['tracking', 'national-holidays']),
     ?branches,
@@ -127,6 +274,7 @@ List<Json> panelNavigation(List<Json> sections) {
     ...take(['courses', 'terms', 'students']),
     ?schedules,
     ...take(['finance']),
+    ?siteManagement,
     // Keep app-only and future authorized sections available at the end.
     ...remaining.values,
   ];

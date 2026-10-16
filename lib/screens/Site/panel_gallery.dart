@@ -18,9 +18,11 @@ class PanelGallery extends StatelessWidget {
     required this.data,
     required this.canEdit,
     this.canDelete = false,
+    this.sectionKey = 'gallery',
     required this.onChanged,
   });
   final PanelApi api;
+  final String sectionKey;
   final List<Json> rows, fields;
   final Json data;
   final bool canEdit, canDelete;
@@ -29,6 +31,7 @@ class PanelGallery extends StatelessWidget {
   Widget build(BuildContext context) {
     if (rows.length == 1)
       return GalleryRecord(
+        sectionKey: sectionKey,
         key: ValueKey(rows.single['id']),
         api: api,
         row: rows.single,
@@ -54,6 +57,7 @@ class PanelGallery extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder: (_) => GalleryRecord(
+              sectionKey: sectionKey,
               api: api,
               row: rows[index],
               fields: fields,
@@ -98,8 +102,10 @@ class GalleryRecord extends StatefulWidget {
     this.canDelete = false,
     required this.onChanged,
     this.standalone = false,
+    this.sectionKey = 'gallery',
   });
   final PanelApi api;
+  final String sectionKey;
   final Json row, data;
   final List<Json> fields;
   final bool canEdit, canDelete, standalone;
@@ -119,7 +125,7 @@ class _GalleryRecordState extends State<GalleryRecord> {
 
   Future<void> save(PanelFormResult result) async {
     final saved = await widget.api.act(
-      'gallery',
+      widget.sectionKey,
       'update',
       params: {'id': '${row['id']}'},
       values: result.values,
@@ -139,7 +145,11 @@ class _GalleryRecordState extends State<GalleryRecord> {
       return;
     setState(() => busy = true);
     try {
-      await widget.api.act('gallery', 'delete', params: {'id': '${row['id']}'});
+      await widget.api.act(
+        widget.sectionKey,
+        'delete',
+        params: {'id': '${row['id']}'},
+      );
       widget.onChanged();
       if (mounted && widget.standalone) Navigator.pop(context);
     } catch (e) {

@@ -44,6 +44,15 @@ void main() {
           });
         }
         return reply({
+          'navigationVersion': 1,
+          'navigation': [
+            {
+              'key': 'posts',
+              'section': 'posts',
+              'label': 'posts',
+              'en': 'posts',
+            },
+          ],
           'sections': [
             for (final key in ['notifications', 'messages', 'points', 'posts'])
               {
@@ -71,16 +80,13 @@ void main() {
     expect(find.byIcon(Icons.notifications_none), findsOneWidget);
     expect(find.byIcon(Icons.mail_outline), findsOneWidget);
     expect(find.byType(SvgPicture), findsOneWidget);
-    final searchX = tester.getCenter(find.byIcon(Icons.search)).dx;
+    expect(find.byIcon(Icons.search), findsNothing);
     final notificationsX = tester
         .getCenter(find.byIcon(Icons.notifications_none))
         .dx;
     final messagesX = tester.getCenter(find.byIcon(Icons.mail_outline)).dx;
     final pointsX = tester.getCenter(find.byType(SvgPicture)).dx;
-    expect(
-      searchX > pointsX && pointsX > messagesX && messagesX > notificationsX,
-      isTrue,
-    );
+    expect(pointsX > messagesX && messagesX > notificationsX, isTrue);
     expect(find.byType(AppLogo), findsNothing);
     expect(find.text('3'), findsOneWidget);
     expect(find.text('2'), findsOneWidget);

@@ -27,6 +27,7 @@ class PanelApi {
     'Authorization': 'Bearer $token',
     'Accept': 'application/json',
     'Accept-Language': SocialApi.locale,
+    'X-Sornaz-Panel-Forms': '2',
   };
   // Session-only cache: no background revalidation or automatic retry.
   final Map<String, (DateTime, String)> _cache = {};
@@ -269,8 +270,15 @@ class PanelApi {
 dynamic panelValue(dynamic value, String path) {
   if (path.isEmpty) return value;
   for (final part in path.split('.')) {
-    if (value is! Map) return null;
-    value = value[part];
+    if (value is List) {
+      final index = int.tryParse(part);
+      if (index == null || index < 0 || index >= value.length) return null;
+      value = value[index];
+    } else if (value is Map) {
+      value = value[part];
+    } else {
+      return null;
+    }
   }
   return value;
 }
