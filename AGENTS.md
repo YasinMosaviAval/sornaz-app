@@ -12,3 +12,17 @@
 - Apply the standard horizontal content inset to the first and last icons of every top bar. Back icons and page titles must share the same size, font style, and theme-derived color throughout the app.
 - For expandable folder and playlist rows, show the expanded row's icon in the theme primary color. If its collapsed icon is outlined, use the filled counterpart while expanded.
 - Display image and video grids with 1dp of spacing between items and a 1dp inset from every screen edge. This grid rule overrides the standard content inset.
+
+# Development Worktree
+
+- This worktree is the `main` development environment. Implement new features here first. Do not modify the `release/google-play-v1` worktree unless the user explicitly requests release work.
+- Preserve the in-development OMR and experimental performance-analysis features and all uncommitted work. Inspect the relevant architecture and dependencies before editing; avoid unrelated changes and keep feature changes independently transferable to the release branch.
+- If a feature shares dependencies with something excluded from the release, identify that dependency in the final report.
+- Do not change the application ID, signing configuration, or backend configuration without a task-specific need and the user's approval.
+- Run tests appropriate to the change. Do not create a commit or push without the user's explicit approval.
+- Report in Persian: changed files, implemented changes, tests and results, remaining issues, and whether the changes are ready for selective transfer to the release worktree.
+
+# Shared Git Worktree Safety
+
+- The development and release worktrees share one Git repository. Transfer changes selectively; never overwrite the other branch's `AGENTS.md` when cherry-picking or merging.
+- Avoid large, unrelated commits. If an `AGENTS.md` conflict occurs during a transfer, report the conflict before resolving it.
