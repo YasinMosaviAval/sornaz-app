@@ -12,7 +12,15 @@ enum IntervalInstrument {
   const IntervalInstrument(this.assetFolder);
   final String assetFolder;
   String get translationKey => 'interval.instrument.$name';
-  String asset(int midi) => 'audio/$assetFolder/$midi.mp3';
+  String asset(num midi) {
+    final quarter = (midi * 2).round();
+    if ((midi * 2) != quarter || midi < 21 || midi > 108) {
+      throw ArgumentError.value(midi, 'midi');
+    }
+    return quarter.isEven
+        ? 'audio/$assetFolder/${quarter ~/ 2}.mp3'
+        : 'audio/${assetFolder}_quarter/$quarter.mp3';
+  }
 }
 
 class IntervalAudioSettings extends ChangeNotifier {
@@ -28,6 +36,13 @@ class IntervalAudioSettings extends ChangeNotifier {
   late final Future<void> ready;
   int _noteDurationMs = defaultDurationMs;
   IntervalInstrument _instrument = IntervalInstrument.piano;
+  int _startingMidi = 60;
+  int get startingMidi => _startingMidi;
+  static final List<int> startingNotes = List.unmodifiable(
+    List.generate(25, (i) => 48 + i),
+  );
+  static String noteName(int midi) =>
+      '${const ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'][midi % 12]}${midi ~/ 12 - 1}';
   int get noteDurationMs => _noteDurationMs;
   IntervalInstrument get instrument => _instrument;
   Duration get noteDuration => Duration(milliseconds: _noteDurationMs);
@@ -49,6 +64,8 @@ class IntervalAudioSettings extends ChangeNotifier {
         try {
           final data = jsonDecode(raw) as Map<String, dynamic>;
           final duration = data['durationMs'];
+          final root = data['startingMidi'];
+          if (root is int && root >= 48 && root <= 72) _startingMidi = root;
           if (duration is int &&
               duration >= minimumDurationMs &&
               duration <= maximumDurationMs &&
@@ -96,10 +113,19 @@ class IntervalAudioSettings extends ChangeNotifier {
     if (!_disposed) await _save();
   }
 
+  Future<void> setStartingMidi(int midi) async {
+    if (!startingNotes.contains(midi)) throw ArgumentError.value(midi, 'midi');
+    await ready;
+    if (_disposed || _startingMidi == midi) return;
+    _startingMidi = midi;
+    await _save();
+  }
+
   Future<void> _save() {
     final encoded = jsonEncode({
       'durationMs': _noteDurationMs,
       'instrument': _instrument.name,
+      'startingMidi': _startingMidi,
     });
     errorKey = null;
     _emit();

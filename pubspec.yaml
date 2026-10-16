@@ -94,6 +94,11 @@ flutter:
     - assets/audio/interval_violin/
     - assets/audio/interval_viola/
     - assets/audio/interval_cello/
+    - assets/audio/interval_piano_quarter/
+    - assets/audio/interval_guitar_quarter/
+    - assets/audio/interval_violin_quarter/
+    - assets/audio/interval_viola_quarter/
+    - assets/audio/interval_cello_quarter/
     - assets/audio/INTERVAL_INSTRUMENTS_NOTICE.md
   fonts:
     - family: iran_sansx_fa

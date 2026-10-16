@@ -86,7 +86,7 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   test(
-    'all 20 levels allow arbitrarily long independent runs of each interval',
+    'all 44 levels allow arbitrarily long independent runs of each interval',
     () {
       for (final level in IntervalLevel.all) {
         for (var index = 0; index < level.intervals.length; index++) {
@@ -463,7 +463,7 @@ void main() {
     },
   );
 
-  for (final level in [1, 5, 17]) {
+  for (final level in [1, 9, 17, 25, 33, 41]) {
     testWidgets(
       'level $level uses 24dp insets, fixed Check and centered 100dp Play',
       (tester) async {
@@ -488,8 +488,14 @@ void main() {
           findsNWidgets(
             level == 1
                 ? 2
-                : level == 5
+                : level == 9
                 ? 4
+                : level == 17
+                ? 6
+                : level == 25
+                ? 8
+                : level == 33
+                ? 10
                 : 12,
           ),
         );
@@ -505,7 +511,7 @@ void main() {
         final check = find.widgetWithText(FilledButton, 'Check');
         final before = tester.getCenter(check);
         expect(before.dy, greaterThan(600));
-        if (level == 17) {
+        if (level >= 17) {
           await tester.drag(
             find.byType(SingleChildScrollView),
             const Offset(0, -1000),
@@ -538,9 +544,9 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      Color? background(MusicalInterval interval) => tester
+      Color? background(TrainingInterval interval) => tester
           .widget<OutlinedButton>(
-            find.byKey(ValueKey('interval.option.${interval.name}')),
+            find.byKey(ValueKey('interval.option.${interval.id}')),
           )
           .style!
           .backgroundColor

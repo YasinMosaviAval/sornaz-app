@@ -84,37 +84,60 @@ Future<void> answer(IntervalTrainingController c, {bool right = true}) async {
 }
 
 void main() {
-  test('all 20 level configurations and 12 semitone categories are exact', () {
+  test('all 44 level configurations and 12 semitone categories are exact', () {
     final groups = [
       [MusicalInterval.perfectFifth, MusicalInterval.perfectOctave],
+      [MusicalInterval.minorThird, MusicalInterval.majorThird],
       [
         MusicalInterval.minorThird,
         MusicalInterval.majorThird,
         MusicalInterval.perfectFifth,
         MusicalInterval.perfectOctave,
       ],
+      [MusicalInterval.majorSecond, MusicalInterval.perfectFourth],
       [
         MusicalInterval.majorSecond,
+        MusicalInterval.minorThird,
+        MusicalInterval.majorThird,
         MusicalInterval.perfectFourth,
+        MusicalInterval.perfectFifth,
+        MusicalInterval.perfectOctave,
+      ],
+      [MusicalInterval.majorSixth, MusicalInterval.majorSeventh],
+      [
+        MusicalInterval.majorSecond,
+        MusicalInterval.minorThird,
+        MusicalInterval.majorThird,
+        MusicalInterval.perfectFourth,
+        MusicalInterval.perfectFifth,
         MusicalInterval.majorSixth,
         MusicalInterval.majorSeventh,
+        MusicalInterval.perfectOctave,
       ],
+      [MusicalInterval.minorSecond, MusicalInterval.minorSeventh],
       [
         MusicalInterval.minorSecond,
-        MusicalInterval.tritone,
-        MusicalInterval.augmentedFifth,
+        MusicalInterval.majorSecond,
+        MusicalInterval.minorThird,
+        MusicalInterval.majorThird,
+        MusicalInterval.perfectFourth,
+        MusicalInterval.perfectFifth,
+        MusicalInterval.majorSixth,
         MusicalInterval.minorSeventh,
+        MusicalInterval.majorSeventh,
+        MusicalInterval.perfectOctave,
       ],
+      [MusicalInterval.tritone, MusicalInterval.augmentedFifth],
       MusicalInterval.values,
     ];
-    expect(IntervalLevel.all, hasLength(20));
+    expect(IntervalLevel.all, hasLength(44));
     expect(IntervalLevel.middleC, 60);
     expect(IntervalLevel.requiredWins, 10);
     expect(
       MusicalInterval.values.map((v) => v.semitones),
       List.generate(12, (i) => i + 1),
     );
-    for (var i = 0; i < 20; i++) {
+    for (var i = 0; i < 44; i++) {
       final level = IntervalLevel.all[i];
       expect(level.number, i + 1);
       expect(level.intervals, groups[i ~/ 4]);
@@ -133,7 +156,7 @@ void main() {
       final ids = <int>{};
       for (final level in IntervalLevel.all) {
         final roots = <int>{};
-        final seen = <MusicalInterval>{};
+        final seen = <TrainingInterval>{};
         for (var i = 0; i < 1000; i++) {
           final q = generator.generate(level);
           expect(ids.add(q.id), isTrue);
@@ -252,23 +275,23 @@ void main() {
   });
 
   test(
-    'level 4 advances into four options and level 20 finishes without level 21',
+    'level 8 advances into four options and level 44 finishes without level 45',
     () async {
-      final c = training(level: 4);
+      final c = training(level: 8);
       for (var i = 0; i < 10; i++) {
         await answer(c);
       }
-      expect(c.level.number, 5);
+      expect(c.level.number, 9);
       expect(c.level.intervals, hasLength(4));
       expect(c.question.rootMidi, 60);
       c.dispose();
-      final last = training(level: 20);
+      final last = training(level: 44);
       for (var i = 0; i < 10; i++) {
         await answer(last);
       }
       expect(last.finished, isTrue);
-      expect(last.level.number, 20);
-      expect(last.progress.completed, hasLength(20));
+      expect(last.level.number, 44);
+      expect(last.progress.completed, hasLength(44));
       last.dispose();
     },
   );
@@ -308,7 +331,7 @@ void main() {
     expect(restored.completed, {1, 2, 3});
     expect(restored.highestUnlocked, 4);
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(IntervalProgressRepository.key, 'broken');
+    await prefs.setString(repository.scopedKey, 'broken');
     expect((await repository.load()).completed, isEmpty);
   });
 
@@ -393,7 +416,7 @@ void main() {
       expect(levels.skip(1).every((v) => v.onTap == null), isTrue);
       await tester.drag(find.byType(ListView), const Offset(0, -5000));
       await tester.pumpAndSettle();
-      expect(find.text('Level 20'), findsOneWidget);
+      expect(find.text('Level 44'), findsOneWidget);
     },
   );
 
@@ -463,7 +486,7 @@ void main() {
     (tester) async {
       final locale = LocaleProvider();
       final store = MemoryStore();
-      final c = training(level: 17, store: store);
+      final c = training(level: 41, store: store);
       c.select(c.question.interval);
       await c.check();
       await tester.pump(const Duration(milliseconds: 1));
@@ -487,7 +510,7 @@ void main() {
                   brightness: dark ? Brightness.dark : Brightness.light,
                 ),
                 home: IntervalTrainingScreen(
-                  levelNumber: 17,
+                  levelNumber: 41,
                   store: store,
                   progress: c.progress,
                   controller: c,
@@ -498,7 +521,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('تشخیص فاصله - سطح ۱۷'), findsOneWidget);
+      expect(find.text('تشخیص فاصله - سطح ۴۱'), findsOneWidget);
       expect(
         Directionality.of(tester.element(find.text('بردهای پیاپی: ۱ از ۱۰'))),
         TextDirection.rtl,
@@ -506,7 +529,7 @@ void main() {
       locale.setLocale('en');
       themeMode.value = true;
       await tester.pumpAndSettle();
-      expect(find.text('Interval Recognition - Level 17'), findsOneWidget);
+      expect(find.text('Interval Recognition - Level 41'), findsOneWidget);
       expect(
         Directionality.of(
           tester.element(find.text('Consecutive Wins: 1 / 10')),
@@ -516,7 +539,7 @@ void main() {
       expect(c.question, same(q));
       expect(c.wins, 1);
       expect(c.selected, q.interval);
-      expect(c.progress.completed, hasLength(16));
+      expect(c.progress.completed, hasLength(40));
       expect(find.byType(OutlinedButton), findsNWidgets(12));
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());

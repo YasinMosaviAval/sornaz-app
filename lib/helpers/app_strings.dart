@@ -5,6 +5,51 @@ import 'package:sornaz/helpers/app_images.dart';
 class AppStrings {
   // Shared labels for learning, profiles and drawer pages.
   static const learningEn = <String, String>{
+    'interval.iranian.raisedUnison':
+        'Raised Perfect Unison / Lowered Minor Second',
+    'interval.iranian.minorSecond': 'Minor Second',
+    'interval.iranian.loweredMajorSecond': 'Lowered Major Second',
+    'interval.iranian.majorSecond': 'Major Second',
+    'interval.iranian.raisedMajorSecond':
+        'Raised Major Second / Lowered Minor Third',
+    'interval.iranian.minorThird': 'Minor Third',
+    'interval.iranian.neutralThird': 'Neutral Third',
+    'interval.iranian.majorThird': 'Major Third',
+    'interval.iranian.raisedMajorThird':
+        'Raised Major Third / Lowered Perfect Fourth',
+    'interval.iranian.perfectFourth': 'Perfect Fourth',
+    'interval.iranian.raisedPerfectFourth':
+        'Raised Perfect Fourth / Lowered Diminished Fifth',
+    'interval.iranian.tritone': 'Augmented Fourth / Diminished Fifth',
+    'interval.iranian.raisedAugmentedFourth':
+        'Raised Augmented Fourth / Lowered Perfect Fifth',
+    'interval.iranian.perfectFifth': 'Perfect Fifth',
+    'interval.iranian.raisedPerfectFifth':
+        'Raised Perfect Fifth / Lowered Minor Sixth',
+    'interval.iranian.minorSixth': 'Minor Sixth',
+    'interval.iranian.neutralSixth': 'Neutral Sixth',
+    'interval.iranian.majorSixth': 'Major Sixth',
+    'interval.iranian.raisedMajorSixth':
+        'Raised Major Sixth / Lowered Minor Seventh',
+    'interval.iranian.minorSeventh': 'Minor Seventh',
+    'interval.iranian.neutralSeventh': 'Neutral Seventh',
+    'interval.iranian.majorSeventh': 'Major Seventh',
+    'interval.iranian.raisedMajorSeventh':
+        'Raised Major Seventh / Lowered Perfect Octave',
+    'interval.iranian.perfectOctave': 'Perfect Octave',
+    'interval.startingNote': 'Starting Note',
+    'interval.startingNoteHint':
+        'Applies to new questions with a fixed starting note.',
+    'interval.iranianFinished':
+        'Congratulations! You have successfully completed all 180 levels of Iranian Music Interval Recognition.',
+    'interval.iranianMusic': 'Iranian Music',
+    'interval.westernMusic': 'Western Music',
+    'interval.iranianTitle': 'Iranian Music - Interval Recognition',
+    'interval.westernTitle': 'Western Music - Interval Recognition',
+    'interval.iranianComingSoon':
+        'Iranian music interval recognition exercises are coming soon.',
+    'interval.accountChanged':
+        'Your account has changed. Please select the level again.',
     'interval.settingsTitle': 'Interval Recognition Settings',
     'interval.duration': 'Note Duration',
     'interval.durationValue': '{value} ms',
@@ -41,7 +86,7 @@ class AppStrings {
     'interval.levelComplete':
         'Level {level} completed. Moving to the next level…',
     'interval.finished':
-        'Congratulations! You have successfully completed all 20 levels of Interval Recognition.',
+        'Congratulations! You have successfully completed all 44 levels of Western Music Interval Recognition.',
     'interval.back': 'Back to Levels',
     'interval.audioError': 'Audio playback failed. Please try again.',
     'interval.saveError': 'Progress could not be saved. Please try again.',
@@ -623,6 +668,43 @@ class AppStrings {
     'مدرسان و نویسندگان': 'Instructors & authors',
   };
   static const learningFa = <String, String>{
+    'interval.iranian.raisedUnison': 'یکم بیش درست / دوم کم کوچک',
+    'interval.iranian.minorSecond': 'دوم کوچک',
+    'interval.iranian.loweredMajorSecond': 'دوم کم بزرگ',
+    'interval.iranian.majorSecond': 'دوم بزرگ',
+    'interval.iranian.raisedMajorSecond': 'دوم بیش بزرگ / سوم کم کوچک',
+    'interval.iranian.minorThird': 'سوم کوچک',
+    'interval.iranian.neutralThird': 'سوم نیم بزرگ',
+    'interval.iranian.majorThird': 'سوم بزرگ',
+    'interval.iranian.raisedMajorThird': 'سوم بیش بزرگ / چهارم کم درست',
+    'interval.iranian.perfectFourth': 'چهارم درست',
+    'interval.iranian.raisedPerfectFourth': 'چهارم بیش درست / پنجم کم کاسته',
+    'interval.iranian.tritone': 'چهارم افزوده / پنجم کاسته',
+    'interval.iranian.raisedAugmentedFourth': 'چهارم بیش افزوده / پنجم کم درست',
+    'interval.iranian.perfectFifth': 'پنجم درست',
+    'interval.iranian.raisedPerfectFifth': 'پنجم بیش درست / ششم کم کوچک',
+    'interval.iranian.minorSixth': 'ششم کوچک',
+    'interval.iranian.neutralSixth': 'ششم نیم بزرگ',
+    'interval.iranian.majorSixth': 'ششم بزرگ',
+    'interval.iranian.raisedMajorSixth': 'ششم بیش بزرگ / هفتم کم کوچک',
+    'interval.iranian.minorSeventh': 'هفتم کوچک',
+    'interval.iranian.neutralSeventh': 'هفتم نیم بزرگ',
+    'interval.iranian.majorSeventh': 'هفتم بزرگ',
+    'interval.iranian.raisedMajorSeventh': 'هفتم بیش بزرگ / هشتم کم درست',
+    'interval.iranian.perfectOctave': 'هشتم درست',
+    'interval.startingNote': 'نت مبدا',
+    'interval.startingNoteHint':
+        'برای سؤال‌های جدید با نت مبدا ثابت اعمال می‌شود.',
+    'interval.iranianFinished':
+        'تبریک! شما تمام ۱۸۰ سطح تشخیص فواصل موسیقی ایرانی را با موفقیت به پایان رساندید.',
+    'interval.iranianMusic': 'موسیقی ایرانی',
+    'interval.westernMusic': 'موسیقی جهانی',
+    'interval.iranianTitle': 'تشخیص فاصله - موسیقی ایرانی',
+    'interval.westernTitle': 'تشخیص فاصله - موسیقی جهانی',
+    'interval.iranianComingSoon':
+        'آزمون‌های تشخیص فواصل موسیقی ایرانی به‌زودی اضافه می‌شوند.',
+    'interval.accountChanged':
+        'حساب کاربری تغییر کرده است. برای ادامه، دوباره سطح را انتخاب کنید.',
     'interval.settingsTitle': 'تنظیمات تشخیص فاصله',
     'interval.duration': 'مدت زمان پخش هر نت',
     'interval.durationValue': '{value} میلی‌ثانیه',
@@ -658,7 +740,7 @@ class AppStrings {
     'interval.answer': 'پاسخ صحیح: {answer}',
     'interval.levelComplete': 'سطح {level} تکمیل شد؛ ورود به سطح بعدی…',
     'interval.finished':
-        'تبریک! شما تمام ۲۰ سطح تمرین تشخیص فاصله را با موفقیت به پایان رساندید.',
+        'تبریک! شما تمام ۴۴ سطح تشخیص فواصل موسیقی جهانی را با موفقیت به پایان رساندید.',
     'interval.back': 'بازگشت به سطوح',
     'interval.audioError': 'پخش صدا انجام نشد. دوباره تلاش کنید.',
     'interval.saveError': 'ذخیره پیشرفت انجام نشد. دوباره تلاش کنید.',

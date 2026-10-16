@@ -10,6 +10,37 @@ class IntervalSettingsScreen extends StatelessWidget {
   const IntervalSettingsScreen({super.key, required this.settings});
   final IntervalAudioSettings settings;
 
+  Future<void> _chooseStartingNote(BuildContext context) async {
+    final midi = await showDialog<int>(
+      context: context,
+      builder: (dialog) {
+        final t = IntervalText(dialog);
+        return Directionality(
+          textDirection: t.direction,
+          child: SimpleDialog(
+            shape: RoundedRectangleBorder(borderRadius: appRadius(dialog)),
+            title: Text(
+              t('interval.startingNote'),
+              style: Theme.of(dialog).textTheme.bodyMedium,
+            ),
+            children: [
+              for (final note in IntervalAudioSettings.startingNotes)
+                SimpleDialogOption(
+                  onPressed: () => Navigator.pop(dialog, note),
+                  child: Text(
+                    IntervalAudioSettings.noteName(note),
+                    textDirection: TextDirection.ltr,
+                    style: Theme.of(dialog).textTheme.bodyMedium,
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+    if (midi != null) await settings.setStartingMidi(midi);
+  }
+
   Future<void> _chooseInstrument(BuildContext context) async {
     final instrument = await showDialog<IntervalInstrument>(
       context: context,
@@ -85,6 +116,23 @@ class IntervalSettingsScreen extends StatelessWidget {
                           style: theme.textTheme.bodySmall,
                         ),
                         onTap: () => _chooseInstrument(context),
+                      ),
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          t('interval.startingNote'),
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                        subtitle: Text(
+                          t('interval.startingNoteHint'),
+                          style: theme.textTheme.bodySmall,
+                        ),
+                        trailing: Text(
+                          IntervalAudioSettings.noteName(settings.startingMidi),
+                          textDirection: TextDirection.ltr,
+                          style: theme.textTheme.bodySmall,
+                        ),
+                        onTap: () => _chooseStartingNote(context),
                       ),
                       if (settings.errorKey != null) ...[
                         Text(

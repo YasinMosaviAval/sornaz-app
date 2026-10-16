@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'audio.dart';
 import 'models.dart';
 import 'progress.dart';
+import 'access.dart';
+import 'settings.dart';
 
 class IntervalTrainingController extends ChangeNotifier {
   IntervalTrainingController({
@@ -12,19 +14,44 @@ class IntervalTrainingController extends ChangeNotifier {
     required this.progress,
     IntervalQuestionGenerator? generator,
     this.feedbackDuration = IntervalAudioTiming.feedback,
+    this.access = const IntervalAccess(),
+    this.music = IntervalMusic.western,
+    this.settings,
   }) : generator = generator ?? IntervalQuestionGenerator(),
-       level = IntervalLevel.all[levelNumber - 1] {
-    if (!progress.isUnlocked(levelNumber)) throw ArgumentError('Locked level');
-    question = this.generator.generate(level);
+       level = IntervalLevel.levelsFor(music)[levelNumber - 1] {
+    if (!access.canEnter(levelNumber, progress, music: music)) {
+      throw ArgumentError('Locked level');
+    }
+    question = this.generator.generate(
+      level,
+      startingMidi: settings?.startingMidi ?? 60,
+    );
+    initializing = settings != null && !settings!.loaded;
+    if (initializing) {
+      settings!.ready.then((_) {
+        if (_disposed || accessRevoked) return;
+        question = this.generator.generate(
+          level,
+          startingMidi: settings!.startingMidi,
+        );
+        initializing = false;
+        _emit();
+      });
+    }
   }
   final IntervalAudio audio;
+  final IntervalAccess access;
+  final IntervalMusic music;
+  final IntervalAudioSettings? settings;
+  bool initializing = false;
+  bool accessRevoked = false;
   final IntervalProgressStore store;
   final IntervalQuestionGenerator generator;
   final Duration feedbackDuration;
   IntervalProgress progress;
   IntervalLevel level;
   late IntervalQuestion question;
-  MusicalInterval? selected;
+  TrainingInterval? selected;
   int wins = 0;
   bool playing = false;
   bool checking = false;
@@ -41,8 +68,10 @@ class IntervalTrainingController extends ChangeNotifier {
     if (!_disposed) notifyListeners();
   }
 
-  void select(MusicalInterval interval) {
+  void select(TrainingInterval interval) {
     if (_disposed ||
+        accessRevoked ||
+        initializing ||
         checking ||
         finished ||
         !level.intervals.contains(interval)) {
@@ -53,7 +82,9 @@ class IntervalTrainingController extends ChangeNotifier {
   }
 
   Future<void> play() async {
-    if (_disposed || checking || finished) return;
+    if (_disposed || accessRevoked || initializing || checking || finished) {
+      return;
+    }
     final generation = ++_playGeneration;
     playing = true;
     errorKey = null;
@@ -88,14 +119,21 @@ class IntervalTrainingController extends ChangeNotifier {
   }
 
   Future<void> check() async {
-    if (_disposed || checking || finished || selected == null) return;
+    if (_disposed ||
+        accessRevoked ||
+        initializing ||
+        checking ||
+        finished ||
+        selected == null) {
+      return;
+    }
     checking = true;
     errorKey = null;
     correct = selected == question.interval;
     wins = correct! ? wins + 1 : 0;
     _emit();
     await stopPlayback();
-    if (_disposed) return;
+    if (_disposed || accessRevoked) return;
     if (wins == IntervalLevel.requiredWins) {
       transitioning = true;
       completedLevel = level.number;
@@ -110,7 +148,7 @@ class IntervalTrainingController extends ChangeNotifier {
     final updated = progress.complete(level.number);
     try {
       await store.save(updated);
-      if (_disposed) return;
+      if (_disposed || accessRevoked) return;
       progress = updated;
       errorKey = null;
       _scheduleNext();
@@ -124,7 +162,12 @@ class IntervalTrainingController extends ChangeNotifier {
   }
 
   Future<void> retrySave() async {
-    if (_disposed || errorKey != 'interval.saveError' || transitioning) return;
+    if (_disposed ||
+        accessRevoked ||
+        errorKey != 'interval.saveError' ||
+        transitioning) {
+      return;
+    }
     transitioning = true;
     _emit();
     await _saveCompletion();
@@ -133,16 +176,16 @@ class IntervalTrainingController extends ChangeNotifier {
   void _scheduleNext() {
     _timer?.cancel();
     _timer = Timer(feedbackDuration, () {
-      if (_disposed) return;
+      if (_disposed || accessRevoked) return;
       if (wins == IntervalLevel.requiredWins) {
-        if (level.number == 20) {
+        if (level.number == music.levelCount) {
           finished = true;
           checking = false;
           transitioning = false;
           _emit();
           return;
         }
-        level = IntervalLevel.all[level.number];
+        level = IntervalLevel.levelsFor(music)[level.number];
         wins = 0;
       }
       selected = null;
@@ -150,7 +193,10 @@ class IntervalTrainingController extends ChangeNotifier {
       checking = false;
       transitioning = false;
       completedLevel = null;
-      question = generator.generate(level);
+      question = generator.generate(
+        level,
+        startingMidi: settings?.startingMidi ?? 60,
+      );
       _emit();
     });
   }
@@ -162,5 +208,14 @@ class IntervalTrainingController extends ChangeNotifier {
     _timer?.cancel();
     unawaited(audio.dispose().catchError((Object _) {}));
     super.dispose();
+  }
+
+  void revokeAccess() {
+    if (_disposed || accessRevoked) return;
+    accessRevoked = true;
+    initializing = false;
+    _timer?.cancel();
+    unawaited(stopPlayback());
+    _emit();
   }
 }

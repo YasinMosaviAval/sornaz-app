@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:sornaz/screens/Players/ui/components/music_playback_entry.dart';
+import 'package:sornaz/screens/Players/services/player_settings.dart';
 import 'package:sornaz/components/app_bar.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
-import 'package:sornaz/screens/IntervalRecognition/levels_screen.dart';
+import 'package:sornaz/screens/IntervalRecognition/music_selection_screen.dart';
 import 'package:sornaz/screens/IntervalRecognition/text.dart';
 
 class SolfegePracticePage extends StatelessWidget {
   const SolfegePracticePage({super.key});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => MusicPlaybackEntry(
+    reason: PlaybackInterruption.solfege,
+    child: _content(context),
+  );
+  Widget _content(BuildContext context) => Scaffold(
     appBar: SornazAppBar(
       title: socialText(context, 'تمرین سولفژ', 'Solfege practice'),
     ),
@@ -25,7 +31,8 @@ class SolfegePracticePage extends StatelessWidget {
         ])
           ListTile(
             onTap: section.$2 == 'Interval recognition'
-                ? () => socialPush(context, const IntervalLevelsScreen())
+                ? () =>
+                      socialPush(context, const IntervalMusicSelectionScreen())
                 : null,
             title: Text(
               section.$2 == 'Interval recognition'
