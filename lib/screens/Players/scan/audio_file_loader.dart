@@ -15,15 +15,23 @@ class AudioFileLoader {
   }) async {
     final receivePort = ReceivePort();
 
-    // await Isolate.spawn(_scanIsolate as void Function(List<Object> message), [receivePort.sendPort, roots]);
     try {
-      await Isolate.spawn(_scanIsolate, [receivePort.sendPort, roots]);
+      await Isolate.spawn(
+        _scanIsolate,
+        [receivePort.sendPort, roots],
+        onError: receivePort.sendPort,
+        onExit: receivePort.sendPort,
+      );
       await for (final message in receivePort) {
         if (message is ScanStatus) {
           onProgress(message);
         } else if (message is List<AudioFile>) {
           await onDone(message);
           break;
+        } else if (message is List && message.isNotEmpty) {
+          throw StateError('Audio scan isolate failed: ${message.first}');
+        } else if (message == null) {
+          throw StateError('Audio scan isolate exited without a result.');
         }
       }
     } finally {

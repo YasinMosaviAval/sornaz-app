@@ -1,4 +1,6 @@
 import 'post_comments.dart';
+import 'package:sornaz/screens/Players/ui/components/music_playback_entry.dart';
+import 'package:sornaz/screens/Players/services/player_settings.dart';
 import 'create_content_button.dart';
 import 'story_seen.dart';
 import 'dart:async';
@@ -30,6 +32,13 @@ class UserPanelPage extends StatelessWidget {
   Widget build(BuildContext context) {
     if (initialTab != 2 && MainTabsScope.maybeOf(context) == null)
       return MainTabs(initialIndex: 2, initialChild: this);
+    return MusicPlaybackEntry(
+      reason: PlaybackInterruption.stageAndProfile,
+      active: MainTabsScope.maybeOf(context)?.index == 2 || initialTab == 2,
+      child: _content(context),
+    );
+  }
+  Widget _content(BuildContext context) {
     final auth = context.watch<AuthSession>();
     if (!auth.isAuthenticated)
       return SocialScaffold(

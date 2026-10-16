@@ -1,11 +1,11 @@
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
+import 'player_sort_tile.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/expanding_search_bar.dart';
-import 'package:sornaz/helpers/app_appearance.dart';
 
 import '../../providers/audio_player_provider.dart';
 import '../../library/audio_library_manager.dart';
@@ -215,6 +215,31 @@ class PlayerSettingsPage extends StatelessWidget {
                 'قطع پخش هنگام ورود به تیونر',
                 'Stop when entering the tuner',
               ),
+              PlaybackInterruption.notation: socialText(
+                c,
+                'قطع پخش هنگام ورود به نت‌نویسی',
+                'Stop when entering notation',
+              ),
+              PlaybackInterruption.video: socialText(
+                c,
+                'قطع پخش هنگام ورود به پخش ویدیو',
+                'Stop when entering video playback',
+              ),
+              PlaybackInterruption.solfege: socialText(
+                c,
+                'قطع پخش هنگام ورود به تمرین سولفژ',
+                'Stop when entering solfege practice',
+              ),
+              PlaybackInterruption.performanceAnalysis: socialText(
+                c,
+                'قطع پخش هنگام ورود به آزمایش تحلیل اجرا',
+                'Stop when entering performance analysis',
+              ),
+              PlaybackInterruption.stageAndProfile: socialText(
+                c,
+                'قطع پخش هنگام ورود به بخش‌های صحنه و پروفایل',
+                'Stop when entering Stage and Profile',
+              ),
             }.entries)
               Container(
                 decoration: BoxDecoration(
@@ -240,83 +265,7 @@ class PlayerSettingsPage extends StatelessWidget {
                   onChanged: (v) => settings.setStop(entry.key, v),
                 ),
               ),
-            ListTile(
-              title: Text(
-                socialText(c, 'مرتب‌سازی', 'Sort'),
-                style: Theme.of(c).textTheme.bodyMedium,
-              ),
-              trailing: Text(switch (settings.musicSort) {
-                'name' => socialText(c, 'حروف الفبا', 'Alphabetical'),
-                'duration' => socialText(c, 'مدت زمان', 'Duration'),
-                'count' => socialText(
-                  c,
-                  'تعداد آهنگ‌های پوشه',
-                  'Audio count in folders',
-                ),
-                _ => socialText(
-                  c,
-                  'تاریخ و زمان اضافه شدن',
-                  'Date and time added',
-                ),
-              }, style: Theme.of(c).textTheme.bodySmall),
-              onTap: () async {
-                final value = await showDialog<String>(
-                  context: c,
-                  builder: (dialog) => SimpleDialog(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: appRadius(dialog),
-                    ),
-                    title: Text(
-                      socialText(dialog, 'مرتب‌سازی', 'Sort'),
-                      style: Theme.of(dialog).textTheme.bodyMedium,
-                    ),
-                    children: [
-                      for (final entry in [
-                        (
-                          'added',
-                          'تاریخ و زمان اضافه شدن',
-                          'Date and time added',
-                        ),
-                        ('name', 'حروف الفبا', 'Alphabetical'),
-                        ('duration', 'مدت زمان', 'Duration'),
-                        (
-                          'count',
-                          'تعداد آهنگ‌های پوشه',
-                          'Audio count in folders',
-                        ),
-                      ])
-                        SimpleDialogOption(
-                          onPressed: () => Navigator.pop(dialog, entry.$1),
-                          child: Text(
-                            socialText(dialog, entry.$2, entry.$3),
-                            style: Theme.of(dialog).textTheme.bodyMedium,
-                          ),
-                        ),
-                    ],
-                  ),
-                );
-                if (value != null) {
-                  await settings.setOption('musicSort', value);
-                  await settings.setOption(
-                    'musicSortAscending',
-                    value == 'name' || value == 'duration',
-                  );
-                }
-              },
-            ),
-            SwitchListTile(
-              title: Text(
-                socialText(c, 'ترتیب صعودی', 'Ascending order'),
-                style: Theme.of(c).textTheme.bodyMedium,
-              ),
-              subtitle: Text(
-                socialText(c, 'خاموش: نزولی', 'Off: descending'),
-                style: Theme.of(c).textTheme.bodySmall,
-              ),
-              value: settings.musicSortAscending,
-              onChanged: (value) =>
-                  settings.setOption('musicSortAscending', value),
-            ),
+            PlayerSortTile(settings: settings),
             InkWell(
               onTap: () async {
                 final action = await showDialog<ListEndAction>(

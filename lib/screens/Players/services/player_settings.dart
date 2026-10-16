@@ -4,14 +4,25 @@ import 'last_playback_position.dart';
 
 enum ListEndAction { restart, nextList, stop }
 
-enum PlaybackInterruption { leavePlayer, exitApp, recording, metronome, tuner }
+enum PlaybackInterruption {
+  leavePlayer,
+  exitApp,
+  recording,
+  metronome,
+  tuner,
+  notation,
+  video,
+  solfege,
+  performanceAnalysis,
+  stageAndProfile,
+}
 
 class PlayerSettings extends ChangeNotifier {
   static final instance = PlayerSettings();
   final Map<PlaybackInterruption, bool> _stop = {};
   ListEndAction listEnd = ListEndAction.stop;
   Future<void>? _loading;
-  bool savePlaybackPosition = false;
+  bool savePlaybackPosition = true;
   String musicSort = 'added';
   String videoSort = 'added';
   bool musicSortAscending = false;
@@ -74,8 +85,7 @@ class PlayerSettings extends ChangeNotifier {
   Future<void> load() => _loading ??= _load();
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    savePlaybackPosition =
-        prefs.getBool('player.savePlaybackPosition') ?? false;
+    savePlaybackPosition = prefs.getBool('player.savePlaybackPosition') ?? true;
     musicSort = prefs.getString('player.musicSort') ?? 'added';
     videoSort = prefs.getString('player.videoSort') ?? 'added';
     musicSortAscending =

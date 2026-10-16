@@ -175,9 +175,41 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byType(SwitchListTile), findsNWidgets(6));
     expect(find.text('Save/Restore Playback Position'), findsOneWidget);
     expect(find.text('Stop when entering the voice recorder'), findsOneWidget);
+    for (final label in [
+      'Stop when entering notation',
+      'Stop when entering video playback',
+      'Stop when entering solfege practice',
+      'Stop when entering performance analysis',
+      'Stop when entering Stage and Profile',
+    ]) {
+      await tester.scrollUntilVisible(
+        find.text(label),
+        150,
+        scrollable: find.byType(Scrollable).first,
+      );
+      final tile = tester.widget<SwitchListTile>(
+        find.ancestor(
+          of: find.text(label),
+          matching: find.byType(SwitchListTile),
+        ),
+      );
+      expect(tile.value, isTrue);
+    }
+    await tester.scrollUntilVisible(
+      find.text('Sort'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Sort'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SimpleDialogOption), findsNWidgets(8));
+    expect(find.text('File count in folders - Descending'), findsOneWidget);
+    await tester.tap(find.text('File count in folders - Descending'));
+    await tester.pumpAndSettle();
+    expect(settings.musicSort, 'count');
+    expect(settings.musicSortAscending, isFalse);
     await tester.scrollUntilVisible(
       find.text('Sleep Timer'),
       200,

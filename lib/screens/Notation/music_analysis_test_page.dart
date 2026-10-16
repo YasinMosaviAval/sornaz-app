@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:sornaz/screens/Players/ui/components/music_playback_entry.dart';
+import 'package:sornaz/screens/Players/services/player_settings.dart';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -240,7 +242,11 @@ class _MusicAnalysisTestPageState extends State<MusicAnalysisTestPage> {
       value == null ? '—' : value.toStringAsFixed(digits);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => MusicPlaybackEntry(
+    reason: PlaybackInterruption.performanceAnalysis,
+    child: _content(context),
+  );
+  Widget _content(BuildContext context) {
     final theme = Theme.of(context);
     final report = _result?.report;
     return SocialScaffold(

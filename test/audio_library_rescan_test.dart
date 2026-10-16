@@ -26,6 +26,24 @@ class _MemoryAudioCache implements AudioCacheService {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('empty library scan finishes instead of leaving progress active', () async {
+    final root = await Directory.systemTemp.createTemp('sornaz-empty-audio-');
+    final library = AudioLibraryManager(
+      cache: _MemoryAudioCache(),
+      hydrateMetadata: false,
+    );
+    addTearDown(() async {
+      library.dispose();
+      await root.delete(recursive: true);
+    });
+
+    await library.setRoots([root]);
+    await library.rescan().timeout(const Duration(seconds: 10));
+    expect(library.isScanning, isFalse);
+    expect(library.progress, 1.0);
+    expect(library.allFiles, isEmpty);
+  });
+
   test('rescan finds audio added after the initial cached scan', () async {
     final root = await Directory.systemTemp.createTemp('sornaz-audio-rescan-');
     final cache = _MemoryAudioCache();
@@ -39,6 +57,8 @@ void main() {
     await library.setRoots([root]);
     await library.loadOrScan();
     expect(library.allFiles.map((file) => file.fileName), ['first.mp3']);
+    expect(library.isScanning, isFalse);
+    expect(library.progress, 1.0);
 
     await File('${root.path}/second.flac').writeAsBytes([0]);
     await library.loadOrScan();
@@ -47,5 +67,7 @@ void main() {
       'second.flac',
     });
     expect(cache.files.length, 2);
+    expect(library.isScanning, isFalse);
+    expect(library.progress, 1.0);
   });
 }

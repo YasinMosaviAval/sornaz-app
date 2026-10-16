@@ -1,4 +1,6 @@
 import 'package:sornaz/helpers/app_appearance.dart';
+import 'package:sornaz/components/page_source_info.dart';
+import '../components/music_playback_entry.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
@@ -788,7 +790,11 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => MusicPlaybackEntry(
+    reason: PlaybackInterruption.video,
+    child: _content(context),
+  );
+  Widget _content(BuildContext context) {
     final visible = sortedVideos(
       videos,
     ).where((v) => v.name.toLowerCase().contains(query)).toList();
@@ -1392,7 +1398,11 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
     ),
   );
   @override
-  Widget build(BuildContext context) => PopScope(
+  Widget build(BuildContext context) => MusicPlaybackEntry(
+    reason: PlaybackInterruption.video,
+    child: _content(context),
+  );
+  Widget _content(BuildContext context) => PopScope(
     onPopInvokedWithResult: (_, __) {
       SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     },
@@ -1516,11 +1526,12 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
                                 ),
                                 child: SizedBox(
                                   height: 52,
-                                  child: Row(
+                                  child: PageSourceControlRow(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       const BackButton(color: Colors.white),
+                                      const PageSourceInfoButton(color: Colors.white),
                                       tool(
                                         Icons.screenshot_outlined,
                                         socialText(

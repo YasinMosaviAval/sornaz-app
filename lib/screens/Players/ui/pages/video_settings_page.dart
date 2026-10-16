@@ -1,3 +1,4 @@
+import '../components/player_sort_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:sornaz/components/app_bar.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
@@ -56,12 +57,6 @@ class _VideoSettingsPageState extends State<VideoSettingsPage> {
           onTap: action,
         );
 
-    String sortLabel(String value) => switch (value) {
-      'name' => t('حروف الفبا', 'Alphabetical'),
-      'duration' => t('مدت زمان', 'Duration'),
-      'count' => t('تعداد ویدیوهای پوشه', 'Video count in folders'),
-      _ => t('تاریخ و زمان اضافه شدن', 'Date and time added'),
-    };
     String viewLabel(int value) => switch (value) {
       3 => t('نمایش گرید سه تایی', 'Three-column grid'),
       4 => t('نمایش گرید چهار تایی', 'Four-column grid'),
@@ -111,38 +106,7 @@ class _VideoSettingsPageState extends State<VideoSettingsPage> {
                   settings.setOption('videoSavePlaybackPosition', value),
             ),
 
-            choiceRow(
-              t('مرتب‌سازی', 'Sort'),
-              sortLabel(settings.videoSort),
-              () async {
-                final value = await choose<String>(t('مرتب‌سازی', 'Sort'), [
-                  ('added', t('تاریخ و زمان اضافه شدن', 'Date and time added')),
-                  ('name', t('حروف الفبا', 'Alphabetical')),
-                  ('duration', t('مدت زمان', 'Duration')),
-                  ('count', t('تعداد ویدیوهای پوشه', 'Video count in folders')),
-                ]);
-                if (value != null) {
-                  await settings.setOption('videoSort', value);
-                  await settings.setOption(
-                    'videoSortAscending',
-                    value == 'name' || value == 'duration',
-                  );
-                }
-              },
-            ),
-            SwitchListTile(
-              title: Text(
-                t('ترتیب صعودی', 'Ascending order'),
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              subtitle: Text(
-                t('خاموش: نزولی', 'Off: descending'),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              value: settings.videoSortAscending,
-              onChanged: (value) =>
-                  settings.setOption('videoSortAscending', value),
-            ),
+            const PlayerSortTile(video: true),
             choiceRow(
               t('حالت نمایش', 'Display mode'),
               viewLabel(selectedViewMode),

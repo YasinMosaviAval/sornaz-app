@@ -1,4 +1,6 @@
 import 'create_content_button.dart';
+import 'package:sornaz/screens/Players/ui/components/music_playback_entry.dart';
+import 'package:sornaz/screens/Players/services/player_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/main_tabs.dart';
@@ -17,6 +19,13 @@ class MyProfilePage extends StatelessWidget {
     if (MainTabsScope.maybeOf(context) == null) {
       return MainTabs(initialIndex: 4, initialChild: this);
     }
+    return MusicPlaybackEntry(
+      reason: PlaybackInterruption.stageAndProfile,
+      active: MainTabsScope.maybeOf(context)?.index == 4,
+      child: _content(context),
+    );
+  }
+  Widget _content(BuildContext context) {
     final auth = context.watch<AuthSession>();
     if (!auth.isAuthenticated) {
       return SocialScaffold(

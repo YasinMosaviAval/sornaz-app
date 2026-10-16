@@ -95,6 +95,7 @@ class AudioLibraryManager extends ChangeNotifier {
     } catch (_) {
       progress = 0.0;
       currentPath = 'خطا در بارگذاری';
+      if (!_disposed) notifyListeners();
     } finally {
       isScanning = false;
       if (!_disposed) notifyListeners();

@@ -10,6 +10,7 @@ void main() {
       SharedPreferences.setMockInitialValues({});
       final settings = PlayerSettings();
       await settings.load();
+      expect(settings.savePlaybackPosition, isTrue);
       expect(settings.musicSort, 'added');
       expect(settings.videoSort, 'added');
       expect(settings.musicSortAscending, isFalse);
@@ -50,4 +51,14 @@ void main() {
       restored.dispose();
     },
   );
+
+  test('explicitly disabled playback restoration stays disabled', () async {
+    SharedPreferences.setMockInitialValues({
+      'player.savePlaybackPosition': false,
+    });
+    final settings = PlayerSettings();
+    await settings.load();
+    expect(settings.savePlaybackPosition, isFalse);
+    settings.dispose();
+  });
 }

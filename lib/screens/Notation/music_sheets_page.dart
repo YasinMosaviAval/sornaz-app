@@ -1,4 +1,6 @@
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
+import 'package:sornaz/screens/Players/ui/components/music_playback_entry.dart';
+import 'package:sornaz/screens/Players/services/player_settings.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'notation_settings.dart';
 import 'notation_list_dialog.dart';
@@ -34,7 +36,11 @@ import 'omr_review_page.dart';
 class MusicSheetsPage extends StatelessWidget {
   const MusicSheetsPage({super.key});
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => MusicPlaybackEntry(
+    reason: PlaybackInterruption.notation,
+    child: _content(context),
+  );
+  Widget _content(BuildContext context) {
     final session = context.watch<AuthSession>();
     if (kIsWeb)
       return BrowserNotationHost(
