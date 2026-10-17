@@ -5,6 +5,33 @@ import 'panel_form_contract.dart';
 /// Web filters are local unless a query key explicitly delegates pagination and
 /// filtering to the same server endpoint used by the website.
 List<Json> panelWebFilters(Json section, Json data, List<Json> rows) {
+  if (section['key'] == 'tracking') {
+    return [
+      {
+        'key': 'days',
+        'queryKey': 'days',
+        'label': 'بازه زمانی',
+        'type': 'select',
+        'options': {
+          '1': '۲۴ ساعت',
+          '7': '۷ روز',
+          '30': '۳۰ روز',
+          '90': '۹۰ روز',
+          'all': 'همه',
+        },
+      },
+      {
+        'key': 'user',
+        'queryKey': 'user',
+        'label': 'کاربر',
+        'type': 'select',
+        'options': {
+          for (final user in objects(data['userOptions'] ?? []))
+            '${user['id']}': '${user['name']}',
+        },
+      },
+    ];
+  }
   final contract = panelTableContract(section);
   final definitions = panelTableColumns({
     'columns':
@@ -212,6 +239,21 @@ bool panelMatchesFilters(
       continue;
     }
     final actual = panelFilterValue(row, path);
+    if (['gte', 'lte'].contains(field['operator'])) {
+      final date = DateTime.tryParse('$actual');
+      final boundary = DateTime.tryParse('$selected');
+      if (date == null ||
+          boundary == null ||
+          (field['operator'] == 'gte'
+              ? date.isBefore(boundary)
+              : date.isAfter(
+                  boundary
+                      .add(const Duration(days: 1))
+                      .subtract(const Duration(microseconds: 1)),
+                )))
+        return false;
+      continue;
+    }
     if (!_values(
       actual,
     ).any((v) => panelFilterToken(v) == panelFilterToken(selected)))

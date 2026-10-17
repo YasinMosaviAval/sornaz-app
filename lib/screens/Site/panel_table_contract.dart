@@ -4,6 +4,28 @@ import '../Social/social_api.dart';
 import 'panel_api.dart';
 import 'panel_web_contracts.dart';
 import 'panel_form_contract.dart';
+import 'panel_parity.dart';
+import 'panel_caption.dart';
+
+String panelCellText(BuildContext context, Json row, Json column) {
+  final value = panelTableValue(row, '${column['key']}');
+  final fa = Localizations.localeOf(context).languageCode == 'fa';
+  if (value is num ||
+      [
+            'amount',
+            'cost',
+            'price',
+            'points',
+            'capacity',
+            'student_capacity',
+            'teacher_capacity',
+          ].contains(column['key']) &&
+          num.tryParse('$value') != null)
+    return panelNumber(value, fa: fa);
+  if (value is String && RegExp(r'^\d{4}-\d{2}-\d{2}([T ]|$)').hasMatch(value))
+    return panelDate(value, fa: fa);
+  return panelTableText(value);
+}
 
 /// Presentation is separate from API capabilities: an available endpoint does
 /// not imply that the website exposes a button or column for it.
@@ -26,8 +48,8 @@ Json panelTableContract(Json section) {
   };
   if (['course-levels', 'my-lesson-levels'].contains(section['key'])) {
     return {
+      ...contract,
       'columns': [
-        {'key': 'id', 'label': 'شناسه'},
         {'key': 'name', 'label': 'عنوان'},
         {'key': 'summary', 'label': 'خلاصه'},
       ],
@@ -306,8 +328,14 @@ class PanelStatusCell extends StatelessWidget {
       'paid': ('پرداخت‌شده', const Color(0xffdcfce7), const Color(0xff15803d)),
       'free': (
         'ماه اول رایگان',
-        const Color(0xffdcfce7),
-        const Color(0xff15803d),
+        const Color(0xffe0e7ff),
+        const Color(0xff4338ca),
+      ),
+      'آماده': ('آماده', const Color(0xffdcfce7), const Color(0xff15803d)),
+      'در حال تهیه': (
+        'در حال تهیه',
+        const Color(0xfffef9c3),
+        const Color(0xffa16207),
       ),
       'canceled': ('لغوشده', const Color(0xfffee2e2), const Color(0xffb91c1c)),
       'expired': (
@@ -470,7 +498,7 @@ class PanelRecordFields extends StatelessWidget {
                     options['${v is Map ? v['id'] : v}'] ?? panelTableText(v),
               )
               .join('، ')
-        : options['$value'] ?? panelTableText(value);
+        : options['$value'] ?? panelCellText(context, row, field);
     return SelectableText(text);
   }
 
@@ -485,7 +513,7 @@ class PanelRecordFields extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${field['label'] ?? field['key']}',
+                panelCaption(context, field),
                 style: Theme.of(context).textTheme.labelLarge,
               ),
               const SizedBox(height: 4),

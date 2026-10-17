@@ -1,5 +1,6 @@
 import 'package:sornaz/helpers/app_appearance.dart';
 import 'panel_ui.dart';
+import 'panel_caption.dart';
 import 'dart:async';
 import 'package:sornaz/helpers/app_typography.dart';
 
@@ -317,14 +318,7 @@ class _PanelFieldState extends State<PanelField> {
   @override
   Widget build(BuildContext context) {
     final field = widget.field;
-    final label = Localizations.localeOf(context).languageCode == 'fa'
-        ? '${field['label']}'
-        : '${field['en'] ?? field['key']}'
-              .replaceAll('_', ' ')
-              .replaceAllMapped(
-                RegExp(r'([a-z])([A-Z])'),
-                (m) => '${m[1]} ${m[2]}',
-              );
+    final label = panelCaption(context, field);
     final type = '${field['type'] ?? 'text'}';
     if (field['filter'] == true && type != 'select') {
       return PanelValueRow(

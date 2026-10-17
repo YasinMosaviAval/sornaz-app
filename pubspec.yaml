@@ -59,6 +59,7 @@ dependencies:
   xml: ^7.0.1
   flutter_rust_bridge: 2.11.1
   ffmpeg_kit_flutter_new_audio: 2.5.7
+  fl_chart: 1.2.0
 
 
 dev_dependencies:

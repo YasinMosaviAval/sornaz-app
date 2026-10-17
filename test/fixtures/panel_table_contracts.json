@@ -3,10 +3,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "course_title",
-                "label": "دوره"
-            },
-            {
                 "key": "enrollment_type",
                 "label": "نقش"
             },
@@ -22,10 +18,6 @@
         "organizationFilter": false,
         "detailFields": [
             {
-                "key": "course_title",
-                "label": "دوره"
-            },
-            {
                 "key": "enrollment_type",
                 "label": "نقش"
             },
@@ -38,10 +30,6 @@
     "my-terms": {
         "version": 2,
         "columns": [
-            {
-                "key": "term_title",
-                "label": "ترم"
-            },
             {
                 "key": "course_title",
                 "label": "دوره"
@@ -65,10 +53,6 @@
         "organizationMode": "branch",
         "organizationFilter": false,
         "detailFields": [
-            {
-                "key": "term_title",
-                "label": "ترم"
-            },
             {
                 "key": "course_title",
                 "label": "دوره"
@@ -90,10 +74,6 @@
     "my-classrooms": {
         "version": 2,
         "columns": [
-            {
-                "key": "course_title",
-                "label": "دوره"
-            },
             {
                 "key": "term_title",
                 "label": "ترم"
@@ -129,10 +109,6 @@
         "organizationMode": "branch",
         "organizationFilter": false,
         "detailFields": [
-            {
-                "key": "course_title",
-                "label": "دوره"
-            },
             {
                 "key": "term_title",
                 "label": "ترم"
@@ -166,10 +142,6 @@
     "messages": {
         "version": 2,
         "columns": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "title",
                 "label": "عنوان"
@@ -248,10 +220,6 @@
     "notifications": {
         "version": 2,
         "columns": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "title",
                 "label": "عنوان اعلان"
@@ -392,10 +360,6 @@
     "members": {
         "version": 2,
         "columns": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "name",
                 "label": "نام"
@@ -587,10 +551,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "name",
                 "label": "نام هنرجو"
             },
@@ -728,10 +688,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "name",
                 "label": "نام کلاس"
             },
@@ -868,10 +824,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "createdByName",
                 "label": "ایجادکننده"
             },
@@ -965,10 +917,6 @@
     "courses": {
         "version": 2,
         "columns": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "name",
                 "label": "نام دوره"
@@ -1088,10 +1036,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "name",
                 "label": "عنوان"
             },
@@ -1125,10 +1069,6 @@
     "terms": {
         "version": 2,
         "columns": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "name",
                 "label": "نام"
@@ -1345,10 +1285,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "title",
                 "label": "فاکتور"
             },
@@ -1453,10 +1389,6 @@
         "organizationFilter": true,
         "detailFields": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "title",
                 "label": "عنوان",
                 "type": "text",
@@ -1513,10 +1445,6 @@
     "schedules": {
         "version": 2,
         "columns": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "title",
                 "label": "عنوان"
@@ -1665,10 +1593,6 @@
         "organizationFilter": true,
         "detailFields": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "title",
                 "label": "عنوان"
             },
@@ -1709,10 +1633,6 @@
     "member-schedules": {
         "version": 2,
         "columns": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "name",
                 "label": "نام عضو"
@@ -1857,10 +1777,6 @@
             }
         },
         "detailFields": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "name",
                 "label": "نام عضو"
@@ -2040,10 +1956,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "name",
                 "label": "نام"
             },
@@ -2138,10 +2050,6 @@
         "organizationMode": "branch",
         "organizationFilter": true,
         "detailFields": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "name",
                 "label": "نام"
@@ -2303,10 +2211,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "title",
                 "label": "عنوان قانون"
             },
@@ -2363,10 +2267,6 @@
         "organizationMode": "branch",
         "organizationFilter": true,
         "detailFields": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "title",
                 "label": "عنوان",
@@ -2458,10 +2358,6 @@
     "lessons": {
         "version": 2,
         "columns": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "title",
                 "label": "عنوان \/ درس"
@@ -2570,10 +2466,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "title",
                 "label": "عنوان"
             },
@@ -2676,10 +2568,6 @@
         "organizationMode": "points",
         "organizationFilter": true,
         "detailFields": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "title",
                 "label": "عنوان",
@@ -2815,10 +2703,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "name",
                 "label": "کاربر"
             },
@@ -2885,10 +2769,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "title",
                 "label": "عنوان"
             },
@@ -2920,10 +2800,6 @@
         "organizationMode": "owner",
         "organizationFilter": true,
         "detailFields": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "title",
                 "label": "عنوان",
@@ -2978,10 +2854,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "title",
                 "label": "عنوان"
             },
@@ -3017,10 +2889,6 @@
         "organizationMode": "owner",
         "organizationFilter": true,
         "detailFields": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "title",
                 "label": "عنوان",
@@ -3093,10 +2961,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "title",
                 "label": "عنوان"
             },
@@ -3132,10 +2996,6 @@
         "organizationMode": "owner",
         "organizationFilter": true,
         "detailFields": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "title",
                 "label": "عنوان",
@@ -3211,10 +3071,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "degree",
                 "label": "مدرک"
             },
@@ -3254,10 +3110,6 @@
         "organizationMode": "owner",
         "organizationFilter": true,
         "detailFields": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "degree",
                 "label": "مدرک",
@@ -3324,10 +3176,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "title",
                 "label": "عنوان"
             },
@@ -3359,10 +3207,6 @@
         "organizationMode": "owner",
         "organizationFilter": true,
         "detailFields": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "title",
                 "label": "عنوان",
@@ -3440,10 +3284,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "title",
                 "label": "عنوان"
             },
@@ -3479,10 +3319,6 @@
         "organizationMode": "owner",
         "organizationFilter": true,
         "detailFields": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "title",
                 "label": "عنوان",
@@ -3549,10 +3385,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "badge_title",
                 "label": "نشان"
             },
@@ -3588,10 +3420,6 @@
         "organizationMode": "owner",
         "organizationFilter": true,
         "detailFields": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "badge_title",
                 "label": "نشان"
@@ -3659,10 +3487,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "question",
                 "label": "پرسش"
             },
@@ -3703,10 +3527,6 @@
         "organizationMode": "owner",
         "organizationFilter": true,
         "detailFields": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "question",
                 "label": "پرسش",
@@ -3805,10 +3625,6 @@
     "posts": {
         "version": 2,
         "columns": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "title",
                 "label": "عنوان"
@@ -3938,10 +3754,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "title_fa",
                 "label": "عنوان فارسی"
             },
@@ -3970,10 +3782,6 @@
         "organizationMode": "branch",
         "organizationFilter": false,
         "detailFields": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "title_fa",
                 "label": "عنوان فارسی",
@@ -4007,10 +3815,6 @@
     "comments": {
         "version": 2,
         "columns": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "author",
                 "label": "نویسنده"
@@ -4070,10 +3874,6 @@
         "organizationFilter": false,
         "detailFields": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "author",
                 "label": "نویسنده"
             },
@@ -4107,10 +3907,6 @@
     "media": {
         "version": 2,
         "columns": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "title",
                 "label": "فایل"
@@ -4165,10 +3961,6 @@
         "organizationFilter": false,
         "detailFields": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "title",
                 "label": "عنوان",
                 "type": "text",
@@ -4210,10 +4002,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "title",
                 "label": "عنوان"
             },
@@ -4236,10 +4024,6 @@
         "organizationMode": "branch",
         "organizationFilter": false,
         "detailFields": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "title",
                 "label": "عنوان",
@@ -4280,10 +4064,6 @@
     "roles": {
         "version": 2,
         "columns": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "title",
                 "label": "عنوان \/ نام"
@@ -4348,10 +4128,6 @@
         "organizationMode": "branch",
         "organizationFilter": false,
         "detailFields": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "title",
                 "label": "عنوان \/ نام"
@@ -4503,10 +4279,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "title",
                 "label": "عنوان \/ نام"
             },
@@ -4572,10 +4344,6 @@
         "organizationMode": "branch",
         "organizationFilter": false,
         "detailFields": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "title",
                 "label": "عنوان \/ نام"
@@ -4713,13 +4481,157 @@
             }
         ]
     },
-    "guides": {
+    "reports": {
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
+                "key": "title",
+                "label": "عنوان"
             },
+            {
+                "key": "branchName",
+                "label": "شعبه"
+            },
+            {
+                "key": "type",
+                "label": "نوع"
+            },
+            {
+                "key": "periodLabel",
+                "label": "بازه زمانی"
+            },
+            {
+                "key": "date",
+                "label": "تاریخ"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت",
+                "action": "status",
+                "type": "badge"
+            }
+        ],
+        "rowActions": [
+            "details"
+        ],
+        "filters": [
+            {
+                "key": "branchId",
+                "queryKey": "branchId",
+                "label": "همه شعبه‌ها",
+                "type": "select",
+                "options": {
+                    "source": "branches"
+                }
+            },
+            {
+                "key": "type",
+                "rowPath": "type",
+                "label": "همه انواع گزارش",
+                "type": "select",
+                "options": {
+                    "حضور و غیاب": "حضور و غیاب",
+                    "مالی": "مالی",
+                    "ثبت‌نام": "ثبت‌نام",
+                    "عملکرد": "عملکرد"
+                }
+            },
+            {
+                "key": "status",
+                "rowPath": "status",
+                "label": "همه وضعیت‌ها",
+                "type": "select",
+                "options": {
+                    "آماده": "آماده",
+                    "در حال تهیه": "در حال تهیه"
+                }
+            },
+            {
+                "key": "period",
+                "rowPath": "period",
+                "label": "همه بازه‌ها",
+                "type": "select",
+                "options": {
+                    "weekly": "هفت روز اخیر",
+                    "monthly": "ماه جاری",
+                    "current": "وضعیت جاری"
+                }
+            },
+            {
+                "key": "from",
+                "rowPath": "dateISO",
+                "operator": "gte",
+                "label": "از تاریخ",
+                "type": "date"
+            },
+            {
+                "key": "to",
+                "rowPath": "dateISO",
+                "operator": "lte",
+                "label": "تا تاریخ",
+                "type": "date"
+            }
+        ],
+        "organizationMode": "branch",
+        "organizationFilter": false,
+        "detailTitle": "جزئیات گزارش",
+        "detailFields": [
+            {
+                "key": "title",
+                "label": "عنوان"
+            },
+            {
+                "key": "branchName",
+                "label": "شعبه"
+            },
+            {
+                "key": "type",
+                "label": "نوع"
+            },
+            {
+                "key": "periodLabel",
+                "label": "بازه زمانی"
+            },
+            {
+                "key": "date",
+                "label": "تاریخ تولید"
+            },
+            {
+                "key": "periodFrom",
+                "label": "از تاریخ"
+            },
+            {
+                "key": "periodTo",
+                "label": "تا تاریخ"
+            },
+            {
+                "key": "status",
+                "label": "وضعیت"
+            },
+            {
+                "key": "summary",
+                "label": "خلاصه گزارش"
+            },
+            {
+                "key": "metrics",
+                "label": "شاخص‌ها",
+                "type": "rows",
+                "options": [
+                    {
+                        "key": "label",
+                        "label": "شاخص"
+                    },
+                    {
+                        "key": "value",
+                        "label": "مقدار"
+                    }
+                ]
+            }
+        ]
+    },
+    "guides": {
+        "version": 2,
+        "columns": [
             {
                 "key": "title",
                 "label": "عنوان"
@@ -4738,10 +4650,6 @@
         "organizationFilter": false,
         "detailFields": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "title",
                 "label": "عنوان"
             },
@@ -4754,10 +4662,6 @@
     "pages": {
         "version": 2,
         "columns": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "title",
                 "label": "عنوان"
@@ -4797,10 +4701,6 @@
         },
         "detailFields": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "title",
                 "label": "عنوان"
             },
@@ -4825,10 +4725,6 @@
     "availabilities": {
         "version": 2,
         "columns": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "branchName",
                 "label": "سازمان"
@@ -4939,10 +4835,6 @@
         "organizationMode": "branch",
         "organizationFilter": true,
         "detailFields": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "branchName",
                 "label": "سازمان"
@@ -5149,10 +5041,6 @@
                 "version": 2,
                 "columns": [
                     {
-                        "key": "id",
-                        "label": "شناسه"
-                    },
-                    {
                         "key": "title",
                         "label": "عنوان"
                     },
@@ -5285,10 +5173,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "title",
                 "label": "درس"
             },
@@ -5322,10 +5206,6 @@
         "organizationMode": "branch",
         "organizationFilter": false,
         "detailFields": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "title",
                 "label": "درس"
@@ -5388,10 +5268,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "day",
                 "label": "روز یا تاریخ"
             },
@@ -5425,10 +5301,6 @@
         "organizationMode": "branch",
         "organizationFilter": false,
         "detailFields": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "day",
                 "label": "روز",
@@ -5540,10 +5412,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "term",
                 "label": "ترم"
             },
@@ -5568,10 +5436,6 @@
         "organizationMode": "branch",
         "organizationFilter": false,
         "detailFields": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "term",
                 "label": "ترم"
@@ -5594,10 +5458,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "studentName",
                 "label": "هنرجو"
             },
@@ -5616,10 +5476,6 @@
         "organizationFilter": false,
         "detailFields": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "studentName",
                 "label": "هنرجو"
             },
@@ -5632,10 +5488,6 @@
     "waiting-schedules": {
         "version": 2,
         "columns": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "studentName",
                 "label": "هنرجو"
@@ -5655,10 +5507,6 @@
         "organizationFilter": false,
         "detailFields": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "studentName",
                 "label": "هنرجو"
             },
@@ -5671,10 +5519,6 @@
     "my-waiting": {
         "version": 2,
         "columns": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "studentName",
                 "label": "هنرجو"
@@ -5697,10 +5541,6 @@
         "organizationFilter": false,
         "detailFields": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "studentName",
                 "label": "هنرجو"
             },
@@ -5717,10 +5557,6 @@
     "organization-holidays": {
         "version": 2,
         "columns": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "name",
                 "label": "سازمان"
@@ -5815,10 +5651,6 @@
         "organizationMode": "branch",
         "organizationFilter": true,
         "detailFields": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "name",
                 "label": "سازمان"
@@ -5950,10 +5782,6 @@
         "version": 2,
         "columns": [
             {
-                "key": "id",
-                "label": "شناسه"
-            },
-            {
                 "key": "name",
                 "label": "کارمند"
             },
@@ -6046,10 +5874,6 @@
         "organizationMode": "branch",
         "organizationFilter": true,
         "detailFields": [
-            {
-                "key": "id",
-                "label": "شناسه"
-            },
             {
                 "key": "name",
                 "label": "کارمند"

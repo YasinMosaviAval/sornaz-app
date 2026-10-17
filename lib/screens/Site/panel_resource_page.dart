@@ -29,6 +29,12 @@ import 'panel_list_item.dart';
 import 'panel_gallery.dart';
 import 'panel_organization_filter.dart';
 import 'panel_finance.dart';
+import 'panel_parity.dart';
+import 'panel_schedule_week.dart';
+import 'panel_dashboard.dart';
+import 'panel_tracking.dart';
+import 'panel_caption.dart';
+import 'panel_web_contracts.dart';
 import 'panel_page_guidance.dart';
 import 'site_api.dart';
 import 'package:sornaz/components/media_dialogs.dart';
@@ -140,7 +146,8 @@ class _PanelResourceContent extends StatefulWidget {
   State<_PanelResourceContent> createState() => _PanelResourcePageState();
 }
 
-class _PanelResourcePageState extends State<_PanelResourceContent> {
+class _PanelResourcePageState extends State<_PanelResourceContent>
+    with WidgetsBindingObserver {
   Widget pendingContent(Widget child) => Column(
     children: [
       if (widget.tabs != null) widget.tabs!,
@@ -154,10 +161,19 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
   String query = '';
   String organizationFilter = '';
   int page = 1, generation = 0;
+  int activeLoads = 0;
+  int localPage = 1, pageSize = 10;
+  String sortKey = '';
+  bool sortAscending = true;
+  bool weekly = false;
+  DateTime weekStart = panelWeekStart(DateTime.now());
   Timer? searchTimer;
+  Timer? refreshTimer;
   @override
   void dispose() {
     searchTimer?.cancel();
+    refreshTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     generation++;
     super.dispose();
   }
@@ -189,31 +205,98 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     if (!['branches', 'branch-types'].contains(section)) load();
+    refreshTimer = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => refreshVisible(),
+    );
   }
 
-  Future<void> load({bool refresh = false}) async {
+  void refreshVisible() {
+    if (!mounted ||
+        busy ||
+        activeLoads > 0 ||
+        selected.isNotEmpty ||
+        loading ||
+        weekly ||
+        ['branches', 'branch-types'].contains(section) ||
+        WidgetsBinding.instance.lifecycleState == AppLifecycleState.paused ||
+        ModalRoute.of(context)?.isCurrent != true)
+      return;
+    unawaited(load(refresh: true, background: true));
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) refreshVisible();
+  }
+
+  Future<void> load({bool refresh = false, bool background = false}) async {
     final request = ++generation;
+    activeLoads++;
     try {
-      final value = await (refresh ? widget.api.refresh : widget.api.get)(
-        '/$section/list',
-        {
-          ...widget.params,
-          ...panelFilterQuery(
-            panelWebFilters(widget.section, data, const []),
-            filters,
-            organizationFilter,
-            section,
-          ),
-          if (!widget.params.containsKey('page')) 'page': '$page',
-          'perPage': '50',
-          if (section == 'my-points') 'history': '1',
-          if (query.trim().isNotEmpty) ...{
-            'q': query.trim(),
-            'search': query.trim(),
-          },
-        },
-      );
+      final value = weekly && section == 'schedules'
+          ? await loadWeek(refresh)
+          : await (refresh ? widget.api.refresh : widget.api.get)(
+              '/$section/list',
+              {
+                ...widget.params,
+                ...panelFilterQuery(
+                  panelWebFilters(widget.section, data, const []),
+                  filters,
+                  organizationFilter,
+                  section,
+                ),
+                if (!widget.params.containsKey('page')) 'page': '$page',
+                'perPage': sortKey.isEmpty ? '$pageSize' : '100',
+                if (section == 'my-points') 'history': '1',
+                if (query.trim().isNotEmpty) ...{
+                  'q': query.trim(),
+                  'search': query.trim(),
+                },
+              },
+            );
+      if (sortKey.isNotEmpty &&
+          value['total'] != null &&
+          value['perPage'] != null) {
+        final path = '${widget.section['rows'] ?? 'items'}';
+        final combined = objects(panelValue(value, path) ?? []);
+        var next = page + 1;
+        // A sort starts at page one and covers the complete authorized result.
+        while (combined.length <
+            (num.tryParse('${value['total']}') ?? combined.length)) {
+          if (!mounted || request != generation) return;
+          final response =
+              await (refresh
+                  ? widget.api.refresh
+                  : widget.api.get)('/$section/list', {
+                ...widget.params,
+                ...panelFilterQuery(
+                  panelWebFilters(widget.section, data, const []),
+                  filters,
+                  organizationFilter,
+                  section,
+                ),
+                'page': '$next',
+                'perPage': '100',
+                if (query.trim().isNotEmpty) 'q': query.trim(),
+                if (query.trim().isNotEmpty) 'search': query.trim(),
+              });
+          final chunk = objects(panelValue(response, path) ?? []);
+          if (chunk.isEmpty)
+            throw const SocialException(
+              'دریافت همهٔ ردیف‌ها برای مرتب‌سازی کامل نشد.',
+            );
+          combined.addAll(chunk);
+          next++;
+        }
+        if (path.contains('.'))
+          throw const SocialException('مرتب‌سازی این مجموعه در دسترس نیست.');
+        value[path] = combined;
+        value['total'] = null;
+        value['perPage'] = null;
+      }
       for (final option
           in widget.section['optionActions'] as List? ?? const []) {
         value.addAll(await widget.api.get('/$section/$option', widget.params));
@@ -256,10 +339,60 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
         });
       }
     } catch (e) {
-      if (mounted && request == generation) setState(() => error = e);
+      if (mounted &&
+          request == generation &&
+          (!background ||
+              e is SocialException && [401, 403].contains(e.status))) {
+        setState(() => error = e);
+      }
     } finally {
+      activeLoads--;
       if (mounted && request == generation) setState(() => loading = false);
     }
+  }
+
+  Future<Json> loadWeek(bool refresh) async {
+    final combined = <Json>[];
+    final start = weekStart;
+    final requestGeneration = generation;
+    final selectedFilters = panelFilterQuery(
+      panelWebFilters(widget.section, data, const []),
+      filters,
+      organizationFilter,
+      section,
+    );
+    final search = query;
+    Json result = {};
+    for (var day = 0; day < 7; day++) {
+      var next = 1;
+      while (true) {
+        if (!mounted || requestGeneration != generation)
+          throw const SocialException('درخواست برنامه تغییر کرده است.');
+        final response = await (refresh ? widget.api.refresh : widget.api.get)(
+          '/schedules/list',
+          {
+            ...selectedFilters,
+            'date': start
+                .add(Duration(days: day))
+                .toIso8601String()
+                .substring(0, 10),
+            'perPage': '100',
+            'page': '$next',
+            'search': search,
+          },
+        );
+        final chunk = objects(response['schedules'] ?? []);
+        combined.addAll(chunk);
+        result = response;
+        final total = num.tryParse('${response['total']}') ?? chunk.length;
+        final actualPageSize = num.tryParse('${response['perPage']}') ?? 100;
+        if (next * actualPageSize >= total) break;
+        if (chunk.isEmpty)
+          throw const SocialException('دریافت برنامهٔ هفتگی کامل نشد.');
+        next++;
+      }
+    }
+    return {...result, 'schedules': combined, 'total': null, 'perPage': null};
   }
 
   bool available(String key, Json record) {
@@ -688,6 +821,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
     setState(() {
       query = value;
       page = 1;
+      localPage = 1;
     });
     searchTimer?.cancel();
     searchTimer = Timer(const Duration(milliseconds: 400), load);
@@ -785,7 +919,12 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
                             'cancel-reject',
                             'restore',
                           ])
-                            if (actions.containsKey(key))
+                            if (actions.containsKey(key) &&
+                                panelSessionAction(
+                                  key,
+                                  session,
+                                  optionalObject(data['permissions']),
+                                ))
                               TextButton(
                                 onPressed: () {
                                   Navigator.pop(context);
@@ -821,7 +960,8 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
                       Wrap(
                         children: [
                           for (final key in ['pay', 'offline'])
-                            if (actions.containsKey(key))
+                            if (actions.containsKey(key) &&
+                                panelPayableInstallment(row, installment))
                               TextButton(
                                 onPressed: () {
                                   Navigator.pop(context);
@@ -879,7 +1019,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
     }
   }
 
-  Widget recordTable(List<Json> rows) {
+  Widget recordTable(List<Json> rows, {int offset = 0}) {
     final contract = tableContract;
     final columns = panelTableColumns(contract, data);
     final effectiveColumns = columns.isEmpty
@@ -903,6 +1043,11 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
+        sortAscending: sortAscending,
+        sortColumnIndex:
+            effectiveColumns.indexWhere((c) => c['key'] == sortKey) < 0
+            ? null
+            : effectiveColumns.indexWhere((c) => c['key'] == sortKey),
         showCheckboxColumn: false,
         dividerThickness: .2,
         decoration: BoxDecoration(
@@ -922,7 +1067,23 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
         dataRowMaxHeight: 90,
         columns: [
           for (final column in effectiveColumns)
-            DataColumn(label: Text('${column['label']}')),
+            DataColumn(
+              label: Text(panelCaption(context, column)),
+              onSort: (_, ascending) {
+                final serverPaged =
+                    data['total'] != null && data['perPage'] != null;
+                setState(() {
+                  sortKey = '${column['key']}';
+                  sortAscending = ascending;
+                  page = 1;
+                  localPage = 1;
+                });
+                if (serverPaged) {
+                  setState(() => loading = true);
+                  load();
+                }
+              },
+            ),
           if (showActions)
             DataColumn(label: Text(socialText(context, 'عملیات', 'Actions'))),
         ],
@@ -931,7 +1092,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
             (entry) => {
               ...panelDisplayRow(section, {
                 ...entry.$2,
-                '_index': entry.$1 + 1,
+                '_index': entry.$1 + 1 + offset,
               }, data),
               '_record': entry.$2,
             },
@@ -959,9 +1120,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
                         : ConstrainedBox(
                             constraints: const BoxConstraints(maxWidth: 220),
                             child: Text(
-                              panelTableText(
-                                panelTableValue(row, '${column['key']}'),
-                              ),
+                              panelCellText(context, row, column),
                               maxLines: 3,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -1263,9 +1422,11 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
         ? objects(data['items'])
         : <Json>[];
     final organizationOptions =
-        (tableContract['organizationFilter'] ??
-                widget.section['organizationFilter']) ==
-            true
+        (gallerySection && data['hideOwnerFilters'] == true)
+        ? <String, String>{}
+        : (tableContract['organizationFilter'] ??
+                  widget.section['organizationFilter']) ==
+              true
         ? panelOrganizationOptions(
             data,
             rows,
@@ -1284,7 +1445,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
         organizationOptions.containsKey(organizationFilter)
         ? organizationFilter
         : '';
-    final filtered = rows
+    var filtered = rows
         .where(
           (row) =>
               (['users', 'schedules'].contains(section) ||
@@ -1303,24 +1464,121 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
                   .contains(query.toLowerCase()),
         )
         .toList();
+    filtered = panelSortedRows(
+      filtered,
+      sortKey,
+      sortAscending,
+      (row, key) => panelTableValue(panelDisplayRow(section, row, data), key),
+    );
+    final serverPaged = data['total'] != null && data['perPage'] != null;
+    final localPages = (filtered.length / pageSize).ceil().clamp(1, 1000000);
+    final currentLocalPage = localPage.clamp(1, localPages);
+    final displayedRows = serverPaged
+        ? filtered
+        : filtered
+              .skip((currentLocalPage - 1) * pageSize)
+              .take(pageSize)
+              .toList();
     final financeTotals = section == 'finance'
         ? panelFinanceTotals(filtered)
         : <String, dynamic>{};
-    final exportColumns = panelTableColumns(tableContract, data);
-    final financeExportRows = [
-      if (section == 'finance' && filtered.isEmpty)
-        {for (final column in exportColumns) '${column['label']}': ''},
-      for (final row in filtered)
+    final definedExportColumns = panelTableColumns(tableContract, data);
+    final exportColumns = definedExportColumns.isEmpty
+        ? <Json>[
+            {'key': 'title', 'label': socialText(context, 'عنوان', 'Title')},
+            if (filtered.any((row) => row.containsKey('status')))
+              {
+                'key': 'status',
+                'label': socialText(context, 'وضعیت', 'Status'),
+              },
+          ]
+        : definedExportColumns;
+    List<Json> exportValues(List<Json> values) => [
+      if (values.isEmpty)
+        {for (final column in exportColumns) panelCaption(context, column): ''},
+      for (final entry in values.indexed)
         {
           for (final column in exportColumns)
-            '${column['label']}': panelTableText(
-              panelTableValue(
-                panelDisplayRow(section, row, data),
-                '${column['key']}',
-              ),
+            panelCaption(context, column): panelCellText(
+              context,
+              panelDisplayRow(section, {
+                ...entry.$2,
+                '_index': entry.$1 + 1,
+              }, data),
+              column,
             ),
         },
     ];
+    Future<List<Json>> completeExport() async {
+      if (!serverPaged) return exportValues(filtered);
+      final exportFilters = {...filters};
+      final exportSearch = query;
+      final exportOrganization = organizationFilter;
+      final collected = <Json>[];
+      var next = 1;
+      while (true) {
+        final response = await widget.api.refresh('/$section/list', {
+          ...widget.params,
+          ...panelFilterQuery(
+            filterFields,
+            exportFilters,
+            exportOrganization,
+            section,
+          ),
+          'page': '$next',
+          'perPage': '100',
+          if (exportSearch.trim().isNotEmpty) 'search': exportSearch.trim(),
+          if (exportSearch.trim().isNotEmpty) 'q': exportSearch.trim(),
+        });
+        final chunk = objects(
+          panelValue(response, '${widget.section['rows'] ?? 'items'}') ??
+              response['items'] ??
+              [],
+        );
+        collected.addAll(chunk);
+        final total = num.tryParse('${response['total']}') ?? collected.length;
+        if (collected.length >= total) break;
+        if (chunk.isEmpty)
+          throw const SocialException(
+            'دریافت همهٔ ردیف‌ها برای خروجی کامل نشد.',
+          );
+        next++;
+      }
+      if (!mounted) throw const SocialException('صفحه بسته شده است.');
+      final matching = collected
+          .where(
+            (row) =>
+                (['users', 'schedules'].contains(section) ||
+                    panelMatchesOrganization(
+                      row,
+                      effectiveOrganization,
+                      data,
+                    )) &&
+                panelMatchesFilters(row, filterFields, exportFilters) &&
+                optionalObject(
+                  widget.section['where'],
+                ).entries.every((e) => row[e.key] == e.value) &&
+                !optionalObject(
+                  widget.section['exclude'],
+                ).entries.any((e) => row[e.key] == e.value) &&
+                row.values
+                    .where((v) => v is String || v is num)
+                    .join(' ')
+                    .toLowerCase()
+                    .contains(exportSearch.toLowerCase()),
+          )
+          .toList();
+      return exportValues(
+        panelSortedRows(
+          matching,
+          sortKey,
+          sortAscending,
+          (row, key) =>
+              panelTableValue(panelDisplayRow(section, row, data), key),
+        ),
+      );
+    }
+
     final pageActions = actions.entries
         .where(
           (entry) =>
@@ -1364,11 +1622,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
           icon: const Icon(Icons.table_view, color: Color(0xff16a34a)),
           onPressed: () async {
             try {
-              if (section == 'finance') {
-                await exportPanelExcel(section, financeExportRows);
-              } else {
-                await exportPanelRows(section, filtered);
-              }
+              await exportPanelExcel(section, await completeExport());
             } catch (e) {
               if (mounted) socialError(this.context, e);
             }
@@ -1382,18 +1636,19 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
             color: Color(0xffdc2626),
           ),
           onPressed: () async {
-            final exportRows = section == 'finance'
-                ? financeExportRows
-                : filtered.isEmpty
-                ? [optionalObject(data['stats'])]
-                : filtered;
-            final labels = {
-              for (final key in exportRows.expand((row) => row.keys))
-                key: section == 'finance' ? key : panelDataLabel(context, key),
-            };
-            final title = panelLabel(context, widget.section);
-
             try {
+              final exportRows = filtered.isEmpty && data['stats'] is Map
+                  ? [optionalObject(data['stats'])]
+                  : await completeExport();
+              if (!context.mounted) return;
+              final labels = {
+                for (final key in exportRows.expand((row) => row.keys))
+                  key: data['stats'] is Map && filtered.isEmpty
+                      ? panelDataLabel(context, key)
+                      : key,
+              };
+              final title = panelLabel(context, widget.section);
+
               await exportBranchesPdf(
                 context,
                 exportRows,
@@ -1426,6 +1681,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
               filters = {};
               organizationFilter = '';
               page = 1;
+              localPage = 1;
             });
             load();
           },
@@ -1535,6 +1791,94 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
                   padding: const EdgeInsets.only(bottom: 16),
                   children: [
                     if (busy) const LinearProgressIndicator(),
+                    if (section == 'schedules')
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Wrap(
+                          spacing: 8,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            ChoiceChip(
+                              label: Text(
+                                socialText(context, 'نمایش لیستی', 'List view'),
+                              ),
+                              selected: !weekly,
+                              onSelected: (_) {
+                                setState(() {
+                                  weekly = false;
+                                  loading = true;
+                                  page = 1;
+                                });
+                                load();
+                              },
+                            ),
+                            ChoiceChip(
+                              label: Text(
+                                socialText(
+                                  context,
+                                  'برنامه هفتگی',
+                                  'Weekly schedule',
+                                ),
+                              ),
+                              selected: weekly,
+                              onSelected: (_) {
+                                setState(() {
+                                  weekly = true;
+                                  loading = true;
+                                  page = 1;
+                                });
+                                load();
+                              },
+                            ),
+                            if (weekly) ...[
+                              IconButton(
+                                tooltip: socialText(
+                                  context,
+                                  'هفته قبل',
+                                  'Previous week',
+                                ),
+                                icon: const Icon(Icons.chevron_left),
+                                onPressed: () {
+                                  setState(() {
+                                    weekStart = weekStart.subtract(
+                                      const Duration(days: 7),
+                                    );
+                                    loading = true;
+                                  });
+                                  load();
+                                },
+                              ),
+                              Text(
+                                panelDate(
+                                  weekStart.toIso8601String().substring(0, 10),
+                                  fa:
+                                      Localizations.localeOf(
+                                        context,
+                                      ).languageCode ==
+                                      'fa',
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: socialText(
+                                  context,
+                                  'هفته بعد',
+                                  'Next week',
+                                ),
+                                icon: const Icon(Icons.chevron_right),
+                                onPressed: () {
+                                  setState(() {
+                                    weekStart = weekStart.add(
+                                      const Duration(days: 7),
+                                    );
+                                    loading = true;
+                                  });
+                                  load();
+                                },
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
                     PanelPageGuidance(
                       api: widget.api,
                       section: section,
@@ -1615,7 +1959,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
                               children: [
                                 Text(socialText(context, metric.$2, metric.$3)),
                                 Text(
-                                  '${financeTotals[metric.$1]} ${socialText(context, 'تومان', 'toman')}',
+                                  '${panelNumber(financeTotals[metric.$1], fa: Localizations.localeOf(context).languageCode == 'fa')} ${socialText(context, 'تومان', 'toman')}',
                                   style: Theme.of(
                                     context,
                                   ).textTheme.headlineSmall,
@@ -1684,6 +2028,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
                           setState(() {
                             organizationFilter = '${value ?? ''}';
                             page = 1;
+                            localPage = 1;
                           });
                           if (['users', 'schedules'].contains(section)) load();
                         },
@@ -1707,6 +2052,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
                                 filters.remove('${child['key']}');
                             }
                             page = 1;
+                            localPage = 1;
                           });
                           if (field['queryKey'] != null) load();
                         },
@@ -1732,11 +2078,42 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
                           ],
                         ),
                       ),
-                    if (page > 1 ||
-                        (num.tryParse('${data['total'] ?? 0}') ?? 0) >
-                            page *
-                                (num.tryParse('${data['perPage'] ?? 50}') ??
-                                    50))
+                    if (listLayout &&
+                        !weekly &&
+                        !serverPaged &&
+                        filtered.length > pageSize)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          TextButton(
+                            onPressed: currentLocalPage > 1
+                                ? () => setState(
+                                    () => localPage = currentLocalPage - 1,
+                                  )
+                                : null,
+                            child: Text(
+                              socialText(context, 'قبلی', 'Previous'),
+                            ),
+                          ),
+                          Text('$currentLocalPage / $localPages'),
+                          TextButton(
+                            onPressed: currentLocalPage < localPages
+                                ? () => setState(
+                                    () => localPage = currentLocalPage + 1,
+                                  )
+                                : null,
+                            child: Text(socialText(context, 'بعدی', 'Next')),
+                          ),
+                        ],
+                      ),
+                    if (serverPaged &&
+                        (page > 1 ||
+                            (num.tryParse('${data['total'] ?? 0}') ?? 0) >
+                                page *
+                                    (num.tryParse(
+                                          '${data['perPage'] ?? pageSize}',
+                                        ) ??
+                                        pageSize)))
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -1757,7 +2134,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
                                 (num.tryParse('${data['total'] ?? 0}') ?? 0) >
                                     page *
                                         (num.tryParse(
-                                              '${data['perPage'] ?? 50}',
+                                              '${data['perPage'] ?? pageSize}',
                                             ) ??
                                             50)
                                 ? () {
@@ -1800,7 +2177,13 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
                             ),
                         ],
                       ),
-                    if (gallerySection && filtered.isNotEmpty)
+                    if (weekly && section == 'schedules')
+                      PanelScheduleWeek(
+                        rows: filtered,
+                        start: weekStart,
+                        open: openRecord,
+                      )
+                    else if (gallerySection && filtered.isNotEmpty)
                       PanelGallery(
                         sectionKey: section,
                         api: widget.api,
@@ -1862,7 +2245,8 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
                       if (widget.accountArea == null ||
                           widget.accountArea == 'securityAlerts')
                         PanelDataView(value: data['securityAlerts']),
-                    ] else if (['dashboard', 'reports'].contains(section)) ...[
+                    ] else if (section == 'dashboard' ||
+                        section == 'reports' && collection is! List) ...[
                       if (section == 'dashboard')
                         Wrap(
                           children: [
@@ -1885,20 +2269,23 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
                               ),
                           ],
                         ),
-                      PanelStatistics(stats: optionalObject(data['stats'])),
-                      const SizedBox(height: 16),
-                      PanelDataView(
-                        value: {...data}
-                          ..remove('stats')
-                          ..remove('branches'),
-                      ),
+                      PanelDashboard(data: data),
+                    ] else if (section == 'tracking') ...[
+                      PanelTracking(data: data),
                     ] else if (rows.isNotEmpty) ...[
                       if (listLayout)
                         Padding(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppTopBarDirection.contentInset,
                           ),
-                          child: recordTable(filtered),
+                          child: recordTable(
+                            displayedRows,
+                            offset: serverPaged
+                                ? (page - 1) *
+                                      (int.tryParse('${data['perPage']}') ??
+                                          pageSize)
+                                : (currentLocalPage - 1) * pageSize,
+                          ),
                         )
                       else
                         for (final row in filtered) recordRow(row),
@@ -1929,6 +2316,15 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
     );
   }
 }
+
+final panelKnownDataLabels = <String, String>{
+  for (final contract in panelWebPresentation.values.whereType<Map>())
+    for (final field in [
+      ...objects(contract['columns'] ?? []),
+      ...objects(contract['detailFields'] ?? []),
+    ])
+      if (field['label'] != null) '${field['key']}': '${field['label']}',
+};
 
 String panelDataLabel(BuildContext context, String key) {
   const labels = {
@@ -2006,14 +2402,15 @@ String panelDataLabel(BuildContext context, String key) {
     'rolePermissions': 'دسترسی‌های نقش‌ها',
     'directPermissions': 'دسترسی‌های مستقل از نقش',
   };
+  if (!labels.containsKey(key) && !panelKnownDataLabels.containsKey(key)) {
+    return socialText(context, 'اطلاعات تکمیلی', 'Additional details');
+  }
   return Localizations.localeOf(context).languageCode == 'fa'
-      ? labels[key] ?? key.replaceAll('_', ' ')
-      : key
-            .replaceAll('_', ' ')
-            .replaceAllMapped(
-              RegExp(r'([a-z])([A-Z])'),
-              (m) => '${m[1]} ${m[2]}',
-            );
+      ? labels[key] ?? panelKnownDataLabels[key] ?? 'اطلاعات تکمیلی'
+      : panelCaption(context, {
+          'key': key,
+          'label': labels[key] ?? panelKnownDataLabels[key],
+        });
 }
 
 class PanelDataView extends StatelessWidget {

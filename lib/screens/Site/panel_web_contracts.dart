@@ -3,7 +3,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "my-courses": {
     "version": 2,
     "columns": [
-      {"key": "course_title", "label": "دوره"},
       {"key": "enrollment_type", "label": "نقش"},
       {"key": "branch_title", "label": "شعبه"},
     ],
@@ -13,7 +12,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "branch",
     "organizationFilter": false,
     "detailFields": [
-      {"key": "course_title", "label": "دوره"},
       {"key": "enrollment_type", "label": "نقش"},
       {"key": "branch_title", "label": "شعبه"},
     ],
@@ -21,7 +19,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "my-terms": {
     "version": 2,
     "columns": [
-      {"key": "term_title", "label": "ترم"},
       {"key": "course_title", "label": "دوره"},
       {"key": "enrollment_type", "label": "نقش"},
       {"key": "start_date", "label": "شروع"},
@@ -33,7 +30,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "branch",
     "organizationFilter": false,
     "detailFields": [
-      {"key": "term_title", "label": "ترم"},
       {"key": "course_title", "label": "دوره"},
       {"key": "enrollment_type", "label": "نقش"},
       {"key": "start_date", "label": "شروع"},
@@ -43,7 +39,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "my-classrooms": {
     "version": 2,
     "columns": [
-      {"key": "course_title", "label": "دوره"},
       {"key": "term_title", "label": "ترم"},
       {"key": "classroom_title", "label": "کلاس"},
       {"key": "enrollment_type", "label": "نقش"},
@@ -58,7 +53,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "branch",
     "organizationFilter": false,
     "detailFields": [
-      {"key": "course_title", "label": "دوره"},
       {"key": "term_title", "label": "ترم"},
       {"key": "classroom_title", "label": "کلاس"},
       {"key": "enrollment_type", "label": "نقش"},
@@ -71,7 +65,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "messages": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان"},
       {"key": "sender", "label": "فرستنده"},
       {"key": "receiver", "label": "گیرنده"},
@@ -106,7 +99,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "notifications": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان اعلان"},
       {"key": "recipientUsername", "label": "گیرنده"},
       {"key": "branchName", "label": "فرستنده"},
@@ -187,7 +179,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "members": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "name", "label": "نام"},
       {"key": "typeLabel", "label": "نوع قرارداد"},
       {"key": "contractTitle", "label": "عنوان قرارداد"},
@@ -293,7 +284,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "students": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "name", "label": "نام هنرجو"},
       {"key": "instrument", "label": "ترم آموزشی"},
       {"key": "level", "label": "سطح"},
@@ -363,7 +353,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "classrooms": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "name", "label": "نام کلاس"},
       {"key": "typeLabel", "label": "نوع کلاس"},
       {"key": "branchName", "label": "شعبه"},
@@ -444,7 +433,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "classroom-types": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "createdByName", "label": "ایجادکننده"},
       {"key": "title", "label": "عنوان"},
       {"key": "summary", "label": "خلاصه"},
@@ -499,7 +487,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "courses": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "name", "label": "نام دوره"},
       {"key": "level", "label": "سطح"},
       {"key": "branchName", "label": "سازمان"},
@@ -563,7 +550,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "course-levels": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "name", "label": "عنوان"},
       {"key": "summary", "label": "خلاصه"},
     ],
@@ -581,7 +567,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "terms": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "name", "label": "نام"},
       {"key": "branchName", "label": "شعبه"},
       {"key": "course", "label": "دوره مرتبط"},
@@ -721,7 +706,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "finance": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "فاکتور"},
       {"key": "branchName", "label": "شعبه"},
       {"key": "course", "label": "دوره"},
@@ -798,7 +782,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "branch",
     "organizationFilter": true,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان", "type": "text", "required": false},
       {"key": "branchName", "label": "شعبه"},
       {"key": "course", "label": "دوره"},
@@ -829,7 +812,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "schedules": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان"},
       {"key": "day", "label": "روز"},
       {"key": "time", "label": "ساعت"},
@@ -940,7 +922,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "branch",
     "organizationFilter": true,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان"},
       {"key": "day", "label": "روز"},
       {"key": "time", "label": "ساعت"},
@@ -955,7 +936,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "member-schedules": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "name", "label": "نام عضو"},
       {"key": "role", "label": "نقش"},
       {"key": "day", "label": "روز"},
@@ -1073,7 +1053,6 @@ const Map<String, dynamic> panelWebPresentation = {
       },
     },
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "name", "label": "نام عضو"},
       {"key": "role", "label": "نقش"},
       {
@@ -1208,7 +1187,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "availability-exceptions": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "name", "label": "نام"},
       {"key": "date", "label": "تاریخ"},
       {"key": "timeLabel", "label": "ساعت"},
@@ -1278,7 +1256,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "branch",
     "organizationFilter": true,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "name", "label": "نام"},
       {"key": "date", "label": "تاریخ", "type": "date", "required": false},
       {"key": "timeLabel", "label": "ساعت"},
@@ -1394,7 +1371,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "scheduling-rules": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان قانون"},
       {"key": "branchName", "label": "سازمان"},
       {"key": "type", "label": "نوع"},
@@ -1432,7 +1408,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "branch",
     "organizationFilter": true,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان", "type": "text", "required": true},
       {"key": "branchName", "label": "سازمان"},
       {
@@ -1501,7 +1476,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "lessons": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان \/ درس"},
       {"key": "levelTitle", "label": "سطح"},
       {"key": "start_date", "label": "زمان شروع"},
@@ -1563,7 +1537,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "points": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان"},
       {"key": "type", "label": "نوع"},
       {"key": "category", "label": "دسته"},
@@ -1637,7 +1610,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "points",
     "organizationFilter": true,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان", "type": "text", "required": true},
       {
         "key": "type",
@@ -1744,7 +1716,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "users": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "name", "label": "کاربر"},
       {"key": "roles", "label": "نقش‌ها"},
       {"key": "permissions", "label": "مجوزهای اختصاصی"},
@@ -1782,7 +1753,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "awards": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان"},
       {"key": "issuer", "label": "اعطاکننده"},
       {"key": "date", "label": "تاریخ"},
@@ -1799,7 +1769,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "owner",
     "organizationFilter": true,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان", "type": "text", "required": true},
       {
         "key": "issuer",
@@ -1836,7 +1805,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "certificates": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان"},
       {"key": "issuer", "label": "صادرکننده"},
       {"key": "issue_date", "label": "صدور"},
@@ -1854,7 +1822,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "owner",
     "organizationFilter": true,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان", "type": "text", "required": true},
       {
         "key": "issuer",
@@ -1914,7 +1881,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "experiences": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان"},
       {"key": "organization", "label": "محل فعالیت"},
       {"key": "start_date", "label": "شروع"},
@@ -1932,7 +1898,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "owner",
     "organizationFilter": true,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان", "type": "text", "required": true},
       {
         "key": "organization",
@@ -1981,7 +1946,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "educations": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "degree", "label": "مدرک"},
       {"key": "institution", "label": "مرکز آموزشی"},
       {"key": "field", "label": "رشته"},
@@ -2000,7 +1964,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "owner",
     "organizationFilter": true,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "degree", "label": "مدرک", "type": "text", "required": true},
       {
         "key": "institution",
@@ -2039,7 +2002,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "events": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان"},
       {"key": "event_type", "label": "نوع"},
       {"key": "event_date", "label": "تاریخ"},
@@ -2056,7 +2018,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "owner",
     "organizationFilter": true,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان", "type": "text", "required": true},
       {
         "key": "event_type",
@@ -2117,7 +2078,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "publications": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان"},
       {"key": "publisher", "label": "ناشر"},
       {"key": "published_date", "label": "تاریخ انتشار"},
@@ -2135,7 +2095,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "owner",
     "organizationFilter": true,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان", "type": "text", "required": true},
       {"key": "publisher", "label": "ناشر", "type": "text", "required": false},
       {
@@ -2184,7 +2143,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "badges": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "badge_title", "label": "نشان"},
       {"key": "granted_at", "label": "زمان اعطا"},
       {"key": "expires_at", "label": "انقضا"},
@@ -2202,7 +2160,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "owner",
     "organizationFilter": true,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "badge_title", "label": "نشان"},
       {
         "key": "granted_at",
@@ -2253,7 +2210,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "polls": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "question", "label": "پرسش"},
       {"key": "type", "label": "نوع"},
       {"key": "status", "label": "وضعیت نظرسنجی"},
@@ -2272,7 +2228,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "owner",
     "organizationFilter": true,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "question", "label": "پرسش", "type": "text", "required": true},
       {
         "key": "type",
@@ -2349,7 +2304,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "posts": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان"},
       {"key": "author_name", "label": "نویسنده"},
       {"key": "categories", "label": "دسته‌ها"},
@@ -2424,7 +2378,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "post-categories": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title_fa", "label": "عنوان فارسی"},
       {"key": "title_en", "label": "عنوان انگلیسی"},
       {"key": "slug", "label": "نامک"},
@@ -2436,7 +2389,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "branch",
     "organizationFilter": false,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {
         "key": "title_fa",
         "label": "عنوان فارسی",
@@ -2457,7 +2409,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "comments": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "author", "label": "نویسنده"},
       {"key": "content", "label": "دیدگاه"},
       {"key": "postTitle", "label": "نوشته"},
@@ -2494,7 +2445,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "branch",
     "organizationFilter": false,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "author", "label": "نویسنده"},
       {
         "key": "content",
@@ -2520,7 +2470,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "media": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "فایل"},
       {"key": "mime", "label": "نوع"},
       {"key": "size", "label": "حجم"},
@@ -2560,7 +2509,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "branch",
     "organizationFilter": false,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان", "type": "text", "required": false},
       {"key": "mime", "label": "نوع"},
       {"key": "size", "label": "حجم"},
@@ -2583,7 +2531,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "national-holidays": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان"},
       {"key": "date", "label": "تاریخ"},
       {"key": "status", "label": "وضعیت", "action": "status"},
@@ -2593,7 +2540,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "branch",
     "organizationFilter": false,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان", "type": "text", "required": false},
       {"key": "date", "label": "تاریخ", "type": "date", "required": false},
       {"key": "status", "label": "وضعیت", "action": "status"},
@@ -2615,7 +2561,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "roles": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان \/ نام"},
       {"key": "scope", "label": "دامنه"},
       {"key": "level", "label": "درجه"},
@@ -2655,7 +2600,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "branch",
     "organizationFilter": false,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان \/ نام"},
       {
         "key": "scope",
@@ -2782,7 +2726,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "permissions": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان \/ نام"},
       {"key": "resource", "label": "منبع"},
       {"key": "action", "label": "عملیات"},
@@ -2822,7 +2765,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "branch",
     "organizationFilter": false,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان \/ نام"},
       {"key": "resource", "label": "بخش", "type": "text", "required": false},
       {"key": "action", "label": "عملیات", "type": "text", "required": false},
@@ -2938,10 +2880,97 @@ const Map<String, dynamic> panelWebPresentation = {
       },
     ],
   },
+  "reports": {
+    "version": 2,
+    "columns": [
+      {"key": "title", "label": "عنوان"},
+      {"key": "branchName", "label": "شعبه"},
+      {"key": "type", "label": "نوع"},
+      {"key": "periodLabel", "label": "بازه زمانی"},
+      {"key": "date", "label": "تاریخ"},
+      {"key": "status", "label": "وضعیت", "action": "status", "type": "badge"},
+    ],
+    "rowActions": ["details"],
+    "filters": [
+      {
+        "key": "branchId",
+        "queryKey": "branchId",
+        "label": "همه شعبه‌ها",
+        "type": "select",
+        "options": {"source": "branches"},
+      },
+      {
+        "key": "type",
+        "rowPath": "type",
+        "label": "همه انواع گزارش",
+        "type": "select",
+        "options": {
+          "حضور و غیاب": "حضور و غیاب",
+          "مالی": "مالی",
+          "ثبت‌نام": "ثبت‌نام",
+          "عملکرد": "عملکرد",
+        },
+      },
+      {
+        "key": "status",
+        "rowPath": "status",
+        "label": "همه وضعیت‌ها",
+        "type": "select",
+        "options": {"آماده": "آماده", "در حال تهیه": "در حال تهیه"},
+      },
+      {
+        "key": "period",
+        "rowPath": "period",
+        "label": "همه بازه‌ها",
+        "type": "select",
+        "options": {
+          "weekly": "هفت روز اخیر",
+          "monthly": "ماه جاری",
+          "current": "وضعیت جاری",
+        },
+      },
+      {
+        "key": "from",
+        "rowPath": "dateISO",
+        "operator": "gte",
+        "label": "از تاریخ",
+        "type": "date",
+      },
+      {
+        "key": "to",
+        "rowPath": "dateISO",
+        "operator": "lte",
+        "label": "تا تاریخ",
+        "type": "date",
+      },
+    ],
+    "organizationMode": "branch",
+    "organizationFilter": false,
+    "detailTitle": "جزئیات گزارش",
+    "detailFields": [
+      {"key": "title", "label": "عنوان"},
+      {"key": "branchName", "label": "شعبه"},
+      {"key": "type", "label": "نوع"},
+      {"key": "periodLabel", "label": "بازه زمانی"},
+      {"key": "date", "label": "تاریخ تولید"},
+      {"key": "periodFrom", "label": "از تاریخ"},
+      {"key": "periodTo", "label": "تا تاریخ"},
+      {"key": "status", "label": "وضعیت"},
+      {"key": "summary", "label": "خلاصه گزارش"},
+      {
+        "key": "metrics",
+        "label": "شاخص‌ها",
+        "type": "rows",
+        "options": [
+          {"key": "label", "label": "شاخص"},
+          {"key": "value", "label": "مقدار"},
+        ],
+      },
+    ],
+  },
   "guides": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان"},
       {"key": "content", "label": "متن راهنما"},
     ],
@@ -2950,7 +2979,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "branch",
     "organizationFilter": false,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان"},
       {"key": "content", "label": "متن راهنما"},
     ],
@@ -2958,7 +2986,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "pages": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان"},
       {"key": "texts", "label": "متن‌های ویرایش‌شده"},
       {"key": "images", "label": "تصاویر"},
@@ -2979,7 +3006,6 @@ const Map<String, dynamic> panelWebPresentation = {
       },
     },
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "عنوان"},
       {"key": "texts", "label": "متن‌های ویرایش‌شده"},
       {"key": "images", "label": "تصاویر"},
@@ -2990,7 +3016,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "availabilities": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "branchName", "label": "سازمان"},
       {"key": "day", "label": "روز"},
       {"key": "timeLabel", "label": "ساعت"},
@@ -3078,7 +3103,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "branch",
     "organizationFilter": true,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "branchName", "label": "سازمان"},
       {
         "key": "day",
@@ -3228,7 +3252,6 @@ const Map<String, dynamic> panelWebPresentation = {
       "rules": {
         "version": 2,
         "columns": [
-          {"key": "id", "label": "شناسه"},
           {"key": "title", "label": "عنوان"},
           {"key": "type", "label": "نوع"},
           {"key": "category", "label": "دسته"},
@@ -3320,7 +3343,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "my-lessons": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "درس"},
       {"key": "level", "label": "سطح"},
       {"key": "is_primary", "label": "اصلی"},
@@ -3333,7 +3355,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "branch",
     "organizationFilter": false,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "title", "label": "درس"},
       {"key": "level", "label": "سطح"},
       {
@@ -3380,7 +3401,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "my-schedule": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "day", "label": "روز یا تاریخ"},
       {"key": "start", "label": "شروع"},
       {"key": "end", "label": "پایان"},
@@ -3393,7 +3413,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "branch",
     "organizationFilter": false,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {
         "key": "day",
         "label": "روز",
@@ -3479,7 +3498,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "my-finance": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "term", "label": "ترم"},
       {"key": "amount", "label": "مبلغ قابل پرداخت"},
       {"key": "status", "label": "وضعیت"},
@@ -3490,7 +3508,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "branch",
     "organizationFilter": false,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "term", "label": "ترم"},
       {"key": "amount", "label": "مبلغ قابل پرداخت"},
       {"key": "status", "label": "وضعیت"},
@@ -3500,7 +3517,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "waiting-approvals": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "studentName", "label": "هنرجو"},
       {"key": "termName", "label": "ترم"},
     ],
@@ -3509,7 +3525,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "branch",
     "organizationFilter": false,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "studentName", "label": "هنرجو"},
       {"key": "termName", "label": "ترم"},
     ],
@@ -3517,7 +3532,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "waiting-schedules": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "studentName", "label": "هنرجو"},
       {"key": "termName", "label": "ترم"},
     ],
@@ -3526,7 +3540,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "branch",
     "organizationFilter": false,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "studentName", "label": "هنرجو"},
       {"key": "termName", "label": "ترم"},
     ],
@@ -3534,7 +3547,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "my-waiting": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "studentName", "label": "هنرجو"},
       {"key": "termName", "label": "ترم"},
       {"key": "status", "label": "وضعیت"},
@@ -3544,7 +3556,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "branch",
     "organizationFilter": false,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "studentName", "label": "هنرجو"},
       {"key": "termName", "label": "ترم"},
       {"key": "status", "label": "وضعیت"},
@@ -3553,7 +3564,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "organization-holidays": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "name", "label": "سازمان"},
       {"key": "date", "label": "تاریخ"},
       {"key": "timeLabel", "label": "ساعت"},
@@ -3622,7 +3632,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "branch",
     "organizationFilter": true,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "name", "label": "سازمان"},
       {"key": "date", "label": "تاریخ", "type": "date", "required": false},
       {"key": "timeLabel", "label": "ساعت"},
@@ -3714,7 +3723,6 @@ const Map<String, dynamic> panelWebPresentation = {
   "employee-leaves": {
     "version": 2,
     "columns": [
-      {"key": "id", "label": "شناسه"},
       {"key": "name", "label": "کارمند"},
       {"key": "date", "label": "تاریخ"},
       {"key": "timeLabel", "label": "ساعت"},
@@ -3782,7 +3790,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "organizationMode": "branch",
     "organizationFilter": true,
     "detailFields": [
-      {"key": "id", "label": "شناسه"},
       {"key": "name", "label": "کارمند"},
       {"key": "date", "label": "تاریخ", "type": "date", "required": false},
       {"key": "timeLabel", "label": "ساعت"},

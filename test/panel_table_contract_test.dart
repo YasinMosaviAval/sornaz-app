@@ -61,7 +61,6 @@ void main() {
     () {
       final levels = panelTableContract(section('course-levels'));
       expect(objects(levels['columns']).map((c) => c['key']), [
-        'id',
         'name',
         'summary',
       ]);
@@ -71,7 +70,7 @@ void main() {
         panelTableColumns(types, {
           'permissions': {'showStatus': false, 'showCategory': false},
         }).map((c) => c['key']),
-        ['id', 'createdByName', 'title', 'summary'],
+        ['createdByName', 'title', 'summary'],
       );
       final points = optionalObject(contracts['points']);
       expect(

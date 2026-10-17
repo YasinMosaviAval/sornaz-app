@@ -72,7 +72,7 @@ void main() {
       final contract = panelTableContract(stale);
       expect(
         panelTableColumns(contract, {'canManage': false}).map((c) => c['key']),
-        ['id', 'title', 'type', 'category', 'points', 'repeatMode'],
+        ['title', 'type', 'category', 'points', 'repeatMode'],
       );
       expect(contract['actionsPermission'], 'canManage');
       expect(objects(contract['summaries']).single['label'], 'قوانین فعال');
@@ -398,8 +398,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('قوانین فعال'), findsOneWidget);
       final table = tester.widget<DataTable>(find.byType(DataTable));
-      expect(table.columns.length, 6);
-      expect(table.rows.single.cells.length, 6);
+      expect(table.columns.length, 5);
+      expect(table.rows.single.cells.length, 5);
       expect(find.byIcon(Icons.delete_outline), findsNothing);
       api.dispose();
     },

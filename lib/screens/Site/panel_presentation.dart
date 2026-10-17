@@ -10,6 +10,7 @@ import '../Social/social_api.dart';
 import '../Social/social_widgets.dart';
 import 'panel_api.dart';
 import 'site_api.dart';
+import 'panel_parity.dart';
 
 String panelCsv(List<Json> rows) {
   final columns = rows
@@ -37,9 +38,9 @@ String panelCsv(List<Json> rows) {
 }
 
 Future<void> exportPanelRows(String name, List<Json> rows) async {
-  final bytes = utf8.encode(panelCsv(rows));
+  final bytes = Uint8List.fromList(panelExcelBytes(rows));
   final path = await FilePicker.platform.saveFile(
-    fileName: '$name.csv',
+    fileName: '$name.xlsx',
     bytes: bytes,
   );
   if (path != null &&
@@ -71,7 +72,7 @@ List<int> panelExcelBytes(List<Json> rows) {
     '_rels/.rels':
         '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>',
     'xl/workbook.xml':
-        '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Finance" sheetId="1" r:id="rId1"/></sheets></workbook>',
+        '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Data" sheetId="1" r:id="rId1"/></sheets></workbook>',
     'xl/_rels/workbook.xml.rels':
         '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>',
     'xl/worksheets/sheet1.xml': sheet,
@@ -169,7 +170,6 @@ class PanelStatistics extends StatelessWidget {
         for (final entry in stats.entries)
           SizedBox(
             width: (size.maxWidth - 8) / 2,
-            height: 40,
             child: Card(
               margin: EdgeInsets.zero,
               child: Padding(
@@ -184,7 +184,7 @@ class PanelStatistics extends StatelessWidget {
                           labels[entry.key]?.$2 ?? entry.key,
                         ),
                         maxLines: 2,
-                        style: const TextStyle(fontSize: 11),
+                        style: Theme.of(context).textTheme.bodyMedium,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -193,11 +193,16 @@ class PanelStatistics extends StatelessWidget {
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
-                          '${entry.value}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Theme.of(context).colorScheme.primary,
+                          panelNumber(
+                            entry.value,
+                            fa:
+                                Localizations.localeOf(context).languageCode ==
+                                'fa',
                           ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                         ),
                       ),
                     ),
