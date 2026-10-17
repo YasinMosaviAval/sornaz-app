@@ -28,6 +28,9 @@ import 'panel_voice.dart';
 import 'panel_list_item.dart';
 import 'panel_gallery.dart';
 import 'panel_organization_filter.dart';
+import 'panel_finance.dart';
+import 'panel_page_guidance.dart';
+import 'site_api.dart';
 import 'package:sornaz/components/media_dialogs.dart';
 
 String panelLabel(BuildContext context, Json item) =>
@@ -103,7 +106,11 @@ class _PanelTabsState extends State<PanelResourcePage>
           ? null
           : TabBar(
               controller: controller,
-              labelPadding: EdgeInsets.zero,
+              isScrollable: tabs.length > 3,
+              tabAlignment: tabs.length > 3 ? TabAlignment.start : null,
+              labelPadding: tabs.length > 3
+                  ? const EdgeInsets.symmetric(horizontal: 12)
+                  : EdgeInsets.zero,
               labelStyle: Theme.of(context).textTheme.labelLarge,
               tabs: [
                 for (final tab in tabs) Tab(text: panelLabel(context, tab)),
@@ -215,6 +222,32 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
         final options = await widget.api.get('/courses/list');
         value.addAll(panelTermOptionData(value, options));
       }
+      if (section == 'finance') {
+        var subscriptions = optionalObject(value['subscriptions']);
+        if (subscriptions.isEmpty &&
+            value['subscriptionUnavailable'] != true &&
+            actions.containsKey('subscriptions')) {
+          try {
+            subscriptions = await widget.api.get('/finance/subscriptions');
+          } catch (error) {
+            if (error is SocialException && error.status == 401) rethrow;
+            value['subscriptionUnavailable'] = true;
+          }
+        }
+        value['subscriptionUnavailable'] = subscriptions.isEmpty;
+        value['invoices'] = [
+          for (final invoice in objects(value['invoices'] ?? []))
+            {
+              ...invoice,
+              'title': invoice['termName'],
+              'type': 'فاکتور ترم',
+              'dateIso': invoice['dueDate'],
+              'date': invoice['dueDate'],
+            },
+          ...panelSubscriptionRows(subscriptions),
+        ];
+        value['subscriptionPlans'] = subscriptions['plans'];
+      }
       if (mounted && request == generation) {
         setState(() {
           data = value;
@@ -288,6 +321,8 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
         section == 'terms' && key == 'restore') {
       return false;
     }
+    if (section == 'finance' && record['invoiceKind'] == 'subscription')
+      return false;
     if (section == 'finance' && ['pay', 'offline'].contains(key)) return false;
     return true;
   }
@@ -344,6 +379,17 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
     var fields = action['fields'] is List
         ? objects(action['fields'])
         : <Json>[];
+    if (section == 'term-discounts' &&
+        key == 'update' &&
+        (num.tryParse('${record['organizationUserId']}') ?? 0) > 0) {
+      fields = [
+        for (final field in fields)
+          {
+            ...field,
+            if (field['key'] == 'organizationUserId') 'readOnly': true,
+          },
+      ];
+    }
     if (section == 'terms') fields = panelTermDialogFields(fields);
     if (section == 'posts' &&
         action['formContractVersion'] != 2 &&
@@ -926,6 +972,22 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        if (section == 'finance' &&
+                            row['invoiceKind'] == 'subscription' &&
+                            row['canPay'] == true)
+                          IconButton(
+                            tooltip: socialText(
+                              context,
+                              'خرید اشتراک',
+                              'Buy subscription',
+                            ),
+                            icon: const Icon(Icons.shopping_cart_outlined),
+                            onPressed: busy
+                                ? null
+                                : () => buySubscription(
+                                    optionalObject(row['_record']),
+                                  ),
+                          ),
                         for (final key in rowActions)
                           if (key == 'details' || available('$key', row))
                             if ([
@@ -1097,6 +1159,70 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
     );
   }
 
+  Future<void> buySubscription(Json row) async {
+    final plan = await showDialog<Json>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+          socialText(
+            context,
+            'انتخاب پلن اشتراک',
+            'Choose a subscription plan',
+          ),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final plan in objects(data['subscriptionPlans'] ?? []))
+                ListTile(
+                  title: Text('${plan['label']}'),
+                  subtitle: Text(
+                    '${plan['amount']} ${socialText(context, 'تومان', 'toman')}',
+                  ),
+                  onTap: () => Navigator.pop(dialogContext, plan),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(socialText(context, 'انصراف', 'Cancel')),
+          ),
+        ],
+      ),
+    );
+    if (plan == null || !mounted) return;
+    final confirmed = await showPanelConfirmation(
+      context,
+      socialText(context, 'پرداخت اشتراک', 'Pay for subscription'),
+      message:
+          '${plan['label']} — ${plan['amount']} ${socialText(context, 'تومان', 'toman')}',
+    );
+    if (!confirmed || !mounted) return;
+    setState(() => busy = true);
+    try {
+      final response = await widget.api.act(
+        'finance',
+        'subscription-pay',
+        params: {'id': '${row['subscriptionId']}'},
+        values: {'months': plan['months']},
+      );
+      final target = SiteApi.origin.resolve('${response['redirectUrl'] ?? ''}');
+      if ('${response['redirectUrl'] ?? ''}'.trim().isEmpty ||
+          !['https', 'http'].contains(target.scheme) ||
+          !await launchUrl(target, mode: LaunchMode.externalApplication)) {
+        throw const SocialException('لینک پرداخت دریافت نشد.');
+      }
+      if (mounted) await load(refresh: true);
+    } catch (error) {
+      if (mounted) socialError(context, error);
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthSession?>();
@@ -1104,7 +1230,15 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
       return const PanelScaffold(body: JoinCommunity());
     }
     if (['branches', 'branch-types'].contains(section)) {
-      return BranchesPage(api: widget.api, section: widget.section);
+      return BranchesPage(
+        api: widget.api,
+        section: {
+          ...widget.section,
+          'label': widget.titleSection['label'],
+          'en': widget.titleSection['en'],
+        },
+        tabs: widget.tabs,
+      );
     }
     final dynamic collection = panelValue(
       data,
@@ -1154,12 +1288,8 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
         .where(
           (row) =>
               (['users', 'schedules'].contains(section) ||
-                  panelMatchesOrganization(row, effectiveOrganization)) &&
-              panelMatchesFilters(
-                row,
-                filterFields,
-                filters,
-              ) &&
+                  panelMatchesOrganization(row, effectiveOrganization, data)) &&
+              panelMatchesFilters(row, filterFields, filters) &&
               optionalObject(
                 widget.section['where'],
               ).entries.every((e) => row[e.key] == e.value) &&
@@ -1173,6 +1303,24 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
                   .contains(query.toLowerCase()),
         )
         .toList();
+    final financeTotals = section == 'finance'
+        ? panelFinanceTotals(filtered)
+        : <String, dynamic>{};
+    final exportColumns = panelTableColumns(tableContract, data);
+    final financeExportRows = [
+      if (section == 'finance' && filtered.isEmpty)
+        {for (final column in exportColumns) '${column['label']}': ''},
+      for (final row in filtered)
+        {
+          for (final column in exportColumns)
+            '${column['label']}': panelTableText(
+              panelTableValue(
+                panelDisplayRow(section, row, data),
+                '${column['key']}',
+              ),
+            ),
+        },
+    ];
     final pageActions = actions.entries
         .where(
           (entry) =>
@@ -1192,7 +1340,8 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
                   entry.key == 'create' &&
                   optionalObject(data['permissions'])['canSetType'] == false) &&
               !(entry.key == 'create' &&
-                  (data['can_create_branch'] == false ||
+                  (section == 'term-discounts' && data['ready'] == false ||
+                      data['can_create_branch'] == false ||
                       section == 'classroom-types' &&
                           optionalObject(data['permissions'])['canCreate'] ==
                               false)),
@@ -1209,19 +1358,23 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
           icon: const Icon(Icons.tune),
           onPressed: busy ? null : () => perform(e.key),
         ),
-      if (filtered.isNotEmpty)
+      if (filtered.isNotEmpty || section == 'finance')
         IconButton(
           tooltip: socialText(context, 'خروجی اکسل', 'Export Excel'),
           icon: const Icon(Icons.table_view, color: Color(0xff16a34a)),
           onPressed: () async {
             try {
-              await exportPanelRows(section, filtered);
+              if (section == 'finance') {
+                await exportPanelExcel(section, financeExportRows);
+              } else {
+                await exportPanelRows(section, filtered);
+              }
             } catch (e) {
               if (mounted) socialError(this.context, e);
             }
           },
         ),
-      if (filtered.isNotEmpty || data['stats'] is Map)
+      if (filtered.isNotEmpty || data['stats'] is Map || section == 'finance')
         IconButton(
           tooltip: socialText(context, 'خروجی PDF', 'Export PDF'),
           icon: const Icon(
@@ -1229,12 +1382,14 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
             color: Color(0xffdc2626),
           ),
           onPressed: () async {
-            final exportRows = filtered.isEmpty
+            final exportRows = section == 'finance'
+                ? financeExportRows
+                : filtered.isEmpty
                 ? [optionalObject(data['stats'])]
                 : filtered;
             final labels = {
               for (final key in exportRows.expand((row) => row.keys))
-                key: panelDataLabel(context, key),
+                key: section == 'finance' ? key : panelDataLabel(context, key),
             };
             final title = panelLabel(context, widget.section);
 
@@ -1380,6 +1535,107 @@ class _PanelResourcePageState extends State<_PanelResourceContent> {
                   padding: const EdgeInsets.only(bottom: 16),
                   children: [
                     if (busy) const LinearProgressIndicator(),
+                    PanelPageGuidance(
+                      api: widget.api,
+                      section: section,
+                      horizontalInset: 12,
+                      defaults: optionalObject(tableContract['guidance']),
+                      enabled: widget.section['pageGuidance'] is Map,
+                      canEdit:
+                          optionalObject(
+                            widget.section['pageGuidance'],
+                          )['canEdit'] ==
+                          true,
+                    ),
+                    if (section == 'finance') ...[
+                      if (data['subscriptionUnavailable'] == true)
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Text(
+                            socialText(
+                              context,
+                              'اطلاعات اشتراک دریافت نشد. API وب را به‌روز کنید و دوباره تلاش کنید.',
+                              'Subscription data could not be loaded. Update the web API and retry.',
+                            ),
+                          ),
+                        ),
+                      Card(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                socialText(
+                                  context,
+                                  'اشتراک سامانه مدیریت آموزشگاه',
+                                  'Academy management subscription',
+                                ),
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              Text(
+                                socialText(
+                                  context,
+                                  'ماه اول رایگان',
+                                  'First month free',
+                                ),
+                              ),
+                              for (final plan in objects(
+                                data['subscriptionPlans'] ?? [],
+                              ))
+                                Text(
+                                  '${plan['label']} — ${plan['amount']} ${socialText(context, 'تومان', 'toman')}',
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      for (final metric in [
+                        (
+                          'total',
+                          'مجموع مبلغ فاکتورها',
+                          'Total invoice amount',
+                        ),
+                        ('paid', 'اقساط پرداخت‌شده', 'Paid installments'),
+                        ('remaining', 'مانده قابل پرداخت', 'Remaining payable'),
+                      ])
+                        Card(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(socialText(context, metric.$2, metric.$3)),
+                                Text(
+                                  '${financeTotals[metric.$1]} ${socialText(context, 'تومان', 'toman')}',
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.headlineSmall,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                    if (section == 'term-discounts' && data['ready'] == false)
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Text(
+                          socialText(
+                            context,
+                            'برای مدیریت تخفیف‌های سازمانی، به‌روزرسانی پایگاه دادهٔ وب لازم است.',
+                            'Update the website database to manage organization discounts.',
+                          ),
+                        ),
+                      ),
                     for (final summary in objects(
                       tableContract['summaries'] ?? [],
                     ))

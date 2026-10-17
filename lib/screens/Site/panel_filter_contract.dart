@@ -134,6 +134,8 @@ String panelFilterToken(dynamic value) {
 }
 
 dynamic panelFilterValue(Json row, String path) {
+  if (path == 'status' && row['invoiceKind'] == 'subscription')
+    return row['status'];
   if (path == 'type' &&
       row['type'] == null &&
       row['termName'] != null &&

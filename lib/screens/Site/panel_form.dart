@@ -549,8 +549,9 @@ class _PanelFieldState extends State<PanelField> {
         validator: (v) => field['required'] == true && (v == null || v.isEmpty)
             ? socialText(context, 'یک گزینه انتخاب کنید.', 'Select an option.')
             : null,
-        onChanged: (v) =>
-            widget.changed(v == null ? null : int.tryParse(v) ?? v),
+        onChanged: field['readOnly'] == true
+            ? null
+            : (v) => widget.changed(v == null ? null : int.tryParse(v) ?? v),
       );
     }
     if (type == 'rows' || type == 'object' || type == 'strings') {

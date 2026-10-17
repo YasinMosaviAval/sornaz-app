@@ -15,19 +15,31 @@ Map<String, String> panelOrganizationOptions(
     return options;
   }
   if (mode == 'points') {
+    options['academy'] = fa ? 'آموزشگاه' : 'Academy';
     for (final organization in objects(data['organizations'] ?? [])) {
       if (organization['id'] != null && '${organization['id']}' != '0')
         options['branch:${organization['id']}'] = '${organization['name']}';
     }
     return options;
   }
+  // The website always offers the academy scope, even when it has no rows.
+  options['academy'] = fa ? 'آموزشگاه' : 'Academy';
+  for (final owner in objects(data['owners'] ?? [])) {
+    if (owner['kind'] == 'branch') {
+      options['owner:${owner['userId']}'] = '${owner['name']}';
+    }
+  }
   for (final branch in objects(data['branches'] ?? [])) {
     if (branch['id'] != null) {
-      options['branch:${branch['id']}'] =
+      if (branch['kind'] == 'academy') continue;
+      options['branch:${branch['branchId'] ?? branch['id']}'] =
           '${branch['name'] ?? branch['title'] ?? branch['id']}';
     }
   }
-  for (final organization in objects(data['organizations'] ?? [])) {
+  for (final organization in [
+    ...objects(data['organizations'] ?? []),
+    ...objects(optionalObject(data['staff_catalog'])['organizations'] ?? []),
+  ]) {
     if (organization['kind'] == 'academy') {
       options['academy'] = fa ? 'آموزشگاه' : 'Academy';
     } else if (organization['kind'] == 'branch') {
@@ -57,16 +69,27 @@ Map<String, String> panelOrganizationOptions(
   return options;
 }
 
-bool panelMatchesOrganization(Json row, String selection) {
+bool panelMatchesOrganization(
+  Json row,
+  String selection, [
+  Json data = const {},
+]) {
   if (selection.isEmpty) return true;
   if (selection.startsWith('owner:'))
     return selection.substring(6) ==
-        '${row['owner_id'] ?? row['user_id'] ?? row['organizationUserId']}';
+        '${row['ownerId'] ?? row['owner_id'] ?? row['user_id'] ?? row['organizationUserId']}';
   final organization = optionalObject(row['organization']);
+  final owner = objects(
+    data['owners'] ?? [],
+  ).where((owner) => '${owner['userId']}' == '${row['ownerId']}').firstOrNull;
   final branch =
       row['branchId'] ?? row['branch_id'] ?? organization['branchId'];
   if (selection == 'academy') {
-    return (row['organizationKind'] ?? organization['kind']) == 'academy' ||
+    return (row['ownerKind'] ??
+                owner?['kind'] ??
+                row['organizationKind'] ??
+                organization['kind']) ==
+            'academy' ||
         ((row.containsKey('branchId') || row.containsKey('branch_id')) &&
             (branch == null || '$branch' == '0'));
   }

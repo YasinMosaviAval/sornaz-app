@@ -54,7 +54,9 @@ Json panelSectionWithTabs(Json section, List<Json> sections) {
   final personalLearning = !catalog.containsKey('members');
   final groups = [
     ['course-levels', 'lessons', 'courses'],
-    ['members', 'users'],
+    ['members', 'users', 'member-schedules', 'employee-leaves'],
+    ['branches', 'availabilities', 'scheduling-rules', 'organization-holidays'],
+    ['terms', 'term-discounts'],
     ['classroom-types', 'classrooms'],
     if (personalLearning) ['dashboard', 'my-terms', 'my-classrooms'],
     ['my-points', 'points'],
@@ -67,6 +69,17 @@ Json panelSectionWithTabs(Json section, List<Json> sections) {
     'courses': ('دوره‌ها', 'Courses'),
     'members': ('قراردادها', 'Contracts'),
     'users': ('نقش‌ها و دسترسی‌ها', 'Roles and permissions'),
+    'member-schedules': ('برنامه زمانی اعضا', 'Member schedules'),
+    'employee-leaves': ('مرخصی‌ها', 'Employee leaves'),
+    'branches': ('سازمان', 'Organization'),
+    'availabilities': ('برنامه زمانی سازمان', 'Organization availability'),
+    'scheduling-rules': (
+      'قوانین زمانبندی سازمان',
+      'Organization scheduling rules',
+    ),
+    'organization-holidays': ('تعطیلات', 'Holidays'),
+    'terms': ('مدیریت ترم‌ها', 'Manage terms'),
+    'term-discounts': ('تخفیف‌ها', 'Discounts'),
     'classroom-types': ('انواع کلاس', 'Classroom types'),
     'classrooms': ('کلاس‌ها', 'Classrooms'),
     'dashboard': ('داشبورد من', 'My dashboard'),

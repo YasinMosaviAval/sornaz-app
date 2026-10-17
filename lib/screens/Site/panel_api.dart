@@ -28,6 +28,7 @@ class PanelApi {
     'Accept': 'application/json',
     'Accept-Language': SocialApi.locale,
     'X-Sornaz-Panel-Forms': '2',
+    'X-Sornaz-Panel-Features': '3',
   };
   // Session-only cache: no background revalidation or automatic retry.
   final Map<String, (DateTime, String)> _cache = {};
@@ -43,7 +44,7 @@ class PanelApi {
     final sorted = Map.fromEntries(
       (query ?? {}).entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
     );
-    return '${SocialApi.locale}:${uri(path, sorted)}';
+    return 'panel-v3:${SocialApi.locale}:${uri(path, sorted)}';
   }
 
   Future<Json> refresh(String path, [Map<String, String>? query]) {

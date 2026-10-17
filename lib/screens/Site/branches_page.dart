@@ -9,9 +9,17 @@ import 'panel_api.dart';
 import 'panel_presentation.dart';
 import 'branch_style.dart';
 import 'branch_form.dart';
+import 'panel_page_guidance.dart';
+import 'panel_table_contract.dart';
 
 class BranchesPage extends StatefulWidget {
-  const BranchesPage({super.key, required this.api, required this.section});
+  const BranchesPage({
+    super.key,
+    required this.api,
+    required this.section,
+    this.tabs,
+  });
+  final Widget? tabs;
   final PanelApi api;
   final Json section;
   @override
@@ -19,6 +27,13 @@ class BranchesPage extends StatefulWidget {
 }
 
 class _BranchesPageState extends State<BranchesPage> {
+  Widget withTabs(Widget child) => Column(
+    children: [
+      if (widget.tabs != null) widget.tabs!,
+      Expanded(child: child),
+    ],
+  );
+
   Json data = {};
   bool loading = true, busy = false, table = false, initialized = false;
   Object? error;
@@ -805,231 +820,252 @@ class _BranchesPageState extends State<BranchesPage> {
             ],
           ],
         ),
-        body: loading
-            ? const Center(child: CircularProgressIndicator())
-            : error != null
-            ? Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      t('دریافت اطلاعات ممکن نشد.', 'Could not load branches.'),
-                    ),
-                    TextButton(
-                      onPressed: () => load(refresh: true),
-                      child: Text(t('تلاش دوباره', 'Retry')),
-                    ),
-                  ],
-                ),
-              )
-            : RefreshIndicator(
-                onRefresh: () => load(refresh: true),
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    if (!typesOnly) ...[
-                      Row(
-                        children: [
-                          Expanded(
-                            child: stat(
-                              t('تعداد آموزشگاه‌ها', 'Academies'),
-                              objects(data['academies'] ?? []).isNotEmpty
-                                  ? objects(data['academies']).length
-                                  : branches
-                                        .map((r) => r['academy_id'])
-                                        .toSet()
-                                        .length,
-                              const Color(0xfff5f3ff),
-                              const Color(0xff6d28d9),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: stat(
-                              t('تعداد شعبه‌ها', 'Branches'),
-                              branches.length,
-                              const Color(0xffeef2ff),
-                              const Color(0xff4338ca),
-                            ),
-                          ),
-                        ],
+        body: withTabs(
+          loading
+              ? const Center(child: CircularProgressIndicator())
+              : error != null
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        t(
+                          'دریافت اطلاعات ممکن نشد.',
+                          'Could not load branches.',
+                        ),
                       ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          for (final option in [
-                            (
-                              true,
-                              Icons.table_chart_outlined,
-                              t('نمایش جدولی', 'Table view'),
-                            ),
-                            (
-                              false,
-                              Icons.grid_view,
-                              t('نمایش کارتی', 'Card view'),
-                            ),
-                          ])
-                            OutlinedButton.icon(
-                              style: OutlinedButton.styleFrom(
-                                minimumSize: const Size(0, 40),
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                backgroundColor: table == option.$1
-                                    ? const Color(0xffeef2ff)
-                                    : Colors.white,
-                              ),
-                              onPressed: () =>
-                                  setState(() => table = option.$1),
-                              icon: Icon(option.$2, size: 18),
-                              label: Text(option.$3),
-                            ),
-                        ],
+                      TextButton(
+                        onPressed: () => load(refresh: true),
+                        child: Text(t('تلاش دوباره', 'Retry')),
                       ),
-                      const SizedBox(height: 20),
-                      BranchSurface(
-                        padding: 0,
-                        child: Column(
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: () => load(refresh: true),
+                  child: ListView(
+                    padding: const EdgeInsets.all(12),
+                    children: [
+                      PanelPageGuidance(
+                        api: widget.api,
+                        section: resource,
+                        defaults: optionalObject(
+                          panelTableContract(widget.section)['guidance'],
+                        ),
+                        enabled: widget.section['pageGuidance'] is Map,
+                        canEdit:
+                            optionalObject(
+                              widget.section['pageGuidance'],
+                            )['canEdit'] ==
+                            true,
+                      ),
+                      if (!typesOnly) ...[
+                        Row(
                           children: [
-                            filter(
-                              'type',
-                              t('همه انواع آموزشی', 'All education types'),
-                              objects(data['types'] ?? []),
-                              type,
-                              (v) => type = v,
+                            Expanded(
+                              child: stat(
+                                t('تعداد آموزشگاه‌ها', 'Academies'),
+                                objects(data['academies'] ?? []).isNotEmpty
+                                    ? objects(data['academies']).length
+                                    : branches
+                                          .map((r) => r['academy_id'])
+                                          .toSet()
+                                          .length,
+                                const Color(0xfff5f3ff),
+                                const Color(0xff6d28d9),
+                              ),
                             ),
-                            if (branchFlag(data['site_admin']) &&
-                                !branchFlag(data['branch_account'])) ...[
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: stat(
+                                t('تعداد شعبه‌ها', 'Branches'),
+                                branches.length,
+                                const Color(0xffeef2ff),
+                                const Color(0xff4338ca),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            for (final option in [
+                              (
+                                true,
+                                Icons.table_chart_outlined,
+                                t('نمایش جدولی', 'Table view'),
+                              ),
+                              (
+                                false,
+                                Icons.grid_view,
+                                t('نمایش کارتی', 'Card view'),
+                              ),
+                            ])
+                              OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  minimumSize: const Size(0, 40),
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  backgroundColor: table == option.$1
+                                      ? const Color(0xffeef2ff)
+                                      : Colors.white,
+                                ),
+                                onPressed: () =>
+                                    setState(() => table = option.$1),
+                                icon: Icon(option.$2, size: 18),
+                                label: Text(option.$3),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        BranchSurface(
+                          padding: 0,
+                          child: Column(
+                            children: [
                               filter(
-                                'academy',
-                                t('همه آموزشگاه‌ها', 'All academies'),
-                                objects(data['academies'] ?? []),
-                                academy,
-                                (v) => academy = v,
+                                'type',
+                                t('همه انواع آموزشی', 'All education types'),
+                                objects(data['types'] ?? []),
+                                type,
+                                (v) => type = v,
+                              ),
+                              if (branchFlag(data['site_admin']) &&
+                                  !branchFlag(data['branch_account'])) ...[
+                                filter(
+                                  'academy',
+                                  t('همه آموزشگاه‌ها', 'All academies'),
+                                  objects(data['academies'] ?? []),
+                                  academy,
+                                  (v) => academy = v,
+                                ),
+                              ],
+
+                              filter(
+                                'mode',
+                                t('همه انواع ارائه', 'All delivery types'),
+                                [
+                                  for (final k in [
+                                    'physical',
+                                    'online',
+                                    'hybrid',
+                                  ])
+                                    {'id': k, 'name': branchMode(k, fa)},
+                                ],
+                                mode,
+                                (v) => mode = v,
+                              ),
+
+                              filter(
+                                'status',
+                                t('همه وضعیت‌ها', 'All statuses'),
+                                [
+                                  for (final k in [
+                                    'active',
+                                    'inactive',
+                                    'removed',
+                                  ])
+                                    {
+                                      'id': k,
+                                      'name': branchStatus({'status': k}, fa),
+                                    },
+                                ],
+                                status,
+                                (v) => status = v,
                               ),
                             ],
-
-                            filter(
-                              'mode',
-                              t('همه انواع ارائه', 'All delivery types'),
-                              [
-                                for (final k in [
-                                  'physical',
-                                  'online',
-                                  'hybrid',
-                                ])
-                                  {'id': k, 'name': branchMode(k, fa)},
-                              ],
-                              mode,
-                              (v) => mode = v,
-                            ),
-
-                            filter(
-                              'status',
-                              t('همه وضعیت‌ها', 'All statuses'),
-                              [
-                                for (final k in [
-                                  'active',
-                                  'inactive',
-                                  'removed',
-                                ])
-                                  {
-                                    'id': k,
-                                    'name': branchStatus({'status': k}, fa),
-                                  },
-                              ],
-                              status,
-                              (v) => status = v,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-                    if (busy) const LinearProgressIndicator(),
-                    if (rows.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 64),
-                        child: Center(
-                          child: Text(
-                            t(
-                              typesOnly
-                                  ? 'نوع آموزشی ثبت نشده است.'
-                                  : 'شعبه‌ای یافت نشد',
-                              'No results found',
-                            ),
-                            style: TextStyle(color: branchSecondary(context)),
                           ),
                         ),
-                      )
-                    else if (table)
-                      tableView(shown)
-                    else
-                      for (final row in shown) ...[
-                        card(row),
                         const SizedBox(height: 24),
                       ],
-                    if (!typesOnly && branches.length >= 11) ...[
-                      const SizedBox(height: 20),
-                      BranchSurface(
-                        padding: 16,
-                        child: Column(
-                          children: [
-                            Text(
+                      if (busy) const LinearProgressIndicator(),
+                      if (rows.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 64),
+                          child: Center(
+                            child: Text(
                               t(
-                                'نمایش ${digits(rows.isEmpty ? 0 : (current - 1) * pageSize + 1)} تا ${digits(((current - 1) * pageSize + shown.length))} از ${digits(rows.length)} شعبه',
-                                '${rows.length} branches',
+                                typesOnly
+                                    ? 'نوع آموزشی ثبت نشده است.'
+                                    : 'شعبه‌ای یافت نشد',
+                                'No results found',
                               ),
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: branchSecondary(context),
+                              style: TextStyle(color: branchSecondary(context)),
+                            ),
+                          ),
+                        )
+                      else if (table)
+                        tableView(shown)
+                      else
+                        for (final row in shown) ...[
+                          card(row),
+                          const SizedBox(height: 24),
+                        ],
+                      if (!typesOnly && branches.length >= 11) ...[
+                        const SizedBox(height: 20),
+                        BranchSurface(
+                          padding: 16,
+                          child: Column(
+                            children: [
+                              Text(
+                                t(
+                                  'نمایش ${digits(rows.isEmpty ? 0 : (current - 1) * pageSize + 1)} تا ${digits(((current - 1) * pageSize + shown.length))} از ${digits(rows.length)} شعبه',
+                                  '${rows.length} branches',
+                                ),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: branchSecondary(context),
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 12),
-                            Wrap(
-                              spacing: 8,
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              children: [
-                                DropdownButton<int>(
-                                  value: pageSize,
-                                  items: [
-                                    for (final n in [10, 20, 50, 100])
-                                      DropdownMenuItem(
-                                        value: n,
-                                        child: Text(digits(n)),
-                                      ),
-                                  ],
-                                  onChanged: (v) => setState(() {
-                                    pageSize = v!;
-                                    page = 1;
-                                  }),
-                                ),
-                                OutlinedButton(
-                                  onPressed: current > 1
-                                      ? () => setState(() => page = current - 1)
-                                      : null,
-                                  child: Text(t('قبلی', 'Previous')),
-                                ),
-                                Text('${digits(current)} / ${digits(pages)}'),
-                                OutlinedButton(
-                                  onPressed: current < pages
-                                      ? () => setState(() => page = current + 1)
-                                      : null,
-                                  child: Text(t('بعدی', 'Next')),
-                                ),
-                              ],
-                            ),
-                          ],
+                              const SizedBox(height: 12),
+                              Wrap(
+                                spacing: 8,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  DropdownButton<int>(
+                                    value: pageSize,
+                                    items: [
+                                      for (final n in [10, 20, 50, 100])
+                                        DropdownMenuItem(
+                                          value: n,
+                                          child: Text(digits(n)),
+                                        ),
+                                    ],
+                                    onChanged: (v) => setState(() {
+                                      pageSize = v!;
+                                      page = 1;
+                                    }),
+                                  ),
+                                  OutlinedButton(
+                                    onPressed: current > 1
+                                        ? () =>
+                                              setState(() => page = current - 1)
+                                        : null,
+                                    child: Text(t('قبلی', 'Previous')),
+                                  ),
+                                  Text('${digits(current)} / ${digits(pages)}'),
+                                  OutlinedButton(
+                                    onPressed: current < pages
+                                        ? () =>
+                                              setState(() => page = current + 1)
+                                        : null,
+                                    child: Text(t('بعدی', 'Next')),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
+        ),
       ),
     );
   }

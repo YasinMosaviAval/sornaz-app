@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:archive/archive.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'dart:convert';
@@ -45,6 +46,53 @@ Future<void> exportPanelRows(String name, List<Json> rows) async {
       (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
     await File(path).writeAsBytes(bytes);
   }
+}
+
+/// A real XLSX workbook with inline text cells: user content is never a formula.
+List<int> panelExcelBytes(List<Json> rows) {
+  String xml(dynamic value) => '$value'
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&apos;');
+  final columns = rows.expand((row) => row.keys).toSet().toList();
+  final table = [
+    columns,
+    for (final row in rows) [for (final key in columns) row[key] ?? ''],
+  ];
+  final sheet =
+      '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0" rightToLeft="1"/></sheetViews><sheetData>${[
+        for (final row in table) '<row>${[for (final cell in row) '<c t="inlineStr"><is><t xml:space="preserve">${xml(cell)}</t></is></c>'].join()}</row>',
+      ].join()}</sheetData></worksheet>';
+  final files = {
+    '[Content_Types].xml':
+        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>',
+    '_rels/.rels':
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>',
+    'xl/workbook.xml':
+        '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Finance" sheetId="1" r:id="rId1"/></sheets></workbook>',
+    'xl/_rels/workbook.xml.rels':
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>',
+    'xl/worksheets/sheet1.xml': sheet,
+  };
+  final archive = Archive();
+  for (final file in files.entries) {
+    final bytes = utf8.encode(file.value);
+    archive.addFile(ArchiveFile(file.key, bytes.length, bytes));
+  }
+  return ZipEncoder().encode(archive);
+}
+
+Future<void> exportPanelExcel(String name, List<Json> rows) async {
+  final bytes = Uint8List.fromList(panelExcelBytes(rows));
+  final path = await FilePicker.platform.saveFile(
+    fileName: '$name.xlsx',
+    bytes: bytes,
+  );
+  if (path != null &&
+      (Platform.isWindows || Platform.isLinux || Platform.isMacOS))
+    await File(path).writeAsBytes(bytes);
 }
 
 class PanelProfileHeader extends StatelessWidget {

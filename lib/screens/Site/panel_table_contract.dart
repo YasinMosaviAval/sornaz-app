@@ -16,9 +16,14 @@ Json panelTableContract(Json section) {
           )['rules'],
         )
       : optionalObject(panelWebPresentation[section['key']]);
-  final contract = incoming['version'] == 2 || bundled.isEmpty
+  final selected = incoming['version'] == 2 || bundled.isEmpty
       ? incoming
       : bundled;
+  final contract = {
+    ...selected,
+    if (selected['guidance'] == null && bundled['guidance'] is Map)
+      'guidance': bundled['guidance'],
+  };
   if (['course-levels', 'my-lesson-levels'].contains(section['key'])) {
     return {
       'columns': [
@@ -89,6 +94,11 @@ String panelTableText(dynamic value) {
 
 Json panelDisplayRow(String section, Json row, Json data) {
   final result = {...row};
+  if (section == 'term-discounts') {
+    result['typeLabel'] = row['type'] == 'percentage' ? 'درصدی' : 'مبلغ ثابت';
+    result['valueLabel'] =
+        '${row['value']}${row['type'] == 'percentage' ? '%' : ''}';
+  }
   if (['points', 'my-point-rules', 'my-points'].contains(section)) {
     result['type'] =
         const {
@@ -294,6 +304,11 @@ class PanelStatusCell extends StatelessWidget {
         const Color(0xffa16207),
       ),
       'paid': ('پرداخت‌شده', const Color(0xffdcfce7), const Color(0xff15803d)),
+      'free': (
+        'ماه اول رایگان',
+        const Color(0xffdcfce7),
+        const Color(0xff15803d),
+      ),
       'canceled': ('لغوشده', const Color(0xfffee2e2), const Color(0xffb91c1c)),
       'expired': (
         'منقضی‌شده',
