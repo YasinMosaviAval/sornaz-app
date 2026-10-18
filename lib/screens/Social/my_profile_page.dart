@@ -1,4 +1,6 @@
 import 'create_content_button.dart';
+import '../../helpers/development_access.dart';
+import 'user_panel.dart';
 import 'package:sornaz/screens/Players/ui/components/music_playback_entry.dart';
 import 'package:sornaz/screens/Players/services/player_settings.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +18,8 @@ class MyProfilePage extends StatelessWidget {
   final SocialApi? api;
   @override
   Widget build(BuildContext context) {
+    if (!DevelopmentAccess.watch(context))
+      return const UserPanelPage(initialTab: 2, mainTabIndex: 4);
     if (MainTabsScope.maybeOf(context) == null) {
       return MainTabs(initialIndex: 4, initialChild: this);
     }
@@ -25,6 +29,7 @@ class MyProfilePage extends StatelessWidget {
       child: _content(context),
     );
   }
+
   Widget _content(BuildContext context) {
     final auth = context.watch<AuthSession>();
     if (!auth.isAuthenticated) {

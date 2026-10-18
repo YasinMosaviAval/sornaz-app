@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import 'development_test_host.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sornaz/screens/Notation/music_analysis_calibration.dart';
@@ -37,13 +38,16 @@ class _RecordingFilePicker extends FilePicker {
   }
 }
 
+Widget analysisHost({required Widget home}) =>
+    developmentAdmin(MaterialApp(home: home));
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('requires both inputs before running', (tester) async {
     var called = false;
     await tester.pumpWidget(
-      MaterialApp(
+      analysisHost(
         home: MusicAnalysisTestPage(
           picker: (_) async => null,
           runner: (_, cancellation) async {
@@ -65,7 +69,7 @@ void main() {
     const audioPath = '/picked/test.wav';
     CalibrationCase? received;
     await tester.pumpWidget(
-      MaterialApp(
+      analysisHost(
         home: MusicAnalysisTestPage(
           picker: (musicXml) async => musicXml
               ? PlatformFile(
@@ -112,7 +116,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(
+      analysisHost(
         home: MusicAnalysisTestPage(
           picker: (musicXml) async => PlatformFile(
             name: musicXml ? 'bad.musicxml' : 'take.wav',
@@ -135,30 +139,32 @@ void main() {
     expect(find.text('PerformanceReport'), findsNothing);
   });
 
-  testWidgets('MusicXML picker does not disable the app export by MIME filter', (
-    tester,
-  ) async {
-    final picker = _RecordingFilePicker();
-    FilePicker.platform = picker;
-    await tester.pumpWidget(
-      MaterialApp(
-        home: MusicAnalysisTestPage(
-          runner: (_, cancellation) async => throw StateError('not analyzing'),
+  testWidgets(
+    'MusicXML picker does not disable the app export by MIME filter',
+    (tester) async {
+      final picker = _RecordingFilePicker();
+      FilePicker.platform = picker;
+      await tester.pumpWidget(
+        analysisHost(
+          home: MusicAnalysisTestPage(
+            runner: (_, cancellation) async =>
+                throw StateError('not analyzing'),
+          ),
         ),
-      ),
-    );
-    await tester.tap(find.text('Choose MusicXML'));
-    await tester.pump();
-    expect(picker.selectedType, FileType.any);
-    expect(picker.selectedExtensions, isNull);
-    expect(find.text('export.musicxml'), findsOneWidget);
-  });
+      );
+      await tester.tap(find.text('Choose MusicXML'));
+      await tester.pump();
+      expect(picker.selectedType, FileType.any);
+      expect(picker.selectedExtensions, isNull);
+      expect(find.text('export.musicxml'), findsOneWidget);
+    },
+  );
 
   testWidgets('rejects a non-XML file after broad picker selection', (
     tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(
+      analysisHost(
         home: MusicAnalysisTestPage(
           picker: (_) async => PlatformFile(
             name: 'wrong.pdf',

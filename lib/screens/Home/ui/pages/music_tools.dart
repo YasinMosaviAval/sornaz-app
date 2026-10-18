@@ -15,6 +15,7 @@ import 'package:sornaz/screens/Voice%20Recorder/ui/pages/voice_recorder.dart';
 import 'package:sornaz/screens/Notation/music_analysis_test_page.dart';
 import 'solfege_practice_page.dart';
 import 'rhythm_practice_page.dart';
+import '../../../../helpers/development_access.dart';
 
 class MusicToolsPage extends StatelessWidget {
   const MusicToolsPage({super.key});
@@ -71,18 +72,20 @@ class MusicToolsPage extends StatelessWidget {
                   'Solfege practice',
                   const SolfegePracticePage(),
                 ),
-                (
-                  Icons.queue_music_outlined,
-                  'تمرین ریتم',
-                  'Rhythm practice',
-                  const RhythmPracticePage(),
-                ),
-                (
-                  Icons.analytics_outlined,
-                  'آزمایش تحلیل اجرا',
-                  'Performance analysis test',
-                  const MusicAnalysisTestPage(),
-                ),
+                if (DevelopmentAccess.watch(context))
+                  (
+                    Icons.queue_music_outlined,
+                    'تمرین ریتم',
+                    'Rhythm practice',
+                    const RhythmPracticePage(),
+                  ),
+                if (DevelopmentAccess.watch(context))
+                  (
+                    Icons.analytics_outlined,
+                    'آزمایش تحلیل اجرا',
+                    'Performance analysis test',
+                    const MusicAnalysisTestPage(),
+                  ),
               ])
                 ListTile(
                   contentPadding: const EdgeInsetsDirectional.only(

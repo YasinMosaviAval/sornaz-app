@@ -38,7 +38,13 @@ Future<Json> chatSection(PanelApi api) async => objects(
 ).firstWhere((s) => s['key'] == 'chat');
 
 class DirectPage extends StatefulWidget {
-  const DirectPage({super.key, required this.api, this.panelApi});
+  const DirectPage({
+    super.key,
+    required this.api,
+    this.panelApi,
+    this.tabIndex,
+  });
+  final int? tabIndex;
   final SocialApi api;
   final PanelApi? panelApi;
   @override
@@ -210,6 +216,7 @@ class _DirectPageState extends State<DirectPage> {
   Widget build(BuildContext context) => DefaultTabController(
     length: 2,
     child: SocialScaffold(
+      tabIndex: widget.tabIndex,
       title: socialText(context, 'گفتگو', 'Conversations'),
       actions: [
         IconButton(

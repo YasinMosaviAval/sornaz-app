@@ -1,5 +1,7 @@
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'bottom_nav.dart';
+import '../helpers/development_access.dart';
+import '../screens/Social/chat_tab_page.dart';
 import 'package:sornaz/screens/Players/providers/audio_player_provider.dart';
 import 'package:sornaz/screens/Players/services/player_settings.dart';
 import 'package:sornaz/screens/Players/services/music_audio_handler.dart';
@@ -53,20 +55,33 @@ class _MainTabsState extends State<MainTabs> {
   late int index = widget.initialIndex;
   bool editorOpen = false;
   final Map<int, PreferredSizeWidget?> chrome = {};
-  late final pages =
-      widget.pages ??
-      [
-        for (var i = 0; i < 5; i++)
-          i == widget.initialIndex && widget.initialChild != null
-              ? widget.initialChild!
-              : const [
-                  HomePage(),
-                  SitePanelPage(),
-                  UserPanelPage(),
-                  MusicToolsPage(),
-                  MyProfilePage(),
-                ][i],
-      ];
+  bool development = false;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final next = DevelopmentAccess.watch(context);
+    if (next != development) {
+      development = next;
+      chrome.clear();
+      editorOpen = false;
+    }
+  }
+
+  Widget page(int value) {
+    if (widget.pages != null) return widget.pages![value];
+    if (value == widget.initialIndex && widget.initialChild != null)
+      return widget.initialChild!;
+    return [
+      const HomePage(),
+      const SitePanelPage(),
+      development ? const UserPanelPage() : const ChatTabPage(),
+      const MusicToolsPage(),
+      development
+          ? const MyProfilePage()
+          : const UserPanelPage(initialTab: 2, mainTabIndex: 4),
+    ][value];
+  }
+
   void setChrome(int page, PreferredSizeWidget? bar) {
     if (!mounted || identical(chrome[page], bar)) return;
     chrome[page] = bar;
@@ -145,7 +160,7 @@ class _MainTabsState extends State<MainTabs> {
             context.read<AppData>().setBottomNavIndex(value);
           },
           itemBuilder: (_, value) =>
-              _RetainedTab(index: value, child: pages[value]),
+              _RetainedTab(index: value, child: page(value)),
         ),
       ),
     ),

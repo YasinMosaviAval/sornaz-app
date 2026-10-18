@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 import 'page_source_catalog.dart';
+import '../helpers/development_access.dart';
 
-bool canInspectPage(AuthSession? session) =>
-    session?.isAuthenticated == true && session?.user?.id == 1;
+bool canInspectPage(AuthSession? session) => DevelopmentAccess.allows(session);
 
 /// Reserve a toolbar slot instead of placing a floating button over page actions.
 class PageSourceToolbar extends StatelessWidget {

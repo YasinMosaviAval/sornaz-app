@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'development_test_host.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -445,7 +446,9 @@ void main() {
   ) async {
     final store = fixture.MemoryStore()
       ..progress = IntervalProgress().complete(1).complete(1);
-    await tester.pumpWidget(widgets.host(IntervalLevelsScreen(store: store)));
+    await tester.pumpWidget(
+      developmentAdmin(widgets.host(IntervalLevelsScreen(store: store))),
+    );
     await tester.pumpAndSettle();
     final stars = find.descendant(
       of: find.byType(IntervalStars).first,

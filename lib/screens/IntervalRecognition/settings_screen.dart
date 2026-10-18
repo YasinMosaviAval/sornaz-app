@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../helpers/development_access.dart';
 import 'package:flutter/material.dart';
 import 'package:sornaz/components/app_bar.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
@@ -117,23 +118,26 @@ class IntervalSettingsScreen extends StatelessWidget {
                         ),
                         onTap: () => _chooseInstrument(context),
                       ),
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(
-                          t('interval.startingNote'),
-                          style: theme.textTheme.bodyMedium,
+                      if (DevelopmentAccess.watch(context))
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(
+                            t('interval.startingNote'),
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                          subtitle: Text(
+                            t('interval.startingNoteHint'),
+                            style: theme.textTheme.bodySmall,
+                          ),
+                          trailing: Text(
+                            IntervalAudioSettings.noteName(
+                              settings.startingMidi,
+                            ),
+                            textDirection: TextDirection.ltr,
+                            style: theme.textTheme.bodySmall,
+                          ),
+                          onTap: () => _chooseStartingNote(context),
                         ),
-                        subtitle: Text(
-                          t('interval.startingNoteHint'),
-                          style: theme.textTheme.bodySmall,
-                        ),
-                        trailing: Text(
-                          IntervalAudioSettings.noteName(settings.startingMidi),
-                          textDirection: TextDirection.ltr,
-                          style: theme.textTheme.bodySmall,
-                        ),
-                        onTap: () => _chooseStartingNote(context),
-                      ),
                       if (settings.errorKey != null) ...[
                         Text(
                           t(settings.errorKey!),

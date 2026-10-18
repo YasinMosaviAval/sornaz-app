@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'development_test_host.dart';
 import 'interval_test_storage.dart';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -429,18 +430,20 @@ void main() {
       await tester.binding.setSurfaceSize(const Size(320, 640));
       addTearDown(() => tester.binding.setSurfaceSize(null));
       final locale = LocaleProvider();
-      final c = iranian(level: 177);
+      final c = iranian(level: 177, access: const IntervalAccess(userId: 1));
       final store = fixture.MemoryStore();
       await tester.pumpWidget(
-        updates.host(
-          IntervalTrainingScreen(
-            levelNumber: 177,
-            music: IntervalMusic.iranian,
-            store: store,
-            progress: c.progress,
-            controller: c,
+        developmentAdmin(
+          updates.host(
+            IntervalTrainingScreen(
+              levelNumber: 177,
+              music: IntervalMusic.iranian,
+              store: store,
+              progress: c.progress,
+              controller: c,
+            ),
+            locale: locale,
           ),
-          locale: locale,
         ),
       );
       await tester.pumpAndSettle();
@@ -482,7 +485,9 @@ void main() {
     (tester) async {
       final settings = IntervalAudioSettings();
       await tester.pumpWidget(
-        updates.host(IntervalSettingsScreen(settings: settings)),
+        developmentAdmin(
+          updates.host(IntervalSettingsScreen(settings: settings)),
+        ),
       );
       await tester.pumpAndSettle();
       await tester.tap(find.text('Starting Note'));
@@ -494,10 +499,14 @@ void main() {
       await tester.pumpAndSettle();
       expect(settings.startingMidi, 62);
       await tester.pumpWidget(
-        updates.host(
-          IntervalLevelsScreen(
-            music: IntervalMusic.iranian,
-            settings: settings,
+        developmentAdmin(
+          updates.host(
+            IntervalLevelsScreen(
+              music: IntervalMusic.iranian,
+              settings: settings,
+              store: fixture.MemoryStore()
+                ..progress = IntervalProgress(music: IntervalMusic.iranian),
+            ),
           ),
         ),
       );

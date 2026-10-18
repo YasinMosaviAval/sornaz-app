@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../helpers/development_access.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
@@ -172,6 +173,10 @@ class _IntervalLevelsScreenState extends State<IntervalLevelsScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (widget.music == IntervalMusic.iranian &&
+        !DevelopmentAccess.watch(context)) {
+      return DevelopmentGate(builder: (_) => const SizedBox.shrink());
+    }
     final t = IntervalText(context);
     final theme = Theme.of(context);
     return Directionality(
@@ -190,7 +195,9 @@ class _IntervalLevelsScreenState extends State<IntervalLevelsScreen>
             : null,
         appBar: SornazAppBar(
           title: t(
-            widget.music == IntervalMusic.western
+            !DevelopmentAccess.watch(context)
+                ? 'interval.title'
+                : widget.music == IntervalMusic.western
                 ? 'interval.westernTitle'
                 : 'interval.iranianTitle',
           ),
@@ -242,7 +249,9 @@ class _IntervalLevelsScreenState extends State<IntervalLevelsScreen>
                         enabled: unlocked,
                         onTap: unlocked ? () => _open(level) : null,
                         leading: Icon(
-                          unlocked
+                          !DevelopmentAccess.watch(context) && completed
+                              ? Icons.check_circle
+                              : unlocked
                               ? Icons.play_circle_outline
                               : Icons.lock_outline,
                           color: unlocked
@@ -258,9 +267,10 @@ class _IntervalLevelsScreenState extends State<IntervalLevelsScreen>
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            IntervalStars(
-                              count: _progress!.starsFor(level.number),
-                            ),
+                            if (DevelopmentAccess.watch(context))
+                              IntervalStars(
+                                count: _progress!.starsFor(level.number),
+                              ),
                             Wrap(
                               textDirection: t.direction,
                               crossAxisAlignment: WrapCrossAlignment.center,

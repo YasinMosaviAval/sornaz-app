@@ -32,6 +32,7 @@ import 'package:sornaz/screens/Players/ui/components/player_dialog.dart';
 import 'notation_api.dart';
 import 'desktop_notation_host.dart';
 import 'omr_review_page.dart';
+import '../../helpers/development_access.dart';
 
 class MusicSheetsPage extends StatelessWidget {
   const MusicSheetsPage({super.key});
@@ -187,32 +188,34 @@ class _NotationHostState extends State<_NotationHost>
         .toList();
     return showModalBottomSheet<String>(
       context: context,
-      builder: (sheetContext) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.playlist_add),
-              title: Text(socialText(context, 'لیست جدید', 'New list')),
-              onTap: () => Navigator.pop(sheetContext, '__new__'),
-            ),
-            for (final item in items)
-              ListTile(
-                leading: Icon(
-                  item['favorite'] == true
-                      ? Icons.favorite_border
-                      : Icons.queue_music,
-                ),
-                title: Text(
-                  item['favorite'] == true
-                      ? socialText(context, 'علاقه‌مندی', 'Favorite')
-                      : '${item['title']}',
-                ),
-                onTap: () => Navigator.pop(sheetContext, '${item['id']}'),
+      builder: (sheetContext) => !DevelopmentAccess.watch(sheetContext)
+          ? const SizedBox.shrink()
+          : SafeArea(
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.playlist_add),
+                    title: Text(socialText(context, 'لیست جدید', 'New list')),
+                    onTap: () => Navigator.pop(sheetContext, '__new__'),
+                  ),
+                  for (final item in items)
+                    ListTile(
+                      leading: Icon(
+                        item['favorite'] == true
+                            ? Icons.favorite_border
+                            : Icons.queue_music,
+                      ),
+                      title: Text(
+                        item['favorite'] == true
+                            ? socialText(context, 'علاقه‌مندی', 'Favorite')
+                            : '${item['title']}',
+                      ),
+                      onTap: () => Navigator.pop(sheetContext, '${item['id']}'),
+                    ),
+                ],
               ),
-          ],
-        ),
-      ),
+            ),
     );
   }
 
@@ -255,6 +258,7 @@ class _NotationHostState extends State<_NotationHost>
   }
 
   Future<void> _openOmr() async {
+    if (!DevelopmentAccess.read(context)) return;
     final source = await showModalBottomSheet<String>(
       context: context,
       builder: (sheetContext) => SafeArea(
@@ -278,7 +282,7 @@ class _NotationHostState extends State<_NotationHost>
         ),
       ),
     );
-    if (!mounted || source == null) return;
+    if (!mounted || source == null || !DevelopmentAccess.read(context)) return;
     try {
       Uint8List? bytes;
       if (source == 'camera') {
@@ -316,12 +320,16 @@ class _NotationHostState extends State<_NotationHost>
             file.bytes ??
             (file.path == null ? null : await File(file.path!).readAsBytes());
       }
-      if (!mounted || bytes == null) return;
+      if (!mounted || bytes == null || !DevelopmentAccess.read(context)) return;
       final score = await Navigator.push<Map<String, Object?>>(
         context,
         MaterialPageRoute(builder: (_) => OmrReviewPage(imageBytes: bytes!)),
       );
-      if (!mounted || score == null || !_ready) return;
+      if (!mounted ||
+          score == null ||
+          !_ready ||
+          !DevelopmentAccess.read(context))
+        return;
       // The existing importer validates, previews and requests confirmation before
       // replacing the open score. No OMR data is written before that confirmation.
       await _controller.runJavaScript(
@@ -335,12 +343,21 @@ class _NotationHostState extends State<_NotationHost>
           content: Text(
             error is FormatException
                 ? switch (error.message) {
-                    'Image is too large.' => socialText(context,
-                      'حجم تصویر بیش از حد مجاز است.', 'Image is too large.'),
-                    'Camera image unavailable.' => socialText(context,
-                      'عکس دوربین در دسترس نیست.', 'Camera image unavailable.'),
-                    _ => socialText(context,
-                      'تصویر قابل استفاده نیست.', 'The image cannot be used.'),
+                    'Image is too large.' => socialText(
+                      context,
+                      'حجم تصویر بیش از حد مجاز است.',
+                      'Image is too large.',
+                    ),
+                    'Camera image unavailable.' => socialText(
+                      context,
+                      'عکس دوربین در دسترس نیست.',
+                      'Camera image unavailable.',
+                    ),
+                    _ => socialText(
+                      context,
+                      'تصویر قابل استفاده نیست.',
+                      'The image cannot be used.',
+                    ),
                   }
                 : socialText(
                     context,
@@ -537,7 +554,9 @@ class _NotationHostState extends State<_NotationHost>
                 editor: _route == 'editor',
                 signedIn: widget.userId > 0,
                 data: _toolbar,
-                onOmr: _route == 'editor' ? _openOmr : null,
+                onOmr: _route == 'editor' && DevelopmentAccess.watch(context)
+                    ? _openOmr
+                    : null,
                 command: (action) => _controller.runJavaScript(
                   'window.Notation.command(${jsonEncode(action)});',
                 ),
@@ -546,15 +565,16 @@ class _NotationHostState extends State<_NotationHost>
                 searchOnly: true,
                 pageTitle: socialText(context, 'نت نویسی', 'Notation'),
                 extraActions: [
-                  IconButton(
-                    tooltip: socialText(
-                      context,
-                      'تشخیص نت از تصویر',
-                      'Recognize notes from image',
+                  if (DevelopmentAccess.watch(context))
+                    IconButton(
+                      tooltip: socialText(
+                        context,
+                        'تشخیص نت از تصویر',
+                        'Recognize notes from image',
+                      ),
+                      icon: const Icon(Icons.camera_alt_outlined),
+                      onPressed: _openOmr,
                     ),
-                    icon: const Icon(Icons.camera_alt_outlined),
-                    onPressed: _openOmr,
-                  ),
                   IconButton(
                     tooltip: socialText(context, 'لیست جدید', 'New list'),
                     icon: const Icon(Icons.playlist_add),

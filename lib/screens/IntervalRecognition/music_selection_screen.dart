@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../helpers/development_access.dart';
 import 'package:sornaz/components/app_bar.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
 import 'levels_screen.dart';
@@ -9,6 +10,7 @@ class IntervalMusicSelectionScreen extends StatelessWidget {
   const IntervalMusicSelectionScreen({super.key});
   @override
   Widget build(BuildContext context) {
+    if (!DevelopmentAccess.watch(context)) return const IntervalLevelsScreen();
     final t = IntervalText(context);
     final theme = Theme.of(context);
     return Directionality(
@@ -58,6 +60,7 @@ class IntervalMusicSelectionScreen extends StatelessWidget {
 class IranianIntervalScreen extends StatelessWidget {
   const IranianIntervalScreen({super.key});
   @override
-  Widget build(BuildContext context) =>
-      const IntervalLevelsScreen(music: IntervalMusic.iranian);
+  Widget build(BuildContext context) => DevelopmentGate(
+    builder: (_) => const IntervalLevelsScreen(music: IntervalMusic.iranian),
+  );
 }

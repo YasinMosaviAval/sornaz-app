@@ -1,4 +1,5 @@
 import 'package:sornaz/components/app_top_bar_direction.dart';
+import '../../helpers/development_access.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -9,15 +10,23 @@ import 'package:provider/provider.dart';
 import 'package:sornaz/services/omr/omr_melody.dart';
 import 'package:sornaz/services/omr/printed_score_engine.dart';
 
-class OmrReviewPage extends StatefulWidget {
+class OmrReviewPage extends StatelessWidget {
   const OmrReviewPage({super.key, required this.imageBytes});
   final Uint8List imageBytes;
 
   @override
-  State<OmrReviewPage> createState() => _OmrReviewPageState();
+  Widget build(BuildContext context) =>
+      DevelopmentGate(builder: (_) => _OmrReview(imageBytes: imageBytes));
 }
 
-class _OmrReviewPageState extends State<OmrReviewPage> {
+class _OmrReview extends StatefulWidget {
+  const _OmrReview({required this.imageBytes});
+  final Uint8List imageBytes;
+  @override
+  State<_OmrReview> createState() => _OmrReviewPageState();
+}
+
+class _OmrReviewPageState extends State<_OmrReview> {
   final _title = TextEditingController();
   final _scroll = ScrollController();
   late Uint8List _imageBytes;
@@ -36,8 +45,10 @@ class _OmrReviewPageState extends State<OmrReviewPage> {
 
   Future<void> _cropImage() async {
     if (_busy) return;
-    final cropped = await Navigator.push<PlatformFile>(context,
-      MaterialPageRoute(builder: (_) => ImageCropPage(bytes: _imageBytes)));
+    final cropped = await Navigator.push<PlatformFile>(
+      context,
+      MaterialPageRoute(builder: (_) => ImageCropPage(bytes: _imageBytes)),
+    );
     if (!mounted || cropped?.bytes == null) return;
     setState(() {
       _imageBytes = cropped!.bytes!;
@@ -78,27 +89,41 @@ class _OmrReviewPageState extends State<OmrReviewPage> {
       });
     } catch (error) {
       if (!mounted) return;
-      setState(() => _error = error is FormatException
-          ? switch (error.message) {
-              'Unsupported image' => socialText(context,
-                'فرمت تصویر پشتیبانی نمی‌شود. PNG یا JPEG انتخاب کنید.',
-                'Unsupported image format. Choose PNG or JPEG.'),
-              'Image dimensions are too large' => socialText(context,
-                'ابعاد تصویر بسیار بزرگ است. بخش نت را برش دهید.',
-                'Image dimensions are too large. Crop to the score.'),
-              'Exactly one staff is required.' => socialText(context,
-                'یک حامل پنج‌خطیِ مستقل لازم است. تصویر را به یک ردیف نت برش دهید.',
-                'One five-line staff is required. Crop to a single score row.'),
-              'No noteheads found.' => socialText(context,
-                'حامل پیدا شد اما سرنتی شناسایی نشد. تصویر واضح‌تر یا برش نزدیک‌تر را امتحان کنید.',
-                'Staff found, but no noteheads detected. Try a clearer, closer crop.'),
-              _ => socialText(context,
-                'نت تصویر قابل تشخیص نیست. بخش نت را برش دهید و دوباره تلاش کنید.',
-                'The score cannot be recognized. Crop to the score and retry.'),
-            }
-          : socialText(context,
-              'پردازش تصویر انجام نشد. تصویر دیگری انتخاب کنید.',
-              'Image processing failed. Try another image.'));
+      setState(
+        () => _error = error is FormatException
+            ? switch (error.message) {
+                'Unsupported image' => socialText(
+                  context,
+                  'فرمت تصویر پشتیبانی نمی‌شود. PNG یا JPEG انتخاب کنید.',
+                  'Unsupported image format. Choose PNG or JPEG.',
+                ),
+                'Image dimensions are too large' => socialText(
+                  context,
+                  'ابعاد تصویر بسیار بزرگ است. بخش نت را برش دهید.',
+                  'Image dimensions are too large. Crop to the score.',
+                ),
+                'Exactly one staff is required.' => socialText(
+                  context,
+                  'یک حامل پنج‌خطیِ مستقل لازم است. تصویر را به یک ردیف نت برش دهید.',
+                  'One five-line staff is required. Crop to a single score row.',
+                ),
+                'No noteheads found.' => socialText(
+                  context,
+                  'حامل پیدا شد اما سرنتی شناسایی نشد. تصویر واضح‌تر یا برش نزدیک‌تر را امتحان کنید.',
+                  'Staff found, but no noteheads detected. Try a clearer, closer crop.',
+                ),
+                _ => socialText(
+                  context,
+                  'نت تصویر قابل تشخیص نیست. بخش نت را برش دهید و دوباره تلاش کنید.',
+                  'The score cannot be recognized. Crop to the score and retry.',
+                ),
+              }
+            : socialText(
+                context,
+                'پردازش تصویر انجام نشد. تصویر دیگری انتخاب کنید.',
+                'Image processing failed. Try another image.',
+              ),
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -161,13 +186,27 @@ class _OmrReviewPageState extends State<OmrReviewPage> {
               ),
             ),
             const SizedBox(height: 12),
-            Text(socialText(context,
-              'برای نتیجهٔ بهتر، اسکرین‌شات PNG یا JPEG را به یک حامل پنج‌خطیِ افقی با کلید سل یا فا برش دهید. نوشته‌ها و بخش‌های اضافی صفحه را حذف کنید.',
-              'For better results, crop a PNG or JPEG screenshot to one horizontal five-line staff with a treble or bass clef. Remove surrounding screen content.')),
-            Align(alignment: AlignmentDirectional.centerStart,
-              child: TextButton.icon(onPressed: _cropImage,
+            Text(
+              socialText(
+                context,
+                'برای نتیجهٔ بهتر، اسکرین‌شات PNG یا JPEG را به یک حامل پنج‌خطیِ افقی با کلید سل یا فا برش دهید. نوشته‌ها و بخش‌های اضافی صفحه را حذف کنید.',
+                'For better results, crop a PNG or JPEG screenshot to one horizontal five-line staff with a treble or bass clef. Remove surrounding screen content.',
+              ),
+            ),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                onPressed: _cropImage,
                 icon: const Icon(Icons.crop),
-                label: Text(socialText(context, 'برش و بزرگ‌نمایی نت', 'Crop and zoom score')))),
+                label: Text(
+                  socialText(
+                    context,
+                    'برش و بزرگ‌نمایی نت',
+                    'Crop and zoom score',
+                  ),
+                ),
+              ),
+            ),
             const SizedBox(height: 4),
             Text(
               socialText(
@@ -203,8 +242,8 @@ class _OmrReviewPageState extends State<OmrReviewPage> {
               Row(
                 children: [
                   Expanded(
-                  child: DropdownButtonFormField<String>(
-                    isExpanded: true,
+                    child: DropdownButtonFormField<String>(
+                      isExpanded: true,
                       initialValue: _clef,
                       decoration: InputDecoration(
                         labelText: socialText(context, 'کلید', 'Clef'),
@@ -291,10 +330,10 @@ class _OmrReviewPageState extends State<OmrReviewPage> {
                           ),
                         ),
                         const SizedBox(width: 8),
-              SizedBox(
-                width: 112,
+                        SizedBox(
+                          width: 112,
                           child: DropdownButtonFormField<String>(
-                  isExpanded: true,
+                            isExpanded: true,
                             key: ValueKey(
                               'duration-$index-${notes[index].hashCode}',
                             ),

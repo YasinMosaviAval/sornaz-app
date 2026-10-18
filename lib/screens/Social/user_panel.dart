@@ -1,4 +1,6 @@
 import 'post_comments.dart';
+import '../../helpers/development_access.dart';
+import 'chat_tab_page.dart';
 import 'package:sornaz/screens/Players/ui/components/music_playback_entry.dart';
 import 'package:sornaz/screens/Players/services/player_settings.dart';
 import 'create_content_button.dart';
@@ -26,10 +28,15 @@ import 'social_learning.dart';
 import 'package:sornaz/components/bottom_nav.dart';
 
 class UserPanelPage extends StatelessWidget {
-  const UserPanelPage({super.key, this.initialTab = 0});
+  const UserPanelPage({super.key, this.initialTab = 0, this.mainTabIndex});
+  final int? mainTabIndex;
   final int initialTab;
   @override
   Widget build(BuildContext context) {
+    if (initialTab != 2 && !DevelopmentAccess.watch(context))
+      return const ChatTabPage();
+    if (mainTabIndex != null && MainTabsScope.maybeOf(context) == null)
+      return MainTabs(initialIndex: mainTabIndex!, initialChild: this);
     if (initialTab != 2 && MainTabsScope.maybeOf(context) == null)
       return MainTabs(initialIndex: 2, initialChild: this);
     return MusicPlaybackEntry(
@@ -38,15 +45,18 @@ class UserPanelPage extends StatelessWidget {
       child: _content(context),
     );
   }
+
   Widget _content(BuildContext context) {
     final auth = context.watch<AuthSession>();
     if (!auth.isAuthenticated)
       return SocialScaffold(
-        tabIndex: 2,
-        title: socialText(context, 'صحنه', 'Stage'),
-        appBar: const GuestStageBar(),
+        tabIndex: mainTabIndex ?? 2,
+        title: initialTab == 2
+            ? socialText(context, 'حساب کاربری', 'Account')
+            : socialText(context, 'صحنه', 'Stage'),
+        appBar: initialTab == 2 ? const HomeTopBar() : const GuestStageBar(),
         drawer: const AppDrawer(),
-        bottom: const BottomNavBarWidget(selectedIndex: 2),
+        bottom: BottomNavBarWidget(selectedIndex: mainTabIndex ?? 2),
         body: const JoinCommunity(),
       );
     return _Panel(
@@ -54,6 +64,7 @@ class UserPanelPage extends StatelessWidget {
       token: auth.token!,
       userId: auth.user!.id,
       initialTab: initialTab,
+      mainTabIndex: mainTabIndex,
     );
   }
 }
@@ -97,7 +108,9 @@ class _Panel extends StatefulWidget {
     required this.token,
     required this.userId,
     required this.initialTab,
+    this.mainTabIndex,
   });
+  final int? mainTabIndex;
   final int initialTab;
   final String token;
   final int userId;
@@ -209,7 +222,9 @@ class _PanelState extends State<_Panel> {
     try {
       final conversations = objects(await api.get('/conversations'));
       if (mounted && request == conversationBadgeRequest) {
-        setState(() => unreadConversations = unreadConversationCount(conversations));
+        setState(
+          () => unreadConversations = unreadConversationCount(conversations),
+        );
       }
     } catch (_) {
       // A conversation error must not block the stage feed.
@@ -255,7 +270,7 @@ class _PanelState extends State<_Panel> {
 
   @override
   Widget build(BuildContext context) => SocialScaffold(
-    tabIndex: tab == 2 ? null : 2,
+    tabIndex: widget.mainTabIndex ?? (tab == 2 ? null : 2),
     appBar: tab == 2
         ? null
         : HomeTopBar(

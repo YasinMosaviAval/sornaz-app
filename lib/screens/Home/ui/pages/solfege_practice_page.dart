@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../helpers/development_access.dart';
+import '../../../IntervalRecognition/levels_screen.dart';
 import 'package:sornaz/screens/Players/ui/components/music_playback_entry.dart';
 import 'package:sornaz/screens/Players/services/player_settings.dart';
 import 'package:sornaz/components/app_bar.dart';
@@ -31,8 +33,12 @@ class SolfegePracticePage extends StatelessWidget {
         ])
           ListTile(
             onTap: section.$2 == 'Interval recognition'
-                ? () =>
-                      socialPush(context, const IntervalMusicSelectionScreen())
+                ? () => socialPush(
+                    context,
+                    DevelopmentAccess.read(context)
+                        ? const IntervalMusicSelectionScreen()
+                        : const IntervalLevelsScreen(),
+                  )
                 : null,
             title: Text(
               section.$2 == 'Interval recognition'

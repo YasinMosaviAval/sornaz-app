@@ -1,4 +1,5 @@
 import 'dart:io';
+import '../../helpers/development_access.dart';
 import 'package:sornaz/screens/Players/ui/components/music_playback_entry.dart';
 import 'package:sornaz/screens/Players/services/player_settings.dart';
 
@@ -50,7 +51,7 @@ Future<CalibrationResult> _runAnalysis(
 ).run(input, cancellation: cancellation);
 
 /// Manual, offline diagnostic page; no educational grade is calculated.
-class MusicAnalysisTestPage extends StatefulWidget {
+class MusicAnalysisTestPage extends StatelessWidget {
   const MusicAnalysisTestPage({
     super.key,
     AnalysisFilePicker? picker,
@@ -65,10 +66,26 @@ class MusicAnalysisTestPage extends StatefulWidget {
   final AnalysisXmlReader xmlReader;
 
   @override
-  State<MusicAnalysisTestPage> createState() => _MusicAnalysisTestPageState();
+  Widget build(BuildContext context) => DevelopmentGate(
+    builder: (_) =>
+        _AnalysisPage(picker: picker, runner: runner, xmlReader: xmlReader),
+  );
 }
 
-class _MusicAnalysisTestPageState extends State<MusicAnalysisTestPage> {
+class _AnalysisPage extends StatefulWidget {
+  const _AnalysisPage({
+    required this.picker,
+    required this.runner,
+    required this.xmlReader,
+  });
+  final AnalysisFilePicker picker;
+  final AnalysisTestRunner runner;
+  final AnalysisXmlReader xmlReader;
+  @override
+  State<_AnalysisPage> createState() => _MusicAnalysisTestPageState();
+}
+
+class _MusicAnalysisTestPageState extends State<_AnalysisPage> {
   PlatformFile? _xml, _audio;
   CalibrationResult? _result;
   String? _error;

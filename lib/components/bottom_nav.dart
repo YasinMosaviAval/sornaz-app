@@ -1,4 +1,6 @@
 import 'main_tabs.dart';
+import '../helpers/development_access.dart';
+import '../screens/Social/chat_tab_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_data.dart';
@@ -21,12 +23,22 @@ class BottomNavBarWidget extends StatelessWidget {
     final background = data.isDark
         ? const Color(0xff202020)
         : const Color(0xfff1f1f1);
-    const items = [
+    final development = DevelopmentAccess.watch(context);
+    final items = [
       (Icons.home_outlined, Icons.home, 'خانه', 'Home'),
       (Icons.dashboard_outlined, Icons.dashboard, 'پنل کاربری', 'User panel'),
-      (Icons.dynamic_feed_outlined, Icons.dynamic_feed, 'صحنه', 'Stage'),
+      development
+          ? (Icons.dynamic_feed_outlined, Icons.dynamic_feed, 'صحنه', 'Stage')
+          : (Icons.chat_bubble_outline, Icons.chat_bubble, 'گفتگو', 'Chat'),
       (Icons.tune, Icons.tune, 'ابزار موسیقی', 'Music tools'),
-      (Icons.person_outline, Icons.person, 'پروفایل', 'Profile'),
+      development
+          ? (Icons.person_outline, Icons.person, 'پروفایل', 'Profile')
+          : (
+              Icons.manage_accounts_outlined,
+              Icons.manage_accounts,
+              'حساب کاربری',
+              'Account',
+            ),
     ];
     void select(int index) {
       if (index == current) return;
@@ -38,12 +50,14 @@ class BottomNavBarWidget extends StatelessWidget {
       data.setBottomNavIndex(index);
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => const [
-            HomePage(),
-            SitePanelPage(),
-            UserPanelPage(),
-            MusicToolsPage(),
-            MyProfilePage(),
+          builder: (_) => [
+            const HomePage(),
+            const SitePanelPage(),
+            development ? const UserPanelPage() : const ChatTabPage(),
+            const MusicToolsPage(),
+            development
+                ? const MyProfilePage()
+                : const UserPanelPage(initialTab: 2, mainTabIndex: 4),
           ][index],
         ),
       );

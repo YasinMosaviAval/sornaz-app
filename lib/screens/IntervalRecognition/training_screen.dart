@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../helpers/development_access.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/components/app_bar.dart';
@@ -57,7 +58,9 @@ class _IntervalTrainingScreenState extends State<IntervalTrainingScreen>
       context.read<AuthSession?>(),
     );
     _access = widget.access ?? currentAccess;
-    if (_access.scope != currentAccess.scope ||
+    if (widget.music == IntervalMusic.iranian &&
+            !DevelopmentAccess.read(context) ||
+        _access.scope != currentAccess.scope ||
         !_access.canEnter(
           widget.levelNumber,
           widget.progress,
@@ -343,14 +346,20 @@ class _IntervalTrainingScreenState extends State<IntervalTrainingScreen>
                                           crossAxisAlignment:
                                               CrossAxisAlignment.stretch,
                                           children: [
-                                            Center(
-                                              child: IntervalStars(
-                                                count: c.progress.starsFor(
-                                                  c.level.number,
+                                            if (DevelopmentAccess.watch(
+                                              context,
+                                            ))
+                                              Center(
+                                                child: IntervalStars(
+                                                  count: c.progress.starsFor(
+                                                    c.level.number,
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                            const SizedBox(height: 8),
+                                            if (DevelopmentAccess.watch(
+                                              context,
+                                            ))
+                                              const SizedBox(height: 8),
                                             Semantics(
                                               liveRegion: true,
                                               child: Text(
