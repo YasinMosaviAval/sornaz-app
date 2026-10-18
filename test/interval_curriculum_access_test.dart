@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'interval_test_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -28,6 +29,7 @@ Widget authenticatedHost(AuthSession session, Widget page) =>
     ChangeNotifierProvider.value(value: session, child: updates.host(page));
 
 void main() {
+  useIntervalTestStorage();
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   test(
@@ -196,7 +198,7 @@ void main() {
         migrated.completed,
       );
       final record = jsonDecode(prefs.getString(repo.scopedKey)!) as Map;
-      expect(record['schema'], 2);
+      expect(record['schema'], 3);
     },
   );
 
@@ -307,7 +309,10 @@ void main() {
       final session = AuthSession();
       await signIn(session, 1);
       await tester.pumpWidget(
-        authenticatedHost(session, const IntervalLevelsScreen()),
+        authenticatedHost(
+          session,
+          IntervalLevelsScreen(store: fixture.MemoryStore()),
+        ),
       );
       await tester.pumpAndSettle();
       expect(find.byIcon(Icons.lock_outline), findsNothing);

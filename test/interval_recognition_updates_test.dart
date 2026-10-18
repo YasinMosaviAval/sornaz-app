@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'interval_test_storage.dart';
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -83,6 +84,7 @@ Widget host(Widget page, {LocaleProvider? locale}) => MultiProvider(
 );
 
 void main() {
+  useIntervalTestStorage();
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   test(
@@ -421,7 +423,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       final list = tester.widget<ListView>(find.byType(ListView));
-      expect(list.padding, const EdgeInsets.fromLTRB(24, 12, 24, 16));
+      expect(list.padding, const EdgeInsets.fromLTRB(12, 12, 12, 16));
       final tile = find.byType(ListTile).first;
       expect(
         find.descendant(of: tile, matching: find.text(' - ')),

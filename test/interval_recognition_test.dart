@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'interval_test_storage.dart';
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -84,6 +85,7 @@ Future<void> answer(IntervalTrainingController c, {bool right = true}) async {
 }
 
 void main() {
+  useIntervalTestStorage();
   test('all 44 level configurations and 12 semitone categories are exact', () {
     final groups = [
       [MusicalInterval.perfectFifth, MusicalInterval.perfectOctave],

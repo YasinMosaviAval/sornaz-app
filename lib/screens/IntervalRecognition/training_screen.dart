@@ -13,6 +13,7 @@ import 'settings.dart';
 import 'settings_screen.dart';
 import 'play_button.dart';
 import 'access.dart';
+import 'stars.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 
 class IntervalTrainingScreen extends StatefulWidget {
@@ -26,6 +27,7 @@ class IntervalTrainingScreen extends StatefulWidget {
     this.settings,
     this.access,
     this.music = IntervalMusic.western,
+    this.onResultSaved,
   });
   final int levelNumber;
   final IntervalProgressStore store;
@@ -35,6 +37,7 @@ class IntervalTrainingScreen extends StatefulWidget {
   final IntervalAudioSettings? settings;
   final IntervalAccess? access;
   final IntervalMusic music;
+  final Future<void> Function(bool force)? onResultSaved;
   @override
   State<IntervalTrainingScreen> createState() => _IntervalTrainingScreenState();
 }
@@ -73,6 +76,7 @@ class _IntervalTrainingScreenState extends State<IntervalTrainingScreen>
           access: _access,
           music: widget.music,
           settings: _settings,
+          onResultSaved: widget.onResultSaved,
         );
     WidgetsBinding.instance.addObserver(this);
   }
@@ -339,6 +343,14 @@ class _IntervalTrainingScreenState extends State<IntervalTrainingScreen>
                                           crossAxisAlignment:
                                               CrossAxisAlignment.stretch,
                                           children: [
+                                            Center(
+                                              child: IntervalStars(
+                                                count: c.progress.starsFor(
+                                                  c.level.number,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
                                             Semantics(
                                               liveRegion: true,
                                               child: Text(
@@ -452,8 +464,10 @@ class _IntervalTrainingScreenState extends State<IntervalTrainingScreen>
                                                         ),
                                                   ),
                                                 ),
-                                                if (c.errorKey ==
-                                                    'interval.saveError')
+                                                if ([
+                                                  'interval.saveError',
+                                                  'interval.resultSaveError',
+                                                ].contains(c.errorKey))
                                                   TextButton(
                                                     onPressed: c.transitioning
                                                         ? null

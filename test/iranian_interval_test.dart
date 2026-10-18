@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'interval_test_storage.dart';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -41,6 +42,7 @@ IntervalTrainingController iranian({
 );
 
 void main() {
+  useIntervalTestStorage();
   setUp(() => SharedPreferences.setMockInitialValues({}));
   test(
     '24 unique quarter-step intervals have exact half-semitone increments and translations',
