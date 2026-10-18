@@ -5,6 +5,7 @@ import 'panel_form_contract.dart';
 /// Web filters are local unless a query key explicitly delegates pagination and
 /// filtering to the same server endpoint used by the website.
 List<Json> panelWebFilters(Json section, Json data, List<Json> rows) {
+  if (section['key'] == 'dashboard') return const [];
   if (section['key'] == 'tracking') {
     return [
       {
@@ -273,10 +274,16 @@ Map<String, String> panelFilterQuery(
         values[field['key']] != null &&
         '${values[field['key']]}'.isNotEmpty)
       '${field['queryKey']}': '${values[field['key']]}',
-  if (['users', 'schedules'].contains(section)) ...{
+  if (['users', 'schedules', 'dashboard'].contains(section)) ...{
     if (organization == 'academy')
-      (section == 'users' ? 'organization' : 'branch'): 'academy',
+      (section == 'users'
+              ? 'organization'
+              : section == 'dashboard'
+              ? 'branchId'
+              : 'branch'):
+          'academy',
     if (organization.startsWith('branch:'))
-      (section == 'users' ? 'branchId' : 'branch'): organization.substring(7),
+      (['users', 'dashboard'].contains(section) ? 'branchId' : 'branch'):
+          organization.substring(7),
   },
 };

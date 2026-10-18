@@ -8,8 +8,10 @@ import '../Social/social_widgets.dart';
 import '../Social/media_picker.dart';
 import 'panel_api.dart';
 import 'panel_form.dart';
+import '../../helpers/app_appearance.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class PanelGallery extends StatelessWidget {
+class PanelGallery extends StatefulWidget {
   const PanelGallery({
     super.key,
     required this.api,
@@ -28,64 +30,225 @@ class PanelGallery extends StatelessWidget {
   final bool canEdit, canDelete;
   final VoidCallback onChanged;
   @override
-  Widget build(BuildContext context) {
-    if (rows.length == 1)
-      return GalleryRecord(
-        sectionKey: sectionKey,
-        key: ValueKey(rows.single['id']),
-        api: api,
-        row: rows.single,
-        fields: fields,
-        data: data,
-        canEdit: canEdit,
-        canDelete: canDelete,
-        onChanged: onChanged,
-      );
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(1),
-      itemCount: rows.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        childAspectRatio: 9 / 16,
-        crossAxisSpacing: 1,
-        mainAxisSpacing: 1,
-      ),
-      itemBuilder: (context, index) => InkWell(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => GalleryRecord(
-              sectionKey: sectionKey,
-              api: api,
-              row: rows[index],
-              fields: fields,
-              data: data,
-              canEdit: canEdit,
-              canDelete: canDelete,
-              onChanged: onChanged,
-              standalone: true,
-            ),
-          ),
-        ),
-        child: Column(
-          children: [
-            Expanded(
-              child: GalleryPreview(
-                key: ValueKey(rows[index]['url']),
-                token: api.token,
-                row: rows[index],
-                thumbnail: true,
+  State<PanelGallery> createState() => _PanelGalleryState();
+}
+
+class _PanelGalleryState extends State<PanelGallery> {
+  bool detailed = false;
+  bool modeChanged = false;
+  @override
+  void initState() {
+    super.initState();
+    SharedPreferences.getInstance().then((prefs) {
+      if (mounted && !modeChanged)
+        setState(
+          () => detailed = prefs.getBool('panel.gallery.detailed') ?? false,
+        );
+    });
+  }
+
+  void setMode(bool value) {
+    setState(() {
+      detailed = value;
+      modeChanged = true;
+    });
+    SharedPreferences.getInstance().then(
+      (prefs) => prefs.setBool('panel.gallery.detailed', value),
+    );
+  }
+
+  Future<void> view(Json row) async {
+    final viewerRows = widget.rows
+        .where((item) => item['category'] == row['category'])
+        .toList();
+    var index = viewerRows.indexOf(row);
+    await showDialog<void>(
+      context: context,
+      builder: (_) => StatefulBuilder(
+        builder: (context, update) {
+          final item = viewerRows[index];
+          return Dialog(
+            shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
+            insetPadding: const EdgeInsets.all(12),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1152),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    title: Text('${item['title'] ?? ''}'),
+                    subtitle: Text(
+                      '${index + 1} / ${viewerRows.length} · ${item['ownerName'] ?? ''}',
+                    ),
+                    trailing: IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ),
+                  Flexible(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        AspectRatio(
+                          aspectRatio: 16 / 9,
+                          child: GalleryPreview(
+                            key: ValueKey('${item['id']}-${item['url']}'),
+                            token: widget.api.token,
+                            row: item,
+                          ),
+                        ),
+                        if (viewerRows.length > 1)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              IconButton.filled(
+                                tooltip: socialText(
+                                  context,
+                                  'قبلی',
+                                  'Previous',
+                                ),
+                                onPressed: () => update(
+                                  () => index =
+                                      (index - 1 + viewerRows.length) %
+                                      viewerRows.length,
+                                ),
+                                icon: const Icon(Icons.chevron_left),
+                              ),
+                              IconButton.filled(
+                                tooltip: socialText(context, 'بعدی', 'Next'),
+                                onPressed: () => update(
+                                  () => index = (index + 1) % viewerRows.length,
+                                ),
+                                icon: const Icon(Icons.chevron_right),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            '${item['summary'] ?? '—'}',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text('${item['description'] ?? ''}'),
+                          const SizedBox(height: 8),
+                          Text(
+                            '${item['date'] ?? ''}',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            Text(
-              '${rows[index]['title'] ?? ''}',
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+          );
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const categories = [
+      ('cover', 'کاور', 'Cover'),
+      ('logo', 'لوگو', 'Logo'),
+      ('intro_video', 'ویدیو معرفی', 'Intro video'),
+      ('gallery', 'گالری', 'Gallery'),
+    ];
+    final selected = '${widget.data['_category'] ?? ''}';
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Wrap(
+            spacing: 8,
+            children: [
+              ChoiceChip(
+                label: Text(socialText(context, 'فشرده', 'Compact')),
+                selected: !detailed,
+                onSelected: (_) => setMode(false),
+              ),
+              ChoiceChip(
+                label: Text(socialText(context, 'توضیحات', 'Details')),
+                selected: detailed,
+                onSelected: (_) => setMode(true),
+              ),
+            ],
+          ),
+          for (final category in categories.where(
+            (c) => selected.isEmpty || c.$1 == selected,
+          )) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Text(
+                socialText(context, category.$2, category.$3),
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
             ),
+            if (!widget.rows.any(
+              (row) => '${row['category'] ?? 'gallery'}' == category.$1,
+            ))
+              Padding(
+                padding: const EdgeInsets.all(32),
+                child: Text(
+                  socialText(
+                    context,
+                    'آیتمی در این بخش وجود ندارد',
+                    'No items in this section',
+                  ),
+                ),
+              ),
+            LayoutBuilder(
+              builder: (context, size) {
+                final columns = size.maxWidth >= 1000
+                    ? 3
+                    : size.maxWidth >= 700
+                    ? 2
+                    : 1;
+                return Wrap(
+                  spacing: 24,
+                  runSpacing: 24,
+                  children: [
+                    for (final row in widget.rows.where(
+                      (row) => '${row['category'] ?? 'gallery'}' == category.$1,
+                    ))
+                      SizedBox(
+                        width: (size.maxWidth - (columns - 1) * 24) / columns,
+                        child: GalleryRecord(
+                          key: ValueKey(row['id']),
+                          sectionKey: widget.sectionKey,
+                          api: widget.api,
+                          row: row,
+                          fields: widget.fields,
+                          data: widget.data,
+                          canEdit: widget.canEdit,
+                          canDelete: widget.canDelete,
+                          onChanged: widget.onChanged,
+                          compactCard: true,
+                          detailed: detailed,
+                          onView: () => view(row),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+            const Divider(height: 48),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -103,12 +266,17 @@ class GalleryRecord extends StatefulWidget {
     required this.onChanged,
     this.standalone = false,
     this.sectionKey = 'gallery',
+    this.compactCard = false,
+    this.detailed = false,
+    this.onView,
   });
   final PanelApi api;
   final String sectionKey;
   final Json row, data;
   final List<Json> fields;
   final bool canEdit, canDelete, standalone;
+  final bool compactCard, detailed;
+  final VoidCallback? onView;
   final VoidCallback onChanged;
   @override
   State<GalleryRecord> createState() => _GalleryRecordState();
@@ -235,6 +403,96 @@ class _GalleryRecordState extends State<GalleryRecord> {
           icon: const Icon(Icons.crop),
         ),
     ];
+    if (widget.compactCard)
+      return Card(
+        margin: EdgeInsets.zero,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            InkWell(
+              onTap: widget.onView,
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    GalleryPreview(
+                      key: ValueKey(row['url']),
+                      token: widget.api.token,
+                      row: row,
+                      thumbnail: true,
+                    ),
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: Chip(
+                        label: Text(
+                          row['type'] == 'video'
+                              ? socialText(context, 'ویدیو', 'Video')
+                              : socialText(context, 'تصویر', 'Image'),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    '${row['title'] ?? ''}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  if (widget.detailed) ...[
+                    Text(
+                      '${row['date'] ?? ''}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${row['summary'] ?? '—'}',
+                      maxLines: 2,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${row['description'] ?? socialText(context, 'بدون توضیحات', 'No description')}',
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        '${row['ownerName'] ?? ''}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: actions
+                            .take(widget.canDelete && widget.canEdit ? 2 : 1)
+                            .toList(),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
     final body = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -324,7 +582,7 @@ class _GalleryPreviewState extends State<GalleryPreview> {
         path: widget.row['url'],
         width: double.infinity,
         height: double.infinity,
-        fit: widget.thumbnail ? BoxFit.cover : BoxFit.contain,
+        fit: BoxFit.contain,
       );
     if (!widget.thumbnail)
       return Center(

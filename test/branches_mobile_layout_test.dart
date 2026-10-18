@@ -127,6 +127,40 @@ class BranchApi extends PanelApi {
 }
 
 void main() {
+  testWidgets('ordinary accounts hide organization totals and filters reopen', (
+    tester,
+  ) async {
+    final api = BranchApi(catalog());
+    addTearDown(api.dispose);
+    tester.view.physicalSize = const Size(500, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      localized.host(BranchesPage(api: api, section: section)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('stat-تعداد آموزشگاه‌ها')), findsNothing);
+    expect(find.byKey(const ValueKey('stat-تعداد شعبه‌ها')), findsNothing);
+    final filter = find.byKey(const ValueKey('branch-filter-mode'));
+    expect(filter.hitTestable(), findsOneWidget);
+    await tester.tap(find.text('فیلترها'));
+    await tester.pumpAndSettle();
+    expect(filter.hitTestable(), findsNothing);
+    await tester.tap(find.text('فیلترها'));
+    await tester.pumpAndSettle();
+    expect(filter.hitTestable(), findsOneWidget);
+    await tester.tap(filter);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('آنلاین'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('فیلترها'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('فیلترها'));
+    await tester.pumpAndSettle();
+    expect(find.text('آنلاین'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
   testWidgets(
     'toolbar actions, compact statistics, modal filters and PDF palettes',
     (tester) async {

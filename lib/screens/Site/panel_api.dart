@@ -10,6 +10,7 @@ class PanelApi {
   PanelApi(this.token, {http.Client? client, this.isCurrentAccount})
     : client = client ?? http.Client();
   final String token;
+  String? _sessionCookie;
   final bool Function()? isCurrentAccount;
   void checkAccount() {
     if (_disposed || isCurrentAccount?.call() == false) {
@@ -29,6 +30,7 @@ class PanelApi {
     'Accept-Language': SocialApi.locale,
     'X-Sornaz-Panel-Forms': '2',
     'X-Sornaz-Panel-Features': '3',
+    'Cookie': ?_sessionCookie,
   };
   // Session-only cache: no background revalidation or automatic retry.
   final Map<String, (DateTime, String)> _cache = {};
@@ -194,6 +196,13 @@ class PanelApi {
       await client.send(request).timeout(const Duration(minutes: 2)),
     );
     checkAccount();
+    final cookie = response.headers['set-cookie'];
+    if (cookie != null) {
+      final session = RegExp(
+        r'(?:^|,\s*)(PHPSESSID=[^;,\s]+)',
+      ).firstMatch(cookie);
+      if (session != null) _sessionCookie = session.group(1);
+    }
     final value = decode(response);
     _revision++;
     _cache.clear();

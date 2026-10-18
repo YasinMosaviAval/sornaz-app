@@ -177,6 +177,83 @@
                 "label": "شرح قرارداد",
                 "type": "multiline",
                 "required": false
+            },
+            {
+                "key": "registration",
+                "label": "ثبت‌نام حساب کارمند",
+                "type": "object",
+                "options": [
+                    {
+                        "key": "username",
+                        "label": "نام کاربری",
+                        "type": "text",
+                        "required": true,
+                        "en": "Username"
+                    },
+                    {
+                        "key": "register_method",
+                        "label": "روش ثبت‌نام",
+                        "type": "select",
+                        "options": {
+                            "phone": "موبایل",
+                            "email": "ایمیل"
+                        },
+                        "required": true,
+                        "en": "Registration method",
+                        "default": "phone"
+                    },
+                    {
+                        "key": "email",
+                        "label": "ایمیل",
+                        "type": "email",
+                        "required": false,
+                        "en": "Email",
+                        "visibleWhen": {
+                            "_form.register_method": "email"
+                        },
+                        "requiredWhen": {
+                            "_form.register_method": "email"
+                        }
+                    },
+                    {
+                        "key": "password",
+                        "label": "رمز عبور",
+                        "type": "password",
+                        "required": true,
+                        "en": "Password"
+                    },
+                    {
+                        "key": "password2",
+                        "label": "تکرار رمز عبور",
+                        "type": "password",
+                        "required": true,
+                        "en": "Confirm password"
+                    },
+                    {
+                        "key": "terms",
+                        "label": "قوانین ثبت‌نام را می‌پذیرم",
+                        "type": "bool",
+                        "required": true,
+                        "en": "I accept the registration terms"
+                    },
+                    {
+                        "key": "otp",
+                        "label": "کد تأیید",
+                        "type": "text",
+                        "required": false,
+                        "en": "Verification code"
+                    }
+                ],
+                "required": false,
+                "en": "Employee account registration",
+                "visibleWhen": {
+                    "_form.type": {
+                        "in": [
+                            "manager",
+                            "receptionist"
+                        ]
+                    }
+                }
             }
         ],
         "formContractVersion": 2
@@ -695,6 +772,30 @@
                 ]
             },
             {
+                "key": "teachers",
+                "label": "استادها",
+                "type": "multi",
+                "options": {
+                    "source": "members",
+                    "where": {
+                        "type": "teacher"
+                    },
+                    "match": {
+                        "lessonId": "_selected.courseId.lessonId"
+                    },
+                    "requireMatch": true,
+                    "termPeople": true
+                },
+                "required": true,
+                "initial": "teachers",
+                "dependsOn": [
+                    "organizationUserId",
+                    "courseId",
+                    "classroomId"
+                ],
+                "maxItemsFrom": "_selected.courseId.teacher_capacity"
+            },
+            {
                 "key": "classroomId",
                 "label": "کلاس برگزاری",
                 "type": "select",
@@ -938,30 +1039,6 @@
                 "label": "شرح ترم",
                 "type": "multiline",
                 "required": false
-            },
-            {
-                "key": "teachers",
-                "label": "استادها",
-                "type": "multi",
-                "options": {
-                    "source": "members",
-                    "where": {
-                        "type": "teacher"
-                    },
-                    "match": {
-                        "lessonId": "_selected.courseId.lessonId"
-                    },
-                    "requireMatch": true,
-                    "termPeople": true
-                },
-                "required": true,
-                "initial": "teachers",
-                "dependsOn": [
-                    "organizationUserId",
-                    "courseId",
-                    "classroomId"
-                ],
-                "maxItemsFrom": "_selected.courseId.teacher_capacity"
             },
             {
                 "key": "students",

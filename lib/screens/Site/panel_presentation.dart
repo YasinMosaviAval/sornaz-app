@@ -152,14 +152,14 @@ class PanelStatistics extends StatelessWidget {
   static const labels = {
     'activeStudents': ('هنرجویان فعال', 'Active students'),
     'todayClasses': ('کلاس‌های امروز', 'Today’s classes'),
-    'monthlyIncome': ('درآمد ماه', 'Monthly income'),
-    'attendanceRate': ('حضور در کلاس', 'Attendance'),
-    'pendingPayments': ('اقساط معوق', 'Overdue payments'),
+    'monthlyIncome': ('درآمد ماهانه', 'Monthly income'),
+    'attendanceRate': ('نرخ حضور', 'Attendance rate'),
+    'pendingPayments': ('پرداخت‌های معوق', 'Overdue payments'),
     'absencesToday': ('غیبت‌های امروز', 'Absences today'),
     'newMessages': ('پیام‌های جدید', 'New messages'),
     'urgentAlerts': ('موارد نیازمند رسیدگی', 'Action required'),
-    'newStudentsWeek': ('ثبت‌نام‌های هفته', 'Weekly enrollments'),
-    'pointsAwarded': ('امتیازهای اعطاشده', 'Points awarded'),
+    'newStudentsWeek': ('ثبت‌نام هفته', 'Weekly registrations'),
+    'pointsAwarded': ('امتیازهای اهداشده', 'Points awarded'),
   };
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -169,11 +169,14 @@ class PanelStatistics extends StatelessWidget {
       children: [
         for (final entry in stats.entries)
           SizedBox(
-            width: (size.maxWidth - 8) / 2,
+            width: size.maxWidth < 600
+                ? size.maxWidth
+                : (size.maxWidth - (size.maxWidth >= 1100 ? 3 : 1) * 8) /
+                      (size.maxWidth >= 1100 ? 4 : 2),
             child: Card(
               margin: EdgeInsets.zero,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
                     Expanded(
@@ -183,27 +186,24 @@ class PanelStatistics extends StatelessWidget {
                           labels[entry.key]?.$1 ?? entry.key,
                           labels[entry.key]?.$2 ?? entry.key,
                         ),
-                        maxLines: 2,
+                        key: ValueKey('panel-stat-label-${entry.key}'),
+                        maxLines: 1,
                         style: Theme.of(context).textTheme.bodyMedium,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(width: 6),
-                    Flexible(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          panelNumber(
-                            entry.value,
-                            fa:
-                                Localizations.localeOf(context).languageCode ==
-                                'fa',
-                          ),
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                        ),
+                    Text(
+                      key: ValueKey('panel-stat-value-${entry.key}'),
+                      panelNumber(
+                        entry.value,
+                        fa:
+                            Localizations.localeOf(context).languageCode ==
+                            'fa',
+                      ),
+                      textAlign: TextAlign.end,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ],

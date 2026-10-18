@@ -1,4 +1,4 @@
-import 'package:sornaz/screens/Social/my_profile_page.dart';
+import 'package:sornaz/screens/Social/chat_tab_page.dart';
 import 'package:sornaz/screens/Social/user_panel.dart';
 import 'package:sornaz/screens/Home/ui/pages/music_tools.dart';
 import 'package:sornaz/components/join_community.dart';
@@ -135,7 +135,7 @@ void main() {
       await tester.tap(
         find.descendant(
           of: find.byType(BottomNavBarWidget),
-          matching: find.text('پروفایل'),
+          matching: find.text('حساب کاربری'),
         ),
       );
       await tester.pumpAndSettle();
@@ -253,7 +253,7 @@ void main() {
   );
 
   testWidgets(
-    'notation is in tools, feed is central, and profile is separate',
+    'guests use release chat and account tabs while notation stays in tools',
     (tester) async {
       await tester.pumpWidget(
         accounts.host(
@@ -262,9 +262,9 @@ void main() {
             pages: [
               SizedBox(),
               SitePanelPage(),
-              UserPanelPage(),
+              ChatTabPage(),
               MusicToolsPage(),
-              MyProfilePage(),
+              UserPanelPage(initialTab: 2, mainTabIndex: 4),
             ],
           ),
           AppData(),
@@ -282,26 +282,26 @@ void main() {
             .map((e) => (e.widget as Text).data)
             .whereType<String>()
             .toList(),
-        ['خانه', 'پنل کاربری', 'صحنه', 'ابزار موسیقی', 'پروفایل'],
+        ['خانه', 'پنل کاربری', 'گفتگو', 'ابزار موسیقی', 'حساب کاربری'],
       );
       expect(find.widgetWithText(ListTile, 'نت‌نویسی'), findsOneWidget);
       await tester.tap(
         find.descendant(
           of: find.byType(BottomNavBarWidget),
-          matching: find.text('پروفایل'),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.byType(MyProfilePage), findsOneWidget);
-      expect(find.byType(JoinCommunity), findsOneWidget);
-      await tester.tap(
-        find.descendant(
-          of: find.byType(BottomNavBarWidget),
-          matching: find.text('صحنه'),
+          matching: find.text('حساب کاربری'),
         ),
       );
       await tester.pumpAndSettle();
       expect(find.byType(UserPanelPage), findsOneWidget);
+      expect(find.byType(JoinCommunity), findsOneWidget);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BottomNavBarWidget),
+          matching: find.text('گفتگو'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(ChatTabPage), findsOneWidget);
       expect(find.byType(JoinCommunity), findsOneWidget);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());

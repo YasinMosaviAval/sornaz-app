@@ -585,6 +585,8 @@ const Map<String, dynamic> panelWebPresentation = {
       "cancel-reject",
       "restore",
       "available-times",
+      "assign-student",
+      "classroom",
     ],
     "detailFields": [
       {"key": "name", "label": "نام ترم"},

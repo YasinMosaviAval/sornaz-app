@@ -98,6 +98,34 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      final guidanceCard = find.ancestor(
+        of: find.byType(PanelPageGuidance),
+        matching: find.byType(Scaffold),
+      );
+      expect(guidanceCard, findsOneWidget);
+      final tile = find.descendant(
+        of: find.byType(PanelPageGuidance),
+        matching: find.byType(ExpansionTile),
+      );
+      expect(tester.widget<ExpansionTile>(tile).initiallyExpanded, isTrue);
+      final card = find.descendant(
+        of: find.byType(PanelPageGuidance),
+        matching: find.byType(Card),
+      );
+      final cardContext = tester.element(card);
+      expect(
+        tester.widget<Card>(card).color,
+        Theme.of(cardContext).colorScheme.primary.withValues(alpha: .2),
+      );
+      await tester.tap(
+        find.descendant(of: tile, matching: find.byType(ListTile)),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('ویرایش توضیحات صفحه').hitTestable(), findsNothing);
+      await tester.tap(
+        find.descendant(of: tile, matching: find.byType(ListTile)),
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.text('ویرایش توضیحات صفحه'));
       await tester.pumpAndSettle();
       final fields = find.byType(TextFormField);

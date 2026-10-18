@@ -20,6 +20,7 @@ import '../Social/social_api.dart';
 import '../Social/social_widgets.dart';
 import 'panel_api.dart';
 import 'panel_form.dart';
+import 'dart:math';
 import 'panel_form_contract.dart';
 import 'panel_presentation.dart';
 import 'panel_table_contract.dart';
@@ -36,6 +37,8 @@ import 'panel_tracking.dart';
 import 'panel_caption.dart';
 import 'panel_web_contracts.dart';
 import 'panel_page_guidance.dart';
+import 'panel_section_card.dart';
+import 'panel_account.dart';
 import 'site_api.dart';
 import 'package:sornaz/components/media_dialogs.dart';
 
@@ -454,6 +457,14 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
         section == 'terms' && key == 'restore') {
       return false;
     }
+    if (section == 'terms' && key == 'assign-student') {
+      return record['status_code'] != 'ongoing' &&
+          objects(record['students'] ?? []).isEmpty;
+    }
+    if (section == 'terms' && key == 'classroom') {
+      return record['scheduleDraft'] is Map &&
+          (num.tryParse('${record['classroomId']}') ?? 0) == 0;
+    }
     if (section == 'finance' && record['invoiceKind'] == 'subscription')
       return false;
     if (section == 'finance' && ['pay', 'offline'].contains(key)) return false;
@@ -472,6 +483,19 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
     }
     final action = optionalObject(actions[key]);
     if (action.isEmpty) return;
+    var formData = data;
+    if (section == 'terms' && key == 'assign-student') {
+      setState(() => busy = true);
+      try {
+        formData = {...data, ...await widget.api.get('/students/list')};
+      } catch (error) {
+        if (mounted) socialError(context, error);
+        return;
+      } finally {
+        if (mounted) setState(() => busy = false);
+      }
+      if (!mounted) return;
+    }
     if (section == 'chat' && key == 'details') {
       await Navigator.of(context).push(
         MaterialPageRoute(
@@ -549,6 +573,12 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
       ]);
     }
     var initial = <String, dynamic>{...record, ...widget.params};
+    if (section == 'terms' && key == 'batch') {
+      initial['requestKey'] = List.generate(
+        16,
+        (_) => Random.secure().nextInt(256).toRadixString(16).padLeft(2, '0'),
+      ).join();
+    }
     if (section == 'account' && action['row'] != true) {
       initial = {...optionalObject(data['profile'])};
     }
@@ -607,6 +637,63 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
               action['strictFields'] == true,
           title: panelLabel(context, action),
           submitButtons: objects(action['submitButtons'] ?? []),
+          loadBatchTimes: section == 'terms' && key == 'batch'
+              ? (values) async {
+                  final organization = objects(data['organizations'] ?? [])
+                      .where(
+                        (row) =>
+                            '${row['user_id']}' ==
+                            '${values['organizationUserId']}',
+                      )
+                      .firstOrNull;
+                  if (organization == null || values['weekday'] == null) {
+                    return {};
+                  }
+                  final room = objects(data['classrooms'] ?? [])
+                      .where(
+                        (row) => '${row['id']}' == '${values['classroomId']}',
+                      )
+                      .firstOrNull;
+                  final result = await widget.api.get('/terms/available-times', {
+                    'branch':
+                        '${room?['branchId'] ?? (organization['kind'] == 'branch' ? organization['id'] : 0)}',
+                    'academy':
+                        '${organization['kind'] == 'academy' ? organization['id'] : organization['academyId'] ?? 0}',
+                    'weekday': '${values['weekday']}',
+                    'duration': '5',
+                  });
+                  return result;
+                }
+              : null,
+          onRequestCode:
+              section == 'members' &&
+                  key == 'create' &&
+                  actions.containsKey('registration-otp')
+              ? (result) async {
+                  await widget.api.act(
+                    section,
+                    'registration-otp',
+                    values: panelDialogPayload(
+                      section,
+                      key,
+                      result.values,
+                      data,
+                    ),
+                  );
+                  if (mounted)
+                    ScaffoldMessenger.of(this.context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          socialText(
+                            this.context,
+                            'کد ارسال شد؛ کد را وارد و ثبت‌نام را نهایی کنید.',
+                            'Code sent. Enter it to complete registration.',
+                          ),
+                        ),
+                      ),
+                    );
+                }
+              : null,
           onSubmit:
               action['formContractVersion'] == 2 && action['method'] == 'POST'
               ? (result) async {
@@ -647,13 +734,17 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                 field,
           ],
           data: {
-            ...data,
+            ...formData,
             'operation': key,
             'record': record,
             if (section == 'polls') 'options': record['options'],
             if (section == 'schedules') 'attendance': record['attendance'],
           },
-          initial: key == 'create' ? {...widget.params} : initial,
+          initial: section == 'terms' && key == 'assign-student'
+              ? const {}
+              : key == 'create'
+              ? {...widget.params}
+              : initial,
         ),
       );
       if (result == null || !mounted) return;
@@ -729,6 +820,30 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
             response['paymentUrl'] ??
             response['redirectUrl'] ??
             response['url'];
+        if (key == 'chat' &&
+            ['waiting-approvals', 'waiting-schedules'].contains(section)) {
+          final id = '${response['conversationId'] ?? ''}';
+          final catalog = await widget.api.get('');
+          final chat = objects(
+            catalog['sections'] ?? [],
+          ).where((row) => row['key'] == 'chat').firstOrNull;
+          final inbox = await widget.api.get('/chat/list');
+          final conversation = objects(
+            inbox['conversations'] ?? [],
+          ).where((row) => '${row['id']}' == id).firstOrNull;
+          if (chat == null || conversation == null)
+            throw const SocialException('گفتگوی ثبت‌نام در دسترس نیست.');
+          if (!mounted) return;
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => PanelConversationPage(
+                api: widget.api,
+                section: chat,
+                conversation: conversation,
+              ),
+            ),
+          );
+        }
         if (['pay'].contains(key) && paymentUrl is String) {
           final uri = Uri.tryParse(paymentUrl);
           if (uri != null && uri.scheme == 'https') {
@@ -1424,14 +1539,17 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
     final organizationOptions =
         (gallerySection && data['hideOwnerFilters'] == true)
         ? <String, String>{}
-        : (tableContract['organizationFilter'] ??
-                  widget.section['organizationFilter']) ==
-              true
+        : (section == 'dashboard' ||
+              (tableContract['organizationFilter'] ??
+                      widget.section['organizationFilter']) ==
+                  true)
         ? panelOrganizationOptions(
             data,
             rows,
             fa: Localizations.localeOf(context).languageCode == 'fa',
-            mode: '${tableContract['organizationMode'] ?? 'branch'}',
+            mode: section == 'dashboard'
+                ? 'branch'
+                : '${tableContract['organizationMode'] ?? 'branch'}',
           )
         : <String, String>{};
     if (section == 'users')
@@ -1583,6 +1701,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
         .where(
           (entry) =>
               entry.key != 'list' &&
+              section != 'account' &&
               !(section == 'classroom-types' &&
                   entry.key == 'create-from-classroom') &&
               entry.value['row'] == false &&
@@ -1628,7 +1747,8 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
             }
           },
         ),
-      if (filtered.isNotEmpty || data['stats'] is Map || section == 'finance')
+      if (section != 'dashboard' &&
+          (filtered.isNotEmpty || data['stats'] is Map || section == 'finance'))
         IconButton(
           tooltip: socialText(context, 'خروجی PDF', 'Export PDF'),
           icon: const Icon(
@@ -2012,50 +2132,95 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                           ),
                         ),
                       ),
-                    if (organizationOptions.isNotEmpty)
-                      PanelField(
-                        field: {
-                          'key': 'organization',
-                          'label': 'آموزشگاه و شعبه‌ها',
-                          'en': 'Academy and branches',
-                          'type': 'select',
-                          'filter': true,
-                          'options': organizationOptions,
-                        },
-                        value: effectiveOrganization,
-                        data: data,
-                        changed: (value) {
-                          setState(() {
-                            organizationFilter = '${value ?? ''}';
-                            page = 1;
-                            localPage = 1;
-                          });
-                          if (['users', 'schedules'].contains(section)) load();
-                        },
-                      ),
-                    for (final field in filterFields.where(
-                      (field) => panelFieldVisible(field, {'_form': filters}),
-                    ))
-                      PanelField(
-                        field: {...field, 'filter': true},
-                        value: filters['${field['key']}'],
-                        data: {...data, '_form': filters},
-                        changed: (value) {
-                          setState(() {
-                            filters['${field['key']}'] = value;
-                            for (final child in objects(
-                              widget.section['filters'] ?? [],
-                            )) {
-                              if (optionalObject(
-                                optionalObject(child['options'])['match'],
-                              ).values.contains(field['key']))
-                                filters.remove('${child['key']}');
-                            }
-                            page = 1;
-                            localPage = 1;
-                          });
-                          if (field['queryKey'] != null) load();
-                        },
+                    if (organizationOptions.isNotEmpty ||
+                        filterFields.isNotEmpty)
+                      PanelSectionCard(
+                        key: ValueKey('panel-filters-$section'),
+                        storageId: 'filters-$section',
+                        title: socialText(context, 'فیلترها', 'Filters'),
+                        children: [
+                          if (organizationOptions.isNotEmpty && gallerySection)
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.all(12),
+                              child: Row(
+                                children: [
+                                  for (final option
+                                      in organizationOptions.entries)
+                                    Padding(
+                                      padding: const EdgeInsetsDirectional.only(
+                                        end: 8,
+                                      ),
+                                      child: ChoiceChip(
+                                        label: Text(option.value),
+                                        selected:
+                                            effectiveOrganization == option.key,
+                                        onSelected: (_) => setState(() {
+                                          organizationFilter = option.key;
+                                          page = 1;
+                                          localPage = 1;
+                                        }),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          if (organizationOptions.isNotEmpty && !gallerySection)
+                            PanelField(
+                              field: {
+                                'key': 'organization',
+                                'label': section == 'dashboard'
+                                    ? 'سازمان'
+                                    : 'آموزشگاه و شعبه‌ها',
+                                'en': section == 'dashboard'
+                                    ? 'Organization'
+                                    : 'Academy and branches',
+                                'type': 'select',
+                                'filter': true,
+                                'options': organizationOptions,
+                              },
+                              value: effectiveOrganization,
+                              data: data,
+                              changed: (value) {
+                                setState(() {
+                                  organizationFilter = '${value ?? ''}';
+                                  page = 1;
+                                  localPage = 1;
+                                });
+                                if ([
+                                  'users',
+                                  'schedules',
+                                  'dashboard',
+                                ].contains(section))
+                                  load();
+                              },
+                            ),
+                          for (final field in filterFields.where(
+                            (field) =>
+                                panelFieldVisible(field, {'_form': filters}),
+                          ))
+                            PanelField(
+                              field: {...field, 'filter': true},
+                              value: filters['${field['key']}'],
+                              data: {...data, '_form': filters},
+                              changed: (value) {
+                                setState(() {
+                                  filters['${field['key']}'] = value;
+                                  for (final child in objects(
+                                    widget.section['filters'] ?? [],
+                                  )) {
+                                    if (optionalObject(
+                                      optionalObject(child['options'])['match'],
+                                    ).values.contains(field['key']))
+                                      filters.remove('${child['key']}');
+                                  }
+                                  page = 1;
+                                  localPage = 1;
+                                });
+                                if (field['queryKey'] != null) load();
+                              },
+                            ),
+                        ],
                       ),
                     if (listLayout)
                       Padding(
@@ -2183,7 +2348,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                         start: weekStart,
                         open: openRecord,
                       )
-                    else if (gallerySection && filtered.isNotEmpty)
+                    else if (gallerySection)
                       PanelGallery(
                         sectionKey: section,
                         api: widget.api,
@@ -2191,85 +2356,73 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                         fields: objects(
                           optionalObject(actions['update'])['fields'] ?? [],
                         ),
-                        data: data,
+                        data: {
+                          ...data,
+                          '_category':
+                              optionalObject(
+                                widget.section['where'],
+                              )['category'] ??
+                              filters['category'] ??
+                              '',
+                        },
                         canEdit: actions.containsKey('update'),
                         canDelete: actions.containsKey('delete'),
                         onChanged: () => load(refresh: true),
                       )
-                    else if (section == 'account') ...[
-                      if (widget.accountArea == null) ...[
-                        PanelProfileHeader(
-                          profile: optionalObject(data['profile']),
+                    else if (section == 'account')
+                      PanelAccount(
+                        key: ValueKey(
+                          'account-${widget.api.hashCode}-${widget.accountArea}',
                         ),
-                        PanelDataView(value: data['profile']),
-                      ],
-                      if (widget.accountArea == 'privacy')
-                        PanelDataView(
-                          value: optionalObject(data['profile'])['privacy'],
+                        api: widget.api,
+                        data: data,
+                        actions: actions,
+                        area: widget.accountArea,
+                        onAction: (key, row) => perform(key, row),
+                        onChanged: () => load(refresh: true),
+                      )
+                    else if (section == 'dashboard' ||
+                        section == 'reports' && collection is! List) ...[
+                      PanelDashboard(
+                        data: panelDashboardOrganizationData(
+                          data,
+                          effectiveOrganization,
                         ),
-                      for (final pair in [
-                        ('documents', ['download-media', 'delete-media']),
-                        ('devices', ['end-session']),
-                        ('merges.requests', ['cancel-merge', 'decide-merge']),
-                      ])
-                        if (widget.accountArea == null ||
-                            widget.accountArea == pair.$1) ...[
-                          for (final row
-                              in (panelValue(data, pair.$1) is List
-                                  ? objects(panelValue(data, pair.$1))
-                                  : <Json>[]))
-                            recordRow(row, only: pair.$2),
-                          if (panelValue(data, pair.$1) is! List ||
-                              (panelValue(data, pair.$1) as List).isEmpty)
-                            Padding(
-                              padding: const EdgeInsets.all(24),
-                              child: Text(
-                                socialText(
-                                  context,
-                                  'موردی برای نمایش وجود ندارد.',
-                                  'No records to display.',
+                        onOpen: (target) async {
+                          try {
+                            final related = objects(
+                              widget.section['relatedSections'] ?? [],
+                            );
+                            Json? destination = related
+                                .where(
+                                  (s) =>
+                                      s['key'] == target ||
+                                      s['resourceKey'] == target,
+                                )
+                                .firstOrNull;
+                            destination ??= objects(
+                              (await widget.api.get(''))['sections'],
+                            ).where((s) => s['key'] == target).firstOrNull;
+                            if (!mounted) return;
+                            if (destination == null)
+                              throw const SocialException(
+                                'دسترسی لازم برای این بخش را ندارید.',
+                                403,
+                              );
+                            await Navigator.of(this.context).push(
+                              MaterialPageRoute(
+                                builder: (_) => PanelResourcePage(
+                                  api: widget.api,
+                                  section: destination!,
                                 ),
                               ),
-                            ),
-                        ],
-                      if ((widget.accountArea == null ||
-                              widget.accountArea == 'documents') &&
-                          data['backup'] is Map)
-                        recordRow(
-                          optionalObject(data['backup']),
-                          only: ['download-backup'],
-                        ),
-                      if (widget.accountArea == null ||
-                          widget.accountArea == 'loginHistory')
-                        PanelDataView(value: data['loginHistory']),
-                      if (widget.accountArea == null ||
-                          widget.accountArea == 'securityAlerts')
-                        PanelDataView(value: data['securityAlerts']),
-                    ] else if (section == 'dashboard' ||
-                        section == 'reports' && collection is! List) ...[
-                      if (section == 'dashboard')
-                        Wrap(
-                          children: [
-                            for (final related in objects(
-                              widget.section['relatedSections'],
-                            ))
-                              TextButton(
-                                onPressed: () async {
-                                  await Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => PanelResourcePage(
-                                        api: widget.api,
-                                        section: related,
-                                      ),
-                                    ),
-                                  );
-                                  if (mounted) await load(refresh: true);
-                                },
-                                child: Text(panelLabel(context, related)),
-                              ),
-                          ],
-                        ),
-                      PanelDashboard(data: data),
+                            );
+                            if (mounted) await load(refresh: true);
+                          } catch (error) {
+                            if (mounted) socialError(this.context, error);
+                          }
+                        },
+                      ),
                     ] else if (section == 'tracking') ...[
                       PanelTracking(data: data),
                     ] else if (rows.isNotEmpty) ...[

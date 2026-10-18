@@ -10,6 +10,7 @@ import 'panel_presentation.dart';
 import 'branch_style.dart';
 import 'branch_form.dart';
 import 'panel_page_guidance.dart';
+import 'panel_section_card.dart';
 import 'panel_table_contract.dart';
 
 class BranchesPage extends StatefulWidget {
@@ -860,33 +861,35 @@ class _BranchesPageState extends State<BranchesPage> {
                             true,
                       ),
                       if (!typesOnly) ...[
-                        Row(
-                          children: [
-                            Expanded(
-                              child: stat(
-                                t('تعداد آموزشگاه‌ها', 'Academies'),
-                                objects(data['academies'] ?? []).isNotEmpty
-                                    ? objects(data['academies']).length
-                                    : branches
-                                          .map((r) => r['academy_id'])
-                                          .toSet()
-                                          .length,
-                                const Color(0xfff5f3ff),
-                                const Color(0xff6d28d9),
+                        if (branchFlag(data['site_admin'])) ...[
+                          Row(
+                            children: [
+                              Expanded(
+                                child: stat(
+                                  t('تعداد آموزشگاه‌ها', 'Academies'),
+                                  objects(data['academies'] ?? []).isNotEmpty
+                                      ? objects(data['academies']).length
+                                      : branches
+                                            .map((r) => r['academy_id'])
+                                            .toSet()
+                                            .length,
+                                  const Color(0xfff5f3ff),
+                                  const Color(0xff6d28d9),
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: stat(
-                                t('تعداد شعبه‌ها', 'Branches'),
-                                branches.length,
-                                const Color(0xffeef2ff),
-                                const Color(0xff4338ca),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: stat(
+                                  t('تعداد شعبه‌ها', 'Branches'),
+                                  branches.length,
+                                  const Color(0xffeef2ff),
+                                  const Color(0xff4338ca),
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                        ],
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
@@ -924,62 +927,62 @@ class _BranchesPageState extends State<BranchesPage> {
                           ],
                         ),
                         const SizedBox(height: 20),
-                        BranchSurface(
-                          padding: 0,
-                          child: Column(
-                            children: [
+                        PanelSectionCard(
+                          horizontalInset: 0,
+                          storageId: 'organization-filters',
+                          title: t('فیلترها', 'Filters'),
+                          children: [
+                            filter(
+                              'type',
+                              t('همه انواع آموزشی', 'All education types'),
+                              objects(data['types'] ?? []),
+                              type,
+                              (v) => type = v,
+                            ),
+                            if (branchFlag(data['site_admin']) &&
+                                !branchFlag(data['branch_account'])) ...[
                               filter(
-                                'type',
-                                t('همه انواع آموزشی', 'All education types'),
-                                objects(data['types'] ?? []),
-                                type,
-                                (v) => type = v,
-                              ),
-                              if (branchFlag(data['site_admin']) &&
-                                  !branchFlag(data['branch_account'])) ...[
-                                filter(
-                                  'academy',
-                                  t('همه آموزشگاه‌ها', 'All academies'),
-                                  objects(data['academies'] ?? []),
-                                  academy,
-                                  (v) => academy = v,
-                                ),
-                              ],
-
-                              filter(
-                                'mode',
-                                t('همه انواع ارائه', 'All delivery types'),
-                                [
-                                  for (final k in [
-                                    'physical',
-                                    'online',
-                                    'hybrid',
-                                  ])
-                                    {'id': k, 'name': branchMode(k, fa)},
-                                ],
-                                mode,
-                                (v) => mode = v,
-                              ),
-
-                              filter(
-                                'status',
-                                t('همه وضعیت‌ها', 'All statuses'),
-                                [
-                                  for (final k in [
-                                    'active',
-                                    'inactive',
-                                    'removed',
-                                  ])
-                                    {
-                                      'id': k,
-                                      'name': branchStatus({'status': k}, fa),
-                                    },
-                                ],
-                                status,
-                                (v) => status = v,
+                                'academy',
+                                t('همه آموزشگاه‌ها', 'All academies'),
+                                objects(data['academies'] ?? []),
+                                academy,
+                                (v) => academy = v,
                               ),
                             ],
-                          ),
+
+                            filter(
+                              'mode',
+                              t('همه انواع ارائه', 'All delivery types'),
+                              [
+                                for (final k in [
+                                  'physical',
+                                  'online',
+                                  'hybrid',
+                                ])
+                                  {'id': k, 'name': branchMode(k, fa)},
+                              ],
+                              mode,
+                              (v) => mode = v,
+                            ),
+
+                            filter(
+                              'status',
+                              t('همه وضعیت‌ها', 'All statuses'),
+                              [
+                                for (final k in [
+                                  'active',
+                                  'inactive',
+                                  'removed',
+                                ])
+                                  {
+                                    'id': k,
+                                    'name': branchStatus({'status': k}, fa),
+                                  },
+                              ],
+                              status,
+                              (v) => status = v,
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 24),
                       ],

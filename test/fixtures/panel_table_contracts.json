@@ -1111,7 +1111,9 @@
             "cancel-approve",
             "cancel-reject",
             "restore",
-            "available-times"
+            "available-times",
+            "assign-student",
+            "classroom"
         ],
         "detailFields": [
             {

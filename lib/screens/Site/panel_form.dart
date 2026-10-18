@@ -33,12 +33,16 @@ class PanelFormPage extends StatefulWidget {
     required this.data,
     this.initial = const {},
     this.onSubmit,
+    this.onRequestCode,
+    this.loadBatchTimes,
     this.settingsCheckboxes = false,
     this.dialog = false,
     this.declaredOnly = false,
     this.submitButtons = const [],
   });
   final Future<void> Function(PanelFormResult result)? onSubmit;
+  final Future<void> Function(PanelFormResult result)? onRequestCode;
+  final Future<Json> Function(Json values)? loadBatchTimes;
   final bool settingsCheckboxes, dialog;
   final bool declaredOnly;
   final List<Json> submitButtons;
@@ -59,6 +63,64 @@ class _PanelFormPageState extends State<PanelFormPage> {
     widget.data,
   );
   final files = <String, PlatformFile>{};
+  List<String> batchTimes = [];
+  bool batchTimesLoading = false, batchTimesFailed = false;
+  int batchTimesSequence = 0;
+  @override
+  void initState() {
+    super.initState();
+    if (widget.loadBatchTimes != null)
+      WidgetsBinding.instance.addPostFrameCallback((_) => refreshBatchTimes());
+  }
+
+  Future<void> refreshBatchTimes() async {
+    if (!mounted || widget.loadBatchTimes == null) return;
+    final sequence = ++batchTimesSequence;
+    setState(() {
+      batchTimesLoading = true;
+      batchTimesFailed = false;
+    });
+    try {
+      final result = await widget.loadBatchTimes!(Map.of(values));
+      if (!mounted || sequence != batchTimesSequence) return;
+      setState(() {
+        batchTimes = (result['times'] as List? ?? [])
+            .map((time) => '$time')
+            .toList();
+        if ((num.tryParse('${result['timezoneId']}') ?? 0) > 0)
+          values['timezoneId'] = result['timezoneId'];
+        for (final key in ['rangeStart', 'rangeEnd']) {
+          if (!batchRangeOptions(key).containsKey('${values[key]}'))
+            values[key] = null;
+        }
+      });
+    } catch (_) {
+      if (mounted && sequence == batchTimesSequence)
+        setState(() {
+          batchTimes = [];
+          batchTimesFailed = true;
+        });
+    } finally {
+      if (mounted && sequence == batchTimesSequence)
+        setState(() => batchTimesLoading = false);
+    }
+  }
+
+  Map<String, String> batchRangeOptions(String key) {
+    final options = <String, String>{};
+    for (final time in batchTimes) {
+      var value = time;
+      if (key == 'rangeEnd') {
+        final parts = time.split(':');
+        final minute = int.parse(parts[0]) * 60 + int.parse(parts[1]) + 5;
+        value =
+            '${(minute ~/ 60).toString().padLeft(2, '0')}:${(minute % 60).toString().padLeft(2, '0')}';
+      }
+      options[value] = value;
+    }
+    return options;
+  }
+
   @override
   void dispose() {
     if (!handedOff)
@@ -77,7 +139,8 @@ class _PanelFormPageState extends State<PanelFormPage> {
         ).values.contains(field['key'])) {
           values['${child['key']}'] = child['type'] == 'multi' ? [] : null;
         }
-        if ((child['dependsOn'] as List? ?? []).contains(field['key'])) {
+        if ((child['dependsOn'] as List? ?? []).contains(field['key']) &&
+            !(child['key'] == 'teachers' && field['key'] == 'classroomId')) {
           values['${child['key']}'] = child['type'] == 'multi' ? [] : null;
         }
       }
@@ -89,11 +152,47 @@ class _PanelFormPageState extends State<PanelFormPage> {
         applyDefaults: false,
       );
       values.addAll(updated);
+      if (field['key'] == 'classroomId' && values['teachers'] is List) {
+        final teacher = widget.fields
+            .where((field) => field['key'] == 'teachers')
+            .firstOrNull;
+        if (teacher != null) {
+          final allowed = panelSelectOptions(
+            teacher,
+            panelFormContext(widget.fields, values, widget.data),
+          );
+          values['teachers'] = (values['teachers'] as List)
+              .where(
+                (item) =>
+                    allowed.containsKey('${item is Map ? item['id'] : item}'),
+              )
+              .toList();
+        }
+      }
     });
+    if (widget.loadBatchTimes != null &&
+        ['organizationUserId', 'classroomId', 'weekday'].contains(field['key']))
+      unawaited(refreshBatchTimes());
   }
 
-  Future<void> submit({Json overrides = const {}}) async {
+  Future<void> submit({
+    Json overrides = const {},
+    bool requestCode = false,
+  }) async {
     if (submitting) return;
+    if (widget.loadBatchTimes != null &&
+        (batchTimesLoading || batchTimesFailed || batchTimes.isEmpty))
+      return;
+    if (widget.loadBatchTimes != null && panelBatchTermCount(values) == null) {
+      setState(
+        () => validationError = socialText(
+          context,
+          'بازه باید به جلسه‌های کامل تقسیم شود.',
+          'The range must contain whole sessions.',
+        ),
+      );
+      return;
+    }
     if (widget.declaredOnly) {
       final invalid = panelInvalidField(widget.fields, values, widget.data);
       if (invalid != null) {
@@ -131,6 +230,10 @@ class _PanelFormPageState extends State<PanelFormPage> {
       }
       setState(() => submitting = true);
       try {
+        if (requestCode) {
+          await widget.onRequestCode!(result);
+          return;
+        }
         await widget.onSubmit!(result);
         if (mounted) {
           handedOff = true;
@@ -157,6 +260,44 @@ class _PanelFormPageState extends State<PanelFormPage> {
               ? EdgeInsets.zero
               : const EdgeInsets.all(16),
           children: [
+            if (widget.loadBatchTimes != null) ...[
+              if (batchTimesLoading) const LinearProgressIndicator(),
+              if (!batchTimesLoading && !batchTimesFailed && batchTimes.isEmpty)
+                Text(
+                  socialText(
+                    context,
+                    'سازمان و روز هفته را انتخاب کنید؛ بازه‌ها از ساعت‌های مجاز همان روز دریافت می‌شوند.',
+                    'Select an organization and weekday to load its available hours.',
+                  ),
+                ),
+              if (batchTimesFailed)
+                TextButton(
+                  onPressed: refreshBatchTimes,
+                  child: Text(
+                    socialText(
+                      context,
+                      'دریافت دوباره ساعت‌های مجاز',
+                      'Retry available times',
+                    ),
+                  ),
+                ),
+              if (panelBatchTermCount(values) case final count?)
+                Text(
+                  socialText(
+                    context,
+                    '$count ترم مستقل ایجاد می‌شود.',
+                    '$count separate terms will be created.',
+                  ),
+                )
+              else
+                Text(
+                  socialText(
+                    context,
+                    'بازه و مدت جلسه را مشخص کنید.',
+                    'Select a range and session duration.',
+                  ),
+                ),
+            ],
             if (submitting) const LinearProgressIndicator(),
             if (validationError != null)
               Text(
@@ -177,6 +318,11 @@ class _PanelFormPageState extends State<PanelFormPage> {
                   key: ValueKey(field['key']),
                   field: {
                     ...field,
+                    if (widget.loadBatchTimes != null &&
+                        ['rangeStart', 'rangeEnd'].contains(field['key'])) ...{
+                      'type': 'select',
+                      'options': batchRangeOptions('${field['key']}'),
+                    },
                     'required': panelFieldRequired(
                       field,
                       panelFormContext(widget.fields, values, widget.data),
@@ -208,6 +354,18 @@ class _PanelFormPageState extends State<PanelFormPage> {
           children: [
             content,
             const SizedBox(height: 12),
+            if (widget.onRequestCode != null &&
+                ['manager', 'receptionist'].contains(values['type']))
+              OutlinedButton(
+                onPressed: submitting ? null : () => submit(requestCode: true),
+                child: Text(
+                  socialText(
+                    context,
+                    'ارسال کد تأیید',
+                    'Send verification code',
+                  ),
+                ),
+              ),
             Row(
               children: [
                 Expanded(

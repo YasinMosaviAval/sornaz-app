@@ -9,6 +9,8 @@ import 'package:sornaz/components/justified_text.dart';
 import 'package:sornaz/components/app_bar.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/helpers/app_data.dart';
+import 'package:sornaz/helpers/app_appearance.dart';
+import 'package:sornaz/helpers/app_typography.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -102,6 +104,23 @@ class ContactUsPage extends StatefulWidget {
 }
 
 class _ContactUsPageState extends State<ContactUsPage> {
+  InputDecoration fieldDecoration(String label, String hint) {
+    final border = OutlineInputBorder(
+      borderRadius: appRadius(context),
+      borderSide: const BorderSide(color: Colors.grey),
+    );
+    return InputDecoration(
+      labelText: label.translate(context),
+      hintText: hint.translate(context),
+      border: border,
+      enabledBorder: border,
+      disabledBorder: border,
+      focusedBorder: border.copyWith(
+        borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+      ),
+    );
+  }
+
   final name = TextEditingController();
   final email = TextEditingController();
   final subject = TextEditingController();
@@ -188,23 +207,26 @@ class _ContactUsPageState extends State<ContactUsPage> {
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: IntrinsicHeight(
                   child: Padding(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 20,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         AppText(
-                          'ارتباط با ما — ارسال پیام جدید',
-                          style: Theme.of(context).textTheme.titleLarge,
+                          'بعد از مشاهده پیام، در اولین فرصت پاسخ شما را می‌دهیم.',
+                          style: AppTypography.subtitle3(
+                            context,
+                          ).copyWith(color: Colors.grey),
                         ),
                         const SizedBox(height: 24),
                         if (user == null) ...[
                           TextField(
                             controller: name,
-                            decoration: InputDecoration(
-                              labelText: 'نام و نام خانوادگی'.translate(
-                                context,
-                              ),
-                              border: OutlineInputBorder(),
+                            decoration: fieldDecoration(
+                              'نام و نام خانوادگی',
+                              'نام و نام خانوادگی خود را وارد کنید',
                             ),
                           ),
                           const SizedBox(height: 14),
@@ -213,20 +235,18 @@ class _ContactUsPageState extends State<ContactUsPage> {
                           TextField(
                             controller: email,
                             keyboardType: TextInputType.emailAddress,
-                            decoration: InputDecoration(
-                              labelText: 'ایمیل پاسخ (اختیاری)'.translate(
-                                context,
-                              ),
-                              border: OutlineInputBorder(),
+                            decoration: fieldDecoration(
+                              'ایمیل پاسخ (اختیاری)',
+                              'email@example.com',
                             ),
                           ),
                           const SizedBox(height: 14),
                         ],
                         TextField(
                           controller: subject,
-                          decoration: InputDecoration(
-                            labelText: 'موضوع'.translate(context),
-                            border: OutlineInputBorder(),
+                          decoration: fieldDecoration(
+                            'موضوع',
+                            'موضوع پیام خود را انتخاب کنید',
                           ),
                         ),
                         const SizedBox(height: 14),
@@ -239,11 +259,10 @@ class _ContactUsPageState extends State<ContactUsPage> {
                               expands: true,
                               maxLines: null,
                               textAlignVertical: TextAlignVertical.top,
-                              decoration: InputDecoration(
-                                labelText: 'متن پیام *'.translate(context),
-                                alignLabelWithHint: true,
-                                border: OutlineInputBorder(),
-                              ),
+                              decoration: fieldDecoration(
+                                'متن پیام *',
+                                'متن پیام خود را بنویسید...',
+                              ).copyWith(alignLabelWithHint: true),
                             ),
                           ),
                         ),

@@ -22,6 +22,30 @@ Json panelFormContext(List<Json> fields, Json values, Json data) => {
   },
 };
 
+int? panelBatchTermCount(Json values) {
+  int? minutes(dynamic value) {
+    final match = RegExp(r'^(\d{2}):(\d{2})$').firstMatch('$value');
+    if (match == null) return null;
+    final hour = int.parse(match[1]!), minute = int.parse(match[2]!);
+    return hour <= 24 && minute < 60 && (hour < 24 || minute == 0)
+        ? hour * 60 + minute
+        : null;
+  }
+
+  final start = minutes(values['rangeStart']),
+      end = minutes(values['rangeEnd']);
+  final duration = int.tryParse('${values['durationMinutes']}');
+  if (start == null ||
+      end == null ||
+      duration == null ||
+      duration < 5 ||
+      duration % 5 != 0 ||
+      end <= start ||
+      (end - start) % duration != 0)
+    return null;
+  return (end - start) ~/ duration;
+}
+
 bool panelConditionsMatch(dynamic conditions, Json data) =>
     optionalObject(conditions).entries.every((entry) {
       final value = panelValue(data, entry.key);
@@ -108,11 +132,18 @@ Map<String, String> panelSelectOptions(Json field, Json data) {
     if (config['termPeople'] == true) {
       final room = optionalObject(panelValue(data, '_selected.classroomId'));
       final course = optionalObject(panelValue(data, '_selected.courseId'));
-      final branch = room['branchId'] ?? 0;
-      if ('${item['branchId'] ?? 0}' != '$branch' ||
-          '$branch' == '0' &&
-              '${item['academyId']}' != '${course['organizationId']}')
+      final teacher = optionalObject(config['where'])['type'] == 'teacher';
+      final roomBranch = '${room['branchId'] ?? 0}';
+      final courseBranch =
+          '${course['branchId'] ?? (course['organizationKind'] == 'branch' ? course['organizationId'] : 0)}';
+      final branch = teacher ? courseBranch : roomBranch;
+      final memberBranch = '${item['branchId'] ?? 0}';
+      if (branch != '0') {
+        if (memberBranch != branch) continue;
+      } else if ('${item['academyId']}' != '${course['organizationId']}' ||
+          memberBranch != roomBranch && !(teacher && memberBranch == '0')) {
         continue;
+      }
     }
     if (config['includeReadOnly'] != true &&
         (item['read_only'] == true ||
@@ -339,9 +370,11 @@ String? panelInvalidField(List<Json> fields, Json values, Json data) {
       return key;
     if (type == 'multi') {
       final options = panelSelectOptions(field, context);
-      final max = num.tryParse(
-        '${panelValue(context, '${field['maxItemsFrom'] ?? ''}')}',
-      );
+      final max =
+          num.tryParse('${field['maxItems']}') ??
+          num.tryParse(
+            '${panelValue(context, '${field['maxItemsFrom'] ?? ''}')}',
+          );
       if (max != null && (value as List).length > max) return key;
       if ((value as List).any(
         (item) => !options.containsKey('${item is Map ? item['id'] : item}'),
@@ -380,6 +413,9 @@ Json panelDialogPayload(
   Json values,
   Json data,
 ) {
+  if (section == 'terms' && operation == 'assign-student') {
+    return panelDialogPayload('students', 'create', values, data);
+  }
   final payload = <String, dynamic>{...values};
   if (section == 'availability-exceptions') {
     final target = '${values['targetValue'] ?? ''}'.split(':');
@@ -429,6 +465,7 @@ Json panelDialogPayload(
     ];
   }
   if (section == 'terms') {
+    if (operation == 'batch') return payload;
     final organization = _rows(data['organizations'])
         .where((o) => '${o['user_id']}' == '${values['organizationUserId']}')
         .firstOrNull;

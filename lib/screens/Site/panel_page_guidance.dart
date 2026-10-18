@@ -3,6 +3,7 @@ import '../Social/social_api.dart';
 import '../Social/social_widgets.dart';
 import 'panel_api.dart';
 import 'panel_form.dart';
+import 'panel_section_card.dart';
 
 String panelGuideKey(String section) =>
     const {
@@ -127,64 +128,55 @@ class _PanelPageGuidanceState extends State<PanelPageGuidance> {
     }
 
     if (guide.isEmpty && !editable && !failed) return const SizedBox.shrink();
-    return Card(
-      margin: EdgeInsets.symmetric(
-        horizontal: widget.horizontalInset,
-        vertical: 4,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (failed)
-            TextButton.icon(
-              onPressed: widget.enabled ? load : null,
-              icon: const Icon(Icons.sync_problem_outlined),
+    return PanelSectionCard(
+      horizontalInset: widget.horizontalInset,
+      storageId: 'guidance-${widget.section}',
+      color: Theme.of(context).colorScheme.primary.withValues(alpha: .2),
+      icon: Icons.description_outlined,
+      title: text('title').isEmpty
+          ? socialText(context, 'توضیحات صفحه', 'Page guidance')
+          : text('title'),
+      children: [
+        if (failed)
+          TextButton.icon(
+            onPressed: widget.enabled ? load : null,
+            icon: const Icon(Icons.sync_problem_outlined),
+            label: Text(
+              socialText(
+                context,
+                widget.enabled
+                    ? 'دریافت توضیحات صفحه؛ تلاش دوباره'
+                    : 'برای توضیحات به‌روز و ویرایش آن، API وب باید به‌روز شود.',
+                widget.enabled
+                    ? 'Retry page guidance'
+                    : 'Update the web API to load and edit current guidance.',
+              ),
+            ),
+          ),
+        if (editable)
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: TextButton.icon(
+              onPressed: edit,
+              icon: const Icon(Icons.edit_outlined),
               label: Text(
                 socialText(
                   context,
-                  widget.enabled
-                      ? 'دریافت توضیحات صفحه؛ تلاش دوباره'
-                      : 'برای توضیحات به‌روز و ویرایش آن، API وب باید به‌روز شود.',
-                  widget.enabled
-                      ? 'Retry page guidance'
-                      : 'Update the web API to load and edit current guidance.',
+                  guide.isEmpty ? 'افزودن توضیحات صفحه' : 'ویرایش توضیحات صفحه',
+                  guide.isEmpty ? 'Add page guidance' : 'Edit page guidance',
                 ),
               ),
             ),
-          if (editable)
-            Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: TextButton.icon(
-                onPressed: edit,
-                icon: const Icon(Icons.edit_outlined),
-                label: Text(
-                  socialText(
-                    context,
-                    guide.isEmpty
-                        ? 'افزودن توضیحات صفحه'
-                        : 'ویرایش توضیحات صفحه',
-                    guide.isEmpty ? 'Add page guidance' : 'Edit page guidance',
-                  ),
-                ),
-              ),
+          ),
+        if (text('title').isNotEmpty || text('body').isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(text('body')),
             ),
-          if (text('title').isNotEmpty || text('body').isNotEmpty)
-            ExpansionTile(
-              title: Text(
-                text('title').isEmpty
-                    ? socialText(context, 'توضیحات صفحه', 'Page guidance')
-                    : text('title'),
-              ),
-              childrenPadding: const EdgeInsets.all(12),
-              children: [
-                Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: Text(text('body')),
-                ),
-              ],
-            ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 }
