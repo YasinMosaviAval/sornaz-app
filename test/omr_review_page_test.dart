@@ -13,7 +13,7 @@ Future<void> waitForDetection(WidgetTester tester) async {
       () => Future<void>.delayed(const Duration(milliseconds: 100)),
     );
     await tester.pump();
-    if (find.byIcon(Icons.auto_fix_high).evaluate().isNotEmpty) return;
+    if (find.byType(CircularProgressIndicator).evaluate().isEmpty) return;
   }
   fail('Image analysis did not finish within 30 seconds.');
 }
