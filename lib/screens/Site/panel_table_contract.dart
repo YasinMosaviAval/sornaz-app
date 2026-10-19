@@ -46,6 +46,28 @@ Json panelTableContract(Json section) {
     if (selected['guidance'] == null && bundled['guidance'] is Map)
       'guidance': bundled['guidance'],
   };
+  if (section['key'] == 'lessons') {
+    return {
+      ...contract,
+      'rowActions': ['details', 'usage', 'update', 'delete'],
+    };
+  }
+  if (section['key'] == 'terms') {
+    return {
+      ...contract,
+      'rowActions': <String>{
+        ...(contract['rowActions'] as List? ??
+                [
+                  'details',
+                  ...optionalObject(
+                    section['actions'],
+                  ).keys.where((key) => key != 'status'),
+                ])
+            .map((key) => '$key'),
+        'attendance',
+      }.toList(),
+    };
+  }
   if (['course-levels', 'my-lesson-levels'].contains(section['key'])) {
     return {
       ...contract,

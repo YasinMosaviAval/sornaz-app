@@ -144,6 +144,37 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      final statistics = tester.widget<PanelStatistics>(
+        find.byType(PanelStatistics),
+      );
+      expect(statistics.stats.keys, [
+        'activeStudents',
+        'monthlyIncome',
+        'pendingPayments',
+        'newStudentsWeek',
+      ]);
+      final orderedCards = [
+        'todayClasses',
+        'todayAbsences',
+        'recentRegistrations',
+        'upcomingHolidays',
+        'recentPayments',
+        'recentDeposits',
+      ];
+      for (var i = 1; i < orderedCards.length; i++) {
+        expect(
+          tester
+              .getTopLeft(find.byKey(ValueKey('dashboard-${orderedCards[i]}')))
+              .dy,
+          greaterThan(
+            tester
+                .getTopLeft(
+                  find.byKey(ValueKey('dashboard-${orderedCards[i - 1]}')),
+                )
+                .dy,
+          ),
+        );
+      }
       expect(
         find.byKey(const ValueKey('dashboard-todayClasses')),
         findsOneWidget,

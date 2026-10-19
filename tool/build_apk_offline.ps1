@@ -26,7 +26,7 @@ try {
     # Match the repository recorded in pubspec.lock and its local cache.
     $env:PUB_HOSTED_URL = 'https://pub.flutter-io.cn'
     $env:CARGO_NET_OFFLINE = 'true'
-    $env:CARGO_BUILD_JOBS = '2'
+    $env:CARGO_BUILD_JOBS = '1'
     # Windows PowerShell can turn harmless native stderr warnings into errors.
     # Use the process exit code to decide whether a Flutter command failed.
     $ErrorActionPreference = 'Continue'

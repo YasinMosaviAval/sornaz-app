@@ -5,11 +5,15 @@ import 'chat_message_bubble.dart';
 import 'chat_cache.dart';
 import 'chat_media.dart';
 import 'panel_ui.dart';
+import 'panel_access_badges.dart';
+import 'panel_national_holiday_settings.dart';
+import 'panel_term_attendance.dart';
 import 'branch_style.dart';
 import 'branch_export.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:sornaz/components/expanding_search_bar.dart';
 import 'dart:async';
+import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -66,12 +70,36 @@ class PanelResourcePage extends StatefulWidget {
 class _PanelTabsState extends State<PanelResourcePage>
     with SingleTickerProviderStateMixin {
   late final TabController controller;
+  bool get gallery => [
+    'gallery',
+    'my-gallery',
+  ].contains(widget.section['resourceKey'] ?? widget.section['key']);
+  List<Json> get pageTabs => gallery
+      ? [
+          for (final category in panelGalleryCategories)
+            {
+              ...widget.section,
+              'key': '${widget.section['key']}-${category.$1}',
+              'resourceKey':
+                  widget.section['resourceKey'] ?? widget.section['key'],
+              'label': category.$2,
+              'en': category.$3,
+              'where': {'category': category.$1},
+              'initialParams': {...widget.params, 'collection': category.$1},
+            },
+        ]
+      : objects(widget.section['pageTabs'] ?? []);
   @override
   void initState() {
     super.initState();
-    final tabs = objects(widget.section['pageTabs'] ?? []);
+    final tabs = pageTabs;
     final initial = tabs.indexWhere(
-      (tab) => tab['key'] == widget.section['key'],
+      (tab) => gallery
+          ? optionalObject(tab['where'])['category'] ==
+                (widget.params['collection'] ??
+                    optionalObject(widget.section['where'])['category'] ??
+                    'cover')
+          : tab['key'] == widget.section['key'],
     );
     controller = TabController(
       length: tabs.isEmpty ? 1 : tabs.length,
@@ -94,18 +122,20 @@ class _PanelTabsState extends State<PanelResourcePage>
 
   @override
   Widget build(BuildContext context) {
-    final tabs = objects(widget.section['pageTabs'] ?? []);
+    final tabs = pageTabs;
     final initial = tabs.indexWhere(
       (tab) => tab['key'] == widget.section['key'],
     );
     final index = controller.index;
     final section = tabs.isEmpty ? widget.section : tabs[index];
     return _PanelResourceContent(
-      key: ValueKey(section['key']),
+      key: ValueKey(gallery ? widget.section['key'] : section['key']),
       api: widget.api,
       section: section,
-      titleSection: widget.section,
-      params: index == (initial < 0 ? 0 : initial)
+      titleSection: gallery
+          ? {...widget.section, 'label': 'گالری', 'en': 'Gallery'}
+          : widget.section,
+      params: !gallery && index == (initial < 0 ? 0 : initial)
           ? widget.params
           : optionalObject(
               section['initialParams'],
@@ -211,18 +241,19 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
     WidgetsBinding.instance.addObserver(this);
     if (!['branches', 'branch-types'].contains(section)) load();
     refreshTimer = Timer.periodic(
-      const Duration(minutes: 1),
+      const Duration(seconds: 3),
       (_) => refreshVisible(),
     );
   }
 
   void refreshVisible() {
+    final auth = mounted ? context.read<AuthSession?>() : null;
     if (!mounted ||
+        (auth != null && auth.token != widget.api.token) ||
         busy ||
         activeLoads > 0 ||
         selected.isNotEmpty ||
         loading ||
-        weekly ||
         ['branches', 'branch-types'].contains(section) ||
         WidgetsBinding.instance.lifecycleState == AppLifecycleState.paused ||
         ModalRoute.of(context)?.isCurrent != true)
@@ -240,26 +271,27 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
     activeLoads++;
     try {
       final value = weekly && section == 'schedules'
-          ? await loadWeek(refresh)
-          : await (refresh ? widget.api.refresh : widget.api.get)(
-              '/$section/list',
-              {
-                ...widget.params,
-                ...panelFilterQuery(
-                  panelWebFilters(widget.section, data, const []),
-                  filters,
-                  organizationFilter,
-                  section,
-                ),
-                if (!widget.params.containsKey('page')) 'page': '$page',
-                'perPage': sortKey.isEmpty ? '$pageSize' : '100',
-                if (section == 'my-points') 'history': '1',
-                if (query.trim().isNotEmpty) ...{
-                  'q': query.trim(),
-                  'search': query.trim(),
-                },
+          ? await loadWeek(refresh, background: background)
+          : await (background
+                ? widget.api.live
+                : refresh
+                ? widget.api.refresh
+                : widget.api.get)('/$section/list', {
+              ...widget.params,
+              ...panelFilterQuery(
+                panelWebFilters(widget.section, data, const []),
+                filters,
+                organizationFilter,
+                section,
+              ),
+              if (!widget.params.containsKey('page')) 'page': '$page',
+              'perPage': sortKey.isEmpty ? '$pageSize' : '100',
+              if (section == 'my-points') 'history': '1',
+              if (query.trim().isNotEmpty) ...{
+                'q': query.trim(),
+                'search': query.trim(),
               },
-            );
+            });
       if (sortKey.isNotEmpty &&
           value['total'] != null &&
           value['perPage'] != null) {
@@ -335,11 +367,41 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
         value['subscriptionPlans'] = subscriptions['plans'];
       }
       if (mounted && request == generation) {
+        final rowsPath = '${widget.section['rows'] ?? 'items'}';
+        final previousRows = panelValue(data, rowsPath);
+        final nextRows = panelValue(value, rowsPath);
+        final changed =
+            background &&
+            previousRows != null &&
+            jsonEncode(previousRows) != jsonEncode(nextRows);
         setState(() {
           data = value;
           error = null;
           selected.clear();
         });
+        if (changed) {
+          final before = previousRows is List ? previousRows.length : 0;
+          final after = nextRows is List ? nextRows.length : 0;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                socialText(
+                  context,
+                  after > before
+                      ? 'سطر جدید اضافه شد.'
+                      : after < before
+                      ? 'سطر حذف شد.'
+                      : 'تغییرات سطرها اعمال شد.',
+                  after > before
+                      ? 'A row was added.'
+                      : after < before
+                      ? 'A row was removed.'
+                      : 'Rows were updated.',
+                ),
+              ),
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted &&
@@ -354,7 +416,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
     }
   }
 
-  Future<Json> loadWeek(bool refresh) async {
+  Future<Json> loadWeek(bool refresh, {bool background = false}) async {
     final combined = <Json>[];
     final start = weekStart;
     final requestGeneration = generation;
@@ -371,19 +433,21 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
       while (true) {
         if (!mounted || requestGeneration != generation)
           throw const SocialException('درخواست برنامه تغییر کرده است.');
-        final response = await (refresh ? widget.api.refresh : widget.api.get)(
-          '/schedules/list',
-          {
-            ...selectedFilters,
-            'date': start
-                .add(Duration(days: day))
-                .toIso8601String()
-                .substring(0, 10),
-            'perPage': '100',
-            'page': '$next',
-            'search': search,
-          },
-        );
+        final response =
+            await (background
+                ? widget.api.live
+                : refresh
+                ? widget.api.refresh
+                : widget.api.get)('/schedules/list', {
+              ...selectedFilters,
+              'date': start
+                  .add(Duration(days: day))
+                  .toIso8601String()
+                  .substring(0, 10),
+              'perPage': '100',
+              'page': '$next',
+              'search': search,
+            });
         final chunk = objects(response['schedules'] ?? []);
         combined.addAll(chunk);
         result = response;
@@ -399,6 +463,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
   }
 
   bool available(String key, Json record) {
+    if (section == 'terms' && key == 'available-times') return false;
     final exposed = tableContract['rowActions'];
     if (exposed is List && key != 'status' && !exposed.contains(key)) {
       return false;
@@ -433,7 +498,10 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
     }
     if (['update', 'roles', 'permissions'].contains(key) &&
             record['canEdit'] == false ||
-        key == 'delete' && record['canDelete'] == false ||
+        key == 'delete' &&
+            record['canDelete'] == false &&
+            !(section == 'lessons' &&
+                record['canInspectDependencies'] == true) ||
         key == 'status' &&
             (record['canChangeStatus'] == false ||
                 optionalObject(data['permissions'])['isReceptionist'] ==
@@ -481,8 +549,23 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
       await showLessonUsage(record);
       return;
     }
+    if (section == 'lessons' &&
+        key == 'delete' &&
+        record['canDelete'] == false &&
+        record['canInspectDependencies'] == true) {
+      await showLessonUsage(record);
+      return;
+    }
     final action = optionalObject(actions[key]);
     if (action.isEmpty) return;
+    if (section == 'terms' && key == 'attendance') {
+      await showDialog<void>(
+        context: context,
+        builder: (_) =>
+            PanelTermAttendance(api: widget.api, termId: '${record['id']}'),
+      );
+      return;
+    }
     var formData = data;
     if (section == 'terms' && key == 'assign-student') {
       setState(() => busy = true);
@@ -584,6 +667,20 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
     }
     if (key == 'privacy') initial = {...optionalObject(initial['privacy'])};
     if (section == 'settings') initial = {...data};
+    if (gallerySection && key == 'create') {
+      initial = {...widget.params};
+      final owners = objects(data['owners'] ?? []);
+      final owner =
+          owners
+              .where(
+                (owner) => organizationFilter == 'academy'
+                    ? owner['kind'] == 'academy'
+                    : organizationFilter == 'owner:${owner['userId']}',
+              )
+              .firstOrNull ??
+          owners.firstOrNull;
+      if (owner != null) initial['ownerId'] = owner['userId'];
+    }
     if (action['initialSources'] is List) {
       initial = {
         for (final source in action['initialSources'] as List)
@@ -635,7 +732,18 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
           declaredOnly:
               action['formContractVersion'] == 2 ||
               action['strictFields'] == true,
-          title: panelLabel(context, action),
+          title: gallerySection && key == 'create'
+              ? panelGalleryAddTitle(
+                  widget.params['collection'] ?? 'gallery',
+                  fa: Localizations.localeOf(context).languageCode == 'fa',
+                )
+              : panelLabel(context, action),
+          suggestedTitle: gallerySection && key == 'create'
+              ? (values) => panelGallerySuggestedTitle(values, {
+                  ...data,
+                  '_ownerName': context.read<AuthSession?>()?.user?.fullName,
+                }, fa: Localizations.localeOf(context).languageCode == 'fa')
+              : null,
           submitButtons: objects(action['submitButtons'] ?? []),
           loadBatchTimes: section == 'terms' && key == 'batch'
               ? (values) async {
@@ -712,12 +820,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                 }
               : null,
           fields: [
-            for (final field in fields.where(
-              (f) =>
-                  !(gallerySection &&
-                      widget.params.containsKey('collection') &&
-                      f['key'] == 'collection'),
-            ))
+            for (final field in fields)
               if (gallerySection && field['type'] == 'file')
                 {
                   ...field,
@@ -726,6 +829,13 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                     'cover',
                     'logo',
                   ].contains(widget.params['collection']),
+                }
+              else if (gallerySection && field['key'] == 'collection')
+                {
+                  ...field,
+                  'label': 'نوع رسانه',
+                  'en': 'Media type',
+                  'readOnly': key == 'create',
                 }
               else if (field['key'] == 'founded' &&
                   optionalObject(data['profile'])['accountType'] == 'human')
@@ -742,7 +852,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
           },
           initial: section == 'terms' && key == 'assign-student'
               ? const {}
-              : key == 'create'
+              : key == 'create' && !gallerySection
               ? {...widget.params}
               : initial,
         ),
@@ -851,6 +961,14 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
           }
         }
         await load();
+        if (mounted)
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                socialText(context, 'تغییرات اعمال شد.', 'Changes applied.'),
+              ),
+            ),
+          );
       }
     } catch (e) {
       if (mounted) socialError(context, e);
@@ -1127,6 +1245,14 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
         params: {...widget.params, 'id': '${row['id']}'},
       );
       if (mounted) await load();
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              socialText(context, 'وضعیت به‌روز شد.', 'Status updated.'),
+            ),
+          ),
+        );
     } catch (e) {
       if (mounted) socialError(context, e);
     } finally {
@@ -1216,8 +1342,19 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
               cells: [
                 for (final column in effectiveColumns)
                   DataCell(
-                    column['key'] == 'status' && column['type'] != 'text' ||
-                            ['approval', 'badge'].contains(column['type'])
+                    section == 'users' && column['key'] == 'status'
+                        ? PanelAccessStatus(
+                            status: optionalObject(row['_record'])['status'],
+                          )
+                        : section == 'users' &&
+                              ['roles', 'permissions'].contains(column['key'])
+                        ? PanelAccessBadges(
+                            items: objects(row['${column['key']}'] ?? []),
+                            roles: column['key'] == 'roles',
+                          )
+                        : column['key'] == 'status' &&
+                                  column['type'] != 'text' ||
+                              ['approval', 'badge'].contains(column['type'])
                         ? PanelStatusCell(
                             row: row,
                             column: column,
@@ -1264,7 +1401,40 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                           ),
                         for (final key in rowActions)
                           if (key == 'details' || available('$key', row))
-                            if ([
+                            if (section == 'users')
+                              Padding(
+                                padding: const EdgeInsetsDirectional.only(
+                                  end: 8,
+                                ),
+                                child: OutlinedButton(
+                                  onPressed: busy
+                                      ? null
+                                      : () => key == 'details'
+                                            ? openRecord(
+                                                optionalObject(row['_record']),
+                                              )
+                                            : perform(
+                                                '$key',
+                                                optionalObject(row['_record']),
+                                              ),
+                                  child: Text(
+                                    socialText(
+                                      context,
+                                      key == 'roles'
+                                          ? 'تعیین نقش‌ها'
+                                          : key == 'permissions'
+                                          ? 'تعیین دسترسی‌ها'
+                                          : 'مشاهده دسترسی‌ها',
+                                      key == 'roles'
+                                          ? 'Assign roles'
+                                          : key == 'permissions'
+                                          ? 'Assign permissions'
+                                          : 'View permissions',
+                                    ),
+                                  ),
+                                ),
+                              )
+                            else if ([
                               'details',
                               'update',
                               'delete',
@@ -1701,6 +1871,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
         .where(
           (entry) =>
               entry.key != 'list' &&
+              !(section == 'terms' && entry.key == 'available-times') &&
               section != 'account' &&
               !(section == 'classroom-types' &&
                   entry.key == 'create-from-classroom') &&
@@ -1735,7 +1906,15 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
           icon: const Icon(Icons.tune),
           onPressed: busy ? null : () => perform(e.key),
         ),
-      if (filtered.isNotEmpty || section == 'finance')
+      if (!gallerySection &&
+          section != 'users' &&
+          (filtered.isNotEmpty ||
+              [
+                'finance',
+                'scheduling-rules',
+                'availability-exceptions',
+              ].contains(section) ||
+              ['organization-holidays'].contains(widget.section['key'])))
         IconButton(
           tooltip: socialText(context, 'خروجی اکسل', 'Export Excel'),
           icon: const Icon(Icons.table_view, color: Color(0xff16a34a)),
@@ -1747,8 +1926,17 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
             }
           },
         ),
-      if (section != 'dashboard' &&
-          (filtered.isNotEmpty || data['stats'] is Map || section == 'finance'))
+      if (!gallerySection &&
+          section != 'users' &&
+          section != 'dashboard' &&
+          (filtered.isNotEmpty ||
+              data['stats'] is Map ||
+              [
+                'finance',
+                'scheduling-rules',
+                'availability-exceptions',
+              ].contains(section) ||
+              widget.section['key'] == 'organization-holidays'))
         IconButton(
           tooltip: socialText(context, 'خروجی PDF', 'Export PDF'),
           icon: const Icon(
@@ -1792,7 +1980,8 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
             }
           },
         ),
-      if (filters.isNotEmpty || organizationFilter.isNotEmpty)
+      if (!gallerySection &&
+          (filters.isNotEmpty || organizationFilter.isNotEmpty))
         IconButton(
           tooltip: socialText(context, 'حذف فیلترها', 'Clear filters'),
           icon: const Icon(Icons.filter_alt_off),
@@ -2132,6 +2321,8 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                           ),
                         ),
                       ),
+                    if (widget.section['key'] == 'organization-holidays')
+                      PanelNationalHolidaySettings(api: widget.api),
                     if (organizationOptions.isNotEmpty ||
                         filterFields.isNotEmpty)
                       PanelSectionCard(
@@ -2139,33 +2330,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                         storageId: 'filters-$section',
                         title: socialText(context, 'فیلترها', 'Filters'),
                         children: [
-                          if (organizationOptions.isNotEmpty && gallerySection)
-                            SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.all(12),
-                              child: Row(
-                                children: [
-                                  for (final option
-                                      in organizationOptions.entries)
-                                    Padding(
-                                      padding: const EdgeInsetsDirectional.only(
-                                        end: 8,
-                                      ),
-                                      child: ChoiceChip(
-                                        label: Text(option.value),
-                                        selected:
-                                            effectiveOrganization == option.key,
-                                        onSelected: (_) => setState(() {
-                                          organizationFilter = option.key;
-                                          page = 1;
-                                          localPage = 1;
-                                        }),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          if (organizationOptions.isNotEmpty && !gallerySection)
+                          if (organizationOptions.isNotEmpty)
                             PanelField(
                               field: {
                                 'key': 'organization',

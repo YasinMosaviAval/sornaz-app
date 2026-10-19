@@ -44,7 +44,12 @@ class _PanelSectionCardState extends State<PanelSectionCard>
         horizontal: widget.horizontalInset,
         vertical: 4,
       ),
-      color: widget.color,
+      color: widget.color == null
+          ? null
+          : Color.alphaBlend(
+              widget.color!,
+              Theme.of(context).scaffoldBackgroundColor,
+            ),
       surfaceTintColor: Colors.transparent,
       shape: shape,
       clipBehavior: Clip.antiAlias,

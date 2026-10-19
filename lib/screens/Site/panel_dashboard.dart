@@ -125,18 +125,26 @@ class PanelDashboard extends StatelessWidget {
           stats: {
             for (final key in [
               'activeStudents',
-              'todayClasses',
               'monthlyIncome',
-              'attendanceRate',
               'pendingPayments',
-              'newMessages',
               'newStudentsWeek',
-              'pointsAwarded',
             ])
               key: optionalObject(data['stats'])[key] ?? '—',
           },
         ),
-        for (final entry in sections.entries)
+        for (final entry in [
+          for (final key in [
+            'actionItems',
+            'urgentItems',
+            'todayClasses',
+            'todayAbsences',
+            'recentRegistrations',
+            'upcomingHolidays',
+            'recentPayments',
+            'recentDeposits',
+          ])
+            MapEntry(key, sections[key]!),
+        ])
           Card(
             key: ValueKey('dashboard-${entry.key}'),
             margin: const EdgeInsets.only(top: 16),

@@ -38,6 +38,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tool\build_apk_offline.ps1
 Flutter، افزودن یا ارتقای وابستگی‌ها و ساخت برای معماری دیگری ممکن است به
 یک‌بار دریافت وابستگی‌های جدید نیاز داشته باشد.
 
+اصلاح ۲۰۲۶/۱۰/۱۹: شکست ثبت‌شدهٔ ساخت در مرحلهٔ `:app:packageRelease` بوده
+و در همان زمان `java_pid10468.hprof` با سقف heap برابر ۲ گیگابایت تولید شده
+است؛ شواهد به کمبود حافظهٔ جاوا هنگام بسته‌بندی اشاره دارد. سقف heap در
+`android/gradle.properties` به ۴ گیگابایت افزایش یافت و هم‌زمانی workerهای
+Gradle و jobهای Cargo به یک کاهش پیدا کرد. فایل‌های کش یا نسخهٔ وابستگی‌ها
+تغییر نکرده‌اند. بررسی `verifyOfflineReleaseDependencies` با ۵۸ artifact
+کامپایل و ۱۱۱ artifact اجرا در حالت آفلاین موفق بود. این بررسی APK تولید
+نمی‌کند و تأیید موفقیت بسته‌بندی نهایی نیازمند اجرای مجدد ساخت APK است.
+
 تنظیم فعلی پروژه، خروجی Release را با کلید debug همین سیستم امضا می‌کند؛
 فایل `%USERPROFILE%\.android\debug.keystore` را هم نگه دارید.
 

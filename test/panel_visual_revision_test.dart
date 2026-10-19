@@ -200,59 +200,57 @@ void main() {
       },
     );
   }
-  testWidgets(
-    'gallery groups website categories, toggles details and opens a dialog viewer',
-    (tester) async {
-      final api = AccountFixture();
-      addTearDown(api.dispose);
-      await tester.pumpWidget(
-        fixture.host(
-          Scaffold(
-            body: SingleChildScrollView(
-              child: PanelGallery(
-                api: api,
-                rows: [
-                  for (final entry in [
-                    ('cover', 'کاور تست'),
-                    ('cover', 'کاور دوم'),
-                    ('gallery', 'عکس تست'),
-                  ])
-                    {
-                      'id': entry.$2,
-                      'category': entry.$1,
-                      'title': entry.$2,
-                      'url': '',
-                      'type': 'image',
-                      'ownerName': 'آموزشگاه',
-                      'summary': 'خلاصه رسانه',
-                      'description': 'شرح رسانه',
-                    },
-                ],
-                fields: const [],
-                data: const {},
-                canEdit: false,
-                onChanged: () {},
-              ),
+  testWidgets('gallery always shows details and opens a dialog viewer', (
+    tester,
+  ) async {
+    final api = AccountFixture();
+    addTearDown(api.dispose);
+    await tester.pumpWidget(
+      fixture.host(
+        Scaffold(
+          body: SingleChildScrollView(
+            child: PanelGallery(
+              api: api,
+              rows: [
+                for (final entry in [
+                  ('cover', 'کاور تست'),
+                  ('cover', 'کاور دوم'),
+                  ('gallery', 'عکس تست'),
+                ])
+                  {
+                    'id': entry.$2,
+                    'category': entry.$1,
+                    'title': entry.$2,
+                    'url': '',
+                    'type': 'image',
+                    'ownerName': 'آموزشگاه',
+                    'summary': 'خلاصه رسانه',
+                    'description': 'شرح رسانه',
+                  },
+              ],
+              fields: const [],
+              data: const {},
+              canEdit: false,
+              onChanged: () {},
             ),
           ),
         ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('کاور'), findsOneWidget);
-      expect(find.text('لوگو'), findsOneWidget);
-      expect(find.text('خلاصه رسانه'), findsNothing);
-      await tester.tap(find.text('توضیحات'));
-      await tester.pumpAndSettle();
-      expect(find.text('خلاصه رسانه'), findsNWidgets(3));
-      await tester.tap(find.byType(GalleryPreview).first);
-      await tester.pumpAndSettle();
-      expect(find.byType(Dialog), findsOneWidget);
-      await tester.tap(find.byIcon(Icons.chevron_right));
-      await tester.pumpAndSettle();
-      expect(find.text('کاور دوم'), findsNWidgets(2));
-      expect(tester.takeException(), isNull);
-    },
-  );
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('کاور'), findsOneWidget);
+    expect(find.text('لوگو'), findsOneWidget);
+    expect(find.text('فشرده'), findsNothing);
+    expect(find.text('توضیحات'), findsNothing);
+    expect(find.text('خلاصه رسانه'), findsNWidgets(3));
+    await tester.tap(find.byType(GalleryPreview).first);
+    await tester.pumpAndSettle();
+    expect(find.byType(Dialog), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.chevron_right));
+    await tester.pumpAndSettle();
+    expect(find.text('کاور دوم'), findsNWidgets(2));
+    expect(tester.takeException(), isNull);
+  });
   testWidgets(
     'account contact changes verify ownership before committing and saving security',
     (tester) async {

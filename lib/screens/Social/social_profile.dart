@@ -1,3 +1,4 @@
+import 'package:sornaz/components/jalali_date_picker.dart';
 import 'profile_highlights.dart';
 import 'profile_articles.dart';
 import '../Site/panel_api.dart';
@@ -596,7 +597,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Future<void> pickDate() async {
     final current = DateTime.tryParse(contacts['founded']!.text);
     final last = DateTime.now();
-    final value = await showDatePicker(
+    final value = await showSornazDatePicker(
       context: context,
       initialDate:
           current != null && !current.isAfter(last) && current.year >= 1900

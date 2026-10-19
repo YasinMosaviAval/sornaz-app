@@ -425,7 +425,7 @@ void main() {
         find.widgetWithText(TextFormField, 'نام کلاس'),
         'Test room',
       );
-      final save = find.byIcon(Icons.save_outlined);
+      final save = find.widgetWithText(FilledButton, 'ذخیره تغییرات');
       await tester.ensureVisible(save);
       await tester.tap(save);
       await tester.pumpAndSettle();

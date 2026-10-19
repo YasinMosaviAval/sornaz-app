@@ -1,4 +1,6 @@
 import 'package:sornaz/helpers/app_appearance.dart';
+import 'dart:async';
+import 'dart:convert';
 import '../../components/app_top_bar_direction.dart';
 import '../../components/expanding_search_bar.dart';
 import 'branch_export.dart';
@@ -71,14 +73,39 @@ class _BranchesPageState extends State<BranchesPage> {
   void initState() {
     super.initState();
     load();
+    updates = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (mounted &&
+          !busy &&
+          !loading &&
+          !polling &&
+          ModalRoute.of(context)?.isCurrent == true &&
+          WidgetsBinding.instance.lifecycleState != AppLifecycleState.paused) {
+        load(background: true);
+      }
+    });
   }
 
-  Future<void> load({bool refresh = false}) async {
+  Timer? updates;
+  bool polling = false;
+  @override
+  void dispose() {
+    updates?.cancel();
+    super.dispose();
+  }
+
+  Future<void> load({bool refresh = false, bool background = false}) async {
+    polling = true;
     try {
-      final value = await (refresh ? widget.api.refresh : widget.api.get)(
-        '/$resource/list',
-      );
+      final value = await (background
+          ? widget.api.live
+          : refresh
+          ? widget.api.refresh
+          : widget.api.get)('/$resource/list');
       if (!mounted) return;
+      final changed =
+          background &&
+          jsonEncode(data[typesOnly ? 'types' : 'branches']) !=
+              jsonEncode(value[typesOnly ? 'types' : 'branches']);
       setState(() {
         data = value;
         error = null;
@@ -88,12 +115,22 @@ class _BranchesPageState extends State<BranchesPage> {
           initialized = true;
         }
       });
+      if (changed)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              t('تغییرات سازمان اعمال شد.', 'Organization changes applied.'),
+            ),
+          ),
+        );
     } catch (e) {
-      if (mounted)
+      if (mounted && !background)
         setState(() {
           error = e;
           loading = false;
         });
+    } finally {
+      polling = false;
     }
   }
 
@@ -148,7 +185,15 @@ class _BranchesPageState extends State<BranchesPage> {
         ),
       ),
     );
-    if (saved == true && mounted) await load();
+    if (saved == true && mounted) {
+      await load();
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(t('اطلاعات سازمان ذخیره شد.', 'Organization saved.')),
+          ),
+        );
+    }
   }
 
   Future<void> remove(Json row) async {
@@ -201,6 +246,14 @@ class _BranchesPageState extends State<BranchesPage> {
         values: values,
       );
       await load();
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              t('تغییرات سازمان اعمال شد.', 'Organization changes applied.'),
+            ),
+          ),
+        );
     } catch (e) {
       if (mounted) socialError(context, e);
     } finally {

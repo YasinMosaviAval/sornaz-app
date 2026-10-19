@@ -1,3 +1,4 @@
+import 'package:sornaz/components/jalali_date_picker.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
 import 'panel_ui.dart';
 import 'panel_caption.dart';
@@ -39,6 +40,7 @@ class PanelFormPage extends StatefulWidget {
     this.dialog = false,
     this.declaredOnly = false,
     this.submitButtons = const [],
+    this.suggestedTitle,
   });
   final Future<void> Function(PanelFormResult result)? onSubmit;
   final Future<void> Function(PanelFormResult result)? onRequestCode;
@@ -47,6 +49,7 @@ class PanelFormPage extends StatefulWidget {
   final bool declaredOnly;
   final List<Json> submitButtons;
   final String title;
+  final String Function(Json values)? suggestedTitle;
   final List<Json> fields;
   final Json data, initial;
   @override
@@ -69,6 +72,9 @@ class _PanelFormPageState extends State<PanelFormPage> {
   @override
   void initState() {
     super.initState();
+    if (widget.suggestedTitle != null && '${values['title'] ?? ''}'.isEmpty) {
+      values['title'] = widget.suggestedTitle!(values);
+    }
     if (widget.loadBatchTimes != null)
       WidgetsBinding.instance.addPostFrameCallback((_) => refreshBatchTimes());
   }
@@ -132,6 +138,11 @@ class _PanelFormPageState extends State<PanelFormPage> {
 
   void change(Json field, dynamic value) {
     setState(() {
+      final previousSuggestion = widget.suggestedTitle?.call(values);
+      final updateTitle =
+          previousSuggestion != null &&
+          ('${values['title'] ?? ''}'.isEmpty ||
+              values['title'] == previousSuggestion);
       values['${field['key']}'] = value;
       for (final child in widget.fields) {
         if (optionalObject(
@@ -152,6 +163,9 @@ class _PanelFormPageState extends State<PanelFormPage> {
         applyDefaults: false,
       );
       values.addAll(updated);
+      if (updateTitle && field['key'] != 'title') {
+        values['title'] = widget.suggestedTitle!(values);
+      }
       if (field['key'] == 'classroomId' && values['teachers'] is List) {
         final teacher = widget.fields
             .where((field) => field['key'] == 'teachers')
@@ -379,7 +393,7 @@ class _PanelFormPageState extends State<PanelFormPage> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: FilledButton.icon(
+                  child: FilledButton(
                     onPressed: submitting
                         ? null
                         : () => submit(
@@ -389,8 +403,7 @@ class _PanelFormPageState extends State<PanelFormPage> {
                                     widget.submitButtons.first['values'],
                                   ),
                           ),
-                    icon: const Icon(Icons.save_outlined, size: 18),
-                    label: Text(
+                    child: Text(
                       widget.submitButtons.isEmpty
                           ? socialText(context, 'ذخیره تغییرات', 'Save changes')
                           : socialText(
@@ -398,6 +411,8 @@ class _PanelFormPageState extends State<PanelFormPage> {
                               '${widget.submitButtons.first['label']}',
                               '${widget.submitButtons.first['en'] ?? widget.submitButtons.first['label']}',
                             ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),
@@ -463,7 +478,13 @@ class _PanelFieldState extends State<PanelField> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.value != widget.value &&
         text.text != '${widget.value ?? ''}') {
-      text.text = '${widget.value ?? ''}';
+      // A dependent field can change while the form is rebuilding. Notify its
+      // TextFormField after that frame so FormState is not dirtied during build.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && text.text != '${widget.value ?? ''}') {
+          text.text = '${widget.value ?? ''}';
+        }
+      });
     }
   }
 
@@ -886,7 +907,7 @@ class _PanelFieldState extends State<PanelField> {
           ? () async {
               String? value;
               if (date) {
-                final selected = await showDatePicker(
+                final selected = await showSornazDatePicker(
                   context: context,
                   initialDate: DateTime.tryParse(text.text) ?? DateTime.now(),
                   firstDate: DateTime(1900),

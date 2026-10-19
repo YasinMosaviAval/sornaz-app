@@ -67,6 +67,12 @@ class PanelApi {
     return value is Map ? object(value) : null;
   }
 
+  /// Only the visible panel polls. Bypass the session cache for these reads.
+  Future<Json> live(String path, [Map<String, String>? query]) {
+    _cache.remove(_key(path, query));
+    return get(path, query);
+  }
+
   Future<Json> get(String path, [Map<String, String>? query]) async {
     checkAccount();
     final key = _key(path, query);

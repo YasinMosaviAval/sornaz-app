@@ -9,7 +9,47 @@ import '../Social/media_picker.dart';
 import 'panel_api.dart';
 import 'panel_form.dart';
 import '../../helpers/app_appearance.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+const panelGalleryCategories = [
+  ('cover', 'کاور', 'Cover'),
+  ('logo', 'لوگو', 'Logo'),
+  ('intro_video', 'ویدیو معرفی', 'Intro video'),
+  ('gallery', 'گالری', 'Gallery'),
+];
+
+String panelGalleryAddTitle(String category, {required bool fa}) =>
+    switch (category) {
+      'cover' => fa ? 'افزودن کاور' : 'Add cover',
+      'logo' => fa ? 'افزودن لوگو' : 'Add logo',
+      'intro_video' => fa ? 'افزودن ویدیو معرفی' : 'Add intro video',
+      _ => fa ? 'افزودن آیتم به گالری' : 'Add gallery item',
+    };
+
+String panelGallerySuggestedTitle(Json values, Json data, {required bool fa}) {
+  final owners = objects(data['owners'] ?? []);
+  final owner = owners
+      .where((owner) => '${owner['userId']}' == '${values['ownerId']}')
+      .firstOrNull;
+  final name =
+      '${owner?['name'] ?? optionalObject(data['profile'])['name'] ?? data['_ownerName'] ?? (fa ? 'حساب' : 'Account')}';
+  final category = '${values['collection'] ?? 'gallery'}';
+  final label = panelGalleryCategories.firstWhere(
+    (item) => item.$1 == category,
+    orElse: () => panelGalleryCategories.last,
+  );
+  if (category != 'gallery') return '${fa ? label.$2 : label.$3} ($name)';
+  final count =
+      objects(data['items'] ?? [])
+          .where(
+            (row) =>
+                row['category'] == 'gallery' &&
+                (values['ownerId'] == null ||
+                    '${row['ownerId']}' == '${values['ownerId']}'),
+          )
+          .length +
+      1;
+  return fa ? 'آیتم شماره $count گالری ($name)' : 'Gallery item $count ($name)';
+}
 
 class PanelGallery extends StatefulWidget {
   const PanelGallery({
@@ -34,29 +74,6 @@ class PanelGallery extends StatefulWidget {
 }
 
 class _PanelGalleryState extends State<PanelGallery> {
-  bool detailed = false;
-  bool modeChanged = false;
-  @override
-  void initState() {
-    super.initState();
-    SharedPreferences.getInstance().then((prefs) {
-      if (mounted && !modeChanged)
-        setState(
-          () => detailed = prefs.getBool('panel.gallery.detailed') ?? false,
-        );
-    });
-  }
-
-  void setMode(bool value) {
-    setState(() {
-      detailed = value;
-      modeChanged = true;
-    });
-    SharedPreferences.getInstance().then(
-      (prefs) => prefs.setBool('panel.gallery.detailed', value),
-    );
-  }
-
   Future<void> view(Json row) async {
     final viewerRows = widget.rows
         .where((item) => item['category'] == row['category'])
@@ -161,33 +178,13 @@ class _PanelGalleryState extends State<PanelGallery> {
 
   @override
   Widget build(BuildContext context) {
-    const categories = [
-      ('cover', 'کاور', 'Cover'),
-      ('logo', 'لوگو', 'Logo'),
-      ('intro_video', 'ویدیو معرفی', 'Intro video'),
-      ('gallery', 'گالری', 'Gallery'),
-    ];
+    const categories = panelGalleryCategories;
     final selected = '${widget.data['_category'] ?? ''}';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Wrap(
-            spacing: 8,
-            children: [
-              ChoiceChip(
-                label: Text(socialText(context, 'فشرده', 'Compact')),
-                selected: !detailed,
-                onSelected: (_) => setMode(false),
-              ),
-              ChoiceChip(
-                label: Text(socialText(context, 'توضیحات', 'Details')),
-                selected: detailed,
-                onSelected: (_) => setMode(true),
-              ),
-            ],
-          ),
           for (final category in categories.where(
             (c) => selected.isEmpty || c.$1 == selected,
           )) ...[
@@ -238,7 +235,7 @@ class _PanelGalleryState extends State<PanelGallery> {
                           canDelete: widget.canDelete,
                           onChanged: widget.onChanged,
                           compactCard: true,
-                          detailed: detailed,
+                          detailed: true,
                           onView: () => view(row),
                         ),
                       ),

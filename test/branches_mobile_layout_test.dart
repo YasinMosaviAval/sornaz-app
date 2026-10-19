@@ -293,7 +293,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       await tester.pump(const Duration(seconds: 10));
-      expect(api.reads, 1);
+      expect(api.reads, greaterThan(1));
     });
   }
   testWidgets(

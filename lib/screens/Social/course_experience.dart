@@ -1,3 +1,4 @@
+import 'package:sornaz/components/jalali_date_picker.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
 import 'course_resource_file.dart';
 import 'package:sornaz/components/app_text.dart';
@@ -263,7 +264,7 @@ class _CourseExperienceState extends State<CourseExperience> {
 
   Future<void> schedule() async {
     final now = DateTime.now();
-    final date = await showDatePicker(
+    final date = await showSornazDatePicker(
       context: context,
       initialDate: now.add(const Duration(days: 1)),
       firstDate: now,
