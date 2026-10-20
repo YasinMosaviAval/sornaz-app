@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/desktop_media_channel.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
 import '../Site/chat_media.dart';
 import '../Site/panel_api.dart';
@@ -19,7 +20,7 @@ import 'story_text_editor.dart';
 import 'story_snap.dart';
 
 class StoryMediaBridge {
-  static const channel = MethodChannel('sornaz/story_media');
+  static const channel = DesktopMediaChannel('sornaz/story_media');
   Future<T?> call<T>(String method, [Map<String, dynamic>? args]) =>
       channel.invokeMethod<T>(method, args);
   Future<Uint8List?> thumbnail(Json item, {int size = 240, int time = 0}) =>
@@ -1162,9 +1163,9 @@ class _StoryComposerState extends State<StoryComposer>
                               color: Colors.white12,
                               child: InkWell(
                                 onTap: busy ? null : () => choose(null),
-                                child: const Center(
+                                child: Center(
                                   child: Icon(
-                                    Icons.camera_alt_outlined,
+                                      Icons.camera_alt_outlined,
                                     color: Colors.white,
                                     size: 36,
                                   ),

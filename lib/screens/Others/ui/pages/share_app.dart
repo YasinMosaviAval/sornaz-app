@@ -3,9 +3,12 @@ import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sornaz/helpers/app_platform.dart';
+import 'package:sornaz/helpers/desktop_distribution.dart';
 import 'package:sornaz/components/drawer_theme.dart';
 import 'package:sornaz/helpers/app_typography.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 
 const appSocialLinks = <(String, String, IconData)>[
   ('سایت سرناز', 'https://sornaz.com/', Icons.language),
@@ -71,7 +74,19 @@ class _ShareAppPageState extends State<ShareAppPage> {
   Future<void> share() async {
     setState(() => sharing = true);
     try {
-      await channel.invokeMethod<void>('shareApk');
+      if (AppPlatform.isWindows) {
+        await shareDesktopDistribution();
+      } else if (AppPlatform.isIOS) {
+        final box = context.findRenderObject() as RenderBox?;
+        await Share.share(
+          'https://sornaz.com/',
+          sharePositionOrigin: box == null
+              ? null
+              : box.localToGlobal(Offset.zero) & box.size,
+        );
+      } else {
+        await channel.invokeMethod<void>('shareApk');
+      }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

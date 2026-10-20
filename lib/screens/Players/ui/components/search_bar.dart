@@ -1,4 +1,6 @@
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
+import 'package:sornaz/helpers/app_platform.dart';
+import 'package:sornaz/helpers/desktop_library_folders.dart';
 import 'player_sort_tile.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:sornaz/helpers/app_data.dart';
@@ -35,10 +37,14 @@ class SearchBarWidget extends StatelessWidget implements PreferredSizeWidget {
       onPressed: scanning ? null : onRescan,
       icon: const Icon(Icons.refresh, size: 24),
     );
-    void settings() => Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const PlayerSettingsPage()),
-    );
+    Future<void> settings() async {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const PlayerSettingsPage()),
+      );
+      if (AppPlatform.isWindows && context.mounted) onRescan?.call();
+    }
+
     if (tab == 3) {
       final eq = context.read<AudioPlayerProvider>().equalizer;
       return ListenableBuilder(
@@ -160,6 +166,19 @@ class PlayerSettingsPage extends StatelessWidget {
         body: ListView(
           padding: const EdgeInsets.symmetric(vertical: 12),
           children: [
+            if (AppPlatform.isWindows)
+              ListTile(
+                title: Text(
+                  socialText(c, 'پوشه‌های کتابخانه', 'Library folders'),
+                  style: Theme.of(c).textTheme.bodyMedium,
+                ),
+                onTap: () => Navigator.push(
+                  c,
+                  MaterialPageRoute(
+                    builder: (_) => const DesktopLibraryFolders(),
+                  ),
+                ),
+              ),
             for (final entry in [
               ('sort', 'مرتب‌سازی تب‌ها', 'Sort Tabs'),
               ('hide', 'مخفی کردن تب‌ها', 'Hide Tabs'),

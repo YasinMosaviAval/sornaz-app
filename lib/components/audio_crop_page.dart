@@ -1,3 +1,5 @@
+import 'package:sornaz/helpers/desktop_media_channel.dart';
+import 'package:sornaz/helpers/desktop_audio_duration.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,7 +7,7 @@ import 'package:just_audio/just_audio.dart';
 import 'app_top_bar_direction.dart';
 import '../screens/Social/social_widgets.dart';
 
-const audioCropChannel = MethodChannel('sornaz/audio_crop');
+const audioCropChannel = DesktopMediaChannel('sornaz/audio_crop');
 
 Future<String> commitAudioCrop(
   String staged,
@@ -53,13 +55,14 @@ class _AudioCropPageState extends State<AudioCropPage> {
 
   Future<void> load() async {
     try {
-      final duration = await player.setAudioSource(
+      final loaded = await player.setAudioSource(
         AudioSource.uri(
           widget.source.startsWith('content:')
               ? Uri.parse(widget.source)
               : Uri.file(widget.source),
         ),
       );
+      final duration = await readyAudioDuration(player, loaded);
       if (!mounted) return;
       if (duration == null || duration.inMilliseconds <= 0)
         throw StateError('Invalid duration');

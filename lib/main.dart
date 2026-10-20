@@ -1,4 +1,6 @@
 import 'package:sornaz/helpers/app_platform.dart';
+import 'desktop_smoke.dart';
+import 'helpers/desktop_audio_platform.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,17 +29,28 @@ import 'package:sornaz/screens/Voice%20Recorder/services/recording_service.dart'
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-void main() async {
+void main(List<String> arguments) async {
   WidgetsFlutterBinding.ensureInitialized();
+  DesktopAudioPlatform.install();
+  if (AppPlatform.isWindows &&
+      arguments.any((arg) => arg.startsWith('--desktop-smoke-test='))) {
+    await runDesktopSmoke(
+      arguments
+          .firstWhere((arg) => arg.startsWith('--desktop-smoke-test='))
+          .substring('--desktop-smoke-test='.length),
+    );
+    return;
+  }
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await PlayerSettings.instance.load();
 
-  if (AppPlatform.isAndroid) {
-    final sdk =
-        await const MethodChannel(
-          'sornaz/recordings',
-        ).invokeMethod<int>('sdk') ??
-        0;
+  if (AppPlatform.isAndroid || AppPlatform.isIOS || AppPlatform.isWindows) {
+    final sdk = AppPlatform.isAndroid
+        ? await const MethodChannel(
+                'sornaz/recordings',
+              ).invokeMethod<int>('sdk') ??
+              0
+        : 0;
     musicAudioHandler = await AudioService.init<MusicAudioHandler>(
       builder: () => MusicAudioHandler(customUndo: sdk >= 33),
       config: const AudioServiceConfig(
@@ -92,7 +105,8 @@ void main() async {
           )..init(),
         ),
       ],
-      child: AppPlatform.isAndroid
+      child:
+          (AppPlatform.isAndroid || AppPlatform.isIOS || AppPlatform.isWindows)
           ? AudioLibraryLifecycle(
               library: libraryManager,
               folders: folderNavigator,

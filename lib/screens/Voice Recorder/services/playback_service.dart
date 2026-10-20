@@ -1,4 +1,5 @@
 import '../../Players/services/music_audio_handler.dart';
+import 'package:sornaz/helpers/desktop_audio_duration.dart';
 import 'package:sornaz/helpers/browser_bridge.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:async';
@@ -287,6 +288,7 @@ class PlaybackService {
               ),
             ) ??
             Duration.zero;
+        duration = await readyAudioDuration(_player, duration) ?? Duration.zero;
         currentPath = path;
         _needsReload = false;
         queue.setCurrentIndex(paths.indexOf(path));

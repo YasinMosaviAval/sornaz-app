@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/desktop_media_channel.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
@@ -117,7 +118,7 @@ abstract class AnalysisAudioDecoder {
 /// Native decoders write bounded-buffer, interleaved signed 16-bit LE PCM.
 class PlatformAnalysisAudioDecoder implements AnalysisAudioDecoder {
   PlatformAnalysisAudioDecoder({MethodChannel? channel})
-    : _channel = channel ?? const MethodChannel('sornaz/analysis_audio');
+    : _channel = channel ?? const DesktopMediaChannel('sornaz/analysis_audio');
   final MethodChannel _channel;
   @override
   Future<DecodedPcmFile> decode(

@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/desktop_media_channel.dart';
 import 'dart:io';
 
 import 'package:ffmpeg_kit_flutter_new_audio/ffmpeg_kit.dart';
@@ -8,7 +9,7 @@ import 'package:path_provider/path_provider.dart';
 enum AudioExportFormat { mp3, m4a, wav, flac, ogg }
 
 class VideoAudioExport {
-  static const _channel = MethodChannel('sornaz/device_videos');
+  static const _channel = DesktopMediaChannel('sornaz/device_videos');
 
   static List<String> arguments(
     String input,

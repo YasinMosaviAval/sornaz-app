@@ -318,14 +318,14 @@ void main() {
       );
     },
   );
-  test('site settings are omitted from panel navigation', () {
+  test('authorized site settings stay grouped under site management', () {
     expect(
       panelNavigation([
         {'key': 'settings'},
         {'key': 'site-settings'},
         {'key': 'courses'},
       ]).map((v) => v['key']),
-      ['courses'],
+      ['courses', 'site-management-menu'],
     );
   });
   testWidgets('waveform drags stay local and commit one seek when released', (

@@ -1,4 +1,6 @@
+import 'package:sornaz/helpers/app_platform.dart';
 import 'dart:io';
+import 'package:sornaz/helpers/desktop_media_channel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
@@ -22,7 +24,9 @@ class VideoCropPage extends StatefulWidget {
 class _VideoCropPageState extends State<VideoCropPage> {
   late final player =
       widget.controllerFactory?.call() ??
-      VideoPlayerController.contentUri(Uri.parse(widget.uri));
+      ((AppPlatform.isWindows || AppPlatform.isIOS)
+          ? VideoPlayerController.file(File(DesktopMedia.path(widget.uri)))
+          : VideoPlayerController.contentUri(Uri.parse(widget.uri)));
   RangeValues range = const RangeValues(0, 1);
   bool ready = false, busy = false;
   String? error;

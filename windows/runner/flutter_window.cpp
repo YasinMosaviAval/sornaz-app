@@ -4,8 +4,8 @@
 
 #include "flutter/generated_plugin_registrant.h"
 
-FlutterWindow::FlutterWindow(const flutter::DartProject& project)
-    : project_(project) {}
+FlutterWindow::FlutterWindow(const flutter::DartProject& project, bool show_window)
+    : project_(project), show_window_(show_window) {}
 
 FlutterWindow::~FlutterWindow() {}
 
@@ -25,10 +25,17 @@ bool FlutterWindow::OnCreate() {
     return false;
   }
   RegisterPlugins(flutter_controller_->engine());
+  // FFmpegKit owns persistent pthread workers. Its plugin calls FreeLibrary
+  // during engine teardown without stopping those workers. Keep the runtime
+  // and its dependencies mapped until Windows terminates the process threads.
+  HMODULE ffmpeg_runtime = nullptr;
+  GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_PIN, L"libffmpegkit.dll",
+                    &ffmpeg_runtime);
+  desktop_services_ = std::make_unique<DesktopServices>(flutter_controller_->engine()->messenger(), GetHandle());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
-    this->Show();
+    if (show_window_) this->Show();
   });
 
   // Flutter can complete the first frame before the "show window" callback is
@@ -40,6 +47,7 @@ bool FlutterWindow::OnCreate() {
 }
 
 void FlutterWindow::OnDestroy() {
+  desktop_services_.reset();
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }
@@ -51,6 +59,7 @@ LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
+  if (desktop_services_ && desktop_services_->HandleMessage(message)) return 0;
   // Give Flutter, including plugins, an opportunity to handle window messages.
   if (flutter_controller_) {
     std::optional<LRESULT> result =

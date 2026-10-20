@@ -13,6 +13,12 @@ import 'package:sornaz/helpers/app_locale_provider.dart';
 import 'package:sornaz/screens/Authentication/ui/pages/authentication.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'notation_api.dart';
+import 'omr_review_page.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sornaz/helpers/development_access.dart';
+import 'notation_settings.dart';
+import 'package:sornaz/helpers/desktop_media_channel.dart';
 
 /// Windows uses the same bundled editor in the system browser. Only the local
 /// native bridge holds the account token; no credentials appear in the page.
@@ -41,15 +47,91 @@ class _DesktopNotationHostState extends State<DesktopNotationHost> {
   bool _opening = false;
   String _locale = 'fa';
   bool _dark = false;
+  Map<String, Object?>? _pendingScore;
+  Map<String, Object?> _appearance = {};
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final app = context.watch<AppData>();
+    _locale = context.watch<LocaleProvider>().locale.languageCode;
+    _dark = app.isDark;
+    _appearance = {
+      'locale': _locale,
+      'dark': _dark,
+      'accent': '#${app.accent.toARGB32().toRadixString(16).substring(2)}',
+      'fontScale': ((16 + app.fontSize) / 16).clamp(.8, 1.5),
+      'fontFamily': app.fontFamily,
+      'fontWeight': (400 + app.fontWeight * 100).round().clamp(100, 900),
+      'cornerRadius': app.cornerRadius,
+    };
+  }
+
+  Future<void> _recognize() async {
+    if (_opening || !DevelopmentAccess.read(context)) return;
+    try {
+      final source = await showModalBottomSheet<String>(
+        context: context,
+        builder: (sheet) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined),
+                title: Text(socialText(sheet, 'گرفتن عکس', 'Take photo')),
+                onTap: () => Navigator.pop(sheet, 'camera'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: Text(
+                  socialText(sheet, 'انتخاب از گالری', 'Choose from gallery'),
+                ),
+                onTap: () => Navigator.pop(sheet, 'file'),
+              ),
+            ],
+          ),
+        ),
+      );
+      if (!mounted || source == null || !DevelopmentAccess.read(context))
+        return;
+      Uint8List bytes;
+      if (source == 'camera') {
+        final captured =
+            await DesktopMedia.invoke('sornaz/story_media', 'camera', {})
+                as Map;
+        final file = await DesktopMedia.privateFile('${captured['path']}');
+        try {
+          if (await file.length() > 12000000)
+            throw const FormatException('Image is too large.');
+          bytes = await file.readAsBytes();
+        } finally {
+          await file.delete();
+        }
+      } else {
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.image,
+          withData: true,
+        );
+        if (result == null) return;
+        final file = result.files.single;
+        if (file.size > 12000000)
+          throw const FormatException('Image is too large.');
+        bytes = file.bytes ?? await File(file.path!).readAsBytes();
+      }
+      if (!mounted || !DevelopmentAccess.read(context)) return;
+      final score = await Navigator.push<Map<String, Object?>>(
+        context,
+        MaterialPageRoute(builder: (_) => OmrReviewPage(imageBytes: bytes)),
+      );
+      if (!mounted || score == null || !DevelopmentAccess.read(context)) return;
+      _pendingScore = score;
+      await _open();
+    } catch (error) {
+      if (mounted) socialError(context, error);
+    }
+  }
 
   Future<void> _open() async {
-    if (widget.token.isEmpty) {
-      await Navigator.push(
-        context,
-        MaterialPageRoute<void>(builder: (_) => const SignInScreen()),
-      );
-      return;
-    }
     setState(() => _opening = true);
     _locale = context.read<LocaleProvider>().locale.languageCode;
     _dark = context.read<AppData>().isDark;
@@ -99,6 +181,73 @@ class _DesktopNotationHostState extends State<DesktopNotationHost> {
         return;
       }
       final path = request.uri.path.substring(_secret.length + 2);
+      if (request.method == 'POST' && path == 'desktop-login') {
+        if (!mounted || request.headers.value('X-CSRF-Token') != _secret) {
+          response.statusCode = HttpStatus.forbidden;
+          return;
+        }
+        await const MethodChannel(
+          'sornaz/video_controls',
+        ).invokeMethod<void>('activate');
+        if (mounted)
+          unawaited(
+            Navigator.push<void>(
+              context,
+              MaterialPageRoute(builder: (_) => const SignInScreen()),
+            ),
+          );
+        response.headers.contentType = ContentType.json;
+        response.write('{"success":true}');
+        return;
+      }
+      if (request.method == 'POST' && path == 'desktop-export') {
+        if (request.headers.value('X-CSRF-Token') != _secret) {
+          response.statusCode = HttpStatus.forbidden;
+          return;
+        }
+        final bytes = <int>[];
+        await for (final chunk in request) {
+          if (bytes.length + chunk.length > 2000000) {
+            response.statusCode = 413;
+            return;
+          }
+          bytes.addAll(chunk);
+        }
+        final data = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+        final content = data['content'];
+        if (content is! String || utf8.encode(content).length > 1000000) {
+          response.statusCode = 422;
+          return;
+        }
+        if ('${data['name']}'.endsWith('.json') &&
+            jsonDecode(content)['format'] != 'sornaz-notation') {
+          response.statusCode = 422;
+          return;
+        }
+        await DesktopMedia.invoke('sornaz/notation_storage', 'save', data);
+        response.headers.contentType = ContentType.json;
+        response.write('{"success":true}');
+        return;
+      }
+      if (request.method == 'GET' && path == 'desktop-state') {
+        final prefs = await SharedPreferences.getInstance();
+        final score = mounted && DevelopmentAccess.read(context)
+            ? _pendingScore
+            : null;
+        _pendingScore = null;
+        response.headers.contentType = ContentType.json;
+        response.write(
+          jsonEncode({
+            'config': {
+              ..._appearance,
+              'durationMode': prefs.getInt('notation.durationMode') ?? 1,
+              'pianoLabelMode': prefs.getInt('notation.pianoLabelMode') ?? 1,
+            },
+            'score': score,
+          }),
+        );
+        return;
+      }
       if (request.method == 'GET' && path.isEmpty) {
         var html = await rootBundle.loadString('assets/notation/index.html');
         final boot = jsonEncode({
@@ -108,11 +257,38 @@ class _DesktopNotationHostState extends State<DesktopNotationHost> {
           'embedded': false,
           'api': '/$_secret/api',
           'csrf': _secret,
+          ..._appearance,
         });
         html = html.replaceFirst(
           '<head>',
           '<head><base href="/$_secret/assets/">',
         );
+        html = html.replaceFirst('</body>', '''<script>
+let sornazDesktopPolling=false,sornazDesktopConfig='';
+const sornazAnchorClick=HTMLAnchorElement.prototype.click;
+HTMLAnchorElement.prototype.click=function(){
+ if(!this.download||!this.href.startsWith('blob:'))return sornazAnchorClick.call(this);
+ const href=this.href,name=this.download;
+ (async()=>{
+  const content=await(await fetch(href)).text();
+  const result=await fetch('/$_secret/desktop-export',{method:'POST',
+   headers:{'Content-Type':'application/json','X-CSRF-Token':'$_secret'},
+   body:JSON.stringify({name,content})});
+  if(!result.ok)throw Error('Could not save the score. Check the selected folder.');
+ })().catch(error=>window.alert(error.message));
+};
+setInterval(async()=>{
+ if(sornazDesktopPolling||!window.Notation)return;
+ sornazDesktopPolling=true;
+ try {
+  const response=await fetch('/$_secret/desktop-state',{cache:'no-store'});
+  if(!response.ok)return;
+  const state=await response.json(),config=JSON.stringify(state.config);
+  if(config!==sornazDesktopConfig){window.Notation.configure(state.config);sornazDesktopConfig=config;}
+  if(state.score)await window.Notation.importContent(JSON.stringify(state.score),'omr.json');
+ }catch(error){console.error(error);}finally{sornazDesktopPolling=false;}
+},1000);
+</script></body>''');
         html = html.replaceFirst(
           '<script src="notation.js"></script>',
           '<script>window.NOTATION_BOOT=$boot;</script><script src="notation.js"></script>',
@@ -135,6 +311,22 @@ class _DesktopNotationHostState extends State<DesktopNotationHost> {
         final name = path.substring(7);
         response.headers.set('Content-Type', '${assets[name]}; charset=utf-8');
         final data = await rootBundle.load('assets/notation/$name');
+        if (name == 'notation.js') {
+          response.write(
+            utf8
+                .decode(
+                  data.buffer.asUint8List(
+                    data.offsetInBytes,
+                    data.lengthInBytes,
+                  ),
+                )
+                .replaceFirst(
+                  "else location.href='/login';",
+                  "else fetch('/$_secret/desktop-login',{method:'POST',headers:{'X-CSRF-Token':'$_secret'}});",
+                ),
+          );
+          return;
+        }
         response.add(
           data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
         );
@@ -236,6 +428,30 @@ class _DesktopNotationHostState extends State<DesktopNotationHost> {
                 ),
               ),
               const SizedBox(height: 12),
+              if (DevelopmentAccess.watch(context))
+                FilledButton.icon(
+                  onPressed: _opening ? null : _recognize,
+                  icon: const Icon(Icons.document_scanner_outlined),
+                  label: Text(
+                    socialText(
+                      context,
+                      'تشخیص نت از تصویر',
+                      'Recognize notes from image',
+                    ),
+                  ),
+                ),
+              TextButton.icon(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const NotationSettingsPage(),
+                  ),
+                ),
+                icon: const Icon(Icons.settings_outlined),
+                label: Text(
+                  socialText(context, 'تنظیمات نت‌نویسی', 'Notation settings'),
+                ),
+              ),
             ],
           ),
         ),

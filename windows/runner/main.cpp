@@ -1,6 +1,8 @@
 #include <flutter/dart_project.h>
 #include <flutter/flutter_view_controller.h>
 #include <windows.h>
+#include <flutter_windows.h>
+#include <algorithm>
 
 #include "flutter_window.h"
 #include "utils.h"
@@ -21,12 +23,22 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   std::vector<std::string> command_line_arguments =
       GetCommandLineArguments();
+  const bool smoke_test = std::any_of(command_line_arguments.begin(), command_line_arguments.end(),
+    [](const std::string& value) { return value.rfind("--desktop-smoke-test=", 0) == 0; });
 
   project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
 
-  FlutterWindow window(project);
+  FlutterWindow window(project, !smoke_test);
   Win32Window::Point origin(10, 10);
-  Win32Window::Size size(1280, 720);
+  const HMONITOR monitor = MonitorFromPoint(POINT{10, 10}, MONITOR_DEFAULTTONEAREST);
+  MONITORINFO info{}; info.cbSize = sizeof(info);
+  GetMonitorInfo(monitor, &info);
+  const double scale = FlutterDesktopGetDpiForMonitor(monitor) / 96.0;
+  const int height = std::max(320, std::min(850,
+    static_cast<int>((info.rcWork.bottom - info.rcWork.top) / scale) - 24));
+  const int width = std::max(240, std::min({480, height * 3 / 5,
+    static_cast<int>((info.rcWork.right - info.rcWork.left) / scale) - 24}));
+  Win32Window::Size size(static_cast<unsigned int>(width), static_cast<unsigned int>(height));
   if (!window.Create(L"sornaz", origin, size)) {
     return EXIT_FAILURE;
   }

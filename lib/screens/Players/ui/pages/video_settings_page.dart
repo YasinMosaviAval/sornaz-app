@@ -1,4 +1,6 @@
 import '../components/player_sort_tile.dart';
+import 'package:sornaz/helpers/app_platform.dart';
+import 'package:sornaz/helpers/desktop_library_folders.dart';
 import 'package:flutter/material.dart';
 import 'package:sornaz/components/app_bar.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
@@ -72,6 +74,19 @@ class _VideoSettingsPageState extends State<VideoSettingsPage> {
         body: ListView(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
           children: [
+            if (AppPlatform.isWindows)
+              ListTile(
+                title: Text(
+                  t('پوشه‌های کتابخانه', 'Library folders'),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const DesktopLibraryFolders(video: true),
+                  ),
+                ),
+              ),
             for (final entry in [
               ('sort', 'مرتب‌سازی تب‌ها', 'Sort Tabs'),
               ('hide', 'مخفی کردن تب‌ها', 'Hide Tabs'),

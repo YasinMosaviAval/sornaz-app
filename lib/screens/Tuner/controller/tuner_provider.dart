@@ -213,7 +213,10 @@ class TunerProvider extends ChangeNotifier {
   ];
 
   bool get supportsPitchDetection =>
-      kIsWeb || AppPlatform.isAndroid || AppPlatform.isIOS;
+      kIsWeb ||
+      AppPlatform.isAndroid ||
+      AppPlatform.isIOS ||
+      AppPlatform.isWindows;
 
   Future<void> start() async {
     await _sampleRateLoaded;

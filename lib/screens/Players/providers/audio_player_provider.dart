@@ -5,6 +5,7 @@ import '../services/equalizer_settings.dart';
 import 'package:sornaz/screens/Players/services/music_audio_handler.dart';
 import 'dart:async';
 import 'dart:io';
+import 'package:path/path.dart' as p;
 
 import 'package:sornaz/screens/Players/cache/audio_cache_factory.dart';
 import 'package:sornaz/components/ab_repeat.dart';
@@ -570,8 +571,11 @@ class AudioPlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
         newName == '..')
       throw const FormatException('Invalid filename');
     final dir = file.file.parent.path;
-    final newPath = "$dir/$newName";
+    final newPath = p.join(dir, newName);
     final oldPath = file.file.path;
+    if (!p.equals(oldPath, newPath) && await File(newPath).exists()) {
+      throw const FileSystemException('A file with this name already exists.');
+    }
     final newFile = await file.file.rename(newPath);
     file.file = newFile;
     file.fileName = newName;

@@ -56,6 +56,7 @@ add_subdirectory("runner")
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
 include(flutter/generated_plugins.cmake)
+include(patch_audio_service.cmake)
 
 
 # === Installation ===
@@ -71,6 +72,23 @@ endif()
 
 set(INSTALL_BUNDLE_DATA_DIR "${CMAKE_INSTALL_PREFIX}/data")
 set(INSTALL_BUNDLE_LIB_DIR "${CMAKE_INSTALL_PREFIX}")
+
+# Make the portable bundle usable on machines without Visual Studio installed.
+set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP TRUE)
+include(InstallRequiredSystemLibraries)
+if(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS)
+  install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}
+    DESTINATION "${INSTALL_BUNDLE_LIB_DIR}" COMPONENT Runtime)
+endif()
+
+# Use the same open analysis engine as Android, without experimental GPL engines.
+set(BUILD_TESTING OFF CACHE BOOL "Build native unit tests" FORCE)
+set(MA_ENABLE_AUBIO OFF CACHE BOOL "Enable Aubio" FORCE)
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../native" "music_analysis")
+install(TARGETS music_analysis_dsp RUNTIME DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+  COMPONENT Runtime)
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../native/open_dsp/LICENSE"
+  DESTINATION "${INSTALL_BUNDLE_LIB_DIR}/licenses/music_analysis_dsp" COMPONENT Runtime)
 
 install(TARGETS ${BINARY_NAME} RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}"
   COMPONENT Runtime)

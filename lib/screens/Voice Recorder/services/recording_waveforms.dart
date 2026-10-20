@@ -1,5 +1,7 @@
+import 'package:sornaz/helpers/app_platform.dart';
 import 'dart:convert';
 import 'dart:io';
+import 'package:sornaz/helpers/desktop_media_channel.dart';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
@@ -64,6 +66,11 @@ class RecordingWaveforms {
     final existing = await cached(file.uri);
     if (existing != null) return existing;
     if (kIsWeb) return [];
+    if (AppPlatform.isWindows) {
+      final samples = await DesktopMedia.waveform(file.uri);
+      await save(file.uri, samples);
+      return samples;
+    }
     File? temporary, wave;
     try {
       final path = await service.materialize(file);

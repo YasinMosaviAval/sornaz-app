@@ -1,4 +1,5 @@
 import 'package:sornaz/helpers/app_platform.dart';
+import 'package:sornaz/helpers/desktop_audio_duration.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
@@ -142,9 +143,18 @@ class MetronomeController extends ChangeNotifier {
           );
       return;
     }
-    await _tickPlayer.setAsset(AppConstants.TICK_WAV);
-    await _accentPlayer.setAsset(AppConstants.ACCENT_WAV);
-    await _subTickPlayer.setAsset(AppConstants.SUB_TICK_WAV);
+    await readyAudioDuration(
+      _tickPlayer,
+      await _tickPlayer.setAsset(AppConstants.TICK_WAV),
+    );
+    await readyAudioDuration(
+      _accentPlayer,
+      await _accentPlayer.setAsset(AppConstants.ACCENT_WAV),
+    );
+    await readyAudioDuration(
+      _subTickPlayer,
+      await _subTickPlayer.setAsset(AppConstants.SUB_TICK_WAV),
+    );
 
     if (AppPlatform.isAndroid) {
       _configureNative();

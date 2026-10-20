@@ -1,4 +1,5 @@
 import 'package:sornaz/helpers/app_platform.dart';
+import 'package:sornaz/helpers/desktop_media_channel.dart';
 import 'recording_bookmarks.dart';
 import 'recording_text.dart';
 import 'recording_waveforms.dart';
@@ -9,6 +10,9 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path/path.dart' as p;
 
 class SavedRecording {
   const SavedRecording({
@@ -46,18 +50,30 @@ class FileService {
     };
   }
 
-  Future<void> spliceDraft(String original, String segment, int at) =>
-      const MethodChannel('sornaz/recordings').invokeMethod<void>(
-        'spliceDraft',
-        {'original': original, 'segment': segment, 'at': at},
-      );
+  Future<void> spliceDraft(String original, String segment, int at) async {
+    if (AppPlatform.isWindows || AppPlatform.isIOS) {
+      await DesktopMedia.splice(original, segment, at, keepTail: false);
+      await File(segment).delete();
+      return;
+    }
+    await const MethodChannel('sornaz/recordings').invokeMethod<void>(
+      'spliceDraft',
+      {'original': original, 'segment': segment, 'at': at},
+    );
+  }
+
   final bookmarks = RecordingBookmarks();
   static const channel = MethodChannel('sornaz/recordings');
   late Directory _dir;
   int? _sdk;
   Future<void> init() async {
     final base = await getApplicationDocumentsDirectory();
-    _dir = Directory('${base.path}/Recordings');
+    final selected = AppPlatform.isWindows
+        ? (await SharedPreferences.getInstance()).getString(
+            'desktop.recordingFolder',
+          )
+        : null;
+    _dir = Directory(selected ?? p.join(base.path, 'Recordings'));
     await _dir.create(recursive: true);
     if (AppPlatform.isAndroid) _sdk = await channel.invokeMethod<int>('sdk');
   }
@@ -171,9 +187,13 @@ class FileService {
         await RecordingWaveforms.move(item.uri, uri);
       }
     } else {
-      final renamed = await File(
-        item.uri,
-      ).rename('${File(item.uri).parent.path}/$name.m4a');
+      final target = p.join(File(item.uri).parent.path, '$name.m4a');
+      if (!p.equals(item.uri, target) && await File(target).exists()) {
+        throw const FileSystemException(
+          'A recording with this name already exists.',
+        );
+      }
+      final renamed = await File(item.uri).rename(target);
       await bookmarks.move(item.uri, renamed.path);
       await MusicPlaylists.recordings.replacePath(item.uri, renamed.path);
       await moveRecordingText(item.uri, renamed.path);
@@ -190,16 +210,20 @@ class FileService {
   }
 
   String newPath() =>
-      '${_dir.path}/${DateTime.now().microsecondsSinceEpoch}.m4a';
+      p.join(_dir.path, '${DateTime.now().microsecondsSinceEpoch}.m4a');
   Future<String> materialize(SavedRecording item) async => item.isPublic
       ? (await channel.invokeMethod<String>('materialize', {'uri': item.uri}))!
       : item.uri;
   Future<void> overwrite(SavedRecording item, String path, int at) async {
-    await channel.invokeMethod<void>('overwrite', {
-      'uri': item.uri,
-      'path': path,
-      'at': at,
-    });
+    if (AppPlatform.isWindows || AppPlatform.isIOS) {
+      await DesktopMedia.splice(item.uri, path, at);
+    } else {
+      await channel.invokeMethod<void>('overwrite', {
+        'uri': item.uri,
+        'path': path,
+        'at': at,
+      });
+    }
     await File(path).delete();
     await RecordingWaveforms.move(item.uri, null);
   }
@@ -211,6 +235,21 @@ class FileService {
             'Sornaz/Voice Recorder'
       : _dir.path;
   Future<void> chooseLocation() async {
+    if (AppPlatform.isWindows) {
+      final selected = await FilePicker.platform.getDirectoryPath();
+      if (selected == null) return;
+      final directory = Directory(
+        await Directory(selected).resolveSymbolicLinks(),
+      );
+      if (!await (await SharedPreferences.getInstance()).setString(
+        'desktop.recordingFolder',
+        directory.path,
+      )) {
+        throw StateError('Could not save recording folder');
+      }
+      _dir = directory;
+      return;
+    }
     if (AppPlatform.isAndroid)
       await const MethodChannel(
         'sornaz/recording_workspace',
