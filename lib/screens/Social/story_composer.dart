@@ -3,6 +3,8 @@ import 'package:sornaz/helpers/app_appearance.dart';
 import '../Site/chat_media.dart';
 import '../Site/panel_api.dart';
 import 'dart:convert';
+import 'dart:io';
+import 'package:sornaz/helpers/app_platform.dart';
 import 'social_profile.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'dart:async';
@@ -388,7 +390,11 @@ class _StoryComposerState extends State<StoryComposer>
       decoded.image.dispose();
       codec.dispose();
       if (chosen['video'] == true) {
-        next = VideoPlayerController.contentUri(Uri.parse('${chosen['uri']}'));
+        next = (AppPlatform.isIOS || AppPlatform.isWindows)
+            ? VideoPlayerController.file(
+                File(DesktopMedia.path('${chosen['uri']}')),
+              )
+            : VideoPlayerController.contentUri(Uri.parse('${chosen['uri']}'));
         await next.initialize();
         await next.setLooping(true);
       }
@@ -1165,7 +1171,7 @@ class _StoryComposerState extends State<StoryComposer>
                                 onTap: busy ? null : () => choose(null),
                                 child: Center(
                                   child: Icon(
-                                      Icons.camera_alt_outlined,
+                                    Icons.camera_alt_outlined,
                                     color: Colors.white,
                                     size: 36,
                                   ),

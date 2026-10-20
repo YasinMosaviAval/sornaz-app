@@ -77,12 +77,13 @@ void main() {
   });
 
   test(
-    'iOS audio export stages a copy and preserves its original file',
+    'iOS audio export materializes its source through the native asset bridge',
     () async {
       final directory = await Directory.systemTemp.createTemp(
         'sornaz-ios-export-',
       );
       const paths = MethodChannel('plugins.flutter.io/path_provider');
+      const native = MethodChannel('sornaz/ios_media');
       final messenger =
           TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
       messenger.setMockMethodCallHandler(paths, (call) async => directory.path);
@@ -90,6 +91,13 @@ void main() {
         final original = await File(
           p.join(directory.path, 'آهنگ من.wav'),
         ).writeAsBytes([1, 2, 3]);
+        messenger.setMockMethodCallHandler(native, (call) async {
+          expect(call.method, 'materialize');
+          expect(call.arguments, {'uri': original.uri.toString()});
+          return (await original.copy(
+            p.join(directory.path, 'staged.wav'),
+          )).path;
+        });
         const channel = DesktopMediaChannel('sornaz/device_videos');
         final staged = await channel.invokeMethod<String>('stageAudioSource', {
           'uri': original.uri.toString(),
@@ -100,8 +108,37 @@ void main() {
         expect(await original.readAsBytes(), [1, 2, 3]);
       } finally {
         messenger.setMockMethodCallHandler(paths, null);
+        messenger.setMockMethodCallHandler(native, null);
         await directory.delete(recursive: true);
       }
     },
   );
+  test(
+    'iOS video rendering selects VideoToolbox instead of Windows Media Foundation',
+    () {
+      expect(DesktopMedia.videoEncoder, contains('h264_videotoolbox'));
+      expect(DesktopMedia.videoEncoder, isNot(contains('h264_mf')));
+    },
+  );
+  test('iOS gallery forwards pagination and limited-photo responses', () async {
+    const native = MethodChannel('sornaz/ios_media');
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(native, (call) async {
+      if (call.method == 'permission') return 'limited';
+      expect(call.method, 'gallery');
+      expect(call.arguments, {'offset': 60});
+      return [
+        {'uri': 'ph://asset/L0/001', 'video': true},
+      ];
+    });
+    try {
+      const channel = DesktopMediaChannel('sornaz/story_media');
+      expect(await channel.invokeMethod<String>('permission'), 'limited');
+      final rows = await channel.invokeListMethod('gallery', {'offset': 60});
+      expect((rows!.single as Map)['uri'], 'ph://asset/L0/001');
+    } finally {
+      messenger.setMockMethodCallHandler(native, null);
+    }
+  });
 }

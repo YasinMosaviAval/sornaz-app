@@ -14,6 +14,7 @@ import 'package:sornaz/screens/Home/ui/components/app_drawer.dart';
 import 'package:flutter/foundation.dart';
 import 'browser_notation_host.dart';
 import 'package:sornaz/helpers/app_platform.dart';
+import 'package:sornaz/helpers/desktop_media_channel.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -265,7 +266,7 @@ class _NotationHostState extends State<_NotationHost>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (Platform.isAndroid)
+            if (Platform.isAndroid || Platform.isIOS)
               ListTile(
                 leading: const Icon(Icons.camera_alt_outlined),
                 title: Text(socialText(context, 'گرفتن عکس', 'Take photo')),
@@ -286,12 +287,12 @@ class _NotationHostState extends State<_NotationHost>
     try {
       Uint8List? bytes;
       if (source == 'camera') {
-        if (!Platform.isAndroid) {
+        if (!Platform.isAndroid && !Platform.isIOS) {
           throw const FormatException(
-            'Camera is currently available on Android only.',
+            'Camera is unavailable on this platform.',
           );
         }
-        const media = MethodChannel('sornaz/story_media');
+        const media = DesktopMediaChannel('sornaz/story_media');
         final captured = await media.invokeMapMethod<String, dynamic>('camera');
         if (captured == null) return;
         final path = captured['path'];

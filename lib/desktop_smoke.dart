@@ -50,7 +50,7 @@ Future<void> runDesktopSmoke(String reportPath) async {
   final wav = File(p.join(directory.path, 'آزمون صدا.wav'));
   final video = File(p.join(directory.path, 'آزمون ویدیو.mp4'));
   try {
-    await check('windows_secure_storage', () async {
+    await check('platform_secure_storage', () async {
       const storage = FlutterSecureStorage();
       final key =
           'sornaz.desktop.smoke.${DateTime.now().microsecondsSinceEpoch}';
@@ -64,7 +64,7 @@ Future<void> runDesktopSmoke(String reportPath) async {
         await storage.delete(key: key);
       }
     });
-    await check('windows_system_media_controls', () async {
+    await check('platform_system_media_controls', () async {
       final handler = await AudioService.init<MusicAudioHandler>(
         builder: () => MusicAudioHandler(),
         config: const AudioServiceConfig(
@@ -129,7 +129,7 @@ Future<void> runDesktopSmoke(String reportPath) async {
         'Video thumbnail missing',
       );
     });
-    await check('windows_video_playback', () async {
+    await check('platform_video_playback', () async {
       final player = VideoPlayerController.file(video);
       try {
         await player.initialize();
@@ -147,7 +147,7 @@ Future<void> runDesktopSmoke(String reportPath) async {
         await player.dispose();
       }
     });
-    await check('windows_recording_playback', () async {
+    await check('platform_recording_playback', () async {
       final player = just.AudioPlayer();
       try {
         final duration = await readyAudioDuration(
@@ -175,7 +175,7 @@ Future<void> runDesktopSmoke(String reportPath) async {
         await player.dispose();
       }
     });
-    await check('windows_music_playback', () async {
+    await check('platform_music_playback', () async {
       final player = audio.AudioPlayer();
       try {
         await player.setSource(audio.DeviceFileSource(wav.path));
@@ -191,7 +191,7 @@ Future<void> runDesktopSmoke(String reportPath) async {
         await player.dispose();
       }
     });
-    await check('windows_metronome_assets', () async {
+    await check('platform_metronome_assets', () async {
       final player = just.AudioPlayer();
       try {
         final duration = await readyAudioDuration(
@@ -332,7 +332,13 @@ Future<void> runDesktopSmoke(String reportPath) async {
   }
   // Close through the UI thread so COM/media plugins are disposed before COM
   // shuts down. dart:io exit bypasses that lifecycle on a Dart worker thread.
-  await const MethodChannel('sornaz/video_controls').invokeMethod<void>(
-    'closeWindow',
-  );
+  if (Platform.isWindows) {
+    await const MethodChannel(
+      'sornaz/video_controls',
+    ).invokeMethod<void>('closeWindow');
+  }
 }
+
+Future<void> runIosSmoke() async => runDesktopSmoke(
+  p.join((await getTemporaryDirectory()).path, 'sornaz-ios-smoke.json'),
+);

@@ -411,7 +411,7 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
     try {
       await store.load();
       final sdk = await channel.invokeMethod<int>('sdk') ?? 33;
-      if (!AppPlatform.isWindows) {
+      if (AppPlatform.isAndroid) {
         final permission = sdk >= 33 ? Permission.videos : Permission.storage;
         final status = await permission.request();
         if (!status.isGranted && !status.isLimited)
@@ -593,13 +593,24 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
       if (action == 'crop') {
         await musicAudioHandler?.pause();
         if (!mounted) return;
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) =>
-                VideoCropPage(uri: items.single.uri, name: items.single.name),
-          ),
-        );
+        final local = AppPlatform.isIOS
+            ? await DesktopMedia.iosMaterialize(items.single.uri)
+            : null;
+        try {
+          if (!mounted) return;
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => VideoCropPage(
+                uri: local ?? items.single.uri,
+                name: items.single.name,
+              ),
+            ),
+          );
+        } finally {
+          if (local != null && await File(local).exists())
+            await File(local).delete();
+        }
         await load();
         return;
       }
@@ -996,6 +1007,7 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
   static const media = DesktopMediaChannel('sornaz/story_media');
   static const controls = MethodChannel('sornaz/video_controls');
   VideoPlayerController? player;
+  String? _iosPlaybackSource;
   late int index;
   int generation = 0;
   int lastSavedSecond = -1;
@@ -1076,18 +1088,37 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
     });
     old?.removeListener(update);
     await old?.dispose();
-    final next = AppPlatform.isWindows
-        ? VideoPlayerController.file(
-            File(DesktopMedia.path(widget.videos[at].uri)),
-          )
-        : VideoPlayerController.contentUri(Uri.parse(widget.videos[at].uri));
+    if (!mounted || request != generation) return;
+    final previousSource = _iosPlaybackSource;
+    _iosPlaybackSource = null;
+    if (previousSource != null && await File(previousSource).exists()) {
+      await File(previousSource).delete();
+    }
+    String? iosSource;
+    VideoPlayerController? pending;
     try {
+      if (AppPlatform.isIOS)
+        iosSource = await DesktopMedia.iosMaterialize(widget.videos[at].uri);
+      if (!mounted || request != generation) {
+        if (iosSource != null && await File(iosSource).exists())
+          await File(iosSource).delete();
+        return;
+      }
+      final next = (AppPlatform.isWindows || AppPlatform.isIOS)
+          ? VideoPlayerController.file(
+              File(iosSource ?? DesktopMedia.path(widget.videos[at].uri)),
+            )
+          : VideoPlayerController.contentUri(Uri.parse(widget.videos[at].uri));
+      pending = next;
       await next.initialize();
       if (AppPlatform.isWindows) await next.setVolume(volume);
       if (!mounted || request != generation) {
         await next.dispose();
+        if (iosSource != null && await File(iosSource).exists())
+          await File(iosSource).delete();
         return;
       }
+      _iosPlaybackSource = iosSource;
       setState(() {
         player = next;
         changing = false;
@@ -1107,7 +1138,10 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
       await next.setPlaybackSpeed(speed);
       _hideChromeLater();
     } catch (_) {
-      await next.dispose();
+      await pending?.dispose();
+      if (iosSource != null && await File(iosSource).exists())
+        await File(iosSource).delete();
+      if (_iosPlaybackSource == iosSource) _iosPlaybackSource = null;
       if (mounted && request == generation)
         setState(() {
           changing = false;
@@ -1375,7 +1409,13 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
     unawaited(savePosition());
     WidgetsBinding.instance.removeObserver(this);
     player?.removeListener(update);
-    player?.dispose();
+    final previous = player;
+    final source = _iosPlaybackSource;
+    unawaited(() async {
+      await previous?.dispose();
+      if (source != null && await File(source).exists())
+        await File(source).delete();
+    }());
     sleepTimer?.cancel();
     countdownTimer?.cancel();
     chromeTimer?.cancel();

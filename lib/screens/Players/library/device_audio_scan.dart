@@ -1,6 +1,8 @@
 import 'package:sornaz/helpers/app_platform.dart';
 import 'package:sornaz/helpers/desktop_library_paths.dart';
 import 'dart:io';
+import 'package:flutter/services.dart';
+import 'package:path/path.dart' as p;
 
 import 'package:flutter/foundation.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -39,6 +41,19 @@ Future<List<Directory>> discoverAudioRoots() async {
     // iOS grants access to the app sandbox, not Android's shared storage.
     final documents = await getApplicationDocumentsDirectory();
     if (await documents.exists()) roots.add(documents);
+    try {
+      final recording = await const MethodChannel(
+        'sornaz/recording_workspace',
+      ).invokeMethod<String>('location');
+      if (recording != null &&
+          !p.equals(documents.path, recording) &&
+          !p.isWithin(documents.path, recording)) {
+        final directory = Directory(recording);
+        if (await directory.exists()) roots.add(directory);
+      }
+    } on MissingPluginException {
+      // Host-only widget tests do not instantiate the iOS document picker.
+    }
     return roots;
   }
   if (AppPlatform.isWindows) {

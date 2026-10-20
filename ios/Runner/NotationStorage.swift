@@ -1,11 +1,19 @@
 import Flutter
 import UIKit
+import UniformTypeIdentifiers
 
 /// Native counterpart of Android's sornaz/notation_storage channel.
 final class NotationStorage: NSObject, UIDocumentPickerDelegate {
   private let channel: FlutterMethodChannel
   private var pending: FlutterResult?
   private var temporaryFile: URL?
+  private var choosingFolder = false
+
+  private func selectedFolder() -> URL? {
+    guard let data = UserDefaults.standard.data(forKey: "sornaz.notation.folder") else { return nil }
+    var stale = false
+    return try? URL(resolvingBookmarkData: data, options: [], relativeTo: nil, bookmarkDataIsStale: &stale)
+  }
 
   init(messenger: FlutterBinaryMessenger) {
     channel = FlutterMethodChannel(name: "sornaz/notation_storage", binaryMessenger: messenger)
@@ -31,6 +39,16 @@ final class NotationStorage: NSObject, UIDocumentPickerDelegate {
 
   private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     if call.method == "sdk" { result(29); return }
+    if call.method == "location" { result(selectedFolder()?.lastPathComponent ?? "Documents"); return }
+    if call.method == "choose" {
+      guard pending == nil, let controller = presenter() else { fail(result, "Document picker is busy."); return }
+      choosingFolder = true
+      pending = result
+      let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.folder], asCopy: false)
+      picker.delegate = self
+      controller.present(picker, animated: true)
+      return
+    }
     guard ["save", "share", "sibelius", "musicxml", "pdf"].contains(call.method) else {
       result(FlutterMethodNotImplemented)
       return
@@ -82,6 +100,20 @@ final class NotationStorage: NSObject, UIDocumentPickerDelegate {
       .replacingOccurrences(of: "[^\\p{L}\\p{N} _-]", with: "", options: .regularExpression)
       .prefix(80)
     let filename = (stem.isEmpty ? "score" : String(stem)) + "." + ext
+    if call.method != "share", let destination = selectedFolder() {
+      guard destination.startAccessingSecurityScopedResource() else { fail(result, "Selected folder access expired; select it again."); return }
+      defer { destination.stopAccessingSecurityScopedResource() }
+      let file = destination.appendingPathComponent(UUID().uuidString + "-" + filename)
+      var coordinationError: NSError?
+      var writeError: Error?
+      NSFileCoordinator().coordinate(writingItemAt: file, options: [], error: &coordinationError) { url in
+        do { try Data(content.utf8).write(to: url, options: .atomic) }
+        catch { writeError = error }
+      }
+      if let error = writeError ?? coordinationError { fail(result, error.localizedDescription) }
+      else { result(file.absoluteString) }
+      return
+    }
     let folder = FileManager.default.temporaryDirectory
       .appendingPathComponent("notation-exports", isDirectory: true)
     do {
@@ -117,6 +149,7 @@ final class NotationStorage: NSObject, UIDocumentPickerDelegate {
   private func complete(value: String? = nil, error: String? = nil) {
     let callback = pending
     pending = nil
+    choosingFolder = false
     if let error = error {
       callback?(FlutterError(code: "NOTATION_STORAGE", message: error, details: nil))
     } else {
@@ -128,6 +161,16 @@ final class NotationStorage: NSObject, UIDocumentPickerDelegate {
 
   func documentPicker(_ controller: UIDocumentPickerViewController,
                       didPickDocumentsAt urls: [URL]) {
+    if choosingFolder, let destination = urls.first {
+      guard destination.startAccessingSecurityScopedResource() else { complete(error: "Folder access was not granted."); return }
+      defer { destination.stopAccessingSecurityScopedResource() }
+      do {
+        let bookmark = try destination.bookmarkData(options: .minimalBookmark, includingResourceValuesForKeys: nil, relativeTo: nil)
+        UserDefaults.standard.set(bookmark, forKey: "sornaz.notation.folder")
+        complete(value: destination.lastPathComponent)
+      } catch { complete(error: error.localizedDescription) }
+      return
+    }
     if let destination = urls.first { complete(value: destination.absoluteString) }
     else { complete(error: "No destination was selected.") }
   }

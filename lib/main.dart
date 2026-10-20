@@ -32,6 +32,10 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main(List<String> arguments) async {
   WidgetsFlutterBinding.ensureInitialized();
   DesktopAudioPlatform.install();
+  if (AppPlatform.isIOS && const bool.fromEnvironment('SORNAZ_IOS_SMOKE')) {
+    await runIosSmoke();
+    return;
+  }
   if (AppPlatform.isWindows &&
       arguments.any((arg) => arg.startsWith('--desktop-smoke-test='))) {
     await runDesktopSmoke(

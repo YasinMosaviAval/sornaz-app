@@ -72,6 +72,10 @@ class FileService {
         ? (await SharedPreferences.getInstance()).getString(
             'desktop.recordingFolder',
           )
+        : AppPlatform.isIOS
+        ? await const MethodChannel(
+            'sornaz/recording_workspace',
+          ).invokeMethod<String>('location')
         : null;
     _dir = Directory(selected ?? p.join(base.path, 'Recordings'));
     await _dir.create(recursive: true);
@@ -235,6 +239,14 @@ class FileService {
             'Sornaz/Voice Recorder'
       : _dir.path;
   Future<void> chooseLocation() async {
+    if (AppPlatform.isIOS) {
+      final selected = await const MethodChannel(
+        'sornaz/recording_workspace',
+      ).invokeMethod<String>('choose');
+      if (selected != null)
+        _dir = await Directory(selected).create(recursive: true);
+      return;
+    }
     if (AppPlatform.isWindows) {
       final selected = await FilePicker.platform.getDirectoryPath();
       if (selected == null) return;

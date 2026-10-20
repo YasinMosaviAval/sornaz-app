@@ -26,22 +26,92 @@ class DesktopMediaChannel extends MethodChannel {
       return super.invokeMethod<T>(method, arguments);
     }
     final values = Map<String, dynamic>.from(arguments as Map? ?? {});
-    // These operations use only local files and FFmpeg; no desktop library,
-    // Android MediaStore, or Windows-only video encoder is involved.
-    final iosLocalAudio =
-        AppPlatform.isIOS &&
-        ((name == 'sornaz/audio_crop' &&
-                (method == 'commit' ||
-                    (method == 'render' && values['video'] != true))) ||
-            (name == 'sornaz/device_videos' &&
-                {'stageAudioSource', 'saveAudioExport'}.contains(method)));
-    if (kIsWeb || (!AppPlatform.isWindows && !iosLocalAudio))
-      return super.invokeMethod<T>(method, arguments);
+    if (AppPlatform.isIOS) {
+      if (!{
+        'sornaz/audio_crop',
+        'sornaz/device_videos',
+        'sornaz/story_media',
+      }.contains(name)) {
+        return super.invokeMethod<T>(method, arguments);
+      }
+      return await DesktopMedia.invokeIOS(name, method, values) as T?;
+    }
     return await DesktopMedia.invoke(name, method, values) as T?;
   }
 }
 
 class DesktopMedia {
+  static const _ios = MethodChannel('sornaz/ios_media');
+  static List<String> get videoEncoder => AppPlatform.isIOS
+      ? ['-c:v', 'h264_videotoolbox', '-allow_sw', '1']
+      : ['-c:v', 'h264_mf', '-hw_encoding', '0'];
+
+  static Future<String> iosMaterialize(String uri) async =>
+      await _ios.invokeMethod<String>('materialize', {'uri': uri}) ??
+      (throw StateError('Selected iOS media is unavailable'));
+
+  static Future<dynamic> invokeIOS(
+    String channel,
+    String method,
+    Map<String, dynamic> a,
+  ) async {
+    if (channel == 'sornaz/device_videos') {
+      if (method == 'sdk') return 0;
+      if (method == 'list') return _ios.invokeMethod('videos');
+      if (method == 'stageAudioSource') return iosMaterialize('${a['uri']}');
+      if (method == 'delete' || method == 'rename')
+        return _ios.invokeMethod(method, a);
+      if (method == 'share') {
+        final paths = <String>[];
+        try {
+          for (final uri in a['uris'] as List? ?? []) {
+            paths.add(await iosMaterialize('$uri'));
+          }
+          return await _ios.invokeMethod('share', {'paths': paths});
+        } finally {
+          for (final path in paths) {
+            final file = await privateFile(path);
+            if (await file.exists()) await file.delete();
+          }
+        }
+      }
+      if (method == 'saveCrop') {
+        final file = await privateFile('${a['staged']}');
+        return _ios.invokeMethod('save', {'path': file.path, 'video': true});
+      }
+    }
+    if (channel == 'sornaz/story_media') {
+      if (method == 'permission' || method == 'gallery')
+        return _ios.invokeMethod(method, a);
+      if (method == 'camera') {
+        final path = await _ios.invokeMethod<String>('camera');
+        return path == null ? null : info(File(path), false);
+      }
+      if (method == 'select') {
+        final path = await iosMaterialize('${a['uri']}');
+        return info(File(path), a['video'] == true);
+      }
+      if (method == 'save') {
+        final file = await privateFile('${a['path']}');
+        return _ios.invokeMethod('save', {
+          'path': file.path,
+          'video': a['video'] == true,
+        });
+      }
+      if (method == 'thumbnail' && '${a['uri']}'.startsWith('ph://')) {
+        if (((a['timeMs'] as num?) ?? 0) == 0)
+          return _ios.invokeMethod(method, a);
+        final path = await iosMaterialize('${a['uri']}');
+        try {
+          return await invoke(channel, method, {...a, 'uri': path});
+        } finally {
+          await File(path).delete();
+        }
+      }
+    }
+    return invoke(channel, method, a);
+  }
+
   static String path(String value) =>
       value.startsWith('file:') ? Uri.parse(value).toFilePath() : value;
   static Future<Directory> workspace() async => Directory(
@@ -325,10 +395,7 @@ class DesktopMedia {
           '-t',
           '${end - start}',
           if (video) ...[
-            '-c:v',
-            'h264_mf',
-            '-hw_encoding',
-            '0',
+            ...videoEncoder,
             '-pix_fmt',
             'yuv420p',
             '-movflags',
@@ -495,10 +562,7 @@ class DesktopMedia {
             '[0:v]scale=1080:1920:force_original_aspect_ratio=${a['cover'] == true ? 'increase' : 'decrease'},'
                 '${a['cover'] == true ? 'crop=1080:1920' : 'pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=black'}[base];'
                 '[1:v]scale=1080:1920[overlay];[base][overlay]overlay=0:0:format=auto',
-            '-c:v',
-            'h264_mf',
-            '-hw_encoding',
-            '0',
+            ...videoEncoder,
             '-pix_fmt',
             'yuv420p',
             '-movflags',
