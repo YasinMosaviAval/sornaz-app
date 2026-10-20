@@ -357,6 +357,7 @@ Future<void> runDesktopSmoke(String reportPath) async {
         }
       });
       await check('ios_photos_round_trip', () async {
+        stdout.writeln('iOS Photos: list videos');
         final before =
             (await DesktopMedia.invokeIOS('sornaz/device_videos', 'list', {})
                     as List)
@@ -366,10 +367,12 @@ Future<void> runDesktopSmoke(String reportPath) async {
         String? selected;
         try {
           await video.copy(staged.path);
+          stdout.writeln('iOS Photos: save synthetic video');
           await DesktopMedia.invokeIOS('sornaz/story_media', 'save', {
             'path': staged.path,
             'video': true,
           });
+          stdout.writeln('iOS Photos: locate saved video');
           final after =
               await DesktopMedia.invokeIOS('sornaz/device_videos', 'list', {})
                   as List;
@@ -379,6 +382,7 @@ Future<void> runDesktopSmoke(String reportPath) async {
               .toList();
           require(created.length == 1, 'Synthetic Photos asset was not listed');
           final uri = created.single['uri'] as String;
+          stdout.writeln('iOS Photos: video thumbnail');
           final thumbnail = await DesktopMedia.invokeIOS(
             'sornaz/story_media',
             'thumbnail',
@@ -388,11 +392,59 @@ Future<void> runDesktopSmoke(String reportPath) async {
             (thumbnail as List).isNotEmpty,
             'Photos thumbnail is missing',
           );
+          stdout.writeln('iOS Photos: materialize video');
           selected = await DesktopMedia.iosMaterialize(uri);
           require(
             await DesktopMedia.duration(selected) > 800,
             'Photos video was not materialized',
           );
+          stdout.writeln('iOS Photos: image round trip');
+          final imageBefore =
+              (await DesktopMedia.invokeIOS('sornaz/story_media', 'gallery', {})
+                      as List)
+                  .cast<Map>()
+                  .map((row) => row['uri'])
+                  .toSet();
+          final picture = await DesktopMedia.draft('png');
+          String? normalized;
+          try {
+            await picture.writeAsBytes(
+              image.encodePng(image.Image(width: 64, height: 64)),
+            );
+            await DesktopMedia.invokeIOS('sornaz/story_media', 'save', {
+              'path': picture.path,
+              'video': false,
+            });
+            final gallery =
+                await DesktopMedia.invokeIOS(
+                      'sornaz/story_media',
+                      'gallery',
+                      {},
+                    )
+                    as List;
+            final pictures = gallery
+                .cast<Map>()
+                .where((row) => !imageBefore.contains(row['uri']))
+                .toList();
+            require(
+              pictures.length == 1,
+              'Synthetic Photos image was not listed',
+            );
+            normalized = await DesktopMedia.iosMaterialize(
+              pictures.single['uri'] as String,
+            );
+            final decoded = image.decodeImage(
+              await File(normalized).readAsBytes(),
+            );
+            require(
+              decoded?.width == 64 && decoded?.height == 64,
+              'Photos image normalization changed dimensions',
+            );
+          } finally {
+            if (normalized != null && await File(normalized).exists())
+              await File(normalized).delete();
+            if (await picture.exists()) await picture.delete();
+          }
         } finally {
           if (selected != null && await File(selected).exists())
             await File(selected).delete();

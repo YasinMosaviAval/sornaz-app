@@ -21,7 +21,8 @@ import UIKit
       } else { result(FlutterMethodNotImplemented) }
     }
     analysisAudio = AnalysisAudio(messenger: registrar(forPlugin: "AnalysisAudio")!.messenger())
-    notationStorage = NotationStorage(messenger: registrar(forPlugin: "NotationStorage")!.messenger())
+    let notationRegistrar = registrar(forPlugin: "NotationStorage")!
+    notationStorage = NotationStorage(messenger: notationRegistrar.messenger(), assetKey: { notationRegistrar.lookupKey(forAsset: $0) })
     mediaServices = MediaServices(messenger: registrar(forPlugin: "MediaServices")!.messenger())
     let metronomeRegistrar = registrar(forPlugin: "IOSMetronome")!
     iosMetronome = IOSMetronome(messenger: metronomeRegistrar.messenger(), assetKey: { metronomeRegistrar.lookupKey(forAsset: $0) })

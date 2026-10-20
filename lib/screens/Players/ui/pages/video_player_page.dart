@@ -1251,7 +1251,7 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
     try {
       await SystemSound.play(SystemSoundType.click);
       final bytes = await media.invokeMethod<Uint8List>('thumbnail', {
-        'uri': widget.videos[index].uri,
+        'uri': _iosPlaybackSource ?? widget.videos[index].uri,
         'video': true,
         'size': 1440,
         'timeMs': player!.value.position.inMilliseconds,

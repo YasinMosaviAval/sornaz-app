@@ -43,7 +43,7 @@ class DesktopMediaChannel extends MethodChannel {
 class DesktopMedia {
   static const _ios = MethodChannel('sornaz/ios_media');
   static List<String> get videoEncoder => AppPlatform.isIOS
-      ? ['-c:v', 'h264_videotoolbox', '-allow_sw', '1']
+      ? ['-c:v', 'h264_videotoolbox']
       : ['-c:v', 'h264_mf', '-hw_encoding', '0'];
 
   static Future<String> iosMaterialize(String uri) async =>

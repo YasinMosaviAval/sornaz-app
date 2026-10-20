@@ -17,6 +17,7 @@ final class IOSMetronome: NSObject, FlutterStreamHandler {
   private var targetBars = 0, targetSeconds = 0
   private var completedBars = 0, lastTick: Int64 = -1
   private var startedAt: TimeInterval = 0
+  private var generation = 0
   private var interruption: NSObjectProtocol?
 
   init(messenger: FlutterBinaryMessenger, assetKey: @escaping (String) -> String) {
@@ -33,7 +34,7 @@ final class IOSMetronome: NSObject, FlutterStreamHandler {
         switch call.method {
         case "start":
           self.stop()
-          self.startedAt = ProcessInfo.processInfo.systemUptime
+          self.startedAt = 0
           try self.configure(call.arguments as? [String: Any] ?? [:])
         case "configure":
           if self.engine.isRunning { try self.configure(call.arguments as? [String: Any] ?? [:]) }
@@ -79,6 +80,8 @@ final class IOSMetronome: NSObject, FlutterStreamHandler {
     return max(0, player.sampleTime)
   }
   private func configure(_ args: [String: Any]) throws {
+    generation += 1
+    let request = generation
     if engine.isRunning {
       completedBars += Int(framePosition()) / max(1, framesPerSubdivision * subdivisions * beats)
     }
@@ -89,7 +92,7 @@ final class IOSMetronome: NSObject, FlutterStreamHandler {
     beats = min(32, max(1, args["beats"] as? Int ?? 4))
     subdivisions = min(4, max(1, args["subdivisions"] as? Int ?? 1))
     framesPerSubdivision = max(1, Int((44100 * 60 / Double(bpm * subdivisions)).rounded()))
-    targetBars = max(0, args["bars"] as? Int ?? 0)
+    targetBars = min(10000, max(0, args["bars"] as? Int ?? 0))
     targetSeconds = max(0, args["seconds"] as? Int ?? 0)
     let volumes = ["accent", "tick", "sub"].map { min(1, max(0, args[$0] as? Double ?? 1)) }
     let frames = framesPerSubdivision * beats * subdivisions
@@ -109,7 +112,41 @@ final class IOSMetronome: NSObject, FlutterStreamHandler {
     try session.setActive(true)
     if !engine.isRunning { try engine.start() }
     lastTick = -1
-    node.scheduleBuffer(buffer, at: nil, options: .loops, completionHandler: nil)
+    if startedAt == 0 { startedAt = ProcessInfo.processInfo.systemUptime }
+    let remainingSeconds = max(0, Double(targetSeconds) - (ProcessInfo.processInfo.systemUptime - startedAt))
+    let limit = targetSeconds > 0 ? Int(remainingSeconds * 44100)
+      : targetBars > 0 ? max(0, targetBars - completedBars) * frames : 0
+    if targetBars == 0 && targetSeconds == 0 {
+      node.scheduleBuffer(buffer, at: nil, options: .loops, completionHandler: nil)
+    } else if limit == 0 {
+      stop(finished: true); return
+    } else {
+      // Queue references to the same bar buffer, with a bounded final partial
+      // bar. Finite practice must not play an extra click while a UI timer
+      // notices that the last bar has already ended.
+      let count = (limit + frames - 1) / frames
+      for index in 0..<count {
+        let length = min(frames, limit - index * frames)
+        var piece = buffer
+        if length < frames {
+          guard let tail = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(length)),
+                let data = tail.floatChannelData?[0] else { throw NSError(domain: "SornazMetronome", code: 5) }
+          tail.frameLength = AVAudioFrameCount(length)
+          data.update(from: output, count: length)
+          piece = tail
+        }
+        if index == count - 1 {
+          node.scheduleBuffer(piece, at: nil, options: [], completionCallbackType: .dataPlayedBack) { [weak self] _ in
+            DispatchQueue.main.async {
+              guard let self = self, self.generation == request, self.engine.isRunning else { return }
+              self.stop(finished: true)
+            }
+          }
+        } else {
+          node.scheduleBuffer(piece, at: nil, options: [], completionHandler: nil)
+        }
+      }
+    }
     node.play()
     timer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { [weak self] _ in self?.update() }
     update()
@@ -128,6 +165,7 @@ final class IOSMetronome: NSObject, FlutterStreamHandler {
            "accent": Int(tick) % (beats * subdivisions) == 0, "finished": false])
   }
   private func stop(finished: Bool = false) {
+    generation += 1
     timer?.invalidate(); timer = nil
     node.stop(); engine.stop()
     completedBars = 0; lastTick = -1

@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 /// Native counterpart of Android's sornaz/notation_storage channel.
 final class NotationStorage: NSObject, UIDocumentPickerDelegate {
   private let channel: FlutterMethodChannel
+  private let assetKey: (String) -> String
   private var pending: FlutterResult?
   private var temporaryFile: URL?
   private var choosingFolder = false
@@ -15,7 +16,8 @@ final class NotationStorage: NSObject, UIDocumentPickerDelegate {
     return try? URL(resolvingBookmarkData: data, options: [], relativeTo: nil, bookmarkDataIsStale: &stale)
   }
 
-  init(messenger: FlutterBinaryMessenger) {
+  init(messenger: FlutterBinaryMessenger, assetKey: @escaping (String) -> String) {
+    self.assetKey = assetKey
     channel = FlutterMethodChannel(name: "sornaz/notation_storage", binaryMessenger: messenger)
     super.init()
     channel.setMethodCallHandler { [weak self] call, result in
@@ -71,7 +73,15 @@ final class NotationStorage: NSObject, UIDocumentPickerDelegate {
       info.outputType = .general
       info.jobName = arguments["name"] as? String ?? "Sornaz notation"
       printController.printInfo = info
-      printController.printFormatter = UIMarkupTextPrintFormatter(markupText: content)
+      // A standalone print formatter has no Flutter asset base URL. Embed the
+      // same bundled font referenced by the score's print stylesheet.
+      var printable = content
+      let key = assetKey("assets/fonts/iran_sansx_fa/regular.ttf")
+      if let path = Bundle.main.path(forResource: key, ofType: nil),
+         let font = try? Data(contentsOf: URL(fileURLWithPath: path)) {
+        printable = content.replacingOccurrences(of: "../fonts/iran_sansx_fa/regular.ttf", with: "data:font/ttf;base64," + font.base64EncodedString())
+      }
+      printController.printFormatter = UIMarkupTextPrintFormatter(markupText: printable)
       let shown: Bool
       if UIDevice.current.userInterfaceIdiom == .pad {
         shown = printController.present(from: CGRect(x: controller.view.bounds.midX,

@@ -6,7 +6,8 @@ SDK قفل‌شدهٔ ساخت Flutter 3.47.2 و حداقل نسخهٔ iOS پر�
 ## ساخت و دریافت
 
 Workflow با نام `iOS unsigned build` روی مک استاندارد GitHub Actions اجرا می‌شود.
-اجرای دستی از تب Actions ممکن است؛ تغییر فایل‌های iOS نیز آن را اجرا می‌کند.
+اجرای دستی از تب Actions ممکن است. برای ساخت هنگام پوش، عبارت `[build-ios]`
+باید در پیام کامیتِ شامل تغییر iOS باشد؛ پوش عادی خروجی برنامه تولید نمی‌کند.
 نسخهٔ Release دستگاه جدا از نسخهٔ Debug تشخیصی شبیه‌ساز ساخته می‌شود.
 Artifact شامل IPA بدون امضا، SHA-256، نتیجهٔ بررسی بومی و راهنمای کوتاه است.
 نگهداری artifact یک روز است؛ آن را پس از ساخت دانلود و نگهداری کنید.
@@ -69,3 +70,16 @@ iOS اجازهٔ اسکن کل حافظهٔ مشترک اندروید یا تن�
 کنترلرهای پخش/ضبط/تیونر/مترونوم و آزمون‌های مرتبط باید هماهنگ منتقل شوند.
 بخش‌های OMR و تحلیل به قابلیت‌های آزمایشی محیط توسعه وابسته‌اند؛ انتقال آن‌ها
 به release باید جداگانه بررسی شود. فایل `AGENTS.md` انتشار نباید جایگزین شود.
+
+فایل‌های اصلی تغییرات: `ios/Podfile`، `ios/Flutter/*.xcconfig`،
+`ios/Flutter/AppFrameworkInfo.plist`، `ios/Runner/Info.plist`،
+`ios/Runner/AppDelegate.swift`، `ios/Runner/AnalysisAudio.swift`،
+`ios/Runner/MediaServices.swift`، `ios/Runner/IOSMetronome.swift`،
+`ios/Runner/NotationStorage.swift`، `ios/Runner/PrivacyInfo.xcprivacy`،
+`ios/Runner.xcodeproj/project.pbxproj`، `lib/main.dart`،
+`lib/helpers/desktop_media_channel.dart`، `lib/helpers/ios_audio_import.dart`،
+کنترلرهای Players/Voice Recorder/Tuner/Metronome، صفحات پخش و تنظیمات رسانه،
+`lib/screens/Social/story_composer.dart`، `lib/screens/Notation/music_sheets_page.dart`،
+`lib/desktop_smoke.dart`، `test/ios_platform_audio_test.dart`،
+`test/ios_metronome_test.dart`، `tool/prepare_ios.dart` و
+`.github/workflows/ios-build.yml`.

@@ -65,6 +65,9 @@ final class MediaServices: NSObject, UIImagePickerControllerDelegate, UINavigati
     }.jpegData(compressionQuality: 0.95)
   }
   private func authorized(_ result: @escaping FlutterResult, action: @escaping () -> Void) {
+    let current = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+    if current == .authorized || current == .limited { action(); return }
+    if current != .notDetermined { failure(result, "Photo library permission was not granted."); return }
     PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
       if status == .authorized || status == .limited { action() }
       else { self.failure(result, "Photo library permission was not granted.") }
@@ -168,7 +171,7 @@ final class MediaServices: NSObject, UIImagePickerControllerDelegate, UINavigati
     case "save":
       guard let path = args["path"] as? String else { failure(result, "Missing output file."); return }
       let url = localURL(path)
-      PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
+      let save: (PHAuthorizationStatus) -> Void = { status in
         guard status == .authorized || status == .limited else { self.failure(result, "Photo saving permission was not granted."); return }
         PHPhotoLibrary.shared().performChanges({
           if args["video"] as? Bool == true { PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: url) }
@@ -178,6 +181,9 @@ final class MediaServices: NSObject, UIImagePickerControllerDelegate, UINavigati
           else { self.failure(result, error?.localizedDescription ?? "Could not save photo asset.") }
         }
       }
+      let current = PHPhotoLibrary.authorizationStatus(for: .addOnly)
+      if current == .notDetermined { PHPhotoLibrary.requestAuthorization(for: .addOnly, handler: save) }
+      else { save(current) }
     case "delete":
       let uris = args["uris"] as? [String] ?? []
       authorized(result) {
