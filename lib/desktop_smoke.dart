@@ -324,6 +324,84 @@ Future<void> runDesktopSmoke(String reportPath) async {
         await pcm.dispose();
       }
     });
+    if (Platform.isIOS) {
+      await check('ios_native_metronome', () async {
+        const channel = MethodChannel('sornaz/metronome');
+        final ticks = <dynamic>[];
+        final subscription = const EventChannel(
+          'sornaz/metronome/events',
+        ).receiveBroadcastStream().listen(ticks.add);
+        try {
+          await channel.invokeMethod<void>('start', {
+            'bpm': 300,
+            'beats': 1,
+            'subdivisions': 2,
+            'accent': 0.0,
+            'tick': 0.0,
+            'sub': 0.0,
+            'bars': 1,
+            'seconds': 0,
+          });
+          await Future<void>.delayed(const Duration(milliseconds: 600));
+          require(
+            ticks.any((event) => (event as Map)['beat'] == 1),
+            'Native audio-clock tick missing',
+          );
+          require(
+            ticks.any((event) => (event as Map)['finished'] == true),
+            'Native bar stop missing',
+          );
+        } finally {
+          await channel.invokeMethod<void>('stop');
+          await subscription.cancel();
+        }
+      });
+      await check('ios_photos_round_trip', () async {
+        final before =
+            (await DesktopMedia.invokeIOS('sornaz/device_videos', 'list', {})
+                    as List)
+                .map((row) => (row as Map)['uri'])
+                .toSet();
+        final staged = await DesktopMedia.draft('mp4');
+        String? selected;
+        try {
+          await video.copy(staged.path);
+          await DesktopMedia.invokeIOS('sornaz/story_media', 'save', {
+            'path': staged.path,
+            'video': true,
+          });
+          final after =
+              await DesktopMedia.invokeIOS('sornaz/device_videos', 'list', {})
+                  as List;
+          final created = after
+              .cast<Map>()
+              .where((row) => !before.contains(row['uri']))
+              .toList();
+          require(created.length == 1, 'Synthetic Photos asset was not listed');
+          final uri = created.single['uri'] as String;
+          final thumbnail = await DesktopMedia.invokeIOS(
+            'sornaz/story_media',
+            'thumbnail',
+            {'uri': uri, 'video': true, 'size': 240},
+          );
+          require(
+            (thumbnail as List).isNotEmpty,
+            'Photos thumbnail is missing',
+          );
+          selected = await DesktopMedia.iosMaterialize(uri);
+          require(
+            await DesktopMedia.duration(selected) > 800,
+            'Photos video was not materialized',
+          );
+        } finally {
+          if (selected != null && await File(selected).exists())
+            await File(selected).delete();
+          if (await staged.exists()) await staged.delete();
+        }
+        // The synthetic asset stays in this disposable CI simulator; never
+        // request deletion of arbitrary assets or interact with real accounts.
+      });
+    }
   } finally {
     await directory.delete(recursive: true);
     await File(

@@ -291,7 +291,7 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
         ),
       ),
     );
-    if (AppPlatform.isWindows && mounted) await load();
+    if ((AppPlatform.isWindows || AppPlatform.isIOS) && mounted) await load();
   }
 
   String _videoDuration(Duration duration) {

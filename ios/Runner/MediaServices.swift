@@ -4,6 +4,7 @@ import PDFKit
 import Photos
 import UIKit
 import UniformTypeIdentifiers
+import ImageIO
 
 /// iOS counterparts of the Android photo-library and private-document contracts.
 /// Originals stay in Photos; only explicitly selected media is materialized.
@@ -52,6 +53,16 @@ final class MediaServices: NSObject, UIImagePickerControllerDelegate, UINavigati
       .appendingPathComponent("sornaz-media", isDirectory: true)
     try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
     return folder.appendingPathComponent(UUID().uuidString).appendingPathExtension(ext)
+  }
+  private func cameraJPEG(_ image: UIImage) -> Data? {
+    let scale = min(1, 4096 / max(image.size.width, image.size.height))
+    let size = CGSize(width: max(1, image.size.width * scale), height: max(1, image.size.height * scale))
+    let format = UIGraphicsImageRendererFormat()
+    format.scale = 1
+    format.opaque = true
+    return UIGraphicsImageRenderer(size: size, format: format).image { _ in
+      image.draw(in: CGRect(origin: .zero, size: size))
+    }.jpegData(compressionQuality: 0.95)
   }
   private func authorized(_ result: @escaping FlutterResult, action: @escaping () -> Void) {
     PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
@@ -265,9 +276,15 @@ final class MediaServices: NSObject, UIImagePickerControllerDelegate, UINavigati
         guard let data = data else { self.failure(result, "Image is unavailable."); return }
         do {
           let output = try self.draft("jpg")
-          guard let image = UIImage(data: data) else { self.failure(result, "Invalid image."); return }
-          let normalized = UIGraphicsImageRenderer(size: image.size).image { _ in image.draw(at: .zero) }
-          guard let encoded = normalized.jpegData(compressionQuality: 0.95) else { self.failure(result, "Image export failed."); return }
+          guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+                let image = CGImageSourceCreateThumbnailAtIndex(source, 0, [
+                  kCGImageSourceCreateThumbnailFromImageAlways: true,
+                  kCGImageSourceCreateThumbnailWithTransform: true,
+                  kCGImageSourceThumbnailMaxPixelSize: 4096,
+                ] as CFDictionary),
+                let encoded = UIImage(cgImage: image).jpegData(compressionQuality: 0.95) else {
+            self.failure(result, "Image export failed."); return
+          }
           try encoded.write(to: output, options: .atomic)
           self.reply(result, output.path)
         } catch { self.failure(result, error.localizedDescription) }
@@ -305,8 +322,7 @@ final class MediaServices: NSObject, UIImagePickerControllerDelegate, UINavigati
       guard let image = info[.originalImage] as? UIImage else { self.failure(result, "Camera returned no image."); return }
       do {
         let file = try self.draft("jpg")
-        let normalized = UIGraphicsImageRenderer(size: image.size).image { _ in image.draw(at: .zero) }
-        guard let data = normalized.jpegData(compressionQuality: 0.95) else { self.failure(result, "Camera image export failed."); return }
+        guard let data = self.cameraJPEG(image) else { self.failure(result, "Camera image export failed."); return }
         try data.write(to: file, options: .atomic)
         self.reply(result, file.path)
       } catch { self.failure(result, error.localizedDescription) }

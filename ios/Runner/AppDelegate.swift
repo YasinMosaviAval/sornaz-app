@@ -6,6 +6,7 @@ import UIKit
   private var analysisAudio: AnalysisAudio?
   private var notationStorage: NotationStorage?
   private var mediaServices: MediaServices?
+  private var iosMetronome: IOSMetronome?
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -22,6 +23,8 @@ import UIKit
     analysisAudio = AnalysisAudio(messenger: registrar(forPlugin: "AnalysisAudio")!.messenger())
     notationStorage = NotationStorage(messenger: registrar(forPlugin: "NotationStorage")!.messenger())
     mediaServices = MediaServices(messenger: registrar(forPlugin: "MediaServices")!.messenger())
+    let metronomeRegistrar = registrar(forPlugin: "IOSMetronome")!
+    iosMetronome = IOSMetronome(messenger: metronomeRegistrar.messenger(), assetKey: { metronomeRegistrar.lookupKey(forAsset: $0) })
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }

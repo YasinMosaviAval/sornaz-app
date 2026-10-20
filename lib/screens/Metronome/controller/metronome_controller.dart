@@ -43,7 +43,7 @@ class MetronomeController extends ChangeNotifier {
     'bars': stopMode == StopMode.bars ? targetBars : 0,
   };
   void _configureNative() {
-    if (AppPlatform.isAndroid && isPlaying)
+    if ((AppPlatform.isAndroid || AppPlatform.isIOS) && isPlaying)
       _native.invokeMethod<void>('configure', _configuration);
   }
 
@@ -114,7 +114,7 @@ class MetronomeController extends ChangeNotifier {
   int currentBar = 0;
 
   Future<void> init() async {
-    if (AppPlatform.isAndroid) {
+    if ((AppPlatform.isAndroid || AppPlatform.isIOS)) {
       _nativeTicks ??= const EventChannel('sornaz/metronome/events')
           .receiveBroadcastStream()
           .listen(
@@ -156,17 +156,17 @@ class MetronomeController extends ChangeNotifier {
       await _subTickPlayer.setAsset(AppConstants.SUB_TICK_WAV),
     );
 
-    if (AppPlatform.isAndroid) {
+    if ((AppPlatform.isAndroid || AppPlatform.isIOS)) {
       _configureNative();
     } else {
       _subTickPlayer.setVolume(subTickVolume);
     }
-    if (AppPlatform.isAndroid) {
+    if ((AppPlatform.isAndroid || AppPlatform.isIOS)) {
       _configureNative();
     } else {
       _tickPlayer.setVolume(tickVolume);
     }
-    if (AppPlatform.isAndroid) {
+    if ((AppPlatform.isAndroid || AppPlatform.isIOS)) {
       _configureNative();
     } else {
       _accentPlayer.setVolume(accentVolume);
@@ -174,7 +174,7 @@ class MetronomeController extends ChangeNotifier {
   }
 
   void start() {
-    if (AppPlatform.isAndroid) {
+    if ((AppPlatform.isAndroid || AppPlatform.isIOS)) {
       _startNative();
       return;
     }
@@ -204,7 +204,8 @@ class MetronomeController extends ChangeNotifier {
 
   void stop() {
     _generation++;
-    if (AppPlatform.isAndroid) _native.invokeMethod<void>('stop');
+    if ((AppPlatform.isAndroid || AppPlatform.isIOS))
+      _native.invokeMethod<void>('stop');
     _timer?.cancel();
     _practiceTimer?.cancel();
     _timer = null;
@@ -279,7 +280,7 @@ class MetronomeController extends ChangeNotifier {
 
   void setNoteLength(NoteLength note) {
     selectedNote = note;
-    if (AppPlatform.isAndroid) {
+    if ((AppPlatform.isAndroid || AppPlatform.isIOS)) {
       _configureNative();
     } else if (isPlaying) {
       start();
@@ -287,7 +288,7 @@ class MetronomeController extends ChangeNotifier {
   }
 
   void pause() {
-    if (AppPlatform.isAndroid) {
+    if ((AppPlatform.isAndroid || AppPlatform.isIOS)) {
       stop();
       return;
     }
@@ -298,7 +299,7 @@ class MetronomeController extends ChangeNotifier {
 
   void setBpm(int value) {
     bpm = value.clamp(30, 300);
-    if (AppPlatform.isAndroid) {
+    if ((AppPlatform.isAndroid || AppPlatform.isIOS)) {
       _configureNative();
     } else if (isPlaying) {
       start();
@@ -313,17 +314,29 @@ class MetronomeController extends ChangeNotifier {
 
   void setTickVolume(double value) {
     tickVolume = value.clamp(0.0, 1.0);
-    _tickPlayer.setVolume(tickVolume);
+    if (AppPlatform.isAndroid || AppPlatform.isIOS) {
+      _configureNative();
+    } else {
+      _tickPlayer.setVolume(tickVolume);
+    }
   }
 
   void setAccentVolume(double value) {
     accentVolume = value.clamp(0.0, 1.0);
-    _accentPlayer.setVolume(accentVolume);
+    if (AppPlatform.isAndroid || AppPlatform.isIOS) {
+      _configureNative();
+    } else {
+      _accentPlayer.setVolume(accentVolume);
+    }
   }
 
   void setSubTickVolume(double value) {
     subTickVolume = value.clamp(0.0, 1.0);
-    _subTickPlayer.setVolume(subTickVolume);
+    if (AppPlatform.isAndroid || AppPlatform.isIOS) {
+      _configureNative();
+    } else {
+      _subTickPlayer.setVolume(subTickVolume);
+    }
   }
 
   void setShowTapTempo(bool value) {
@@ -372,7 +385,7 @@ class MetronomeController extends ChangeNotifier {
     _timer?.cancel();
     _practiceTimer?.cancel();
     _nativeTicks?.cancel();
-    if (AppPlatform.isAndroid) {
+    if ((AppPlatform.isAndroid || AppPlatform.isIOS)) {
       _native.invokeMethod<void>('stop');
     } else {
       _tickPlayer.dispose();

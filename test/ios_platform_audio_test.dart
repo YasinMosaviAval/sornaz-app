@@ -7,6 +7,7 @@ import 'package:sornaz/screens/Tuner/audio/desktop_pitch_input.dart';
 import 'package:sornaz/screens/Tuner/audio/pitch_input_native.dart';
 import 'package:sornaz/screens/Players/library/device_audio_scan.dart';
 import 'package:sornaz/helpers/desktop_media_channel.dart';
+import 'package:sornaz/screens/Voice Recorder/services/file_service.dart';
 
 class _PcmInput extends DesktopPitchInput {
   int? sampleRate;
@@ -113,6 +114,38 @@ void main() {
       }
     },
   );
+  test('iOS recording folder changes preserve existing recordings', () async {
+    final root = await Directory.systemTemp.createTemp(
+      'sornaz-ios-recording-folder-',
+    );
+    final before = await Directory(p.join(root.path, 'before')).create();
+    final after = await Directory(p.join(root.path, 'after')).create();
+    final recording = await File(
+      p.join(before.path, 'keep.m4a'),
+    ).writeAsString('original');
+    const paths = MethodChannel('plugins.flutter.io/path_provider');
+    const workspace = MethodChannel('sornaz/recording_workspace');
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(paths, (call) async => root.path);
+    messenger.setMockMethodCallHandler(
+      workspace,
+      (call) async => call.method == 'location' ? before.path : after.path,
+    );
+    try {
+      final service = FileService();
+      await service.init();
+      expect(await service.location(), before.path);
+      await service.chooseLocation();
+      expect(await service.location(), after.path);
+      expect(p.dirname(service.newPath()), after.path);
+      expect(await recording.readAsString(), 'original');
+    } finally {
+      messenger.setMockMethodCallHandler(paths, null);
+      messenger.setMockMethodCallHandler(workspace, null);
+      await root.delete(recursive: true);
+    }
+  });
   test(
     'iOS video rendering selects VideoToolbox instead of Windows Media Foundation',
     () {
