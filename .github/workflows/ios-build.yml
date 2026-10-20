@@ -1,0 +1,62 @@
+name: iOS unsigned build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/ios-build.yml'
+      - 'tool/prepare_ios.dart'
+      - 'ios/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-14
+    timeout-minutes: 45
+    env:
+      CI: 'true'
+      PUB_HOSTED_URL: https://pub.flutter-io.cn
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Install pinned Flutter SDK
+        shell: bash
+        run: |
+          git clone --depth 1 --branch 3.47.2 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          test "$(git -C "$RUNNER_TEMP/flutter" rev-parse HEAD)" = d3b14c876900e553bc736ca19295fc09e3853e8e
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+      - name: Resolve locked dependencies
+        run: flutter pub get --enforce-lockfile
+      - name: Prepare iOS FFmpeg frameworks
+        run: dart run tool/prepare_ios.dart
+      - name: Prepare Rust iOS target
+        run: rustup target add aarch64-apple-ios
+      - name: Test shared audio integration
+        run: flutter test --no-pub test/ios_platform_audio_test.dart test/desktop_pitch_test.dart test/player_behavior_revision_test.dart test/recorder_player_revision_test.dart
+      - name: Build unsigned iPhone application
+        run: flutter build ios --release --no-codesign --no-pub
+      - name: Package unsigned iOS output
+        shell: bash
+        run: |
+          mkdir -p build/ios/unsigned/Payload
+          ditto build/ios/iphoneos/Runner.app build/ios/unsigned/Payload/Runner.app
+          printf '%s\n' 'Unsigned iOS application. Requires valid Apple signing and provisioning before installation.' > build/ios/unsigned/README.txt
+          cd build/ios/unsigned
+          ditto -c -k --keepParent Payload Sornaz-iOS-unsigned.ipa
+          shasum -a 256 Sornaz-iOS-unsigned.ipa > Sornaz-iOS-unsigned.ipa.sha256
+      - name: Upload unsigned iOS output
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: Sornaz-iOS-unsigned
+          path: |
+            build/ios/unsigned/Sornaz-iOS-unsigned.ipa
+            build/ios/unsigned/Sornaz-iOS-unsigned.ipa.sha256
+            build/ios/unsigned/README.txt
+          retention-days: 1
+          if-no-files-found: error
