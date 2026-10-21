@@ -2,7 +2,7 @@ import AVFoundation
 import AudioToolbox
 import Flutter
 
-/// Temporary, bounded-buffer AAC-to-s16le decoder for offline analysis.
+/// Bounded-buffer AVFoundation-to-s16le decoder for offline analysis.
 final class AnalysisAudio: NSObject {
   private let channel: FlutterMethodChannel
   private let worker = DispatchQueue(label: "sornaz.analysis.audio", qos: .utility)
@@ -67,10 +67,12 @@ final class AnalysisAudio: NSObject {
     }
     let asset = AVURLAsset(url: url)
     guard let track = asset.tracks(withMediaType: .audio).first,
-          let description = track.formatDescriptions.first as? CMAudioFormatDescription,
-          let sourceFormat = CMAudioFormatDescriptionGetStreamBasicDescription(description)?.pointee,
-          sourceFormat.mFormatID == kAudioFormatMPEG4AAC else {
-      throw AnalysisDecodeError("UNSUPPORTED_FORMAT", "Only AAC-LC recordings are supported")
+          let description = track.formatDescriptions.first else {
+      throw AnalysisDecodeError("UNSUPPORTED_FORMAT", "No readable audio track")
+    }
+    let format = description as! CMAudioFormatDescription
+    guard let sourceFormat = CMAudioFormatDescriptionGetStreamBasicDescription(format)?.pointee else {
+      throw AnalysisDecodeError("UNSUPPORTED_FORMAT", "Audio format metadata is unavailable")
     }
     let settings: [String: Any] = [
       AVFormatIDKey: kAudioFormatLinearPCM,
@@ -128,7 +130,7 @@ final class AnalysisAudio: NSObject {
         "sampleRate": Int(sourceFormat.mSampleRate),
         "channels": Int(sourceFormat.mChannelsPerFrame),
         "durationUs": duration.isFinite ? Int64(duration * 1_000_000) : 0,
-        "mime": "audio/mp4a-latm",
+        "mime": "audio/pcm",
       ]
     } catch {
       try? FileManager.default.removeItem(at: target)

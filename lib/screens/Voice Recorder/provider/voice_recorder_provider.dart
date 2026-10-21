@@ -247,7 +247,9 @@ class VoiceRecorderProvider extends ChangeNotifier {
     if (!isRecording) return;
     await _run(() async {
       _recordingClock.stop();
-      if (AppPlatform.isAndroid) {
+      if ((AppPlatform.isAndroid ||
+          AppPlatform.isIOS ||
+          AppPlatform.isWindows)) {
         await recordingService.stop();
         isRecording = false;
         isPaused = true;
@@ -267,7 +269,9 @@ class VoiceRecorderProvider extends ChangeNotifier {
       isPaused = true;
       _timer?.cancel();
       timer = recordingTime(recordingMilliseconds);
-      if (AppPlatform.isAndroid) {
+      if ((AppPlatform.isAndroid ||
+          AppPlatform.isIOS ||
+          AppPlatform.isWindows)) {
         await playbackService.stop();
         await playbackService.play(currentFilePath!, autoplay: false);
         await playbackService.seek(
@@ -283,7 +287,9 @@ class VoiceRecorderProvider extends ChangeNotifier {
       return;
     }
     await _run(() async {
-      if (AppPlatform.isAndroid) {
+      if ((AppPlatform.isAndroid ||
+          AppPlatform.isIOS ||
+          AppPlatform.isWindows)) {
         if (_segmentPath != null) {
           await fileService.spliceDraft(
             currentFilePath!,
@@ -324,7 +330,10 @@ class VoiceRecorderProvider extends ChangeNotifier {
     await _run(() async {
       final outputUri =
           _stoppedOutput ??
-          (AppPlatform.isAndroid && isPaused
+          ((AppPlatform.isAndroid ||
+                      AppPlatform.isIOS ||
+                      AppPlatform.isWindows) &&
+                  isPaused
               ? null
               : await recordingService.stop());
       _stoppedOutput = outputUri;
@@ -369,7 +378,11 @@ class VoiceRecorderProvider extends ChangeNotifier {
     if (!hasDraft) return;
     await _run(() async {
       if (isRecording ||
-          (isPaused && !AppPlatform.isAndroid && _stoppedOutput == null)) {
+          (isPaused &&
+              !(AppPlatform.isAndroid ||
+                  AppPlatform.isIOS ||
+                  AppPlatform.isWindows) &&
+              _stoppedOutput == null)) {
         _stoppedOutput = await recordingService.stop();
       }
       _recordingClock.stop();

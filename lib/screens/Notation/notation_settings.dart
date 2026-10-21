@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:sornaz/helpers/desktop_media_channel.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
@@ -11,7 +11,7 @@ class NotationSettingsPage extends StatefulWidget {
 }
 
 class _NotationSettingsPageState extends State<NotationSettingsPage> {
-  static const channel = MethodChannel('sornaz/notation_storage');
+  static const channel = DesktopMediaChannel('sornaz/notation_storage');
   String location = 'Sornaz/Music Sheets';
   bool busy = false;
   int durationMode = 1;

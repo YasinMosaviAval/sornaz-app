@@ -1,4 +1,7 @@
 import '../components/player_sort_tile.dart';
+import 'package:sornaz/helpers/app_platform.dart';
+import 'package:sornaz/helpers/desktop_library_folders.dart';
+import 'package:sornaz/helpers/ios_audio_import.dart';
 import 'package:flutter/material.dart';
 import 'package:sornaz/components/app_bar.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
@@ -26,6 +29,7 @@ class VideoSettingsPage extends StatefulWidget {
 
 class _VideoSettingsPageState extends State<VideoSettingsPage> {
   late int selectedViewMode = widget.viewMode;
+  bool importing = false;
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +76,66 @@ class _VideoSettingsPageState extends State<VideoSettingsPage> {
         body: ListView(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
           children: [
+            if (AppPlatform.isIOS)
+              ListTile(
+                title: Text(
+                  t('افزودن ویدیو از فایل‌ها', 'Import videos from Files'),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                trailing: importing
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : null,
+                onTap: importing
+                    ? null
+                    : () async {
+                        setState(() => importing = true);
+                        try {
+                          final count = await importIosVideos();
+                          if (count > 0 && context.mounted)
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  t(
+                                    '$count ویدیو به گالری اضافه شد.',
+                                    '$count videos added to Photos.',
+                                  ),
+                                ),
+                              ),
+                            );
+                        } catch (_) {
+                          if (context.mounted)
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  t(
+                                    'افزودن ویدیو ممکن نشد.',
+                                    'Could not import videos.',
+                                  ),
+                                ),
+                              ),
+                            );
+                        } finally {
+                          if (mounted) setState(() => importing = false);
+                        }
+                      },
+              ),
+            if (AppPlatform.isWindows)
+              ListTile(
+                title: Text(
+                  t('پوشه‌های کتابخانه', 'Library folders'),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const DesktopLibraryFolders(video: true),
+                  ),
+                ),
+              ),
             for (final entry in [
               ('sort', 'مرتب‌سازی تب‌ها', 'Sort Tabs'),
               ('hide', 'مخفی کردن تب‌ها', 'Hide Tabs'),

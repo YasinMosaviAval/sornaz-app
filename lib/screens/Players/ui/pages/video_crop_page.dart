@@ -1,6 +1,7 @@
+import 'package:sornaz/helpers/app_platform.dart';
 import 'dart:io';
+import 'package:sornaz/helpers/desktop_media_channel.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:sornaz/components/audio_crop_page.dart';
@@ -22,7 +23,9 @@ class VideoCropPage extends StatefulWidget {
 class _VideoCropPageState extends State<VideoCropPage> {
   late final player =
       widget.controllerFactory?.call() ??
-      VideoPlayerController.contentUri(Uri.parse(widget.uri));
+      ((AppPlatform.isWindows || AppPlatform.isIOS)
+          ? VideoPlayerController.file(File(DesktopMedia.path(widget.uri)))
+          : VideoPlayerController.contentUri(Uri.parse(widget.uri)));
   RangeValues range = const RangeValues(0, 1);
   bool ready = false, busy = false;
   String? error;
@@ -81,7 +84,7 @@ class _VideoCropPageState extends State<VideoCropPage> {
         'video': true,
       });
       if (staged == null) throw StateError('Missing output');
-      await const MethodChannel(
+      await const DesktopMediaChannel(
         'sornaz/device_videos',
       ).invokeMethod('saveCrop', {'staged': staged});
       if (mounted) Navigator.pop(context, true);

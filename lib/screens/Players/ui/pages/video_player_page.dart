@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/app_platform.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/components/page_source_info.dart';
 import '../components/music_playback_entry.dart';
@@ -15,6 +16,8 @@ import 'video_crop_page.dart';
 import 'package:sornaz/components/media_dialogs.dart';
 import 'package:sornaz/components/expanding_search_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
+import 'package:sornaz/helpers/desktop_media_channel.dart';
 import 'package:volume_controller/volume_controller.dart';
 import '../../services/player_settings.dart';
 import '../../services/last_playback_position.dart';
@@ -132,7 +135,7 @@ class _VideoThumbnailState extends State<VideoThumbnail> {
       cache.remove(cache.keys.first);
     bytes = cache.putIfAbsent(
       widget.uri,
-      () => const MethodChannel('sornaz/story_media')
+      () => const DesktopMediaChannel('sornaz/story_media')
           .invokeMethod<Uint8List>('thumbnail', {
             'uri': widget.uri,
             'video': true,
@@ -185,7 +188,7 @@ class VideoLibraryPage extends StatefulWidget {
 
 class _VideoLibraryPageState extends State<VideoLibraryPage>
     with TickerProviderStateMixin {
-  static const channel = MethodChannel('sornaz/device_videos');
+  static const channel = DesktopMediaChannel('sornaz/device_videos');
   final store = MusicPlaylists(storagePrefix: 'video');
   List<DeviceVideo> videos = [];
   final expanded = <String>{};
@@ -266,27 +269,31 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
     });
   }
 
-  Future<void> _viewSettings() => Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => VideoSettingsPage(
-        videoNames: {
-          for (final video in videos) video.uri: video.name,
-          for (final video in videos) video.folderId: video.folder,
-        },
-        viewMode: gridView ? gridColumns : 0,
-        onViewMode: (value) async {
-          setState(() {
-            gridView = value != 0;
-            if (value != 0) gridColumns = value;
-          });
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setBool('video.grid', gridView);
-          await prefs.setInt('video.grid.columns', gridColumns);
-        },
+  Future<void> _viewSettings() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => VideoSettingsPage(
+          videoNames: {
+            for (final video in videos) video.uri: video.name,
+            for (final video in videos) video.folderId: video.folder,
+          },
+          viewMode: gridView ? gridColumns : 0,
+          onViewMode: (value) async {
+            setState(() {
+              gridView = value != 0;
+              if (value != 0) gridColumns = value;
+            });
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setBool('video.grid', gridView);
+            await prefs.setInt('video.grid.columns', gridColumns);
+          },
+        ),
       ),
-    ),
-  );
+    );
+    if ((AppPlatform.isWindows || AppPlatform.isIOS) && mounted) await load();
+  }
+
   String _videoDuration(Duration duration) {
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
@@ -404,10 +411,12 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
     try {
       await store.load();
       final sdk = await channel.invokeMethod<int>('sdk') ?? 33;
-      final permission = sdk >= 33 ? Permission.videos : Permission.storage;
-      final status = await permission.request();
-      if (!status.isGranted && !status.isLimited)
-        throw StateError('permission');
+      if (AppPlatform.isAndroid) {
+        final permission = sdk >= 33 ? Permission.videos : Permission.storage;
+        final status = await permission.request();
+        if (!status.isGranted && !status.isLimited)
+          throw StateError('permission');
+      }
       final items = await channel.invokeListMethod<dynamic>('list') ?? [];
       if (mounted)
         setState(
@@ -584,13 +593,24 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
       if (action == 'crop') {
         await musicAudioHandler?.pause();
         if (!mounted) return;
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) =>
-                VideoCropPage(uri: items.single.uri, name: items.single.name),
-          ),
-        );
+        final local = AppPlatform.isIOS
+            ? await DesktopMedia.iosMaterialize(items.single.uri)
+            : null;
+        try {
+          if (!mounted) return;
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => VideoCropPage(
+                uri: local ?? items.single.uri,
+                name: items.single.name,
+              ),
+            ),
+          );
+        } finally {
+          if (local != null && await File(local).exists())
+            await File(local).delete();
+        }
         await load();
         return;
       }
@@ -630,10 +650,23 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
         );
         if (yes != true) return;
       }
-      await channel.invokeMethod(action, {
+      final renamed = await channel.invokeMethod<dynamic>(action, {
         'uris': items.map((v) => v.uri).toList(),
         if (name != null) 'name': name,
       });
+      if (AppPlatform.isWindows &&
+          action == 'rename' &&
+          renamed is String &&
+          items.length == 1) {
+        await store.replacePath(items.single.uri, renamed);
+        final position = await LastPlaybackPositionStore.readVideo();
+        if (position?.id == items.single.uri) {
+          await LastPlaybackPositionStore.saveVideo(
+            renamed,
+            position!.milliseconds,
+          );
+        }
+      }
       if (action == 'delete')
         for (final item in items) {
           await store.replacePath(item.uri, null);
@@ -661,7 +694,9 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
         groups.putIfAbsent(video.folderId, () => []).add(video);
       }
     }
-    final orderedGroups = groups.entries.toList();
+    final orderedGroups = groups.entries
+        .where((entry) => entry.value.isNotEmpty)
+        .toList();
     if (settings.videoSort == 'count')
       orderedGroups.sort((a, b) => a.value.length.compareTo(b.value.length));
     else if (settings.videoSort == 'duration')
@@ -969,9 +1004,10 @@ class DeviceVideoPlayback extends StatefulWidget {
 
 class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
     with WidgetsBindingObserver {
-  static const media = MethodChannel('sornaz/story_media');
+  static const media = DesktopMediaChannel('sornaz/story_media');
   static const controls = MethodChannel('sornaz/video_controls');
   VideoPlayerController? player;
+  String? _iosPlaybackSource;
   late int index;
   int generation = 0;
   int lastSavedSecond = -1;
@@ -992,7 +1028,7 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
   bool adjustingBrightness = false, adjustingVolume = false, landscape = false;
   bool pausedByHold = false;
   VideoRepeatMode repeatMode = VideoRepeatMode.off;
-  double volume = .5, brightness = .5, speed = 1;
+  double volume = .5, brightness = AppPlatform.isWindows ? 1 : .5, speed = 1;
   final abRepeat = AbRepeat();
   Timer? sleepTimer, chromeTimer, countdownTimer;
   DateTime? sleepDeadline;
@@ -1015,13 +1051,15 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     index = widget.initialIndex;
-    VolumeController().showSystemUI = false;
-    VolumeController().getVolume().then((v) {
-      if (mounted) setState(() => volume = v);
-    });
-    controls.invokeMethod<double>('getBrightness').then((v) {
-      if (mounted && v != null) setState(() => brightness = v);
-    });
+    if (!AppPlatform.isWindows) {
+      VolumeController().showSystemUI = false;
+      VolumeController().getVolume().then((v) {
+        if (mounted) setState(() => volume = v);
+      });
+      controls.invokeMethod<double>('getBrightness').then((v) {
+        if (mounted && v != null) setState(() => brightness = v);
+      });
+    }
     load(index);
   }
 
@@ -1050,15 +1088,37 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
     });
     old?.removeListener(update);
     await old?.dispose();
-    final next = VideoPlayerController.contentUri(
-      Uri.parse(widget.videos[at].uri),
-    );
+    if (!mounted || request != generation) return;
+    final previousSource = _iosPlaybackSource;
+    _iosPlaybackSource = null;
+    if (previousSource != null && await File(previousSource).exists()) {
+      await File(previousSource).delete();
+    }
+    String? iosSource;
+    VideoPlayerController? pending;
     try {
-      await next.initialize();
+      if (AppPlatform.isIOS)
+        iosSource = await DesktopMedia.iosMaterialize(widget.videos[at].uri);
       if (!mounted || request != generation) {
-        await next.dispose();
+        if (iosSource != null && await File(iosSource).exists())
+          await File(iosSource).delete();
         return;
       }
+      final next = (AppPlatform.isWindows || AppPlatform.isIOS)
+          ? VideoPlayerController.file(
+              File(iosSource ?? DesktopMedia.path(widget.videos[at].uri)),
+            )
+          : VideoPlayerController.contentUri(Uri.parse(widget.videos[at].uri));
+      pending = next;
+      await next.initialize();
+      if (AppPlatform.isWindows) await next.setVolume(volume);
+      if (!mounted || request != generation) {
+        await next.dispose();
+        if (iosSource != null && await File(iosSource).exists())
+          await File(iosSource).delete();
+        return;
+      }
+      _iosPlaybackSource = iosSource;
       setState(() {
         player = next;
         changing = false;
@@ -1078,7 +1138,10 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
       await next.setPlaybackSpeed(speed);
       _hideChromeLater();
     } catch (_) {
-      await next.dispose();
+      await pending?.dispose();
+      if (iosSource != null && await File(iosSource).exists())
+        await File(iosSource).delete();
+      if (_iosPlaybackSource == iosSource) _iosPlaybackSource = null;
       if (mounted && request == generation)
         setState(() {
           changing = false;
@@ -1170,20 +1233,25 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
       volume = value;
       muted = value == 0;
     });
-    VolumeController().setVolume(value, showSystemUI: false);
+    if (AppPlatform.isWindows) {
+      await player?.setVolume(value);
+    } else {
+      VolumeController().setVolume(value, showSystemUI: false);
+    }
   }
 
   Future<void> setBrightness(double value) async {
     value = value.clamp(.05, 1);
     setState(() => brightness = value);
-    await controls.invokeMethod('setBrightness', {'value': value});
+    if (!AppPlatform.isWindows)
+      await controls.invokeMethod('setBrightness', {'value': value});
   }
 
   Future<void> screenshot() async {
     try {
       await SystemSound.play(SystemSoundType.click);
       final bytes = await media.invokeMethod<Uint8List>('thumbnail', {
-        'uri': widget.videos[index].uri,
+        'uri': _iosPlaybackSource ?? widget.videos[index].uri,
         'video': true,
         'size': 1440,
         'timeMs': player!.value.position.inMilliseconds,
@@ -1268,6 +1336,9 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
 
   Future<void> rotate() async {
     landscape = !landscape;
+    if (AppPlatform.isWindows) {
+      await controls.invokeMethod('rotateWindow', {'landscape': landscape});
+    }
     await SystemChrome.setPreferredOrientations(
       landscape
           ? [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]
@@ -1338,11 +1409,24 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
     unawaited(savePosition());
     WidgetsBinding.instance.removeObserver(this);
     player?.removeListener(update);
-    player?.dispose();
+    final previous = player;
+    final source = _iosPlaybackSource;
+    unawaited(() async {
+      await previous?.dispose();
+      if (source != null && await File(source).exists())
+        await File(source).delete();
+    }());
     sleepTimer?.cancel();
     countdownTimer?.cancel();
     chromeTimer?.cancel();
-    controls.invokeMethod('resetBrightness');
+    if (!AppPlatform.isWindows) controls.invokeMethod('resetBrightness');
+    if (AppPlatform.isWindows && landscape) {
+      unawaited(
+        controls
+            .invokeMethod<void>('rotateWindow', {'landscape': false})
+            .catchError((Object _) {}),
+      );
+    }
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     super.dispose();
   }
@@ -1505,7 +1589,17 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
                             scale: videoScale,
                             child: AspectRatio(
                               aspectRatio: player!.value.aspectRatio,
-                              child: VideoPlayer(player!),
+                              child: ColorFiltered(
+                                colorFilter: ColorFilter.mode(
+                                  AppPlatform.isWindows
+                                      ? Colors.black.withValues(
+                                          alpha: 1 - brightness,
+                                        )
+                                      : Colors.transparent,
+                                  BlendMode.srcATop,
+                                ),
+                                child: VideoPlayer(player!),
+                              ),
                             ),
                           ),
                         ),
@@ -1531,7 +1625,9 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       const BackButton(color: Colors.white),
-                                      const PageSourceInfoButton(color: Colors.white),
+                                      const PageSourceInfoButton(
+                                        color: Colors.white,
+                                      ),
                                       tool(
                                         Icons.screenshot_outlined,
                                         socialText(

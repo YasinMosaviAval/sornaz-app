@@ -1,0 +1,122 @@
+name: iOS unsigned build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/ios-build.yml'
+      - 'tool/prepare_ios.dart'
+      - 'ios/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    # Application outputs require an explicit request; routine source pushes
+    # should not silently build a platform the user did not ask to package.
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[build-ios]')
+    runs-on: macos-14
+    timeout-minutes: 45
+    env:
+      CI: 'true'
+      PUB_HOSTED_URL: https://pub.flutter-io.cn
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Install pinned Flutter SDK
+        shell: bash
+        run: |
+          git clone --depth 1 --branch 3.47.2 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          test "$(git -C "$RUNNER_TEMP/flutter" rev-parse HEAD)" = d3b14c876900e553bc736ca19295fc09e3853e8e
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+      - name: Resolve locked dependencies
+        run: flutter pub get --enforce-lockfile
+      - name: Prepare iOS FFmpeg frameworks
+        run: dart run tool/prepare_ios.dart
+      - name: Prepare Rust iOS target
+        run: rustup target add aarch64-apple-ios x86_64-apple-ios aarch64-apple-ios-sim
+      - name: Test shared audio integration
+        run: flutter test --no-pub test/ios_platform_audio_test.dart test/ios_metronome_test.dart test/desktop_pitch_test.dart test/player_behavior_revision_test.dart test/recorder_player_revision_test.dart test/media_crop_story_revision_test.dart test/video_audio_export_test.dart
+      - name: Build unsigned iPhone application
+        run: flutter build ios --release --no-codesign --no-pub
+      - name: Build synthetic iOS simulator diagnostics
+        run: flutter build ios --simulator --debug --no-pub --dart-define=SORNAZ_IOS_SMOKE=true
+      - name: Run native iOS media diagnostics
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, subprocess, time
+          def command(*args):
+              return subprocess.check_output(args, text=True).strip()
+          devices = json.loads(command('xcrun', 'simctl', 'list', 'devices', 'available', '-j'))
+          phones = [d for group in devices['devices'].values() for d in group if d['name'].startswith('iPhone')]
+          if not phones:
+              raise RuntimeError('No available iPhone simulator')
+          device = phones[0]['udid']
+          if phones[0]['state'] != 'Booted':
+              subprocess.run(['xcrun', 'simctl', 'boot', device], check=True)
+          subprocess.run(['xcrun', 'simctl', 'bootstatus', device, '-b'], check=True)
+          app = pathlib.Path('build/ios/iphonesimulator/Runner.app')
+          bundle = command('/usr/libexec/PlistBuddy', '-c', 'Print CFBundleIdentifier', str(app / 'Info.plist'))
+          subprocess.run(['xcrun', 'simctl', 'install', device, str(app)], check=True)
+          subprocess.run(['xcrun', 'simctl', 'privacy', device, 'grant', 'photos', bundle], check=True)
+          subprocess.run(['xcrun', 'simctl', 'privacy', device, 'grant', 'photos-add', bundle], check=True)
+          subprocess.run(['xcrun', 'simctl', 'addmedia', device, 'assets/images/sornaz_logo_with_background.png'], check=True)
+          container = pathlib.Path(command('xcrun', 'simctl', 'get_app_container', device, bundle, 'data'))
+          report = container / 'Library/Caches/sornaz-ios-smoke.json'
+          log = pathlib.Path('build/ios/simulator.log')
+          stream = log.open('w')
+          launched = subprocess.Popen(['xcrun', 'simctl', 'launch', '--console', '--terminate-running-process', device, bundle], stdout=stream, stderr=subprocess.STDOUT)
+          results = {}
+          try:
+              for _ in range(60):
+                  if report.exists():
+                      try:
+                          results = json.loads(report.read_text())
+                      except json.JSONDecodeError:
+                          pass
+                  if len(results) == 21:
+                      break
+                  if launched.poll() is not None:
+                      break
+                  time.sleep(5)
+              print(json.dumps(results, indent=2))
+              pathlib.Path('build/ios/native-verification.json').write_text(json.dumps(results, indent=2))
+              if len(results) != 21 or any(value != 'passed' for value in results.values()):
+                  raise RuntimeError('Native iOS diagnostics failed or timed out')
+          except Exception:
+              print(log.read_text(errors='replace')[-24000:])
+              raise
+          finally:
+              subprocess.run(['xcrun', 'simctl', 'terminate', device, bundle], check=False)
+              try:
+                  launched.wait(timeout=15)
+              except subprocess.TimeoutExpired:
+                  launched.terminate()
+              stream.close()
+          PY
+      - name: Package unsigned iOS output
+        shell: bash
+        run: |
+          mkdir -p build/ios/unsigned/Payload
+          ditto build/ios/iphoneos/Runner.app build/ios/unsigned/Payload/Runner.app
+          printf '%s\n' 'Unsigned iOS application. Requires valid Apple signing and provisioning before installation.' > build/ios/unsigned/README.txt
+          cd build/ios/unsigned
+          ditto -c -k --keepParent Payload Sornaz-iOS-unsigned.ipa
+          shasum -a 256 Sornaz-iOS-unsigned.ipa > Sornaz-iOS-unsigned.ipa.sha256
+      - name: Upload unsigned iOS output
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: Sornaz-iOS-unsigned
+          path: |
+            build/ios/unsigned/Sornaz-iOS-unsigned.ipa
+            build/ios/unsigned/Sornaz-iOS-unsigned.ipa.sha256
+            build/ios/unsigned/README.txt
+            build/ios/native-verification.json
+          retention-days: 1
+          if-no-files-found: error

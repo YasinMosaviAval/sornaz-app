@@ -4,10 +4,10 @@
 <dict>
     <key>NSCameraUsageDescription</key>
     <string>برای ثبت تصویر و تماس تصویری در پنل کاربری.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>اجازه دسترسی به میکروفون برای ضبط صدا.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>اجازه دسترسی به گالری برای انتخاب فایل.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>برای ذخیره تصاویر و ویدیوهای ساخته‌شده در گالری.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>این اپ نیاز به دسترسی میکروفون برای ضبط و تحلیل صدا داره.</string>
 	<key>CFBundleDevelopmentRegion</key>
@@ -32,6 +32,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

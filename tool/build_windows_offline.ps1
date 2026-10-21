@@ -28,6 +28,8 @@ $savedEnvironment = @{
     FLUTTER_LINUX = $env:FLUTTER_LINUX
     PUB_HOSTED_URL = $env:PUB_HOSTED_URL
     CARGO_NET_OFFLINE = $env:CARGO_NET_OFFLINE
+    CARGO_BUILD_JOBS = $env:CARGO_BUILD_JOBS
+    SORNAZ_GRADLE_OFFLINE = $env:SORNAZ_GRADLE_OFFLINE
 }
 
 Push-Location $projectRoot
@@ -37,16 +39,27 @@ try {
     $env:FLUTTER_LINUX = 'false'
     $env:PUB_HOSTED_URL = 'https://pub.flutter-io.cn'
     $env:CARGO_NET_OFFLINE = 'true'
+    $env:CARGO_BUILD_JOBS = '1'
+    $env:SORNAZ_GRADLE_OFFLINE = 'true'
 
     $ErrorActionPreference = 'Continue'
-    & $Flutter pub get --offline --enforce-lockfile
+    $pubOutput = @(& $Flutter pub get --offline --enforce-lockfile 2>&1)
     $flutterExitCode = $LASTEXITCODE
+    $pubOutput | ForEach-Object { Write-Host $_ }
+    if ($flutterExitCode -ne 0 -and ($pubOutput -join "`n").Contains('requires symlink support')) {
+        # Pub has already written its current plugin manifest. Prepare only
+        # workspace-local junctions, then let Flutter finish its registration.
+        & (Join-Path $PSScriptRoot 'prepare_windows_plugins.ps1')
+        & $Flutter pub get --offline --enforce-lockfile
+        $flutterExitCode = $LASTEXITCODE
+    }
     $ErrorActionPreference = 'Stop'
     if ($flutterExitCode -ne 0) {
         throw 'Offline package resolution failed. Populate the locked Pub cache before building.'
     }
 
     & (Join-Path $PSScriptRoot 'prepare_offline_native.ps1')
+    & (Join-Path $PSScriptRoot 'prepare_windows_plugins.ps1')
 
     $mode = $Configuration.ToLowerInvariant()
     $buildArguments = @('build', 'windows', "--$mode", '--no-pub')
@@ -67,5 +80,7 @@ try {
     $env:FLUTTER_LINUX = $savedEnvironment.FLUTTER_LINUX
     $env:PUB_HOSTED_URL = $savedEnvironment.PUB_HOSTED_URL
     $env:CARGO_NET_OFFLINE = $savedEnvironment.CARGO_NET_OFFLINE
+    $env:CARGO_BUILD_JOBS = $savedEnvironment.CARGO_BUILD_JOBS
+    $env:SORNAZ_GRADLE_OFFLINE = $savedEnvironment.SORNAZ_GRADLE_OFFLINE
     Pop-Location
 }

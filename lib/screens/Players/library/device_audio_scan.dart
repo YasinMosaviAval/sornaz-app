@@ -1,14 +1,21 @@
+import 'package:sornaz/helpers/app_platform.dart';
+import 'package:sornaz/helpers/desktop_library_paths.dart';
 import 'dart:io';
+import 'package:flutter/services.dart';
+import 'package:path/path.dart' as p;
 
 import 'package:flutter/foundation.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sornaz/helpers/app_constants.dart';
 import 'package:sornaz/screens/Players/providers/folder_navigator_provider.dart';
 
 import 'audio_library_manager.dart';
 
 Future<bool> hasAudioStoragePermission({bool request = false}) async {
-  if (kIsWeb || !Platform.isAndroid) return false;
+  if (kIsWeb) return false;
+  if (AppPlatform.isWindows || AppPlatform.isIOS) return true;
+  if (!Platform.isAndroid) return false;
   try {
     final permissions = [
       Permission.audio,
@@ -30,6 +37,42 @@ Future<bool> hasAudioStoragePermission({bool request = false}) async {
 
 Future<List<Directory>> discoverAudioRoots() async {
   final roots = <Directory>[];
+  if (AppPlatform.isIOS) {
+    // iOS grants access to the app sandbox, not Android's shared storage.
+    final documents = await getApplicationDocumentsDirectory();
+    if (await documents.exists()) roots.add(documents);
+    try {
+      final recording = await const MethodChannel(
+        'sornaz/recording_workspace',
+      ).invokeMethod<String>('location');
+      if (recording != null &&
+          !p.equals(documents.path, recording) &&
+          !p.isWithin(documents.path, recording)) {
+        final directory = Directory(recording);
+        if (await directory.exists()) roots.add(directory);
+      }
+    } on MissingPluginException {
+      // Host-only widget tests do not instantiate the iOS document picker.
+    }
+    return roots;
+  }
+  if (AppPlatform.isWindows) {
+    final profile = Platform.environment['USERPROFILE'];
+    final recordingFolder = await desktopRecordingFolder();
+    final candidates = <Directory>[
+      if (profile != null) Directory('$profile/Music'),
+      Directory(
+        '${(await getApplicationDocumentsDirectory()).path}/Recordings',
+      ),
+      for (final folder in await desktopLibraryFolders(false))
+        Directory(folder),
+      if (recordingFolder != null) Directory(recordingFolder),
+    ];
+    for (final directory in candidates) {
+      if (await directory.exists()) roots.add(directory);
+    }
+    return roots;
+  }
   final internal = Directory(AppConstants.STORAGE_EMULATED_0);
   if (await internal.exists()) roots.add(internal);
 

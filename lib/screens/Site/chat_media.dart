@@ -1,3 +1,4 @@
+import 'package:sornaz/helpers/desktop_media_channel.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
 import 'dart:async';
@@ -125,7 +126,7 @@ class _ChatMediaState extends State<ChatMedia> {
   Future<Uint8List?> frame(Future<File> source) async {
     try {
       final file = await source;
-      return await const MethodChannel(
+      return await const DesktopMediaChannel(
         'sornaz/story_media',
       ).invokeMethod<Uint8List>('thumbnail', {
         'uri': Uri.file(file.path).toString(),

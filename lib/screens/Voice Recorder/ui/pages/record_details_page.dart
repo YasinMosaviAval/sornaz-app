@@ -1,6 +1,8 @@
+import 'package:sornaz/helpers/app_platform.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'dart:io';
+import 'package:sornaz/helpers/desktop_media_channel.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -50,6 +52,11 @@ class _RecordDetailsPageState extends State<RecordDetailsPage> {
   }
 
   Future<List<int>> _loadWaveform(File file) async {
+    if (AppPlatform.isWindows) {
+      return (await DesktopMedia.waveform(
+        file.path,
+      )).map((v) => (v * 32767).round()).toList();
+    }
     final tmp = File("${file.path}.${AppConstants.WAVEFORM}");
     final stream = JustWaveform.extract(audioInFile: file, waveOutFile: tmp);
     final last = await stream.last;

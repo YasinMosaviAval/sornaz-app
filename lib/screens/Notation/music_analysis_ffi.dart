@@ -194,6 +194,10 @@ class MusicAnalysisFfi {
         library = ffi.DynamicLibrary.open('libmusic_analysis_dsp.so');
       } else if (Platform.isIOS) {
         library = ffi.DynamicLibrary.process();
+      } else if (Platform.isWindows) {
+        library = ffi.DynamicLibrary.open(
+          '${File(Platform.resolvedExecutable).parent.path}/music_analysis_dsp.dll',
+        );
       } else {
         throw const MusicAnalysisException(
           MusicAnalysisErrorCode.unsupportedPlatform,
