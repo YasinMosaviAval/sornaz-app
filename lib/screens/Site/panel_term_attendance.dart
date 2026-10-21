@@ -63,7 +63,15 @@ class _PanelTermAttendanceState extends State<PanelTermAttendance> {
       builder: (_) => PanelFormPage(
         dialog: true,
         title: socialText(context, 'حضور و غیاب', 'Attendance'),
-        fields: const [
+        fields: [
+          if (session['canWriteTeacherNote'] == true)
+            const {
+              'key': 'teacherNote',
+              'label': 'یادداشت استاد',
+              'en': 'Teacher note',
+              'type': 'multiline',
+              'maxLength': 10000,
+            },
           {
             'key': 'attendance',
             'label': 'حضور و غیاب',
@@ -99,6 +107,8 @@ class _PanelTermAttendanceState extends State<PanelTermAttendance> {
         ],
         data: {'attendance': people},
         initial: {
+          if (session['canWriteTeacherNote'] == true)
+            'teacherNote': session['teacherNote'] ?? '',
           'attendance': [
             for (final person in people) {...person, 'memberId': person['id']},
           ],

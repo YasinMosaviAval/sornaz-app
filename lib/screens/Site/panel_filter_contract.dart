@@ -1,6 +1,7 @@
 import '../Social/social_api.dart';
 import 'panel_table_contract.dart';
 import 'panel_form_contract.dart';
+import 'panel_organization_filter.dart';
 
 /// Web filters are local unless a query key explicitly delegates pagination and
 /// filtering to the same server endpoint used by the website.
@@ -44,45 +45,52 @@ List<Json> panelWebFilters(Json section, Json data, List<Json> rows) {
   }, data);
   return [
     for (final field in definitions)
-      {
-        ...field,
-        'options': {
-          if (optionalObject(field['options'])['source'] == null)
-            ...optionalObject(field['options'])
-          else
-            ...panelSelectOptions(field, data),
-          if (field['distinct'] == true)
-            for (final row in rows)
-              for (final value in _values(
-                panelFilterValue(row, '${field['rowPath']}'),
-              ))
-                if (value != null && '$value'.isNotEmpty)
-                  (section['key'] == 'my-points' && field['rowPath'] == 'type'
-                          ? panelFilterToken(value)
-                          : '$value'):
-                      section['key'] == 'my-points' &&
-                          field['rowPath'] == 'type'
-                      ? const {
-                              'general': 'عمومی',
-                              'professional': 'حرفه‌ای',
-                              'specialized': 'حرفه‌ای',
-                            }['$value'] ??
-                            panelTableText(value)
-                      : panelTableText(value),
-          if (field['optionSource'] is Map)
-            ...panelSelectOptions({
-              'options': {
-                ...optionalObject(field['optionSource']),
-                'includeReadOnly': true,
-              },
-            }, data),
-          if (['timeFrom', 'timeTo'].contains(field['rowPath']))
-            ..._timeOptions(rows),
-          if (field['key'] == 'mediaMonth')
-            for (final month in objects(data['months'] ?? []))
-              '${month['value']}': '${month['value']} (${month['total']})',
+      if (!panelFixedBranchScope(data) ||
+          !RegExp(
+            r'branch|academy|organization',
+            caseSensitive: false,
+          ).hasMatch(
+            '${field['key']} ${field['rowPath']} ${field['queryKey']}',
+          ))
+        {
+          ...field,
+          'options': {
+            if (optionalObject(field['options'])['source'] == null)
+              ...optionalObject(field['options'])
+            else
+              ...panelSelectOptions(field, data),
+            if (field['distinct'] == true)
+              for (final row in rows)
+                for (final value in _values(
+                  panelFilterValue(row, '${field['rowPath']}'),
+                ))
+                  if (value != null && '$value'.isNotEmpty)
+                    (section['key'] == 'my-points' && field['rowPath'] == 'type'
+                            ? panelFilterToken(value)
+                            : '$value'):
+                        section['key'] == 'my-points' &&
+                            field['rowPath'] == 'type'
+                        ? const {
+                                'general': 'عمومی',
+                                'professional': 'حرفه‌ای',
+                                'specialized': 'حرفه‌ای',
+                              }['$value'] ??
+                              panelTableText(value)
+                        : panelTableText(value),
+            if (field['optionSource'] is Map)
+              ...panelSelectOptions({
+                'options': {
+                  ...optionalObject(field['optionSource']),
+                  'includeReadOnly': true,
+                },
+              }, data),
+            if (['timeFrom', 'timeTo'].contains(field['rowPath']))
+              ..._timeOptions(rows),
+            if (field['key'] == 'mediaMonth')
+              for (final month in objects(data['months'] ?? []))
+                '${month['value']}': '${month['value']} (${month['total']})',
+          },
         },
-      },
   ];
 }
 

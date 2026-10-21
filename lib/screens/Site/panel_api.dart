@@ -41,6 +41,9 @@ class PanelApi {
   Object? _lastFailure;
   bool _disposed = false;
   int _revision = 0;
+  bool branchContext = false;
+  final _mutations = StreamController<String>.broadcast();
+  Stream<String> get mutations => _mutations.stream;
 
   String _key(String path, Map<String, String>? query) {
     final sorted = Map.fromEntries(
@@ -80,7 +83,9 @@ class PanelApi {
     if (cached != null && DateTime.now().isBefore(cached.$1)) {
       return object(jsonDecode(cached.$2));
     }
-    final pending = _pending[key];
+    final revision = _revision;
+    final pendingKey = '$revision:$key';
+    final pending = _pending[pendingKey];
     if (pending != null) return object(jsonDecode(jsonEncode(await pending)));
     if (_pending.length >= 16) {
       throw const SocialException('Please wait for the current request.');
@@ -88,7 +93,6 @@ class PanelApi {
     final previous = _queue;
     final done = Completer<void>();
     _queue = done.future;
-    final revision = _revision;
     final future = () async {
       await previous;
       checkAccount();
@@ -118,6 +122,7 @@ class PanelApi {
           );
         }
         final value = decode(response);
+        if (path.isEmpty) branchContext = value['branchContext'] == true;
         if (path.isEmpty || path.startsWith('/chat/'))
           await ChatCache.write(token, key, value);
         if (revision == _revision) {
@@ -153,11 +158,11 @@ class PanelApi {
         rethrow;
       }
     }();
-    _pending[key] = future;
+    _pending[pendingKey] = future;
     try {
       return object(jsonDecode(jsonEncode(await future)));
     } finally {
-      _pending.remove(key);
+      _pending.remove(pendingKey);
       done.complete();
     }
   }
@@ -212,6 +217,7 @@ class PanelApi {
     final value = decode(response);
     _revision++;
     _cache.clear();
+    _mutations.add(section);
     return value;
   }
 
@@ -278,6 +284,7 @@ class PanelApi {
 
   void dispose() {
     _disposed = true;
+    unawaited(_mutations.close());
     _cache.clear();
     client.close();
   }

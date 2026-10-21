@@ -36,6 +36,7 @@ class PanelFormPage extends StatefulWidget {
     this.onSubmit,
     this.onRequestCode,
     this.loadBatchTimes,
+    this.loadOptions,
     this.settingsCheckboxes = false,
     this.dialog = false,
     this.declaredOnly = false,
@@ -45,6 +46,7 @@ class PanelFormPage extends StatefulWidget {
   final Future<void> Function(PanelFormResult result)? onSubmit;
   final Future<void> Function(PanelFormResult result)? onRequestCode;
   final Future<Json> Function(Json values)? loadBatchTimes;
+  final Future<Json> Function()? loadOptions;
   final bool settingsCheckboxes, dialog;
   final bool declaredOnly;
   final List<Json> submitButtons;
@@ -57,13 +59,16 @@ class PanelFormPage extends StatefulWidget {
 }
 
 class _PanelFormPageState extends State<PanelFormPage> {
+  late final Json liveData = Map.of(widget.data);
+  Timer? optionsTimer;
+  bool optionsLoading = false;
   final form = GlobalKey<FormState>();
   bool submitting = false, handedOff = false;
   String? validationError;
   late final Json values = panelInitialValues(
     widget.fields,
     widget.initial,
-    widget.data,
+    liveData,
   );
   final files = <String, PlatformFile>{};
   List<String> batchTimes = [];
@@ -77,6 +82,53 @@ class _PanelFormPageState extends State<PanelFormPage> {
     }
     if (widget.loadBatchTimes != null)
       WidgetsBinding.instance.addPostFrameCallback((_) => refreshBatchTimes());
+    if (widget.loadOptions != null) {
+      optionsTimer = Timer.periodic(
+        const Duration(seconds: 3),
+        (_) => refreshOptions(),
+      );
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => unawaited(refreshOptions()),
+      );
+    }
+  }
+
+  Future<void> refreshOptions() async {
+    if (!mounted ||
+        submitting ||
+        optionsLoading ||
+        widget.loadOptions == null ||
+        WidgetsBinding.instance.lifecycleState == AppLifecycleState.paused ||
+        ModalRoute.of(context)?.isCurrent == false)
+      return;
+    optionsLoading = true;
+    try {
+      final latest = await widget.loadOptions!();
+      if (!mounted) return;
+      setState(() {
+        liveData.addAll(latest);
+        // Keep user input; clear only a selection whose organization was removed.
+        for (final field in widget.fields) {
+          if (field['type'] != 'select' ||
+              !RegExp(
+                r'organization|branch|academy',
+                caseSensitive: false,
+              ).hasMatch('${field['key']}'))
+            continue;
+          final available = panelSelectOptions(
+            field,
+            panelFormContext(widget.fields, values, liveData),
+          );
+          final current = '${values[field['key']] ?? ''}';
+          if (current.isNotEmpty && !available.containsKey(current))
+            values[field['key']] = null;
+        }
+      });
+    } catch (_) {
+      // Keep the form and entered values when the network is unavailable.
+    } finally {
+      optionsLoading = false;
+    }
   }
 
   Future<void> refreshBatchTimes() async {
@@ -129,6 +181,7 @@ class _PanelFormPageState extends State<PanelFormPage> {
 
   @override
   void dispose() {
+    optionsTimer?.cancel();
     if (!handedOff)
       for (final file in files.values) {
         unawaited(releasePickedMedia(file));
@@ -158,7 +211,7 @@ class _PanelFormPageState extends State<PanelFormPage> {
       final updated = panelInitialValues(
         widget.fields,
         values,
-        widget.data,
+        liveData,
         applyAliases: false,
         applyDefaults: false,
       );
@@ -173,7 +226,7 @@ class _PanelFormPageState extends State<PanelFormPage> {
         if (teacher != null) {
           final allowed = panelSelectOptions(
             teacher,
-            panelFormContext(widget.fields, values, widget.data),
+            panelFormContext(widget.fields, values, liveData),
           );
           values['teachers'] = (values['teachers'] as List)
               .where(
@@ -208,7 +261,7 @@ class _PanelFormPageState extends State<PanelFormPage> {
       return;
     }
     if (widget.declaredOnly) {
-      final invalid = panelInvalidField(widget.fields, values, widget.data);
+      final invalid = panelInvalidField(widget.fields, values, liveData);
       if (invalid != null) {
         final field = widget.fields
             .where((field) => field['key'] == invalid)
@@ -233,7 +286,7 @@ class _PanelFormPageState extends State<PanelFormPage> {
     if (form.currentState!.validate()) {
       final result = PanelFormResult({
         ...(widget.declaredOnly
-            ? panelSubmittedValues(widget.fields, values, widget.data)
+            ? panelSubmittedValues(widget.fields, values, liveData)
             : Map.of(values)),
         ...overrides,
       }, Map.of(files));
@@ -321,7 +374,7 @@ class _PanelFormPageState extends State<PanelFormPage> {
             for (final field in widget.fields.where(
               (field) => panelFieldVisible(
                 field,
-                panelFormContext(widget.fields, values, widget.data),
+                panelFormContext(widget.fields, values, liveData),
               ),
             ))
               Padding(
@@ -339,12 +392,12 @@ class _PanelFormPageState extends State<PanelFormPage> {
                     },
                     'required': panelFieldRequired(
                       field,
-                      panelFormContext(widget.fields, values, widget.data),
+                      panelFormContext(widget.fields, values, liveData),
                     ),
                     if (widget.settingsCheckboxes) 'type': 'settingsCheckbox',
                   },
                   value: values['${field['key']}'],
-                  data: panelFormContext(widget.fields, values, widget.data),
+                  data: panelFormContext(widget.fields, values, liveData),
                   changed: (value) => change(field, value),
                   onFile: (file) {
                     final previous = files['${field['key']}'];

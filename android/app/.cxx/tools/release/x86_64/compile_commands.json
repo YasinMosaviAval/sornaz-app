@@ -1,0 +1,12 @@
+[
+{
+  "directory": "A:/workspace/android/flutter/sornaz-app/android/app/.cxx/RelWithDebInfo/10714s4p/x86_64",
+  "command": "A:\\sdk\\android-sdk\\ndk\\28.2.13676358\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe --target=x86_64-none-linux-android24 --sysroot=A:/sdk/android-sdk/ndk/28.2.13676358/toolchains/llvm/prebuilt/windows-x86_64/sysroot -Dmusic_analysis_dsp_EXPORTS -IA:/workspace/android/flutter/sornaz-app/native -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O2 -g -DNDEBUG -fPIC -o CMakeFiles\\music_analysis_dsp.dir\\music_analysis_dsp.cpp.o -c A:\\workspace\\android\\flutter\\sornaz-app\\native\\music_analysis_dsp.cpp",
+  "file": "A:\\workspace\\android\\flutter\\sornaz-app\\native\\music_analysis_dsp.cpp"
+},
+{
+  "directory": "A:/workspace/android/flutter/sornaz-app/android/app/.cxx/RelWithDebInfo/10714s4p/x86_64",
+  "command": "A:\\sdk\\android-sdk\\ndk\\28.2.13676358\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe --target=x86_64-none-linux-android24 --sysroot=A:/sdk/android-sdk/ndk/28.2.13676358/toolchains/llvm/prebuilt/windows-x86_64/sysroot -Dmusic_analysis_dsp_EXPORTS -IA:/workspace/android/flutter/sornaz-app/native -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O2 -g -DNDEBUG -fPIC -o CMakeFiles\\music_analysis_dsp.dir\\dsp_engine_open.cpp.o -c A:\\workspace\\android\\flutter\\sornaz-app\\native\\dsp_engine_open.cpp",
+  "file": "A:\\workspace\\android\\flutter\\sornaz-app\\native\\dsp_engine_open.cpp"
+}
+]

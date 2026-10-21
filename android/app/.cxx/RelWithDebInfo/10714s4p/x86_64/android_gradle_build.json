@@ -1,0 +1,178 @@
+{
+  "buildFiles": [
+    "A:\\workspace\\android\\flutter\\sornaz-app\\native\\CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "A:\\sdk\\android-sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+      "-C",
+      "A:\\workspace\\android\\flutter\\sornaz-app\\android\\app\\.cxx\\RelWithDebInfo\\10714s4p\\x86_64",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "A:\\sdk\\android-sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+    "-C",
+    "A:\\workspace\\android\\flutter\\sornaz-app\\android\\app\\.cxx\\RelWithDebInfo\\10714s4p\\x86_64",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "Continuous::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "Continuous"
+    },
+    "ContinuousBuild::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "ContinuousBuild"
+    },
+    "ContinuousConfigure::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "ContinuousConfigure"
+    },
+    "ContinuousCoverage::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "ContinuousCoverage"
+    },
+    "ContinuousMemCheck::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "ContinuousMemCheck"
+    },
+    "ContinuousStart::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "ContinuousStart"
+    },
+    "ContinuousSubmit::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "ContinuousSubmit"
+    },
+    "ContinuousTest::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "ContinuousTest"
+    },
+    "ContinuousUpdate::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "ContinuousUpdate"
+    },
+    "Experimental::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "Experimental"
+    },
+    "ExperimentalBuild::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "ExperimentalBuild"
+    },
+    "ExperimentalConfigure::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "ExperimentalConfigure"
+    },
+    "ExperimentalCoverage::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "ExperimentalCoverage"
+    },
+    "ExperimentalMemCheck::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "ExperimentalMemCheck"
+    },
+    "ExperimentalStart::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "ExperimentalStart"
+    },
+    "ExperimentalSubmit::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "ExperimentalSubmit"
+    },
+    "ExperimentalTest::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "ExperimentalTest"
+    },
+    "ExperimentalUpdate::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "ExperimentalUpdate"
+    },
+    "Nightly::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "Nightly"
+    },
+    "NightlyBuild::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "NightlyBuild"
+    },
+    "NightlyConfigure::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "NightlyConfigure"
+    },
+    "NightlyCoverage::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "NightlyCoverage"
+    },
+    "NightlyMemCheck::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "NightlyMemCheck"
+    },
+    "NightlyMemoryCheck::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "NightlyMemoryCheck"
+    },
+    "NightlyStart::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "NightlyStart"
+    },
+    "NightlySubmit::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "NightlySubmit"
+    },
+    "NightlyTest::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "NightlyTest"
+    },
+    "NightlyUpdate::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "NightlyUpdate"
+    },
+    "music_analysis_dsp::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "music_analysis_dsp",
+      "output": "A:\\workspace\\android\\flutter\\sornaz-app\\build\\app\\intermediates\\cxx\\RelWithDebInfo\\10714s4p\\obj\\x86_64\\libmusic_analysis_dsp.so",
+      "runtimeFiles": []
+    }
+  },
+  "toolchains": {
+    "toolchain": {
+      "cCompilerExecutable": "A:\\sdk\\android-sdk\\ndk\\28.2.13676358\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang.exe",
+      "cppCompilerExecutable": "A:\\sdk\\android-sdk\\ndk\\28.2.13676358\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe"
+    }
+  },
+  "cFileExtensions": [],
+  "cppFileExtensions": [
+    "cpp"
+  ]
+}

@@ -1,0 +1,1 @@
+A:\workspace\android\flutter\sornaz-app\build\app\intermediates\cxx\RelWithDebInfo\10714s4p\obj\x86_64

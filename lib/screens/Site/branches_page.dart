@@ -68,7 +68,11 @@ class _BranchesPageState extends State<BranchesPage> {
       !readOnly &&
       row['canDelete'] != false &&
       (typesOnly ||
-          (!branchFlag(row['is_main']) && data['can_delete_branch'] != false));
+          (data['can_delete_branch'] != false &&
+              (!branchFlag(row['is_main']) ||
+                  (data['main_delete_academy_ids'] as List? ?? const []).any(
+                    (id) => '$id' == '${row['academy_id']}',
+                  ))));
   @override
   void initState() {
     super.initState();

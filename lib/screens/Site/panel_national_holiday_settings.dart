@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../../helpers/app_appearance.dart';
 import '../Social/social_api.dart';
 import '../Social/social_widgets.dart';
@@ -17,18 +18,44 @@ class _PanelNationalHolidaySettingsState
   List<Json>? organizations;
   bool failed = false, saving = false, bulk = false;
   final values = <String, bool>{};
+  Timer? timer;
+  StreamSubscription<String>? mutations;
+  bool loading = false;
   String id(Json row) => '${row['academyId']}:${row['branchId'] ?? 0}';
   @override
   void initState() {
     super.initState();
     load();
+    mutations = widget.api.mutations.listen((resource) {
+      if (['branches', 'academies', 'account'].contains(resource)) load();
+    });
+    timer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (mounted &&
+          ModalRoute.of(context)?.isCurrent == true &&
+          WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed)
+        load();
+    });
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    mutations?.cancel();
+    super.dispose();
   }
 
   Future<void> load() async {
+    if (loading || saving) return;
+    loading = true;
     try {
       final data = await widget.api.live('/national-holidays/list');
       if (!mounted) return;
       setState(() {
+        final dirty = <String, bool>{
+          for (final row in organizations ?? <Json>[])
+            if (values[id(row)] != (row['allowClasses'] == true))
+              id(row): values[id(row)] ?? false,
+        };
         bulk = data['organizations'] is List;
         organizations = bulk
             ? objects(data['organizations'])
@@ -38,12 +65,14 @@ class _PanelNationalHolidaySettingsState
               ];
         values.clear();
         for (final row in organizations!) {
-          values[id(row)] = row['allowClasses'] == true;
+          values[id(row)] = dirty[id(row)] ?? (row['allowClasses'] == true);
         }
         failed = false;
       });
     } catch (_) {
       if (mounted) setState(() => failed = true);
+    } finally {
+      loading = false;
     }
   }
 

@@ -1,0 +1,167 @@
+{
+  "buildFiles": [
+    "A:\\workspace\\android\\flutter\\sornaz-app\\native\\CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "A:\\sdk\\android-sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+      "-C",
+      "A:\\workspace\\android\\flutter\\sornaz-app\\android\\app\\.cxx\\RelWithDebInfo\\10714s4p\\armeabi-v7a",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "A:\\sdk\\android-sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+    "-C",
+    "A:\\workspace\\android\\flutter\\sornaz-app\\android\\app\\.cxx\\RelWithDebInfo\\10714s4p\\armeabi-v7a",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "ContinuousStart::@6890427a1f51a3e7e1df": {
+      "artifactName": "ContinuousStart",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "NightlySubmit::@6890427a1f51a3e7e1df": {
+      "artifactName": "NightlySubmit",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "Nightly::@6890427a1f51a3e7e1df": {
+      "artifactName": "Nightly",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "NightlyMemCheck::@6890427a1f51a3e7e1df": {
+      "artifactName": "NightlyMemCheck",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "ContinuousSubmit::@6890427a1f51a3e7e1df": {
+      "artifactName": "ContinuousSubmit",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "NightlyUpdate::@6890427a1f51a3e7e1df": {
+      "artifactName": "NightlyUpdate",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "ExperimentalMemCheck::@6890427a1f51a3e7e1df": {
+      "artifactName": "ExperimentalMemCheck",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "NightlyBuild::@6890427a1f51a3e7e1df": {
+      "artifactName": "NightlyBuild",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "ExperimentalCoverage::@6890427a1f51a3e7e1df": {
+      "artifactName": "ExperimentalCoverage",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "NightlyMemoryCheck::@6890427a1f51a3e7e1df": {
+      "artifactName": "NightlyMemoryCheck",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "ExperimentalTest::@6890427a1f51a3e7e1df": {
+      "artifactName": "ExperimentalTest",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "ContinuousMemCheck::@6890427a1f51a3e7e1df": {
+      "artifactName": "ContinuousMemCheck",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "Continuous::@6890427a1f51a3e7e1df": {
+      "artifactName": "Continuous",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "ContinuousBuild::@6890427a1f51a3e7e1df": {
+      "artifactName": "ContinuousBuild",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "ContinuousTest::@6890427a1f51a3e7e1df": {
+      "artifactName": "ContinuousTest",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "ExperimentalUpdate::@6890427a1f51a3e7e1df": {
+      "artifactName": "ExperimentalUpdate",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "NightlyTest::@6890427a1f51a3e7e1df": {
+      "artifactName": "NightlyTest",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "ExperimentalStart::@6890427a1f51a3e7e1df": {
+      "artifactName": "ExperimentalStart",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "ContinuousUpdate::@6890427a1f51a3e7e1df": {
+      "artifactName": "ContinuousUpdate",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "ExperimentalConfigure::@6890427a1f51a3e7e1df": {
+      "artifactName": "ExperimentalConfigure",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "ContinuousConfigure::@6890427a1f51a3e7e1df": {
+      "artifactName": "ContinuousConfigure",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "ExperimentalSubmit::@6890427a1f51a3e7e1df": {
+      "artifactName": "ExperimentalSubmit",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "music_analysis_dsp::@6890427a1f51a3e7e1df": {
+      "artifactName": "music_analysis_dsp",
+      "abi": "armeabi-v7a",
+      "output": "A:\\workspace\\android\\flutter\\sornaz-app\\build\\app\\intermediates\\cxx\\RelWithDebInfo\\10714s4p\\obj\\armeabi-v7a\\libmusic_analysis_dsp.so",
+      "runtimeFiles": []
+    },
+    "ContinuousCoverage::@6890427a1f51a3e7e1df": {
+      "artifactName": "ContinuousCoverage",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "ExperimentalBuild::@6890427a1f51a3e7e1df": {
+      "artifactName": "ExperimentalBuild",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "NightlyStart::@6890427a1f51a3e7e1df": {
+      "artifactName": "NightlyStart",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "NightlyConfigure::@6890427a1f51a3e7e1df": {
+      "artifactName": "NightlyConfigure",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "Experimental::@6890427a1f51a3e7e1df": {
+      "artifactName": "Experimental",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "NightlyCoverage::@6890427a1f51a3e7e1df": {
+      "artifactName": "NightlyCoverage",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    }
+  }
+}

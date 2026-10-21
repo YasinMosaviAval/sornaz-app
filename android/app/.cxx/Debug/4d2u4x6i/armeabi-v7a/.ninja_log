@@ -1,0 +1,4 @@
+# ninja log v5
+0	538	8140631794491484	CMakeFiles/music_analysis_dsp.dir/music_analysis_dsp.cpp.o	6a70995a2112f345
+10	1013	8140631799085815	CMakeFiles/music_analysis_dsp.dir/dsp_engine_open.cpp.o	7fcb966c49903e87
+1014	1228	8140631801264857	A:/workspace/android/flutter/sornaz-app/build/app/intermediates/cxx/debug/4d2u4x6i/obj/armeabi-v7a/libmusic_analysis_dsp.so	ba8d7a193522dc21

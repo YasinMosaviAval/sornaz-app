@@ -120,7 +120,7 @@ Map<String, String> panelSelectOptions(Json field, Json data) {
           .where(
             (o) =>
                 '${o['user_id']}' ==
-                '${optionalObject(data['_form'])['organizationUserId']}',
+                '${optionalObject(data['_form'])['organizationUserId'] ?? optionalObject(data['_root'])['organizationUserId']}',
           )
           .firstOrNull;
       if (selected == null ||
@@ -440,6 +440,15 @@ Json panelDialogPayload(
     payload['academyId'] = organization?['academyId'] ?? 0;
   }
   if (section == 'students') {
+    if ('${optionalObject(payload['studentSchedule'])['firstDate'] ?? ''}'
+            .isEmpty &&
+        (num.tryParse(
+                  '${optionalObject(payload['studentSchedule'])['classroomId']}',
+                ) ??
+                0) <=
+            0) {
+      payload.remove('studentSchedule');
+    }
     payload['type'] = 'student';
     payload['parent'] = {
       for (final entry in {
@@ -474,12 +483,13 @@ Json panelDialogPayload(
           _rows(data['classrooms'])
               .where((room) => '${room['id']}' == '${values['classroomId']}')
               .firstOrNull?['branchId'] ??
-          0;
+          (organization['kind'] == 'branch' ? organization['id'] : 0);
       payload['academyId'] = organization['kind'] == 'academy'
           ? organization['id']
           : optionalObject(data['branchAcademies'])['${organization['id']}'];
     }
-    final draft = operation == 'create' && values['status'] == 'open';
+    final draft =
+        operation == 'create' && ['open', 'pending'].contains(values['status']);
     payload['undatedTemplate'] = draft;
     payload['sessions'] = [
       for (final row in _rows(values['sessions']))
@@ -601,8 +611,10 @@ List<Json> panelTermDialogFields(List<Json> fields) => [
           for (final key in field['dependsOn'])
             key == 'branchId' ? 'organizationUserId' : key,
         ];
-      if (key == 'classroomId')
+      if (key == 'classroomId') {
         field['options'] = {'source': 'classrooms', 'termRooms': true};
+        field['hiddenWhen'] = {'operation': 'create'};
+      }
       if (['teachers', 'students'].contains(key))
         field['options'] = {
           ...optionalObject(field['options']),

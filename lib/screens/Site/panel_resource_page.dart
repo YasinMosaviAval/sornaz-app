@@ -202,10 +202,12 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
   DateTime weekStart = panelWeekStart(DateTime.now());
   Timer? searchTimer;
   Timer? refreshTimer;
+  StreamSubscription<String>? mutationSubscription;
   @override
   void dispose() {
     searchTimer?.cancel();
     refreshTimer?.cancel();
+    mutationSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     generation++;
     super.dispose();
@@ -239,6 +241,11 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    mutationSubscription = widget.api.mutations.listen((resource) {
+      if (['branches', 'academies', 'account'].contains(resource) && mounted) {
+        unawaited(load(refresh: true));
+      }
+    });
     if (!['branches', 'branch-types'].contains(section)) load();
     refreshTimer = Timer.periodic(
       const Duration(seconds: 3),
@@ -334,10 +341,19 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
       }
       for (final option
           in widget.section['optionActions'] as List? ?? const []) {
-        value.addAll(await widget.api.get('/$section/$option', widget.params));
+        value.addAll(
+          await (background || refresh ? widget.api.live : widget.api.get)(
+            '/$section/$option',
+            widget.params,
+          ),
+        );
       }
+      value['branchContext'] =
+          widget.api.branchContext || widget.section['branchContext'] == true;
       if (section == 'terms') {
-        final options = await widget.api.get('/courses/list');
+        final options = await (background || refresh
+            ? widget.api.live
+            : widget.api.get)('/courses/list');
         value.addAll(panelTermOptionData(value, options));
       }
       if (section == 'finance') {
@@ -526,11 +542,11 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
       return false;
     }
     if (section == 'terms' && key == 'assign-student') {
-      return record['status_code'] != 'ongoing' &&
+      return ['open', 'pending'].contains(record['status_code']) &&
           objects(record['students'] ?? []).isEmpty;
     }
     if (section == 'terms' && key == 'classroom') {
-      return record['scheduleDraft'] is Map &&
+      return record['status_code'] == 'open' &&
           (num.tryParse('${record['classroomId']}') ?? 0) == 0;
     }
     if (section == 'finance' && record['invoiceKind'] == 'subscription')
@@ -729,6 +745,52 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
         context: context,
         builder: (_) => PanelFormPage(
           dialog: true,
+          loadOptions:
+              section == 'terms' ||
+                  fields.any(
+                    (field) => RegExp(
+                      r'organization|branch|academy|owner',
+                      caseSensitive: false,
+                    ).hasMatch(jsonEncode(field)),
+                  )
+              ? () async {
+                  final latest = await widget.api.live(
+                    '/$section/list',
+                    widget.params,
+                  );
+                  for (final option
+                      in widget.section['optionActions'] as List? ?? const []) {
+                    latest.addAll(
+                      await widget.api.live('/$section/$option', widget.params),
+                    );
+                  }
+                  if (section == 'terms') {
+                    latest.addAll(
+                      panelTermOptionData(
+                        latest,
+                        await widget.api.live('/courses/list'),
+                      ),
+                    );
+                  }
+                  return {
+                    for (final name in [
+                      'organizations',
+                      'branches',
+                      'academies',
+                      'owners',
+                      'classrooms',
+                      'courses',
+                      'members',
+                      'staff_catalog',
+                      'terms',
+                      'currencies',
+                      'discounts',
+                      'permissions',
+                    ])
+                      if (latest.containsKey(name)) name: latest[name],
+                  };
+                }
+              : null,
           declaredOnly:
               action['formContractVersion'] == 2 ||
               action['strictFields'] == true,
@@ -849,9 +911,18 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
             'record': record,
             if (section == 'polls') 'options': record['options'],
             if (section == 'schedules') 'attendance': record['attendance'],
+            if (section == 'schedules')
+              'canWriteTeacherNote': record['canWriteTeacherNote'],
           },
           initial: section == 'terms' && key == 'assign-student'
-              ? const {}
+              ? {
+                  'organizationUserId': objects(data['courses'] ?? [])
+                      .where(
+                        (course) =>
+                            '${course['id']}' == '${record['courseId']}',
+                      )
+                      .firstOrNull?['organizationUserId'],
+                }
               : key == 'create' && !gallerySection
               ? {...widget.params}
               : initial,
@@ -1722,7 +1793,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                 : '${tableContract['organizationMode'] ?? 'branch'}',
           )
         : <String, String>{};
-    if (section == 'users')
+    if (section == 'users' && !panelFixedBranchScope(data))
       organizationOptions['academy'] = socialText(
         context,
         'آموزشگاه',
@@ -2707,6 +2778,10 @@ String panelDataLabel(BuildContext context, String key) {
     'sessions': 'جلسه‌ها',
     'installments': 'اقساط',
     'teacher': 'مدرس',
+    'teacherNotes': 'یادداشت‌های استاد',
+    'teacherNote': 'یادداشت استاد',
+    'sessionId': 'جلسه',
+    'text': 'متن یادداشت',
     'student': 'هنرجو',
     'capacity': 'ظرفیت',
     'privacy': 'حریم خصوصی',

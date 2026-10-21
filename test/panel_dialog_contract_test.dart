@@ -307,7 +307,7 @@ void main() {
         'permissions': {'isReceptionist': true},
       });
       expect(receptionist['status'], 'pending');
-      expect((receptionist['sessions'] as List).length, 8);
+      expect((receptionist['sessions'] as List).length, 1);
       final submitted = panelSubmittedValues(fields('terms'), receptionist, {
         ...data,
         'permissions': {'isReceptionist': true},

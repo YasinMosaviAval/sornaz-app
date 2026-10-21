@@ -8,6 +8,7 @@ Map<String, String> panelOrganizationOptions(
   String mode = 'branch',
 }) {
   final options = <String, String>{};
+  if (panelFixedBranchScope(data)) return options;
   if (mode == 'owner') {
     for (final organization in objects(data['organizations'] ?? [])) {
       options['owner:${organization['id']}'] = '${organization['name'] ?? ''}';
@@ -68,6 +69,12 @@ Map<String, String> panelOrganizationOptions(
   }
   return options;
 }
+
+bool panelFixedBranchScope(Json data) =>
+    data['branchContext'] == true ||
+    data['branch_account'] == true ||
+    optionalObject(data['permissions'])['isBranchContext'] == true ||
+    optionalObject(data['staff_catalog'])['organization_selection'] == 'fixed';
 
 bool panelMatchesOrganization(
   Json row,

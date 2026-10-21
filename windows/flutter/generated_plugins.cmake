@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_windows
+  ffmpeg_kit_flutter_new_audio
   flutter_secure_storage_windows
   metronome
   permission_handler_windows

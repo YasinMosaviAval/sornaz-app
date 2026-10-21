@@ -1,0 +1,1 @@
+A:\workspace\android\flutter\sornaz-app\native\CMakeLists.txt

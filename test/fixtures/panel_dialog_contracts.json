@@ -454,6 +454,33 @@
                 ]
             },
             {
+                "key": "studentSchedule",
+                "label": "زمان‌بندی جلسات ترم",
+                "type": "object",
+                "options": [
+                    {
+                        "key": "classroomId",
+                        "label": "کلاس برگزاری",
+                        "type": "select",
+                        "options": {
+                            "source": "classrooms",
+                            "termRooms": true
+                        },
+                        "required": false
+                    },
+                    {
+                        "key": "firstDate",
+                        "label": "تاریخ جلسه اول",
+                        "type": "date",
+                        "required": false
+                    }
+                ],
+                "required": false,
+                "visibleWhen": {
+                    "_selected.termId.status": "open"
+                }
+            },
+            {
                 "key": "availabilities",
                 "label": "افزودن برنامه زمانی هنرجو",
                 "type": "rows",
@@ -806,7 +833,10 @@
                 "required": true,
                 "dependsOn": [
                     "organizationUserId"
-                ]
+                ],
+                "hiddenWhen": {
+                    "operation": "create"
+                }
             },
             {
                 "key": "currencyId",
@@ -862,7 +892,12 @@
                     },
                     "value": "pending"
                 },
-                "submitWhenHidden": true
+                "submitWhenHidden": true,
+                "visibleWhen": {
+                    "operation": {
+                        "not": "create"
+                    }
+                }
             },
             {
                 "key": "sessionCount",
@@ -971,7 +1006,12 @@
                 "required": false,
                 "visibleWhen": {
                     "operation": "create",
-                    "_form.status": "open"
+                    "_form.status": {
+                        "in": [
+                            "open",
+                            "pending"
+                        ]
+                    }
                 }
             },
             {
@@ -986,7 +1026,12 @@
                         "required": true,
                         "hiddenWhen": {
                             "operation": "create",
-                            "_root.status": "open"
+                            "_root.status": {
+                                "in": [
+                                    "open",
+                                    "pending"
+                                ]
+                            }
                         }
                     },
                     {
@@ -1025,7 +1070,12 @@
                 "rowsCountFrom": "sessionCount",
                 "singleWhen": {
                     "operation": "create",
-                    "_form.status": "open"
+                    "_form.status": {
+                        "in": [
+                            "open",
+                            "pending"
+                        ]
+                    }
                 }
             },
             {
