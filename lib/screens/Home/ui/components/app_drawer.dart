@@ -217,7 +217,7 @@ class AppDrawer extends StatelessWidget {
                                         : 'ورود با حساب دیگر',
                                     style: AppTypography.appDrawerItemTitle(
                                       context,
-                                    ),
+                                    ).copyWith(color: appData.accent),
                                   ),
                                   onTap: session.isChanging
                                       ? null
@@ -230,7 +230,7 @@ class AppDrawer extends StatelessWidget {
                                       'خروج از حساب',
                                       style: AppTypography.appDrawerItemTitle(
                                         context,
-                                      ),
+                                      ).copyWith(color: AppColors.error),
                                     ),
                                     onTap: session.isChanging
                                         ? null
