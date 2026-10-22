@@ -147,12 +147,56 @@ void main() {
     }
   });
   test(
-    'iOS video rendering selects VideoToolbox instead of Windows Media Foundation',
+    'iOS FFmpeg composes a portable draft for native H.264 finalization',
     () {
-      expect(DesktopMedia.videoEncoder, contains('h264_videotoolbox'));
+      expect(DesktopMedia.videoEncoder, contains('mpeg4'));
       expect(DesktopMedia.videoEncoder, isNot(contains('h264_mf')));
     },
   );
+  for (final outcome in ['success', 'failure', 'empty']) {
+    test('iOS video finalization preserves drafts on $outcome', () async {
+      final root = await Directory.systemTemp.createTemp('sornaz-ios-encode-');
+      const paths = MethodChannel('plugins.flutter.io/path_provider');
+      const native = MethodChannel('sornaz/ios_media');
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(paths, (call) async => root.path);
+      File? output;
+      try {
+        final source = await DesktopMedia.draft('mp4');
+        await source.writeAsBytes([1, 2, 3]);
+        messenger.setMockMethodCallHandler(native, (call) async {
+          expect(call.method, 'encodeVideo');
+          final args = call.arguments as Map;
+          expect(args['path'], source.path);
+          output = File(args['output'] as String);
+          await output!.writeAsBytes(outcome == 'empty' ? [] : [4, 5, 6]);
+          if (outcome == 'failure') {
+            throw PlatformException(code: 'IOS_MEDIA');
+          }
+          return null;
+        });
+        if (outcome == 'success') {
+          final finished = await DesktopMedia.finishVideo(source);
+          expect(await finished.readAsBytes(), [4, 5, 6]);
+          expect(await source.exists(), false);
+        } else {
+          await expectLater(
+            DesktopMedia.finishVideo(source),
+            throwsA(
+              outcome == 'empty' ? isA<StateError>() : isA<PlatformException>(),
+            ),
+          );
+          expect(await source.readAsBytes(), [1, 2, 3]);
+          expect(await output!.exists(), false);
+        }
+      } finally {
+        messenger.setMockMethodCallHandler(paths, null);
+        messenger.setMockMethodCallHandler(native, null);
+        await root.delete(recursive: true);
+      }
+    });
+  }
   test('iOS gallery forwards pagination and limited-photo responses', () async {
     const native = MethodChannel('sornaz/ios_media');
     final messenger =

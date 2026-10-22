@@ -36,6 +36,11 @@ class _AudioLibraryLifecycleState extends State<AudioLibraryLifecycle>
   }
 
   Future<void> _refresh() async {
+    final lastScan = widget.library.lastScan;
+    if (lastScan != null &&
+        DateTime.now().difference(lastScan).inSeconds < 30) {
+      return;
+    }
     try {
       await refreshDeviceAudioLibrary(
         library: widget.library,

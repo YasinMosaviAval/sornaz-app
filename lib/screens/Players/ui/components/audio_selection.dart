@@ -1,4 +1,6 @@
 import 'player_dialog.dart';
+import '../../services/media_file_operations.dart';
+import 'package:path/path.dart' as p;
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
@@ -69,7 +71,7 @@ Future<void> audioAction(
           builder: (c) => PlayerDialog(
             title: const Text('تغییر نام'),
             content: TextField(
-              style: const TextStyle(fontSize: 14),
+              style: Theme.of(c).textTheme.bodyMedium,
               controller: input,
               maxLength: 100,
             ),
@@ -93,6 +95,14 @@ Future<void> audioAction(
             '$name${dot < 0 ? '' : file.fileName.substring(dot)}',
             'نام فایل تغییر کرد',
           );
+      }
+    }
+    if (action == 'move') {
+      final folder = await MediaFileOperations.chooseFolder();
+      if (folder == null) return;
+      for (final file in files) {
+        await provider.relocateFile(file, p.join(folder, file.fileName));
+        await MediaFileOperations.retainDestination(folder);
       }
     }
     if (action == 'share')
@@ -134,7 +144,13 @@ Future<void> audioAction(
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            e.code == 'PERMISSION'
+            action != 'ringtone'
+                ? socialText(
+                    context,
+                    'تغییر فایل انجام نشد: ' + (e.message ?? e.code),
+                    'Could not change file: ' + (e.message ?? e.code),
+                  )
+                : e.code == 'PERMISSION'
                 ? socialText(
                     context,
                     'اجازه تغییر تنظیمات سیستم را بدهید و دوباره «قرار دادن به عنوان زنگ گوشی» را انتخاب کنید.',
@@ -193,6 +209,7 @@ class AudioActionsMenu extends StatelessWidget {
           if (files.length == 1) ('rename', 'تغییر نام'),
           if (files.length == 1) ('crop', 'برش صدا'),
           ('playlist', 'افزودن به لیست پخش'),
+          ('move', socialText(context, 'انتقال', 'Move')),
           ('share', 'اشتراک‌گذاری'),
           ('delete', 'حذف'),
         ])

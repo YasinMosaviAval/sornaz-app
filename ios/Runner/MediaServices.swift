@@ -65,7 +65,13 @@ final class MediaServices: NSObject, UIImagePickerControllerDelegate, UINavigati
     }.jpegData(compressionQuality: 0.95)
   }
   private func authorized(_ result: @escaping FlutterResult, action: @escaping () -> Void) {
+    #if DEBUG
+    print("Sornaz Photos: authorization query")
+    #endif
     let current = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+    #if DEBUG
+    print("Sornaz Photos: authorization status \(current.rawValue)")
+    #endif
     if current == .authorized || current == .limited { action(); return }
     if current != .notDetermined { failure(result, "Photo library permission was not granted."); return }
     PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
@@ -130,12 +136,27 @@ final class MediaServices: NSObject, UIImagePickerControllerDelegate, UINavigati
       return
     }
     switch call.method {
+    case "encodeVideo":
+      guard let path = args["path"] as? String, let output = args["output"] as? String else { failure(result, "Video paths are missing."); return }
+      let source = AVURLAsset(url: localURL(path))
+      guard let exporter = AVAssetExportSession(asset: source, presetName: AVAssetExportPresetHighestQuality),
+            exporter.supportedFileTypes.contains(.mp4) else { failure(result, "Native MP4 export is unavailable."); return }
+      exporter.outputURL = localURL(output)
+      exporter.outputFileType = .mp4
+      exporter.shouldOptimizeForNetworkUse = true
+      exporter.exportAsynchronously {
+        if exporter.status == .completed { self.reply(result, nil) }
+        else {
+          try? FileManager.default.removeItem(at: self.localURL(output))
+          self.failure(result, exporter.error?.localizedDescription ?? "Native video export failed.")
+        }
+      }
     case "permission":
       PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
         self.reply(result, status == .authorized ? "granted" : status == .limited ? "limited" : "denied")
       }
     case "gallery", "videos":
-      authorized(result) { self.worker.async { self.list(args, videosOnly: call.method == "videos", result) } }
+      authorized(result) { DispatchQueue.main.async { self.list(args, videosOnly: call.method == "videos", result) } }
     case "materialize":
       guard let uri = args["uri"] as? String else { failure(result, "Missing media URI."); return }
       if uri.hasPrefix("ph://") {
@@ -229,11 +250,17 @@ final class MediaServices: NSObject, UIImagePickerControllerDelegate, UINavigati
   }
 
   private func list(_ args: [String: Any], videosOnly: Bool, _ result: @escaping FlutterResult) {
+    #if DEBUG
+    print("Sornaz Photos: fetch start")
+    #endif
     let options = PHFetchOptions()
     options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
     options.predicate = videosOnly ? NSPredicate(format: "mediaType == %d", PHAssetMediaType.video.rawValue)
       : NSPredicate(format: "mediaType == %d OR mediaType == %d", PHAssetMediaType.video.rawValue, PHAssetMediaType.image.rawValue)
     let assets = PHAsset.fetchAssets(with: options)
+    #if DEBUG
+    print("Sornaz Photos: fetch completed, count \(assets.count)")
+    #endif
     let offset = min(assets.count, max(0, args["offset"] as? Int ?? 0))
     let end = videosOnly ? assets.count : min(assets.count, offset + 60)
     var rows: [[String: Any]] = []

@@ -43,8 +43,30 @@ class DesktopMediaChannel extends MethodChannel {
 class DesktopMedia {
   static const _ios = MethodChannel('sornaz/ios_media');
   static List<String> get videoEncoder => AppPlatform.isIOS
-      ? ['-c:v', 'h264_videotoolbox']
+      ? ['-c:v', 'mpeg4', '-q:v', '2']
       : ['-c:v', 'h264_mf', '-hw_encoding', '0'];
+
+  /// The audio-only iOS FFmpeg distribution has no H.264 encoder. Compose a
+  /// high-quality MPEG-4 draft, then let AVFoundation produce the final MP4.
+  static Future<File> finishVideo(File source) async {
+    if (!AppPlatform.isIOS) return source;
+    await privateFile(source.path);
+    final output = await draft('mp4');
+    try {
+      await _ios.invokeMethod<void>('encodeVideo', {
+        'path': source.path,
+        'output': output.path,
+      });
+      if (!await output.exists() || await output.length() == 0) {
+        throw StateError('Native video export is empty');
+      }
+      await source.delete();
+      return output;
+    } catch (_) {
+      if (await output.exists()) await output.delete();
+      rethrow;
+    }
+  }
 
   static Future<String> iosMaterialize(String uri) async =>
       await _ios.invokeMethod<String>('materialize', {'uri': uri}) ??
@@ -386,7 +408,7 @@ class DesktopMedia {
         if (start < 0 || end <= start)
           throw ArgumentError('Invalid crop interval');
         final video = a['video'] == true;
-        final output = await draft(video ? 'mp4' : 'm4a');
+        var output = await draft(video ? 'mp4' : 'm4a');
         await run([
           '-ss',
           '$start',
@@ -406,6 +428,7 @@ class DesktopMedia {
           'aac',
           output.path,
         ]);
+        if (video) output = await finishVideo(output);
         return output.path;
       }
       if (method == 'commit') {
@@ -550,7 +573,7 @@ class DesktopMedia {
       if (method == 'exportVideo') {
         final source = await privateFile('${a['path']}');
         final overlay = await draft('png');
-        final output = await draft('mp4');
+        var output = await draft('mp4');
         try {
           await overlay.writeAsBytes(a['overlay'] as List<int>);
           await run([
@@ -571,6 +594,7 @@ class DesktopMedia {
             'aac',
             output.path,
           ]);
+          output = await finishVideo(output);
           return await info(output, true);
         } finally {
           if (await overlay.exists()) await overlay.delete();

@@ -1,5 +1,6 @@
 import '../../providers/audio_player_provider.dart';
 import '../../services/player_settings.dart';
+import 'dart:async';
 import '../components/player_dialog.dart';
 import '../components/search_bar.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
@@ -31,6 +32,8 @@ class MusicPlayerPage extends StatefulWidget {
 
 class _MusicPlayerPageState extends State<MusicPlayerPage> {
   int activeTab = 0;
+  bool initialScanVisible = true;
+  Timer? initialScanTimer;
   AudioPlayerProvider? player;
   @override
   void didChangeDependencies() {
@@ -40,6 +43,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
 
   @override
   void dispose() {
+    initialScanTimer?.cancel();
     player?.interrupt(PlaybackInterruption.leavePlayer);
     super.dispose();
   }
@@ -48,6 +52,9 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
   void initState() {
     super.initState();
 
+    initialScanTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted) setState(() => initialScanVisible = false);
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _requestPermissionsAndScan();
     });
@@ -63,7 +70,11 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
     }
     final player = context.read<AudioPlayerProvider>();
     await player.restoreLastPlayback();
-    await _rescan(requestPermission: false);
+    final lastScan = context.read<AudioLibraryManager>().lastScan;
+    if (lastScan == null ||
+        DateTime.now().difference(lastScan).inSeconds >= 30) {
+      await _rescan(requestPermission: false);
+    }
     if (mounted && player.currentAudio == null) {
       await player.restoreLastPlayback();
     }
@@ -123,9 +134,12 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
       child: ScrollAwareScaffold(
         appBar: SearchBarWidget(tab: activeTab, onRescan: _rescan),
         pinTopBar: true,
-        body: Consumer<AudioLibraryManager>(
-          builder: (_, library, _) {
-            if (library.isScanning && library.allFiles.isEmpty) {
+        body: Selector<AudioLibraryManager, bool>(
+          selector: (_, library) =>
+              library.isScanning && library.allFiles.isEmpty,
+          builder: (_, initialLoading, _) {
+            final library = context.read<AudioLibraryManager>();
+            if (initialScanVisible && initialLoading) {
               return Container(
                 color: AppColors.music_player_is_scanning_background_color(
                   isDark: isDark,
@@ -177,10 +191,6 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
             }
             return Column(
               children: [
-                if (library.isScanning)
-                  LinearProgressIndicator(
-                    value: library.totalFiles == 0 ? null : library.progress,
-                  ),
                 Expanded(
                   child: MusicPlayerTabs(
                     onTabChanged: (tab) {

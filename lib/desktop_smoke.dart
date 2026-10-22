@@ -363,10 +363,11 @@ Future<void> runDesktopSmoke(String reportPath) async {
                     as List)
                 .map((row) => (row as Map)['uri'])
                 .toSet();
-        final staged = await DesktopMedia.draft('mp4');
+        var staged = await DesktopMedia.draft('mp4');
         String? selected;
         try {
           await video.copy(staged.path);
+          staged = await DesktopMedia.finishVideo(staged);
           stdout.writeln('iOS Photos: save synthetic video');
           await DesktopMedia.invokeIOS('sornaz/story_media', 'save', {
             'path': staged.path,

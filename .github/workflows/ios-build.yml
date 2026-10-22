@@ -100,6 +100,16 @@ jobs:
                   launched.terminate()
               stream.close()
           PY
+      - name: Upload native diagnostic reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: Sornaz-iOS-diagnostics
+          path: |
+            build/ios/native-verification.json
+            build/ios/simulator.log
+          retention-days: 1
+          if-no-files-found: ignore
       - name: Package unsigned iOS output
         shell: bash
         run: |

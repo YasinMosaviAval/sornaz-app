@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'dart:async';
+import 'package:flutter/services.dart';
+import 'package:path/path.dart' as p;
 import 'package:sornaz/screens/Players/metadata/metadata_service.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
@@ -30,6 +32,7 @@ class AudioLibraryManager extends ChangeNotifier {
   bool _hydrating = false, _disposed = false;
   bool _hydrateAgain = false;
   Future<void>? _scanFuture;
+  DateTime? lastScan;
 
   Future<void> setRoots(List<Directory> directories) async {
     roots = directories;
@@ -68,30 +71,61 @@ class AudioLibraryManager extends ChangeNotifier {
     notifyListeners();
     try {
       final cache = await _cache();
-      await AudioFileLoader.scanWithIsolate(
-        roots: List.of(roots),
-        onProgress: (ScanStatus status) {
-          if (_disposed) return;
-          scannedFiles = status.scanned;
-          totalFiles = status.total;
-          currentPath = status.currentPath;
-          progress = totalFiles == 0 ? 0.0 : scannedFiles / totalFiles;
-          notifyListeners();
-        },
-        onDone: (List<AudioFile> files) async {
-          if (_disposed) return;
-          final previous = {for (final file in allFiles) file.file.path: file};
-          for (var i = 0; i < files.length; i++) {
-            final old = previous[files[i].file.path];
-            if (old != null) files[i] = old;
+      Future<void> acceptFiles(List<AudioFile> files) async {
+        if (_disposed) return;
+        final previous = {for (final file in allFiles) file.file.path: file};
+        for (var i = 0; i < files.length; i++) {
+          final old = previous[files[i].file.path];
+          if (old != null) {
+            if (files[i].duration > Duration.zero)
+              old.duration = files[i].duration;
+            files[i] = old;
           }
-          allFiles = files;
-          progress = 1.0;
-          await cache.saveFiles(files);
-          notifyListeners();
-          if (_hydrateMetadata) unawaited(hydrateDurations());
-        },
-      );
+        }
+        allFiles = files;
+        scannedFiles = totalFiles = files.length;
+        progress = 1;
+        lastScan = DateTime.now();
+        // Publish results before persisting the cache.
+        isScanning = false;
+        notifyListeners();
+        await cache.saveFiles(files);
+        if (_hydrateMetadata) unawaited(hydrateDurations());
+      }
+
+      if (Platform.isAndroid) {
+        final entries = await const MethodChannel(
+          'sornaz/media_files',
+        ).invokeListMethod<dynamic>('listAudio');
+        await acceptFiles([
+          for (final entry in entries ?? [])
+            AudioFile(
+              file: File(entry['path'] as String),
+              fileName: entry['name'] as String,
+              folderName: p.dirname(entry['path'] as String),
+              duration: Duration(
+                milliseconds: (entry['duration'] as num).toInt(),
+              ),
+              addedAt: DateTime.fromMillisecondsSinceEpoch(
+                (entry['addedAt'] as num).toInt() * 1000,
+              ),
+            ),
+        ]);
+      } else {
+        await AudioFileLoader.scanWithIsolate(
+          roots: List.of(roots),
+          onProgress: (ScanStatus status) {
+            if (_disposed) return;
+            scannedFiles = status.scanned;
+            totalFiles = status.total;
+            currentPath = status.currentPath;
+            progress = totalFiles == 0 ? 0.0 : scannedFiles / totalFiles;
+            // Scan progress never rebuilds the visible library on every file.
+            if (allFiles.isEmpty) notifyListeners();
+          },
+          onDone: acceptFiles,
+        );
+      }
     } catch (_) {
       progress = 0.0;
       currentPath = 'خطا در بارگذاری';

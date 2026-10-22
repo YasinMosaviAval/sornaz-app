@@ -1,4 +1,5 @@
 import '../services/music_playlists.dart';
+import '../services/media_file_operations.dart';
 import '../services/sleep_timer_status.dart';
 import '../../Voice Recorder/services/recording_text.dart';
 import '../services/equalizer_settings.dart';
@@ -30,6 +31,7 @@ class AudioPlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
   List<AudioFile> allFiles = [];
   List<AudioFile> filteredFiles = [];
   Map<String, List<AudioFile>> folderTree = {};
+  int libraryRevision = 0;
   bool isLoading = false;
   bool isHiveLoading = true;
   bool isUndoMode = false;
@@ -137,7 +139,11 @@ class AudioPlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
     await play(at, remember: false, restorePosition: saved.milliseconds);
   }
 
-  void _settingsChanged() => notifyListeners();
+  void _settingsChanged() {
+    libraryRevision++;
+    notifyListeners();
+  }
+
   Timer? _sleepTimer;
   DateTime? sleepDeadline;
   Duration? sleepDuration;
@@ -339,16 +345,32 @@ class AudioPlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
       final replaced = !identical(allFiles, libraryManager.allFiles);
       allFiles = libraryManager.allFiles;
       if (replaced) {
-        filteredFiles = allFiles
-            .where((f) => f.fileName.toLowerCase().contains(searchQuery))
-            .toList();
+        // A device refresh must preserve the active collection and its order.
+        final byPath = {for (final file in allFiles) file.file.path: file};
+        filteredFiles = _playingAudio == null && filteredFiles.isEmpty
+            ? List.of(allFiles)
+            : [
+                for (final file in filteredFiles)
+                  if (byPath[file.file.path] != null) byPath[file.file.path]!,
+              ];
+        if (_lists != null) {
+          _lists = [
+            for (final entry in _lists!)
+              MapEntry(entry.key, [
+                for (final file in entry.value)
+                  if (byPath[file.file.path] != null) byPath[file.file.path]!,
+              ]),
+          ];
+        }
         currentIndex = filteredFiles.indexWhere(
           (f) => f.file.path == _playingAudio?.file.path,
         );
         _queue.setQueue(filteredFiles.length);
         _queue.setCurrentIndex(currentIndex);
+        _buildFolderTree();
       }
-      if (replaced) _buildFolderTree();
+      isHiveLoading = false;
+      if (replaced || !libraryManager.isScanning) libraryRevision++;
       notifyListeners();
     };
     libraryManager.addListener(_libraryListener);
@@ -485,6 +507,7 @@ class AudioPlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void setFileList(List<AudioFile> files) {
+    libraryRevision++;
     allFiles = files;
     filteredFiles = files;
     _buildFolderTree();
@@ -505,6 +528,13 @@ class AudioPlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
   AudioFile? get currentAudio {
     return _playingAudio;
   }
+
+  bool isActiveCollection(List<AudioFile> files, String? key) =>
+      _listKey == key &&
+      filteredFiles.length == files.length &&
+      Iterable<int>.generate(
+        files.length,
+      ).every((i) => filteredFiles[i].file.path == files[i].file.path);
 
   Future<void> playFromFolder(
     List<AudioFile> files,
@@ -576,16 +606,40 @@ class AudioPlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
     if (!p.equals(oldPath, newPath) && await File(newPath).exists()) {
       throw const FileSystemException('A file with this name already exists.');
     }
-    final newFile = await file.file.rename(newPath);
-    file.file = newFile;
-    file.fileName = newName;
-    await MusicPlaylists.instance.replacePath(oldPath, newFile.path);
-    await moveRecordingText(oldPath, newFile.path);
-    await (await AudioCacheFactory.getCache()).saveFiles(allFiles);
-    _buildFolderTree();
-    notifyListeners();
+    await relocateFile(file, newPath);
     _showSnackBar(message);
     return true;
+  }
+
+  Future<void> relocateFile(AudioFile file, String destination) async {
+    final oldPath = file.file.path;
+    final wasCurrent = identical(_playingAudio, file);
+    final wasPlaying = isPlaying;
+    final at = position;
+    if (wasCurrent) await _controller.stop();
+    try {
+      final newPath = await MediaFileOperations.relocate(oldPath, destination);
+      file.file = File(newPath);
+      file.fileName = p.basename(newPath);
+      file.folderName = p.dirname(newPath);
+      _buildFolderTree();
+      libraryRevision++;
+      notifyListeners();
+      await MusicPlaylists.instance.replacePath(oldPath, newPath);
+      await moveRecordingText(oldPath, newPath);
+      final saved = await LastPlaybackPositionStore.readMusic();
+      if (saved?.id == oldPath) {
+        await LastPlaybackPositionStore.saveMusic(newPath, saved!.milliseconds);
+      }
+      await (await AudioCacheFactory.getCache()).saveFiles(allFiles);
+    } finally {
+      if (wasCurrent) {
+        await _controller.playFile(file.file.path);
+        await _controller.seek(at);
+        if (!wasPlaying) await _controller.pause();
+        _publishMedia();
+      }
+    }
   }
 
   Future<void> registerCroppedAudio(
@@ -619,10 +673,12 @@ class AudioPlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
     }
     await (await AudioCacheFactory.getCache()).saveFiles(allFiles);
     _buildFolderTree();
+    libraryRevision++;
     notifyListeners();
   }
 
   bool removeFromList(AudioFile file, String message) {
+    libraryRevision++;
     allFiles.remove(file);
     filteredFiles.remove(file);
     notifyListeners();
@@ -637,6 +693,7 @@ class AudioPlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
     }
     await file.file.delete();
     allFiles.remove(file);
+    libraryRevision++;
     filteredFiles.remove(file);
     _queue.setQueue(filteredFiles.length);
     currentIndex = currentAudio == null

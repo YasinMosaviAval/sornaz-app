@@ -36,6 +36,8 @@ import 'panel_organization_filter.dart';
 import 'panel_finance.dart';
 import 'panel_parity.dart';
 import 'panel_schedule_week.dart';
+import 'panel_schedule_contract.dart';
+import 'panel_schedule_cancellation.dart';
 import 'panel_dashboard.dart';
 import 'panel_tracking.dart';
 import 'panel_caption.dart';
@@ -184,6 +186,27 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
   Widget pendingContent(Widget child) => Column(
     children: [
       if (widget.tabs != null) widget.tabs!,
+      if (section == 'schedules')
+        DefaultTabController(
+          length: 2,
+          initialIndex: weekly ? 1 : 0,
+          child: TabBar(
+            labelStyle: Theme.of(context).textTheme.labelLarge,
+            onTap: (index) {
+              if (weekly == (index == 1)) return;
+              setState(() {
+                weekly = index == 1;
+                loading = true;
+                page = 1;
+              });
+              load();
+            },
+            tabs: [
+              Tab(text: socialText(context, 'نمایش لیستی', 'List view')),
+              Tab(text: socialText(context, 'برنامه هفتگی', 'Weekly schedule')),
+            ],
+          ),
+        ),
       Expanded(child: child),
     ],
   );
@@ -199,6 +222,8 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
   String sortKey = '';
   bool sortAscending = true;
   bool weekly = false;
+  final schedulePreferences = PanelSchedulePreferences();
+  DateTime? firstScheduleWeek, lastScheduleWeek;
   DateTime weekStart = panelWeekStart(DateTime.now());
   Timer? searchTimer;
   Timer? refreshTimer;
@@ -436,7 +461,6 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
 
   Future<Json> loadWeek(bool refresh, {bool background = false}) async {
     final combined = <Json>[];
-    final start = weekStart;
     final requestGeneration = generation;
     final selectedFilters = panelFilterQuery(
       panelWebFilters(widget.section, data, const []),
@@ -445,6 +469,23 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
       section,
     );
     final search = query;
+    if (actions.containsKey('week-bounds')) {
+      final bounds = await widget.api.get('/schedules/week-bounds', {
+        if (selectedFilters['branch'] != null)
+          'branch': selectedFilters['branch']!,
+      });
+      if (!mounted || requestGeneration != generation)
+        throw const SocialException('درخواست برنامه تغییر کرده است.');
+      final first = DateTime.tryParse('${bounds['firstDate']}');
+      final last = DateTime.tryParse('${bounds['lastDate']}');
+      firstScheduleWeek = first == null ? null : panelWeekStart(first);
+      lastScheduleWeek = last == null ? null : panelWeekStart(last);
+      if (firstScheduleWeek != null && weekStart.isBefore(firstScheduleWeek!))
+        weekStart = firstScheduleWeek!;
+      if (lastScheduleWeek != null && weekStart.isAfter(lastScheduleWeek!))
+        weekStart = lastScheduleWeek!;
+    }
+    final start = weekStart;
     Json result = {};
     for (var day = 0; day < 7; day++) {
       var next = 1;
@@ -458,6 +499,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                 ? widget.api.refresh
                 : widget.api.get)('/schedules/list', {
               ...selectedFilters,
+              'day': '',
               'date': start
                   .add(Duration(days: day))
                   .toIso8601String()
@@ -481,6 +523,8 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
   }
 
   bool available(String key, Json record) {
+    if (section == 'schedules' && key == 'cancel')
+      return panelScheduleCanCancel(record);
     if (section == 'terms' && key == 'available-times') return false;
     final exposed = tableContract['rowActions'];
     if (exposed is List && key != 'status' && !exposed.contains(key)) {
@@ -557,8 +601,11 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
           1;
       return objects(record['students'] ?? []).length < capacity;
     }
+    if (section == 'terms' && key == 'attendance')
+      return objects(record['students'] ?? []).isNotEmpty;
     if (section == 'terms' && key == 'classroom') {
-      return record['status_code'] == 'open';
+      return objects(record['students'] ?? []).isNotEmpty &&
+          ['open', 'pending', 'ongoing'].contains(record['status_code']);
     }
     if (section == 'finance' && record['invoiceKind'] == 'subscription')
       return false;
@@ -585,6 +632,15 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
     }
     final action = optionalObject(actions[key]);
     if (action.isEmpty) return;
+    if (section == 'schedules' && key == 'cancel') {
+      final saved = await showDialog<bool>(
+        context: context,
+        builder: (_) =>
+            PanelScheduleCancellation(api: widget.api, session: record),
+      );
+      if (saved == true && mounted) await load(refresh: true);
+      return;
+    }
     if (section == 'terms' && key == 'attendance') {
       await showDialog<void>(
         context: context,
@@ -628,6 +684,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
       ...widget.params,
       if (record['value'] != null) 'value': '${record['value']}',
       ...extra,
+      if (section == 'schedules') 'termId': '${record['termId']}',
     };
     if (action['recordAction'] is String) {
       setState(() => busy = true);
@@ -769,6 +826,34 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
         context: context,
         builder: (_) => PanelFormPage(
           dialog: true,
+          lookupMemberUser:
+              ((['students', 'members'].contains(section) && key == 'create') ||
+                  (section == 'terms' && key == 'assign-student'))
+              ? (values, query) async {
+                  final course = objects(formData['courses'] ?? [])
+                      .where((row) => '${row['id']}' == '${record['courseId']}')
+                      .firstOrNull;
+                  return widget.api.act(
+                    section == 'members' ? 'members' : 'students',
+                    'user-lookup',
+                    values: {
+                      'organizationUserId':
+                          values['organizationUserId'] ??
+                          course?['organizationUserId'],
+                      'query': query,
+                    },
+                  );
+                }
+              : null,
+          previewStudentSchedule:
+              fields.any((field) => field['key'] == 'studentSchedule')
+              ? (values) => widget.api.act(
+                  'terms',
+                  'schedule-preview',
+                  params: {'id': '${values['termId'] ?? record['id']}'},
+                  values: optionalObject(values['studentSchedule']),
+                )
+              : null,
           loadOptions:
               section == 'terms' ||
                   fields.any(
@@ -913,7 +998,14 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
               : null,
           fields: [
             for (final field in fields)
-              if (gallerySection && field['type'] == 'file')
+              if (['finance', 'my-finance'].contains(section) &&
+                  [
+                    'status',
+                    'statusCode',
+                    'status_code',
+                  ].contains(field['key']))
+                panelInvoiceStatusField(field)
+              else if (gallerySection && field['type'] == 'file')
                 {
                   ...field,
                   'mediaPicker': true,
@@ -1067,6 +1159,20 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
           }
         }
         await load();
+        if (mounted && section == 'terms' && key == 'assign-student') {
+          setState(() => busy = false);
+          final updated = objects(
+            panelValue(data, '${widget.section['rows'] ?? 'items'}') ?? [],
+          ).where((row) => '${row['id']}' == '${record['id']}').firstOrNull;
+          await perform(
+            'classroom',
+            updated ??
+                {
+                  ...record,
+                  'students': [<String, dynamic>{}],
+                },
+          );
+        }
         if (mounted)
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -1319,6 +1425,18 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
             Wrap(
               spacing: 8,
               children: [
+                if (section == 'schedules')
+                  for (final key in ['cancel', 'attendance'])
+                    if (actions.containsKey(key) && available(key, row))
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          perform(key, row);
+                        },
+                        child: Text(
+                          panelLabel(context, optionalObject(actions[key])),
+                        ),
+                      ),
                 if (available('update', row))
                   TextButton(
                     onPressed: () {
@@ -2017,6 +2135,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
           (filtered.isNotEmpty ||
               [
                 'finance',
+                'schedules',
                 'scheduling-rules',
                 'availability-exceptions',
               ].contains(section) ||
@@ -2039,6 +2158,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
               data['stats'] is Map ||
               [
                 'finance',
+                'schedules',
                 'scheduling-rules',
                 'availability-exceptions',
               ].contains(section) ||
@@ -2163,9 +2283,16 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                   ),
               ],
             ),
-          if (!loading && error == null)
+          if ((!loading || section == 'schedules') && error == null)
             ...exportButtons.map(
-              (button) => SizedBox(width: 48, child: button),
+              (button) => SizedBox(
+                width: 48,
+                child: IconButton(
+                  tooltip: button.tooltip,
+                  icon: button.icon,
+                  onPressed: loading ? null : button.onPressed,
+                ),
+              ),
             ),
           if (toolbar.isNotEmpty)
             PopupMenuButton<VoidCallback>(
@@ -2206,94 +2333,6 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                   padding: const EdgeInsets.only(bottom: 16),
                   children: [
                     if (busy) const LinearProgressIndicator(),
-                    if (section == 'schedules')
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Wrap(
-                          spacing: 8,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            ChoiceChip(
-                              label: Text(
-                                socialText(context, 'نمایش لیستی', 'List view'),
-                              ),
-                              selected: !weekly,
-                              onSelected: (_) {
-                                setState(() {
-                                  weekly = false;
-                                  loading = true;
-                                  page = 1;
-                                });
-                                load();
-                              },
-                            ),
-                            ChoiceChip(
-                              label: Text(
-                                socialText(
-                                  context,
-                                  'برنامه هفتگی',
-                                  'Weekly schedule',
-                                ),
-                              ),
-                              selected: weekly,
-                              onSelected: (_) {
-                                setState(() {
-                                  weekly = true;
-                                  loading = true;
-                                  page = 1;
-                                });
-                                load();
-                              },
-                            ),
-                            if (weekly) ...[
-                              IconButton(
-                                tooltip: socialText(
-                                  context,
-                                  'هفته قبل',
-                                  'Previous week',
-                                ),
-                                icon: const Icon(Icons.chevron_left),
-                                onPressed: () {
-                                  setState(() {
-                                    weekStart = weekStart.subtract(
-                                      const Duration(days: 7),
-                                    );
-                                    loading = true;
-                                  });
-                                  load();
-                                },
-                              ),
-                              Text(
-                                panelDate(
-                                  weekStart.toIso8601String().substring(0, 10),
-                                  fa:
-                                      Localizations.localeOf(
-                                        context,
-                                      ).languageCode ==
-                                      'fa',
-                                ),
-                              ),
-                              IconButton(
-                                tooltip: socialText(
-                                  context,
-                                  'هفته بعد',
-                                  'Next week',
-                                ),
-                                icon: const Icon(Icons.chevron_right),
-                                onPressed: () {
-                                  setState(() {
-                                    weekStart = weekStart.add(
-                                      const Duration(days: 7),
-                                    );
-                                    loading = true;
-                                  });
-                                  load();
-                                },
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
                     PanelPageGuidance(
                       api: widget.api,
                       section: section,
@@ -2353,36 +2392,19 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                           ),
                         ),
                       ),
-                      for (final metric in [
-                        (
-                          'total',
-                          'مجموع مبلغ فاکتورها',
-                          'Total invoice amount',
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
                         ),
-                        ('paid', 'اقساط پرداخت‌شده', 'Paid installments'),
-                        ('remaining', 'مانده قابل پرداخت', 'Remaining payable'),
-                      ])
-                        Card(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Text(socialText(context, metric.$2, metric.$3)),
-                                Text(
-                                  '${panelNumber(financeTotals[metric.$1], fa: Localizations.localeOf(context).languageCode == 'fa')} ${socialText(context, 'تومان', 'toman')}',
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.headlineSmall,
-                                ),
-                              ],
-                            ),
-                          ),
+                        child: PanelStatistics(
+                          stats: {
+                            for (final metric in ['total', 'paid', 'remaining'])
+                              metric:
+                                  '${panelNumber(financeTotals[metric], fa: Localizations.localeOf(context).languageCode == 'fa')} ${socialText(context, 'تومان', 'toman')}',
+                          },
                         ),
+                      ),
                     ],
                     if (section == 'term-discounts' && data['ready'] == false)
                       Padding(
@@ -2615,8 +2637,20 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                       ),
                     if (weekly && section == 'schedules')
                       PanelScheduleWeek(
+                        preferences: schedulePreferences,
                         rows: filtered,
+                        data: data,
+                        branch: organizationFilter,
                         start: weekStart,
+                        first: firstScheduleWeek,
+                        last: lastScheduleWeek,
+                        changeWeek: (date) {
+                          setState(() {
+                            weekStart = date;
+                            loading = true;
+                          });
+                          load();
+                        },
                         open: openRecord,
                       )
                     else if (gallerySection)

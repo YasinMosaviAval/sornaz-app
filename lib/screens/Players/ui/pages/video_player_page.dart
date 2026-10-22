@@ -1,3 +1,5 @@
+import '../../services/media_file_operations.dart';
+import 'package:path/path.dart' as p;
 import 'package:sornaz/helpers/app_platform.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/components/page_source_info.dart';
@@ -246,7 +248,7 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
   String query = '';
   String? error;
   bool loading = true;
-  bool gridView = false;
+  bool gridView = true;
   int gridColumns = 3;
   String t(String fa, String en) => socialText(context, fa, en);
   @override
@@ -264,7 +266,7 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     setState(() {
-      gridView = prefs.getBool('video.grid') ?? false;
+      gridView = prefs.getBool('video.grid') ?? true;
       gridColumns = prefs.getInt('video.grid.columns') == 4 ? 4 : 3;
     });
   }
@@ -303,63 +305,70 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
         : '${duration.inMinutes}:$seconds';
   }
 
-  Widget _grid(
-    List<DeviceVideo> items, {
-    bool embedded = false,
-    String? collection,
-  }) => GridView.builder(
+  SliverGridDelegate get _gridDelegate =>
+      SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: gridColumns,
+        childAspectRatio: gridColumns == 3 ? 9 / 16 : 1,
+        crossAxisSpacing: 1,
+        mainAxisSpacing: 1,
+      );
+
+  Widget _grid(List<DeviceVideo> items) => GridView.builder(
     padding: const EdgeInsets.all(1),
-    shrinkWrap: embedded,
-    physics: embedded ? const NeverScrollableScrollPhysics() : null,
-    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-      crossAxisCount: gridColumns,
-      childAspectRatio: gridColumns == 3 ? 9 / 16 : 1,
-      crossAxisSpacing: 1,
-      mainAxisSpacing: 1,
-    ),
+    gridDelegate: _gridDelegate,
     itemCount: items.length,
-    itemBuilder: (context, i) => InkWell(
-      onLongPress: () => setState(() {
-        if (!selected.remove(items[i].uri)) selected.add(items[i].uri);
-      }),
-      onTap: () => selected.isEmpty
-          ? open(items[i], items)
-          : setState(() {
-              if (!selected.remove(items[i].uri)) {
-                selected.add(items[i].uri);
-              }
-            }),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          VideoThumbnail(uri: items[i].uri),
-          if (selected.contains(items[i].uri))
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primary.withValues(alpha: .22),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary,
-                  width: 2,
-                ),
-              ),
-            ),
-          Positioned(
-            top: 4,
-            right: 4,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: .68),
-                borderRadius: appRadius(context),
-              ),
-              child: Text(
-                _videoDuration(items[i].duration),
-                style: const TextStyle(color: Colors.white, fontSize: 9),
+    itemBuilder: (_, i) => _gridTile(items[i], items),
+  );
+
+  Widget _gridTile(
+    DeviceVideo video,
+    List<DeviceVideo> queue, {
+    String? collection,
+  }) => InkWell(
+    onLongPress: () => setState(() {
+      if (!selected.remove(video.uri)) selected.add(video.uri);
+    }),
+    onTap: () => selected.isEmpty
+        ? open(video, queue)
+        : setState(() {
+            if (!selected.remove(video.uri)) {
+              selected.add(video.uri);
+            }
+          }),
+    child: Stack(
+      fit: StackFit.expand,
+      children: [
+        VideoThumbnail(uri: video.uri),
+        if (selected.contains(video.uri))
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: .22),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.primary,
+                width: 2,
               ),
             ),
           ),
+        Positioned(
+          top: 4,
+          right: 4,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: .68),
+              borderRadius: appRadius(context),
+            ),
+            child: Text(
+              _videoDuration(video.duration),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.white),
+            ),
+          ),
+        ),
+        if (selected.isEmpty)
           Positioned(
             top: 2,
             left: 2,
@@ -368,25 +377,26 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
                 color: Colors.black54,
                 borderRadius: appRadius(context),
               ),
-              child: videoMenu(items[i], collection: collection, onGrid: true),
+              child: videoMenu(video, collection: collection, onGrid: true),
             ),
           ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              width: double.infinity,
-              color: Colors.black54,
-              padding: const EdgeInsets.all(3),
-              child: Text(
-                items[i].name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Colors.white, fontSize: 10),
-              ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            width: double.infinity,
+            color: Colors.black54,
+            padding: const EdgeInsets.all(3),
+            child: Text(
+              video.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.white),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     ),
   );
 
@@ -471,7 +481,7 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
     icon: onGrid ? null : const Icon(Icons.more_vert),
     enabled: !busy,
     onSelected: (action) async {
-      if (['rename', 'crop', 'share', 'delete'].contains(action)) {
+      if (['rename', 'crop', 'move', 'share', 'delete'].contains(action)) {
         await fileAction(action, [video]);
         return;
       }
@@ -509,6 +519,7 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
       for (final action in [
         ('rename', t('تغییر نام', 'Rename')),
         ('crop', t('برش ویدیو', 'Trim video')),
+        ('move', t('انتقال', 'Move')),
         ('share', t('اشتراک‌گذاری', 'Share')),
         ('delete', t('حذف', 'Delete')),
       ])
@@ -549,13 +560,13 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
         leading: VideoThumbnail(uri: video.uri),
         title: Text(
           video.name,
-          style: const TextStyle(fontSize: 13),
+          style: Theme.of(context).textTheme.bodyMedium,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: Text(
           '${video.duration.inMinutes}:${(video.duration.inSeconds % 60).toString().padLeft(2, '0')}',
-          style: const TextStyle(fontSize: 11),
+          style: Theme.of(context).textTheme.bodySmall,
         ),
         onLongPress: () => setState(() {
           if (!selected.remove(video.uri)) selected.add(video.uri);
@@ -565,7 +576,9 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
             : setState(() {
                 if (!selected.remove(video.uri)) selected.add(video.uri);
               }),
-        trailing: videoMenu(video, collection: collection),
+        trailing: selected.isEmpty
+            ? videoMenu(video, collection: collection)
+            : null,
       ),
       Divider(
         height: .2,
@@ -588,6 +601,38 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
     try {
       if (action == 'add') {
         await chooseAudioPlaylist(context, items.map((v) => v.uri), store);
+        return;
+      }
+      if (action == 'move') {
+        final folder = await MediaFileOperations.chooseFolder();
+        if (folder == null) return;
+        for (final item in items) {
+          final destination = p.join(folder, item.name);
+          final moved = AppPlatform.isAndroid
+              ? await MediaFileOperations.channel.invokeMethod<String>(
+                  'relocate',
+                  {'source': item.uri, 'destination': destination},
+                )
+              : await MediaFileOperations.relocate(
+                  DesktopMedia.path(item.uri),
+                  destination,
+                );
+          if (!AppPlatform.isAndroid && moved != null) {
+            final movedUri = item.uri.startsWith('file:')
+                ? File(moved).uri.toString()
+                : moved;
+            await store.replacePath(item.uri, movedUri);
+            await MediaFileOperations.retainDestination(folder, video: true);
+            final saved = await LastPlaybackPositionStore.readVideo();
+            if (saved?.id == item.uri)
+              await LastPlaybackPositionStore.saveVideo(
+                movedUri,
+                saved!.milliseconds,
+              );
+          }
+        }
+        if (mounted) setState(selected.clear);
+        await load();
         return;
       }
       if (action == 'crop') {
@@ -675,6 +720,10 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
       setState(selected.clear);
       if (action != 'share') await load();
     } catch (e) {
+      if (action == 'move' && mounted) {
+        setState(selected.clear);
+        await load();
+      }
       if (mounted) socialError(context, e);
     } finally {
       if (mounted) setState(() => busy = false);
@@ -685,9 +734,14 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
     final groups = <String, List<DeviceVideo>>{};
     if (playlists) {
       for (final e in store.lists.entries) {
-        groups[e.key] = sortedVideos(
-          videos.where((v) => e.value.contains(v.uri)),
-        );
+        final byUri = {
+          for (final v in videos)
+            if (videoVisible(v)) v.uri: v,
+        };
+        groups[e.key] = [
+          for (final uri in e.value)
+            if (byUri[uri] != null) byUri[uri]!,
+        ];
       }
     } else {
       for (final video in sortedVideos(videos)) {
@@ -727,10 +781,11 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
           title.toLowerCase().contains(query) ||
           e.value.any((v) => v.name.toLowerCase().contains(query));
     }).toList();
-    return ListView(
-      children: [
-        for (final e in visibleGroups) ...[
-          ListTile(
+    final slivers = <Widget>[];
+    for (final e in visibleGroups) {
+      slivers.add(
+        SliverToBoxAdapter(
+          child: ListTile(
             dense: true,
             leading: Icon(
               playlists
@@ -749,17 +804,19 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
                         ? t('علاقه‌مندی', 'Favorites')
                         : e.key)
                   : e.value.first.folder,
-              style: const TextStyle(fontSize: 13),
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
             subtitle: Text(
               '${e.value.length} ${t('ویدیو', 'videos')}',
-              style: const TextStyle(fontSize: 11),
+              style: Theme.of(context).textTheme.bodySmall,
             ),
             onTap: () => setState(() {
               final key = '${playlists ? 'p' : 'f'}:${e.key}';
               if (!expanded.remove(key)) expanded.add(key);
             }),
-            trailing: !playlists
+            trailing: selected.isNotEmpty
+                ? null
+                : !playlists
                 ? PopupMenuButton<String>(
                     onSelected: (_) => settings.setOption(
                       'videoHiddenFolders',
@@ -794,34 +851,40 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
                   )
                 : null,
           ),
-          Divider(
-            height: .2,
-            thickness: .2,
-            color: Theme.of(
-              context,
-            ).colorScheme.onSurface.withValues(alpha: .04),
+        ),
+      );
+      if (!expanded.contains('${playlists ? 'p' : 'f'}:${e.key}')) continue;
+      final matches = e.value
+          .where((v) => query.isEmpty || v.name.toLowerCase().contains(query))
+          .toList();
+      if (gridView) {
+        slivers.add(
+          SliverPadding(
+            padding: const EdgeInsets.all(1),
+            sliver: SliverGrid(
+              gridDelegate: _gridDelegate,
+              delegate: SliverChildBuilderDelegate(
+                (_, i) => _gridTile(
+                  matches[i],
+                  e.value,
+                  collection: playlists ? e.key : null,
+                ),
+                childCount: matches.length,
+              ),
+            ),
           ),
-          if (expanded.contains('${playlists ? 'p' : 'f'}:${e.key}'))
-            if (gridView)
-              _grid(
-                e.value
-                    .where(
-                      (video) =>
-                          query.isEmpty ||
-                          video.name.toLowerCase().contains(query),
-                    )
-                    .toList(),
-                embedded: true,
-                collection: playlists ? e.key : null,
-              )
-            else
-              for (final video in e.value.where(
-                (v) => query.isEmpty || v.name.toLowerCase().contains(query),
-              ))
-                row(video, e.value, collection: playlists ? e.key : null),
-        ],
-      ],
-    );
+        );
+      } else {
+        slivers.add(
+          SliverList.builder(
+            itemCount: matches.length,
+            itemBuilder: (_, i) =>
+                row(matches[i], e.value, collection: playlists ? e.key : null),
+          ),
+        );
+      }
+    }
+    return CustomScrollView(slivers: slivers);
   }
 
   @override
@@ -929,6 +992,7 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
                         ('crop', t('برش ویدیو', 'Trim video')),
                       ],
                       ('add', t('افزودن به لیست پخش', 'Add to playlist')),
+                      ('move', t('انتقال', 'Move')),
                       ('share', t('اشتراک‌گذاری', 'Share')),
                       ('delete', t('حذف', 'Delete')),
                       ('hide', t('مخفی کردن', 'Hide')),
@@ -971,11 +1035,10 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
                                 )
                               : gridView
                               ? _grid(visible)
-                              : ListView(
-                                  children: [
-                                    for (final video in visible)
-                                      row(video, visible),
-                                  ],
+                              : ListView.builder(
+                                  itemCount: visible.length,
+                                  itemBuilder: (_, index) =>
+                                      row(visible[index], visible),
                                 )
                         else if (i == 1)
                           groups(false)

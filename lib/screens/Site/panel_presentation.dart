@@ -160,6 +160,9 @@ class PanelStatistics extends StatelessWidget {
     'urgentAlerts': ('موارد نیازمند رسیدگی', 'Action required'),
     'newStudentsWeek': ('ثبت‌نام هفته', 'Weekly registrations'),
     'pointsAwarded': ('امتیازهای اهداشده', 'Points awarded'),
+    'total': ('مجموع مبلغ فاکتورها', 'Total invoice amount'),
+    'paid': ('اقساط پرداخت‌شده', 'Paid installments'),
+    'remaining': ('مانده قابل پرداخت', 'Remaining payable'),
   };
   @override
   Widget build(BuildContext context) => LayoutBuilder(

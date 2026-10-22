@@ -1,5 +1,25 @@
 import '../Social/social_api.dart';
 
+const panelInvoiceStatuses = {
+  'draft': 'پیش‌نویس',
+  'issued': 'صادرشده',
+  'partial': 'پرداخت جزئی',
+  'partially_paid': 'پرداخت جزئی',
+  'paid': 'پرداخت‌شده',
+  'pending': 'در انتظار پرداخت',
+  'canceled': 'لغوشده',
+  'cancelled': 'لغوشده',
+  'void': 'باطل‌شده',
+};
+
+Json panelInvoiceStatusField(Json field) => {
+  ...field,
+  'label': 'وضعیت',
+  'type': 'select',
+  'options': panelInvoiceStatuses,
+  'readOnly': true,
+};
+
 List<Json> panelSubscriptionRows(Json data) => [
   for (final period in objects(data['periods'] ?? []))
     {

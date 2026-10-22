@@ -135,7 +135,6 @@ class PanelDashboard extends StatelessWidget {
         for (final entry in [
           for (final key in [
             'actionItems',
-            'urgentItems',
             'todayClasses',
             'todayAbsences',
             'recentRegistrations',
@@ -254,6 +253,20 @@ class PanelDashboard extends StatelessWidget {
                                               )
                                             : '${row[key]}',
                                       ),
+                                  if (entry.key == 'actionItems' &&
+                                      row['type'] == 'term_missing_classroom')
+                                    TextButton(
+                                      onPressed: onOpen == null
+                                          ? null
+                                          : () => onOpen!('terms'),
+                                      child: Text(
+                                        socialText(
+                                          context,
+                                          'تعیین کلاس برگزاری',
+                                          'Assign classroom',
+                                        ),
+                                      ),
+                                    ),
                                   if (entry.key == 'actionItems' &&
                                       [
                                         'student_waiting',

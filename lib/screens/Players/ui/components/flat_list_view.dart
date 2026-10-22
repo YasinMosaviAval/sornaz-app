@@ -28,7 +28,10 @@ class _FlatListViewState extends State<FlatListView> {
   @override
   Widget build(BuildContext context) {
     final controller = this.controller;
-    final player = context.watch<AudioPlayerProvider>();
+    context.select<AudioPlayerProvider, (int, String, String?)>(
+      (p) => (p.libraryRevision, p.searchQuery, p.currentAudio?.file.path),
+    );
+    final player = context.read<AudioPlayerProvider>();
     final settings = player.settings;
     final visible = player.allFiles
         .where((f) => !settings.isHidden(f.file.path))
@@ -158,20 +161,26 @@ class _FlatListViewState extends State<FlatListView> {
                   onTap: () => setState(() {
                     if (!expanded.remove(row)) expanded.add(row);
                   }),
-                  trailing: PopupMenuButton<String>(
-                    onSelected: (_) => settings.setOption('hiddenPaths', [
-                      ...settings.hiddenPaths,
-                      row,
-                    ]),
-                    itemBuilder: (_) => [
-                      PopupMenuItem(
-                        value: 'hide',
-                        child: Text(
-                          socialText(context, 'مخفی کردن پوشه', 'Hide folder'),
+                  trailing: selected.isNotEmpty
+                      ? const SizedBox.shrink()
+                      : PopupMenuButton<String>(
+                          onSelected: (_) => settings.setOption('hiddenPaths', [
+                            ...settings.hiddenPaths,
+                            row,
+                          ]),
+                          itemBuilder: (_) => [
+                            PopupMenuItem(
+                              value: 'hide',
+                              child: Text(
+                                socialText(
+                                  context,
+                                  'مخفی کردن پوشه',
+                                  'Hide folder',
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
                 );
               }
               final file = row as AudioFile;
@@ -184,6 +193,7 @@ class _FlatListViewState extends State<FlatListView> {
                 index: at,
                 isPlaying: player.currentAudio?.file.path == file.file.path,
                 selected: selected.contains(file.file.path),
+                showActions: selected.isEmpty,
                 onLongPress: () => setState(() => selected.add(file.file.path)),
                 onTap: () {
                   if (selected.isNotEmpty) {
@@ -192,7 +202,11 @@ class _FlatListViewState extends State<FlatListView> {
                           ? selected.remove(file.file.path)
                           : selected.add(file.file.path),
                     );
-                  } else if (player.currentAudio?.file.path == file.file.path) {
+                  } else if (player.currentAudio?.file.path == file.file.path &&
+                      player.isActiveCollection(
+                        queue,
+                        widget.folders ? file.file.parent.path : null,
+                      )) {
                     player.isPlaying ? player.pause() : player.resume();
                   } else {
                     player.playFromFolder(

@@ -6,6 +6,8 @@ import 'panel_web_contracts.dart';
 import 'panel_form_contract.dart';
 import 'panel_parity.dart';
 import 'panel_caption.dart';
+import 'panel_finance.dart';
+import 'panel_schedule_contract.dart';
 
 String panelCellText(BuildContext context, Json row, Json column) {
   final value = panelTableValue(row, '${column['key']}');
@@ -68,6 +70,15 @@ Json panelTableContract(Json section) {
       }.toList(),
     };
   }
+  if (section['key'] == 'schedules') {
+    return {
+      ...contract,
+      'rowActions': [
+        ...((contract['rowActions'] as List?) ?? ['details', 'attendance']),
+        'cancel',
+      ].toSet().toList(),
+    };
+  }
   if (['course-levels', 'my-lesson-levels'].contains(section['key'])) {
     return {
       ...contract,
@@ -89,13 +100,32 @@ Json panelTableContract(Json section) {
 
 List<Json> panelRecordDetailFields(Json section) {
   final contract = panelTableContract(section);
+  final finance = ['finance', 'my-finance'].contains(section['key']);
+  var statusShown = false;
   return objects(contract['detailFields'] ?? section['fields'] ?? [])
+      .map(
+        (field) =>
+            finance &&
+                [
+                  'statusCode',
+                  'status_code',
+                  'statusLabel',
+                ].contains(field['key'])
+            ? <String, dynamic>{...field, 'key': 'status', 'label': 'وضعیت'}
+            : field,
+      )
       .where(
         (field) =>
             field['label'] is String &&
             field['label'] != field['key'] &&
             !['password', 'csrf_token', 'token'].contains(field['key']),
       )
+      .where((field) {
+        if (!finance || field['key'] != 'status') return true;
+        if (statusShown) return false;
+        statusShown = true;
+        return true;
+      })
       .toList();
 }
 
@@ -138,6 +168,21 @@ String panelTableText(dynamic value) {
 
 Json panelDisplayRow(String section, Json row, Json data) {
   final result = {...row};
+  if (section == 'schedules') {
+    final label =
+        row['status'] ??
+        panelScheduleStatus(row['statusCode'] ?? row['status_code']);
+    for (final key in ['status', 'statusCode', 'status_code', 'statusValue']) {
+      result[key] = panelScheduleStatus(label);
+    }
+  }
+  if (['finance', 'my-finance'].contains(section)) {
+    final code = row['statusCode'] ?? row['status_code'] ?? row['status'];
+    final label = panelInvoiceStatuses[code] ?? row['status'] ?? '—';
+    for (final key in ['status', 'statusCode', 'status_code', 'statusLabel']) {
+      result[key] = label;
+    }
+  }
   if (section == 'term-discounts') {
     result['typeLabel'] = row['type'] == 'percentage' ? 'درصدی' : 'مبلغ ثابت';
     result['valueLabel'] =

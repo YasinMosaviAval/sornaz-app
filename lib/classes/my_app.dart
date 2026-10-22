@@ -2,6 +2,7 @@ import 'package:sornaz/screens/Social/social_api.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/screens/Social/user_panel.dart';
 import 'package:flutter/material.dart';
+import 'package:sornaz/components/app_scroll_behavior.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_data.dart';
 import 'package:sornaz/helpers/app_locale_provider.dart';
@@ -23,6 +24,7 @@ class MyApp extends StatelessWidget {
       builder: (context, localeProvider, appData, _) {
         SocialApi.locale = localeProvider.locale.languageCode;
         return MaterialApp(
+          scrollBehavior: const AppScrollBehavior(),
           navigatorKey: navigatorKey,
           debugShowCheckedModeBanner: false,
           title: AppStrings.application_fullname.translate(context),

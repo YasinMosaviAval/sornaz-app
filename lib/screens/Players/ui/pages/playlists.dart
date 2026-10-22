@@ -23,7 +23,7 @@ Future<String?> createMusicPlaylist(
     builder: (c) => PlayerDialog(
       title: Text(socialText(c, 'لیست پخش جدید', 'New playlist')),
       content: TextField(
-        style: const TextStyle(fontSize: 14),
+        style: Theme.of(c).textTheme.bodyMedium,
         onChanged: (value) => draft = value,
         autofocus: true,
         maxLength: 80,
@@ -111,6 +111,9 @@ class PlaylistsTab extends StatefulWidget {
 class _PlaylistsTabState extends State<PlaylistsTab> {
   final store = MusicPlaylists.instance;
   final expanded = <String>{};
+  final selected = <String>{};
+  final scroll = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -118,8 +121,17 @@ class _PlaylistsTabState extends State<PlaylistsTab> {
   }
 
   @override
+  void dispose() {
+    scroll.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final player = context.watch<AudioPlayerProvider>();
+    context.select<AudioPlayerProvider, (int, String, String?)>(
+      (p) => (p.libraryRevision, p.searchQuery, p.currentAudio?.file.path),
+    );
+    final player = context.read<AudioPlayerProvider>();
     return AnimatedBuilder(
       animation: store,
       builder: (c, _) {
@@ -134,122 +146,194 @@ class _PlaylistsTabState extends State<PlaylistsTab> {
                 if (byPath[p] != null) byPath[p]!,
             ]),
         ];
-        return ListView(
-          padding: EdgeInsets.zero,
+        final rows = <(String, AudioFile?)>[];
+        for (final entry in lists) {
+          rows.add((entry.key, null));
+          if (expanded.contains(entry.key)) {
+            for (final file in entry.value) {
+              if (file.fileName.toLowerCase().contains(player.searchQuery)) {
+                rows.add((entry.key, file));
+              }
+            }
+          }
+        }
+        final queues = {for (final entry in lists) entry.key: entry.value};
+        final selectedFiles = [
+          for (final file in byPath.values)
+            if (selected.contains(file.file.path)) file,
+        ];
+        return Column(
           children: [
-            for (final entry in lists) ...[
-              SizedBox(
-                height: 64,
-                child: AudioRow(
-                  title: playlistLabel(c, entry.key),
-                  location: '',
-                  duration: Duration.zero,
-                  count: entry.value.length,
-                  leadingIcon: entry.key == MusicPlaylists.favorite
-                      ? Icons.favorite_border
-                      : Icons.queue_music,
-                  isPlaying: false,
-                  onTap: () => setState(() {
-                    if (!expanded.remove(entry.key)) expanded.add(entry.key);
-                  }),
-                  trailing: entry.key == MusicPlaylists.favorite
-                      ? Icon(
-                          expanded.contains(entry.key)
-                              ? Icons.expand_less
-                              : Icons.expand_more,
-                        )
-                      : PopupMenuButton<String>(
-                          padding: EdgeInsets.zero,
-                          icon: const Icon(Icons.more_vert, size: 24),
-                          onSelected: (action) async {
-                            final renamed = await editAudioCollection(
-                              c,
-                              store,
-                              entry.key,
-                              delete: action == 'delete',
-                            );
-                            if (mounted &&
-                                renamed != null &&
-                                expanded.remove(entry.key))
-                              setState(() => expanded.add(renamed));
-                          },
-                          itemBuilder: (_) => const [
-                            PopupMenuItem(
-                              value: 'rename',
-                              child: Text('تغییر نام'),
-                            ),
-                            PopupMenuItem(value: 'delete', child: Text('حذف')),
-                          ],
-                        ),
-                ),
+            if (selected.isNotEmpty)
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: () => setState(selected.clear),
+                    icon: const Icon(Icons.close),
+                  ),
+                  Text('${selected.length}'),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () => setState(
+                      () => selected.addAll([
+                        for (final row in rows)
+                          if (row.$2 != null) row.$2!.file.path,
+                      ]),
+                    ),
+                    icon: const Icon(Icons.select_all),
+                  ),
+                  AudioActionsMenu(
+                    files: selectedFiles,
+                    after: () {
+                      if (mounted) setState(selected.clear);
+                    },
+                  ),
+                ],
               ),
-              if (expanded.contains(entry.key))
-                for (final audio in entry.value.where(
-                  (f) => f.fileName.toLowerCase().contains(player.searchQuery),
-                ))
-                  SizedBox(
-                    height: 64,
-                    child: AudioItem(
-                      audio: audio,
-                      index: entry.value.indexOf(audio),
-                      isPlaying:
-                          player.currentAudio?.file.path == audio.file.path,
-                      onTap: () {
-                        if (player.currentAudio?.file.path == audio.file.path) {
-                          player.isPlaying ? player.pause() : player.resume();
-                        } else {
-                          player.playFromFolder(
-                            entry.value,
-                            entry.value.indexOf(audio),
-                            listKey: entry.key,
-                            lists: lists,
+            Expanded(
+              child: ListView.builder(
+                controller: scroll,
+                padding: EdgeInsets.zero,
+                itemExtent: 64,
+                itemCount: rows.length,
+                itemBuilder: (c, index) {
+                  final (key, audio) = rows[index];
+                  final queue = queues[key]!;
+                  if (audio == null) {
+                    final isExpanded = expanded.contains(key);
+                    return AudioRow(
+                      title: playlistLabel(c, key),
+                      location: '',
+                      duration: Duration.zero,
+                      count: queue.length,
+                      leadingIcon: key == MusicPlaylists.favorite
+                          ? (isExpanded
+                                ? Icons.favorite
+                                : Icons.favorite_border)
+                          : (isExpanded
+                                ? Icons.queue_music
+                                : Icons.queue_music_outlined),
+                      isPlaying: isExpanded,
+                      onTap: () => setState(() {
+                        if (!expanded.remove(key)) expanded.add(key);
+                      }),
+                      trailing: selected.isNotEmpty
+                          ? const SizedBox.shrink()
+                          : key == MusicPlaylists.favorite
+                          ? Icon(
+                              isExpanded
+                                  ? Icons.expand_less
+                                  : Icons.expand_more,
+                            )
+                          : PopupMenuButton<String>(
+                              onSelected: (action) async {
+                                final renamed = await editAudioCollection(
+                                  c,
+                                  store,
+                                  key,
+                                  delete: action == 'delete',
+                                );
+                                if (mounted &&
+                                    renamed != null &&
+                                    expanded.remove(key)) {
+                                  setState(() => expanded.add(renamed));
+                                }
+                              },
+                              itemBuilder: (_) => [
+                                PopupMenuItem(
+                                  value: 'rename',
+                                  child: Text(
+                                    socialText(c, 'تغییر نام', 'Rename'),
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Text(socialText(c, 'حذف', 'Delete')),
+                                ),
+                              ],
+                            ),
+                    );
+                  }
+                  return AudioItem(
+                    key: ValueKey('$key:${audio.file.path}'),
+                    audio: audio,
+                    index: queue.indexOf(audio),
+                    isPlaying:
+                        player.currentAudio?.file.path == audio.file.path,
+                    selected: selected.contains(audio.file.path),
+                    showActions: selected.isEmpty,
+                    onLongPress: () =>
+                        setState(() => selected.add(audio.file.path)),
+                    onTap: () {
+                      if (selected.isNotEmpty) {
+                        setState(() {
+                          if (!selected.remove(audio.file.path))
+                            selected.add(audio.file.path);
+                        });
+                      } else if (player.currentAudio?.file.path ==
+                              audio.file.path &&
+                          player.isActiveCollection(queue, key)) {
+                        player.isPlaying ? player.pause() : player.resume();
+                      } else {
+                        player.playFromFolder(
+                          queue,
+                          queue.indexOf(audio),
+                          listKey: key,
+                          lists: lists,
+                        );
+                      }
+                    },
+                    trailing: PopupMenuButton<String>(
+                      padding: EdgeInsets.zero,
+                      icon: const Icon(Icons.more_vert),
+                      onSelected: (action) {
+                        if (action == 'remove') {
+                          store.remove(key, audio.file.path);
+                        } else if (action == 'playlist') {
+                          chooseAudioPlaylist(
+                            c,
+                            [audio.file.path],
+                            store,
+                            excludeKey: key,
                           );
+                        } else {
+                          audioAction(c, [audio], action);
                         }
                       },
-                      trailing: PopupMenuButton<String>(
-                        padding: EdgeInsets.zero,
-                        icon: const Icon(Icons.more_vert, size: 24),
-                        onSelected: (action) {
-                          if (action == 'remove') {
-                            store.remove(entry.key, audio.file.path);
-                          } else if (action == 'playlist') {
-                            chooseAudioPlaylist(
+                      itemBuilder: (_) => [
+                        for (final action in [
+                          ('crop', socialText(c, 'برش صدا', 'Trim audio')),
+                          (
+                            'playlist',
+                            socialText(
                               c,
-                              [audio.file.path],
-                              store,
-                              excludeKey: entry.key,
-                            );
-                          } else {
-                            audioAction(c, [audio], action);
-                          }
-                        },
-                        itemBuilder: (_) => const [
-                          PopupMenuItem(value: 'crop', child: Text('برش صدا')),
-                          PopupMenuItem(
-                            value: 'playlist',
-                            child: Text('افزودن به لیست پخش'),
+                              'افزودن به لیست پخش',
+                              'Add to playlist',
+                            ),
                           ),
-                          PopupMenuItem(
-                            value: 'rename',
-                            child: Text('تغییر نام'),
+                          ('rename', socialText(c, 'تغییر نام', 'Rename')),
+                          ('move', socialText(c, 'انتقال', 'Move')),
+                          ('share', socialText(c, 'اشتراک‌گذاری', 'Share')),
+                          ('delete', socialText(c, 'حذف فایل', 'Delete file')),
+                          (
+                            'remove',
+                            socialText(
+                              c,
+                              'حذف از لیست پخش',
+                              'Remove from playlist',
+                            ),
                           ),
+                        ])
                           PopupMenuItem(
-                            value: 'share',
-                            child: Text('اشتراک‌گذاری'),
+                            value: action.$1,
+                            child: Text(action.$2),
                           ),
-                          PopupMenuItem(
-                            value: 'delete',
-                            child: Text('حذف فایل'),
-                          ),
-                          PopupMenuItem(
-                            value: 'remove',
-                            child: Text('حذف از لیست پخش'),
-                          ),
-                        ],
-                      ),
+                      ],
                     ),
-                  ),
-            ],
+                  );
+                },
+              ),
+            ),
           ],
         );
       },

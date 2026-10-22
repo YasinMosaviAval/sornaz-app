@@ -5,12 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sornaz/screens/Site/panel_api.dart';
+import 'package:sornaz/screens/Site/panel_dashboard.dart';
+import 'package:sornaz/screens/Site/panel_form.dart';
 import 'package:sornaz/screens/Site/panel_finance.dart';
 import 'package:sornaz/screens/Site/panel_navigation.dart';
 import 'package:sornaz/screens/Site/panel_organization_filter.dart';
 import 'package:sornaz/screens/Site/panel_page_guidance.dart';
 import 'package:sornaz/screens/Site/panel_presentation.dart';
 import 'package:sornaz/screens/Site/panel_resource_page.dart';
+import 'package:sornaz/screens/Site/panel_table_contract.dart';
 import 'package:sornaz/screens/Social/social_api.dart';
 import 'social_widget_test.dart' as fixture;
 
@@ -76,7 +79,75 @@ class FinanceApi extends PanelApi {
 }
 
 void main() {
+  test(
+    'invoice details contain one localized status and edit is read-only',
+    () {
+      final fields = panelRecordDetailFields({
+        'key': 'finance',
+        'fields': [
+          {'key': 'status', 'label': 'وضعیت'},
+          {'key': 'statusCode', 'label': 'وضعیت'},
+        ],
+      });
+      expect(fields.where((field) => field['key'] == 'status'), hasLength(1));
+      final row = panelDisplayRow('finance', {
+        'statusCode': 'issued',
+        'status': 'صادرشده',
+      }, {});
+      expect(panelTableValue(row, 'status'), 'صادرشده');
+      final field = panelInvoiceStatusField({'key': 'statusCode'});
+      expect(field['readOnly'], isTrue);
+      expect(field['options']['issued'], 'صادرشده');
+    },
+  );
   setUp(() => SharedPreferences.setMockInitialValues({}));
+  testWidgets('invoice status displays Persian and cannot be edited', (
+    tester,
+  ) async {
+    var changed = false;
+    await tester.pumpWidget(
+      fixture.host(
+        Scaffold(
+          body: PanelField(
+            field: panelInvoiceStatusField({'key': 'statusCode'}),
+            value: 'issued',
+            data: const {},
+            changed: (_) => changed = true,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('صادرشده'), findsOneWidget);
+    expect(find.text('issued'), findsNothing);
+    final dropdown = tester.widget<DropdownButtonFormField<String>>(
+      find.byType(DropdownButtonFormField<String>),
+    );
+    expect(dropdown.onChanged, isNull);
+    expect(changed, isFalse);
+  });
+  testWidgets('dashboard omits urgent items and retains review actions', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      fixture.host(
+        const Scaffold(
+          body: SingleChildScrollView(
+            child: PanelDashboard(
+              data: {
+                'urgentItems': [
+                  {'text': 'hidden urgent fixture'},
+                ],
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('dashboard-urgentItems')), findsNothing);
+    expect(find.byKey(const ValueKey('dashboard-actionItems')), findsOneWidget);
+  });
   testWidgets(
     'guidance editor preserves bilingual values on failure and submits the website page key',
     (tester) async {
@@ -262,6 +333,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('راهنمای مالی'), findsOneWidget);
       expect(find.text('مجموع مبلغ فاکتورها'), findsOneWidget);
+      expect(find.byType(PanelStatistics), findsOneWidget);
       expect(find.byTooltip('خروجی اکسل'), findsOneWidget);
       expect(find.byTooltip('خروجی PDF'), findsOneWidget);
       await tester.ensureVisible(find.byIcon(Icons.shopping_cart_outlined));

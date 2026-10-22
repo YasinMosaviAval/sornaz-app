@@ -14,6 +14,7 @@ import 'branch_form.dart';
 import 'panel_page_guidance.dart';
 import 'panel_section_card.dart';
 import 'panel_table_contract.dart';
+import 'panel_form.dart';
 
 class BranchesPage extends StatefulWidget {
   const BranchesPage({
@@ -198,6 +199,41 @@ class _BranchesPageState extends State<BranchesPage> {
           ),
         );
     }
+  }
+
+  Future<void> registerAccount() async {
+    if (busy || !canCreate || !actions.containsKey('register-account')) return;
+    final action = optionalObject(actions['register-account']);
+    final result = await showDialog<PanelFormResult>(
+      context: context,
+      builder: (_) => PanelFormPage(
+        title: t('ثبت حساب شعبه', 'Register branch account'),
+        fields: objects(action['fields'] ?? []),
+        data: data,
+        initial: {
+          'academy_id': academy.isNotEmpty
+              ? academy
+              : objects(data['academies'] ?? []).firstOrNull?['id'],
+        },
+        dialog: true,
+        declaredOnly: true,
+        onRequestCode: (result) async {
+          await widget.api.act(
+            'branches',
+            'registration-otp',
+            values: result.values,
+          );
+        },
+        onSubmit: (result) async {
+          await widget.api.act(
+            'branches',
+            'register-account',
+            values: result.values,
+          );
+        },
+      ),
+    );
+    if (result != null && mounted) await load();
   }
 
   Future<void> remove(Json row) async {
@@ -421,10 +457,10 @@ class _BranchesPageState extends State<BranchesPage> {
       key: ValueKey('branch-card-${row['id']}'),
       color: branchFlag(row['is_main'])
           ? branchHighlight(context)
-          : Colors.white,
+          : Theme.of(context).colorScheme.surface,
       border: branchFlag(row['is_main'])
           ? const Color(0xfffcd34d)
-          : Colors.transparent,
+          : Theme.of(context).colorScheme.outline,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -853,6 +889,14 @@ class _BranchesPageState extends State<BranchesPage> {
             page = 1;
           }),
           actions: [
+            if (canCreate &&
+                !typesOnly &&
+                actions.containsKey('register-account'))
+              IconButton(
+                tooltip: t('ثبت حساب شعبه', 'Register branch account'),
+                onPressed: loading || busy ? null : registerAccount,
+                icon: const Icon(Icons.person_add_alt),
+              ),
             if (canCreate)
               IconButton(
                 tooltip: typesOnly

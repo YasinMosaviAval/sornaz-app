@@ -71,7 +71,7 @@ Json panelSectionWithTabs(Json section, List<Json> sections) {
     'users': ('نقش‌ها و دسترسی‌ها', 'Roles and permissions'),
     'member-schedules': ('برنامه زمانی اعضا', 'Member schedules'),
     'employee-leaves': ('مرخصی‌ها', 'Employee leaves'),
-    'branches': ('سازمان', 'Organization'),
+    'branches': ('مدیریت شعبه‌ها', 'Branch management'),
     'availabilities': ('برنامه زمانی سازمان', 'Organization availability'),
     'scheduling-rules': (
       'قوانین زمانبندی سازمان',

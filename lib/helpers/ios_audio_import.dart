@@ -49,7 +49,7 @@ Future<int> importIosVideos() async {
   for (final file in selected.files) {
     if (file.path == null)
       throw const FileSystemException('Selected video has no readable path');
-    final output = await DesktopMedia.draft('mp4');
+    var output = await DesktopMedia.draft('mp4');
     try {
       await DesktopMedia.run([
         '-i',
@@ -67,6 +67,7 @@ Future<int> importIosVideos() async {
         '+faststart',
         output.path,
       ]);
+      output = await DesktopMedia.finishVideo(output);
       await DesktopMedia.invokeIOS('sornaz/story_media', 'save', {
         'path': output.path,
         'video': true,

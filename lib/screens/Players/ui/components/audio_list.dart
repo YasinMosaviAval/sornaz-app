@@ -20,7 +20,7 @@ class AudioList extends StatelessWidget {
       AudioLibraryManager
     >(
       builder: (context, audio, folder, library, _) {
-        if (library.isScanning)
+        if (library.isScanning && library.allFiles.isEmpty)
           return Center(child: CircularProgressIndicator());
         if (audio.folderMode) {
           return const FolderView();

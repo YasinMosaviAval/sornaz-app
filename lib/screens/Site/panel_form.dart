@@ -3,6 +3,7 @@ import 'package:sornaz/helpers/app_appearance.dart';
 import 'panel_ui.dart';
 import 'panel_caption.dart';
 import 'dart:async';
+import 'dart:convert';
 import 'package:sornaz/helpers/app_typography.dart';
 
 import 'package:sornaz/components/app_top_bar_direction.dart';
@@ -36,6 +37,8 @@ class PanelFormPage extends StatefulWidget {
     this.onSubmit,
     this.onRequestCode,
     this.loadBatchTimes,
+    this.lookupMemberUser,
+    this.previewStudentSchedule,
     this.loadOptions,
     this.settingsCheckboxes = false,
     this.dialog = false,
@@ -46,6 +49,8 @@ class PanelFormPage extends StatefulWidget {
   final Future<void> Function(PanelFormResult result)? onSubmit;
   final Future<void> Function(PanelFormResult result)? onRequestCode;
   final Future<Json> Function(Json values)? loadBatchTimes;
+  final Future<Json> Function(Json values, String query)? lookupMemberUser;
+  final Future<Json> Function(Json values)? previewStudentSchedule;
   final Future<Json> Function()? loadOptions;
   final bool settingsCheckboxes, dialog;
   final bool declaredOnly;
@@ -59,6 +64,79 @@ class PanelFormPage extends StatefulWidget {
 }
 
 class _PanelFormPageState extends State<PanelFormPage> {
+  Json? existingUser;
+  bool lookupBusy = false, previewBusy = false;
+  String userQuery = '';
+  List<Json> foundUsers = [];
+  List<String> scheduleIssues = [];
+  List<Json> get effectiveFields => [
+    for (final field in widget.fields)
+      if (existingUser != null &&
+          (optionalObject(existingUser!['fields'])[field['key']] == true ||
+              ['registration', 'profileVisibility'].contains(field['key'])))
+        {
+          ...field,
+          'required': false,
+          'visibleWhen': {'_form._neverShowSavedIdentity': true},
+        }
+      else if (existingUser != null &&
+          '${field['key']}'.startsWith('parent') &&
+          optionalObject(existingUser!['fields'])['birthDate'] == true)
+        {
+          ...field,
+          'visibleWhen': {'_form._existingUnder18': true},
+        }
+      else
+        field,
+  ];
+
+  Future<void> lookupUser() async {
+    if (lookupBusy || widget.lookupMemberUser == null) return;
+    setState(() => lookupBusy = true);
+    final organization = values['organizationUserId'];
+    try {
+      final result = await widget.lookupMemberUser!(
+        Map.of(values),
+        userQuery.trim(),
+      );
+      if (mounted && organization == values['organizationUserId'])
+        setState(() => foundUsers = objects(result['users'] ?? []));
+    } catch (e) {
+      if (mounted) socialError(context, e);
+    } finally {
+      if (mounted) setState(() => lookupBusy = false);
+    }
+  }
+
+  Future<void> previewSchedule() async {
+    if (previewBusy || widget.previewStudentSchedule == null) return;
+    setState(() => previewBusy = true);
+    final before = jsonEncode([values['termId'], values['studentSchedule']]);
+    try {
+      final response = await widget.previewStudentSchedule!(Map.of(values));
+      if (mounted &&
+          before == jsonEncode([values['termId'], values['studentSchedule']]))
+        setState(() {
+          scheduleIssues = [
+            for (final session in objects(response['sessions'] ?? []))
+              if ('${session['error'] ?? ''}'.isNotEmpty)
+                '${session['date']}: ${session['error']}',
+          ];
+          values['studentSchedule'] = {
+            ...optionalObject(values['studentSchedule']),
+            'dates': [
+              for (final session in objects(response['sessions'] ?? []))
+                session['date'],
+            ],
+          };
+        });
+    } catch (e) {
+      if (mounted) socialError(context, e);
+    } finally {
+      if (mounted) setState(() => previewBusy = false);
+    }
+  }
+
   late final Json liveData = Map.of(widget.data);
   Timer? optionsTimer;
   bool optionsLoading = false;
@@ -66,7 +144,7 @@ class _PanelFormPageState extends State<PanelFormPage> {
   bool submitting = false, handedOff = false;
   String? validationError;
   late final Json values = panelInitialValues(
-    widget.fields,
+    effectiveFields,
     widget.initial,
     liveData,
   );
@@ -108,7 +186,7 @@ class _PanelFormPageState extends State<PanelFormPage> {
       setState(() {
         liveData.addAll(latest);
         // Keep user input; clear only a selection whose organization was removed.
-        for (final field in widget.fields) {
+        for (final field in effectiveFields) {
           if (field['type'] != 'select' ||
               !RegExp(
                 r'organization|branch|academy',
@@ -117,7 +195,7 @@ class _PanelFormPageState extends State<PanelFormPage> {
             continue;
           final available = panelSelectOptions(
             field,
-            panelFormContext(widget.fields, values, liveData),
+            panelFormContext(effectiveFields, values, liveData),
           );
           final current = '${values[field['key']] ?? ''}';
           if (current.isNotEmpty && !available.containsKey(current))
@@ -191,13 +269,28 @@ class _PanelFormPageState extends State<PanelFormPage> {
 
   void change(Json field, dynamic value) {
     setState(() {
+      if (field['key'] == 'organizationUserId') {
+        existingUser = null;
+        foundUsers = [];
+        values.remove('_existingUnder18');
+      }
+      if (field['key'] == 'termId') values.remove('studentSchedule');
+      if (field['key'] == 'studentSchedule') {
+        final previous = optionalObject(values['studentSchedule']);
+        final next = optionalObject(value);
+        if (previous['firstDate'] != next['firstDate'] ||
+            previous['classroomId'] != next['classroomId']) {
+          value = {...next}..remove('dates');
+          scheduleIssues = [];
+        }
+      }
       final previousSuggestion = widget.suggestedTitle?.call(values);
       final updateTitle =
           previousSuggestion != null &&
           ('${values['title'] ?? ''}'.isEmpty ||
               values['title'] == previousSuggestion);
       values['${field['key']}'] = value;
-      for (final child in widget.fields) {
+      for (final child in effectiveFields) {
         if (optionalObject(
           optionalObject(child['options'])['match'],
         ).values.contains(field['key'])) {
@@ -209,7 +302,7 @@ class _PanelFormPageState extends State<PanelFormPage> {
         }
       }
       final updated = panelInitialValues(
-        widget.fields,
+        effectiveFields,
         values,
         liveData,
         applyAliases: false,
@@ -220,13 +313,13 @@ class _PanelFormPageState extends State<PanelFormPage> {
         values['title'] = widget.suggestedTitle!(values);
       }
       if (field['key'] == 'classroomId' && values['teachers'] is List) {
-        final teacher = widget.fields
+        final teacher = effectiveFields
             .where((field) => field['key'] == 'teachers')
             .firstOrNull;
         if (teacher != null) {
           final allowed = panelSelectOptions(
             teacher,
-            panelFormContext(widget.fields, values, liveData),
+            panelFormContext(effectiveFields, values, liveData),
           );
           values['teachers'] = (values['teachers'] as List)
               .where(
@@ -247,6 +340,16 @@ class _PanelFormPageState extends State<PanelFormPage> {
     bool requestCode = false,
   }) async {
     if (submitting) return;
+    if (!requestCode && scheduleIssues.isNotEmpty) {
+      setState(
+        () => validationError = socialText(
+          context,
+          'تداخل جلسه‌ها را اصلاح و دوباره تاریخ‌ها را بررسی کنید.',
+          'Resolve session conflicts and preview the dates again.',
+        ),
+      );
+      return;
+    }
     if (widget.loadBatchTimes != null &&
         (batchTimesLoading || batchTimesFailed || batchTimes.isEmpty))
       return;
@@ -261,9 +364,9 @@ class _PanelFormPageState extends State<PanelFormPage> {
       return;
     }
     if (widget.declaredOnly) {
-      final invalid = panelInvalidField(widget.fields, values, liveData);
+      final invalid = panelInvalidField(effectiveFields, values, liveData);
       if (invalid != null) {
-        final field = widget.fields
+        final field = effectiveFields
             .where((field) => field['key'] == invalid)
             .first;
         setState(
@@ -275,7 +378,7 @@ class _PanelFormPageState extends State<PanelFormPage> {
       }
     }
     setState(() => validationError = null);
-    for (final field in widget.fields) {
+    for (final field in effectiveFields) {
       if (field['type'] == 'multi' && values[field['key']] is List) {
         values[field['key']] = (values[field['key']] as List)
             .map((item) => item is Map ? item['id'] : item)
@@ -286,10 +389,15 @@ class _PanelFormPageState extends State<PanelFormPage> {
     if (form.currentState!.validate()) {
       final result = PanelFormResult({
         ...(widget.declaredOnly
-            ? panelSubmittedValues(widget.fields, values, liveData)
+            ? panelSubmittedValues(effectiveFields, values, liveData)
             : Map.of(values)),
         ...overrides,
       }, Map.of(files));
+      if (existingUser != null)
+        result.values['existingUserToken'] = existingUser!['token'];
+      final schedule = optionalObject(values['studentSchedule']);
+      if (schedule['dates'] is List)
+        result.values['studentSchedule'] = schedule;
       if (widget.onSubmit == null) {
         handedOff = true;
         Navigator.pop(context, result);
@@ -327,6 +435,105 @@ class _PanelFormPageState extends State<PanelFormPage> {
               ? EdgeInsets.zero
               : const EdgeInsets.all(16),
           children: [
+            if (widget.lookupMemberUser != null) ...[
+              TextField(
+                decoration: InputDecoration(
+                  labelText: socialText(
+                    context,
+                    'نام کاربری یا شماره موبایل کامل',
+                    'Exact username or mobile number',
+                  ),
+                ),
+                onChanged: (value) => userQuery = value,
+              ),
+              TextButton(
+                onPressed: lookupBusy ? null : lookupUser,
+                child: Text(
+                  socialText(
+                    context,
+                    'جستجوی کاربر موجود',
+                    'Find existing user',
+                  ),
+                ),
+              ),
+              for (final user in foundUsers)
+                ListTile(
+                  title: Text('${user['name'] ?? user['username']}'),
+                  onTap: () => setState(() {
+                    existingUser = user;
+                    values['_existingUnder18'] = user['under18'] == true;
+                    foundUsers = [];
+                  }),
+                ),
+              if (existingUser != null)
+                ListTile(
+                  title: Text(
+                    '${existingUser!['name'] ?? existingUser!['username']}',
+                  ),
+                  subtitle: Text(
+                    socialText(
+                      context,
+                      'اطلاعات ثبت‌شده از حساب انتخابی استفاده می‌شود.',
+                      'Saved information from the selected account will be used.',
+                    ),
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => setState(() {
+                      existingUser = null;
+                      values.remove('_existingUnder18');
+                    }),
+                  ),
+                ),
+            ],
+            if (widget.previewStudentSchedule != null &&
+                effectiveFields.any(
+                  (field) =>
+                      field['key'] == 'studentSchedule' &&
+                      panelFieldVisible(
+                        field,
+                        panelFormContext(effectiveFields, values, liveData),
+                      ),
+                )) ...[
+              for (final issue in scheduleIssues)
+                Text(
+                  issue,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              TextButton(
+                onPressed: previewBusy ? null : previewSchedule,
+                child: Text(
+                  socialText(
+                    context,
+                    'بررسی تاریخ جلسات',
+                    'Preview session dates',
+                  ),
+                ),
+              ),
+              for (final entry
+                  in (optionalObject(values['studentSchedule'])['dates']
+                              as List? ??
+                          [])
+                      .indexed)
+                PanelField(
+                  key: ValueKey('preview-session-${entry.$1}'),
+                  field: {
+                    'key': 'sessionDate${entry.$1}',
+                    'label': 'تاریخ جلسه ${entry.$1 + 1}',
+                    'en': 'Session ${entry.$1 + 1} date',
+                    'type': 'date',
+                  },
+                  value: entry.$2,
+                  data: liveData,
+                  changed: (value) => setState(() {
+                    final schedule = optionalObject(values['studentSchedule']);
+                    final dates = List<dynamic>.of(schedule['dates'] as List);
+                    dates[entry.$1] = value;
+                    values['studentSchedule'] = {...schedule, 'dates': dates};
+                  }),
+                  onFile: (_) {},
+                ),
+            ],
             if (widget.loadBatchTimes != null) ...[
               if (batchTimesLoading) const LinearProgressIndicator(),
               if (!batchTimesLoading && !batchTimesFailed && batchTimes.isEmpty)
@@ -371,10 +578,10 @@ class _PanelFormPageState extends State<PanelFormPage> {
                 validationError!,
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
-            for (final field in widget.fields.where(
+            for (final field in effectiveFields.where(
               (field) => panelFieldVisible(
                 field,
-                panelFormContext(widget.fields, values, liveData),
+                panelFormContext(effectiveFields, values, liveData),
               ),
             ))
               Padding(
@@ -392,12 +599,12 @@ class _PanelFormPageState extends State<PanelFormPage> {
                     },
                     'required': panelFieldRequired(
                       field,
-                      panelFormContext(widget.fields, values, liveData),
+                      panelFormContext(effectiveFields, values, liveData),
                     ),
                     if (widget.settingsCheckboxes) 'type': 'settingsCheckbox',
                   },
                   value: values['${field['key']}'],
-                  data: panelFormContext(widget.fields, values, liveData),
+                  data: panelFormContext(effectiveFields, values, liveData),
                   changed: (value) => change(field, value),
                   onFile: (file) {
                     final previous = files['${field['key']}'];
@@ -422,7 +629,9 @@ class _PanelFormPageState extends State<PanelFormPage> {
             content,
             const SizedBox(height: 12),
             if (widget.onRequestCode != null &&
-                ['manager', 'receptionist'].contains(values['type']))
+                existingUser == null &&
+                (values['type'] == null ||
+                    ['manager', 'receptionist'].contains(values['type'])))
               OutlinedButton(
                 onPressed: submitting ? null : () => submit(requestCode: true),
                 child: Text(

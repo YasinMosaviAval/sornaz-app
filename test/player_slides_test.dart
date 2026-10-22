@@ -13,6 +13,8 @@ import 'social_widget_test.dart' as fixture;
 
 class Audio extends ChangeNotifier implements AudioPlayerProvider {
   @override
+  int get libraryRevision => 0;
+  @override
   PlayerSettings get settings => PlayerSettings.instance;
   @override
   bool get isPlaying => false;

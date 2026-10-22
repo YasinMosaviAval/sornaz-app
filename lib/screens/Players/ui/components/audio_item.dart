@@ -20,9 +20,11 @@ class AudioItem extends StatelessWidget {
     this.onLongPress,
     this.selected = false,
     this.trailing,
+    this.showActions = true,
   });
   final AudioFile audio;
   final Widget? trailing;
+  final bool showActions;
   final bool isPlaying, selected;
   final int index;
   final VoidCallback? onTap, onLongPress;
@@ -39,11 +41,15 @@ class AudioItem extends StatelessWidget {
       location: audio.folderName,
       duration: audio.duration,
       isPlaying: isPlaying,
-      paused: isPlaying && !context.watch<AudioPlayerProvider>().isPlaying,
+      paused:
+          isPlaying &&
+          !context.select<AudioPlayerProvider, bool>((p) => p.isPlaying),
       selected: selected,
       onTap: action,
       onLongPress: onLongPress ?? () => showFileOptions(context, audio),
-      trailing: trailing ?? AudioActionsMenu(files: [audio]),
+      trailing: showActions
+          ? trailing ?? AudioActionsMenu(files: [audio])
+          : const SizedBox.shrink(),
     );
   }
 }
