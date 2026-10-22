@@ -12,3 +12,18 @@
 - Apply the standard horizontal content inset to the first and last icons of every top bar. Back icons and page titles must share the same size, font style, and theme-derived color throughout the app.
 - For expandable folder and playlist rows, show the expanded row's icon in the theme primary color. If its collapsed icon is outlined, use the filled counterpart while expanded.
 - Display image and video grids with 1dp of spacing between items and a 1dp inset from every screen edge. This grid rule overrides the standard content inset.
+
+# Google Play Release Worktree
+
+- This worktree is `release/google-play-v1`. Make release-specific changes only here; do not modify the `main` development worktree.
+- Keep unfinished OMR and experimental performance analysis out of this release. Keep the Scene tab connected to the existing chat screen and the Profile tab connected to the existing account screen. Preserve completed features and existing authentication and navigation behavior.
+- Transfer development changes selectively and review dependencies and conflicts before cherry-picking or merging. Never merge all of `main` into this branch without an explicit user request. Preserve this release-specific `AGENTS.md` during transfers.
+- Do not remove a shared dependency without checking its production uses. Do not change the application ID, signing keys or configuration, backend configuration, or sensitive permissions without the user's approval.
+- Preserve all important files and uncommitted work. Avoid unnecessary architecture changes; release stability takes priority over adding features.
+- The Release black-screen startup issue has not yet been confirmed fixed on an Android device. Do not call the app ready for publication until relevant tests and real Android startup have been verified.
+- Do not create a commit or push without the user's explicit approval. Report work and test results in Persian.
+
+# Shared Git Worktree Safety
+
+- Both worktrees share one Git repository. Avoid large, unrelated commits and do not replace the other branch's `AGENTS.md` during a transfer.
+- If an `AGENTS.md` conflict occurs during a cherry-pick or merge, report the conflict before resolving it.
