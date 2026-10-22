@@ -164,16 +164,6 @@ class AppDrawer extends StatelessWidget {
                                 'جزئیات عضویت و خدمات حساب شما پس از فعال شدن طرح‌های عضویت اینجا قرار می‌گیرد.',
                           ),
                         ),
-                        AppDrawerItem(
-                          icon: Icons.emoji_events_outlined,
-                          text: 'دستاوردها',
-                          link: const SimpleInfoPage(
-                            title: 'دستاوردها',
-                            icon: Icons.emoji_events_outlined,
-                            body:
-                                'دستاوردها و روند پیشرفت آموزشی شما در این بخش نمایش داده می‌شود.',
-                          ),
-                        ),
                       ],
                     ),
                     Column(

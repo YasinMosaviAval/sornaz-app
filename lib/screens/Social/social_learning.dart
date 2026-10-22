@@ -12,7 +12,7 @@ import 'social_widgets.dart';
 import 'social_profile.dart';
 import 'social_courses.dart';
 import 'social_activity.dart';
-import 'social_downloads.dart';
+
 import 'learning_widgets.dart';
 
 class AccountDashboardBody extends StatefulWidget {
@@ -74,6 +74,9 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
             data: const {},
             initial: initial,
             settingsCheckboxes: area == 'privacy',
+            bottomSubmitLabel: area == 'security'
+                ? socialText(context, 'تغییر رمز', 'Change password')
+                : socialText(context, 'ذخیره تغییرات', 'Save changes'),
             onSubmit: (result) async {
               await accountApi.act(
                 'account',
@@ -132,11 +135,6 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
     if (error != null) return SocialEmpty(error!, onRetry: load);
     if (data == null) return const Center(child: CircularProgressIndicator());
     final profile = object(data!['profile']);
-    final courses = objects(data!['courses']);
-    final active = courses.where((c) => number(c['progress']) < 100).toList();
-    final finished = courses
-        .where((c) => number(c['progress']) == 100)
-        .toList();
     return RefreshIndicator(
       onRefresh: load,
       child: ListView(
@@ -174,36 +172,6 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
           ),
           const SizedBox(height: 16),
           for (final item in [
-            (
-              Icons.bookmark_border,
-              'ذخیره‌شده‌ها',
-              'Saved',
-              SavedLibraryPage(api: widget.api),
-            ),
-            (
-              Icons.download_outlined,
-              'دانلودها',
-              'Downloads',
-              DownloadsPage(api: widget.api),
-            ),
-            (
-              Icons.notifications_none,
-              'تنظیمات اعلان',
-              'Notification settings',
-              NotificationSettingsPage(api: widget.api),
-            ),
-          ])
-            Card(
-              elevation: 0,
-              margin: const EdgeInsets.only(bottom: 12),
-              child: ListTile(
-                leading: Icon(item.$1),
-                title: AppText(socialText(context, item.$2, item.$3)),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => open(item.$4),
-              ),
-            ),
-          for (final item in [
             ('privacy', Icons.privacy_tip_outlined, 'حریم خصوصی', 'Privacy'),
             (
               'security',
@@ -211,13 +179,6 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
               'تغییر رمز عبور',
               'Change password',
             ),
-            if (humanAccount)
-              (
-                'merge',
-                Icons.merge_outlined,
-                'درخواست ادغام حساب',
-                'Request account merge',
-              ),
             (
               'securityAlerts',
               Icons.security_outlined,
@@ -230,8 +191,8 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
             (
               'merges.requests',
               Icons.merge_type,
-              'درخواست‌های ادغام',
-              'Merge requests',
+              'درخواست ادغام حساب',
+              'Request account merge',
             ),
           ])
             Card(
@@ -244,131 +205,6 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
                 onTap: () => openAccount(item.$1, item.$3, item.$4),
               ),
             ),
-          LearningHeading(
-            socialText(context, 'پیشرفت یادگیری', 'Learning progress'),
-            onMore: () => open(LearningProgressPage(api: widget.api)),
-          ),
-          if (active.isEmpty)
-            AppText(
-              socialText(
-                context,
-                'برای شروع یادگیری یک دوره انتخاب کنید.',
-                'Choose a course to start learning.',
-              ),
-            ),
-          for (final course in active.take(2))
-            LearningCourseTile(
-              api: widget.api,
-              course: course,
-              showProgress: true,
-              onTap: () => open(
-                CourseDetailPage(api: widget.api, id: number(course['id'])),
-              ),
-            ),
-          LearningHeading(
-            socialText(context, 'دوره‌های تکمیل‌شده', 'Finished courses'),
-          ),
-          if (finished.isEmpty)
-            AppText(
-              socialText(
-                context,
-                'با تکمیل درس‌ها، دوره‌ها اینجا نمایش داده می‌شوند.',
-                'Completed courses will appear here.',
-              ),
-            ),
-          for (final course in finished)
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.check_circle, color: Color(0xff4f9771)),
-              title: AppText('${course['title']}'),
-              onTap: () => open(
-                CourseDetailPage(api: widget.api, id: number(course['id'])),
-              ),
-            ),
-          LearningHeading(socialText(context, 'دستاوردها', 'Achievements')),
-          LayoutBuilder(
-            builder: (context, box) => Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                for (final badge in [
-                  (
-                    'اولین درس',
-                    'First lesson',
-                    number(data!['completed_lessons']) >= 1,
-                    Icons.school_outlined,
-                  ),
-                  (
-                    'ده درس',
-                    'Ten lessons',
-                    number(data!['completed_lessons']) >= 10,
-                    Icons.auto_stories_outlined,
-                  ),
-                  (
-                    'اولین دوره',
-                    'First course',
-                    finished.isNotEmpty,
-                    Icons.workspace_premium_outlined,
-                  ),
-                  (
-                    'سه دوره',
-                    'Three courses',
-                    finished.length >= 3,
-                    Icons.emoji_events_outlined,
-                  ),
-                ])
-                  SizedBox(
-                    width: (box.maxWidth - 12) / 2,
-                    child: Card(
-                      elevation: 0,
-                      margin: EdgeInsets.zero,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          children: [
-                            Icon(
-                              badge.$4,
-                              size: 40,
-                              color: badge.$3
-                                  ? const Color(0xffd3ae32)
-                                  : Theme.of(context).disabledColor,
-                            ),
-                            const SizedBox(height: 12),
-                            AppText(
-                              socialText(context, badge.$1, badge.$2),
-                              textAlign: TextAlign.center,
-                            ),
-                            AppText(
-                              badge.$3
-                                  ? socialText(context, 'به دست آمد', 'Earned')
-                                  : socialText(
-                                      context,
-                                      'هنوز تکمیل نشده',
-                                      'Not earned yet',
-                                    ),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 11),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
-          OutlinedButton.icon(
-            onPressed: () => open(CoursesPage(api: widget.api, mode: 'manage')),
-            icon: const Icon(Icons.add),
-            label: AppText(
-              socialText(
-                context,
-                'ساخت و مدیریت دوره',
-                'Create and manage courses',
-              ),
-            ),
-          ),
         ],
       ),
     );

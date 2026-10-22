@@ -1,4 +1,3 @@
-import 'package:sornaz/screens/Notation/music_sheets_page.dart';
 import 'package:sornaz/components/main_tabs.dart';
 import 'package:sornaz/components/home_top_bar.dart';
 import '../components/app_drawer.dart';
@@ -12,7 +11,6 @@ import 'package:sornaz/screens/Players/ui/pages/video_player_page.dart';
 import 'package:sornaz/screens/Metronome/ui/pages/metronome_page.dart';
 import 'package:sornaz/screens/Tuner/ui/pages/tuner_page.dart';
 import 'package:sornaz/screens/Voice%20Recorder/ui/pages/voice_recorder.dart';
-import 'solfege_practice_page.dart';
 
 class MusicToolsPage extends StatelessWidget {
   const MusicToolsPage({super.key});
@@ -32,12 +30,6 @@ class MusicToolsPage extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 24),
             children: [
               for (final item in [
-                (
-                  Icons.music_note_outlined,
-                  'نت‌نویسی',
-                  'Notation',
-                  const MusicSheetsPage(),
-                ),
                 (
                   Icons.library_music_outlined,
                   'پخش موسیقی',
@@ -62,12 +54,6 @@ class MusicToolsPage extends StatelessWidget {
                   'ضبط صدا',
                   'Recorder',
                   const VoiceRecorderPage(),
-                ),
-                (
-                  Icons.hearing_outlined,
-                  'تمرین سولفژ',
-                  'Solfege practice',
-                  const SolfegePracticePage(),
                 ),
               ])
                 ListTile(

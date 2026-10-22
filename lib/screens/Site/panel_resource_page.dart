@@ -1,3 +1,4 @@
+import 'account_membership_request.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
 import '../Social/media_picker.dart';
 import 'branches_page.dart';
@@ -79,7 +80,11 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
         'download-backup',
       ],
       if (area == 'devices') 'end-session',
-      if (area == 'merges.requests') ...['cancel-merge', 'decide-merge'],
+      if (area == 'merges.requests') ...[
+        'merge',
+        'cancel-merge',
+        'decide-merge',
+      ],
     };
     return Map.fromEntries(all.entries.where((e) => keys.contains(e.key)));
   }
@@ -727,6 +732,9 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
               entry.value['row'] == false &&
               entry.value['hidden'] != true &&
               !(section == 'account' &&
+                  widget.accountArea == 'merges.requests' &&
+                  entry.key == 'merge') &&
+              !(section == 'account' &&
                   ['document', 'backup'].contains(entry.key) &&
                   optionalObject(data['profile'])['accountType'] !=
                       'academy') &&
@@ -1070,6 +1078,16 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                       onChanged: () => load(refresh: true),
                     )
                   else if (section == 'account') ...[
+                    if (widget.accountArea == 'merges.requests' &&
+                        optionalObject(data['profile'])['accountType'] ==
+                            'human' &&
+                        actions.containsKey('merge'))
+                      AccountMembershipRequest(
+                        api: widget.api,
+                        eligible:
+                            optionalObject(data['merges'])['eligible'] == true,
+                        onChanged: () => load(refresh: true),
+                      ),
                     if (widget.accountArea == null) ...[
                       PanelProfileHeader(
                         profile: optionalObject(data['profile']),
@@ -1208,7 +1226,7 @@ String panelDataLabel(BuildContext context, String key) {
     'actionItems': 'نیازمند اقدام',
     'documents': 'اسناد',
     'devices': 'دستگاه‌ها',
-    'merges.requests': 'درخواست‌های ادغام',
+    'merges.requests': 'درخواست ادغام حساب',
     'loginHistory': 'تاریخچه ورود',
     'securityAlerts': 'هشدارهای امنیتی',
     'sessions': 'جلسه‌ها',
