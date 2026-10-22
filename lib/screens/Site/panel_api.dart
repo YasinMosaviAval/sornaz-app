@@ -67,7 +67,10 @@ class PanelApi {
     checkAccount();
     final value = await ChatCache.read(token, _key(path, query));
     checkAccount();
-    return value is Map ? object(value) : null;
+    if (value is! Map) return null;
+    final result = object(value);
+    if (path.isEmpty) branchContext = result['branchContext'] == true;
+    return result;
   }
 
   /// Only the visible panel polls. Bypass the session cache for these reads.
@@ -81,7 +84,9 @@ class PanelApi {
     final key = _key(path, query);
     final cached = _cache[key];
     if (cached != null && DateTime.now().isBefore(cached.$1)) {
-      return object(jsonDecode(cached.$2));
+      final value = object(jsonDecode(cached.$2));
+      if (path.isEmpty) branchContext = value['branchContext'] == true;
+      return value;
     }
     final revision = _revision;
     final pendingKey = '$revision:$key';
@@ -142,7 +147,11 @@ class PanelApi {
           if (ChatCache.mayUseOffline(error)) {
             final saved = await ChatCache.read(token, key);
             checkAccount();
-            if (saved is Map) return {...object(saved), '_offline': true};
+            if (saved is Map) {
+              final value = object(saved);
+              if (path.isEmpty) branchContext = value['branchContext'] == true;
+              return {...value, '_offline': true};
+            }
           } else {
             await ChatCache.remove(token, key);
           }

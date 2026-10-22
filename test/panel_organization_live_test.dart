@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,6 +12,7 @@ import 'package:sornaz/screens/Site/panel_filter_contract.dart';
 import 'package:sornaz/screens/Site/panel_form_contract.dart';
 import 'package:sornaz/screens/Social/social_api.dart';
 import 'social_widget_test.dart' as fixture;
+import 'panel_dialog_contract_test.dart' as contracts;
 
 class LiveOrganizations extends PanelApi {
   LiveOrganizations() : super('test');
@@ -19,6 +23,171 @@ class LiveOrganizations extends PanelApi {
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+  test('actual student schema only offers open terms when creating', () {
+    final field = contracts.field('students', 'termId');
+    final data = <String, dynamic>{
+      'operation': 'create',
+      'terms': [
+        {'id': 1, 'name': 'Open', 'status': 'open', 'organizationUserId': 10},
+        {
+          'id': 2,
+          'name': 'Ongoing',
+          'status': 'ongoing',
+          'organizationUserId': 10,
+        },
+        {
+          'id': 3,
+          'name': 'Pending',
+          'status': 'pending',
+          'organizationUserId': 10,
+        },
+      ],
+    };
+    expect(
+      panelSelectOptions(
+        field,
+        panelFormContext([field], {'organizationUserId': 10}, data),
+      ).keys,
+      ['1'],
+    );
+    data['operation'] = 'update';
+    expect(
+      panelSelectOptions(
+        field,
+        panelFormContext(
+          [field],
+          {'organizationUserId': 10, 'termId': 2},
+          data,
+        ),
+      ).containsKey('2'),
+      isTrue,
+    );
+  });
+  test(
+    'open term teacher completion submits no session or invoice rebuild',
+    () {
+      final payload = panelDialogPayload(
+        'terms',
+        'update',
+        {
+          'name': 'Group',
+          'teachers': [1, 2],
+          'status': 'open',
+          'classroomId': 1001,
+          'cost': 99,
+          'sessions': [],
+        },
+        {
+          'record': {'status_code': 'open'},
+        },
+      );
+      expect(payload, {
+        'metadataOnly': true,
+        'name': 'Group',
+        'summary': '',
+        'description': '',
+        'teachers': [
+          {'id': 1},
+          {'id': 2},
+        ],
+      });
+      expect(
+        panelDialogPayload(
+          'terms',
+          'update',
+          {
+            'name': 'Group',
+            'teachers': [1, 2],
+          },
+          {
+            'record': {'status_code': 'ongoing'},
+          },
+        ).containsKey('teachers'),
+        isFalse,
+      );
+    },
+  );
+  test(
+    'open term edit completes teachers without requiring new session dates',
+    () {
+      final fields = panelTermEditFields(
+        panelTermDialogFields(contracts.fields('terms')),
+        {'status_code': 'open'},
+      );
+      final values = <String, dynamic>{
+        'name': 'Group',
+        'courseId': 500,
+        'classroomId': 1001,
+        'teachers': [1],
+      };
+      final data = <String, dynamic>{
+        'operation': 'update',
+        'courses': [
+          {
+            'id': 500,
+            'organizationKind': 'academy',
+            'organizationId': 100,
+            'lessonId': 5,
+            'teacher_capacity': 2,
+          },
+        ],
+        'classrooms': [
+          {'id': 1001, 'academyId': 100, 'branchId': 0},
+        ],
+        'members': [
+          {
+            'id': 1,
+            'name': 'Teacher',
+            'type': 'teacher',
+            'academyId': 100,
+            'branchId': 0,
+            'lessonId': 5,
+          },
+        ],
+      };
+      final context = panelFormContext(fields, values, data);
+      expect(
+        fields
+            .where((field) => panelFieldVisible(field, context))
+            .map((field) => field['key'])
+            .toSet(),
+        {'name', 'summary', 'description', 'teachers'},
+      );
+      expect(panelInvalidField(fields, values, data), isNull);
+      expect(
+        panelTermEditFields(contracts.fields('terms'), {
+          'status_code': 'ongoing',
+        }).any((field) => field['key'] == 'teachers'),
+        isFalse,
+      );
+    },
+  );
+  test('cached and saved panel roots restore branch filter scope', () async {
+    var reads = 0;
+    final api = PanelApi(
+      'branch-scope-fixture',
+      client: MockClient((request) async {
+        reads++;
+        return http.Response(
+          jsonEncode({
+            'success': true,
+            'data': {'branchContext': true},
+          }),
+          200,
+        );
+      }),
+    );
+    await api.get('');
+    expect(api.branchContext, isTrue);
+    api.branchContext = false;
+    await api.get('');
+    expect(api.branchContext, isTrue);
+    expect(reads, 1);
+    api.branchContext = false;
+    await api.saved('');
+    expect(api.branchContext, isTrue);
+    api.dispose();
+  });
   test('student classroom is submitted without requiring session dates', () {
     final payload = panelDialogPayload('students', 'create', {
       'studentSchedule': {'classroomId': 1001, 'firstDate': ''},

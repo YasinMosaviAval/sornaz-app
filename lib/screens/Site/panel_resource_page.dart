@@ -349,7 +349,9 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
         );
       }
       value['branchContext'] =
-          widget.api.branchContext || widget.section['branchContext'] == true;
+          value['branchContext'] == true ||
+          widget.api.branchContext ||
+          widget.section['branchContext'] == true;
       if (section == 'terms') {
         final options = await (background || refresh
             ? widget.api.live
@@ -542,12 +544,21 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
       return false;
     }
     if (section == 'terms' && key == 'assign-student') {
-      return ['open', 'pending'].contains(record['status_code']) &&
-          objects(record['students'] ?? []).isEmpty;
+      if (!['open', 'pending'].contains(record['status_code'])) return false;
+      if (record['canAssignStudent'] is bool)
+        return record['canAssignStudent'] == true;
+      final course = objects(
+        data['courses'] ?? [],
+      ).where((row) => '${row['id']}' == '${record['courseId']}').firstOrNull;
+      final capacity =
+          num.tryParse(
+            '${record['studentCapacity'] ?? course?['student_capacity'] ?? 1}',
+          ) ??
+          1;
+      return objects(record['students'] ?? []).length < capacity;
     }
     if (section == 'terms' && key == 'classroom') {
-      return record['status_code'] == 'open' &&
-          (num.tryParse('${record['classroomId']}') ?? 0) == 0;
+      return record['status_code'] == 'open';
     }
     if (section == 'finance' && record['invoiceKind'] == 'subscription')
       return false;
@@ -582,11 +593,15 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
       );
       return;
     }
-    var formData = data;
+    var formData = {...data};
     if (section == 'terms' && key == 'assign-student') {
       setState(() => busy = true);
       try {
-        formData = {...data, ...await widget.api.get('/students/list')};
+        formData = {
+          ...data,
+          ...await widget.api.live('/students/list'),
+          ...await widget.api.live('/students/options'),
+        };
       } catch (error) {
         if (mounted) socialError(context, error);
         return;
@@ -647,6 +662,14 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
       ];
     }
     if (section == 'terms') fields = panelTermDialogFields(fields);
+    if (section == 'terms' && key == 'update') {
+      fields = panelTermEditFields(
+        fields,
+        record,
+        canCompleteTeachers:
+            optionalObject(data['permissions'])['isReceptionist'] != true,
+      );
+    }
     if (section == 'posts' &&
         action['formContractVersion'] != 2 &&
         ['create', 'update', 'edit'].contains(key) &&
@@ -740,6 +763,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
     }
     PanelFormResult? result;
     Json? submittedResponse;
+    formData.addAll({'record': record, 'operation': key});
     if (fields.isNotEmpty) {
       result = await showDialog<PanelFormResult>(
         context: context,
@@ -772,6 +796,12 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                       ),
                     );
                   }
+                  if (section == 'terms' && key == 'assign-student') {
+                    latest.addAll(await widget.api.live('/students/options'));
+                  }
+                  // Submit and availability callbacks must use the same catalogs
+                  // as the open form, including newly created organizations.
+                  formData.addAll(latest);
                   return {
                     for (final name in [
                       'organizations',
@@ -809,7 +839,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
           submitButtons: objects(action['submitButtons'] ?? []),
           loadBatchTimes: section == 'terms' && key == 'batch'
               ? (values) async {
-                  final organization = objects(data['organizations'] ?? [])
+                  final organization = objects(formData['organizations'] ?? [])
                       .where(
                         (row) =>
                             '${row['user_id']}' ==
@@ -819,7 +849,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                   if (organization == null || values['weekday'] == null) {
                     return {};
                   }
-                  final room = objects(data['classrooms'] ?? [])
+                  final room = objects(formData['classrooms'] ?? [])
                       .where(
                         (row) => '${row['id']}' == '${values['classroomId']}',
                       )
@@ -847,7 +877,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                       section,
                       key,
                       result.values,
-                      data,
+                      formData,
                     ),
                   );
                   if (mounted)
@@ -874,7 +904,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                       section,
                       key,
                       result.values,
-                      data,
+                      formData,
                     ),
                     params: params,
                     files: result.files,
@@ -992,7 +1022,12 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                           '${field['key']}': result!.values['${field['key']}'],
                     }
                   : action['formContractVersion'] == 2
-                  ? panelDialogPayload(section, key, result?.values ?? {}, data)
+                  ? panelDialogPayload(
+                      section,
+                      key,
+                      result?.values ?? {},
+                      formData,
+                    )
                   : result?.values ?? {},
               params: params,
               files: result?.files ?? {},

@@ -115,6 +115,10 @@ Map<String, String> panelSelectOptions(Json field, Json data) {
       continue;
     }
     final item = optionalObject(raw);
+    if (config['openTermsOnlyOnCreate'] == true &&
+        data['operation'] == 'create' &&
+        item['status'] != 'open')
+      continue;
     if (config['termRooms'] == true) {
       final selected = _rows(data['organizations'])
           .where(
@@ -406,6 +410,26 @@ String? panelInvalidField(List<Json> fields, Json values, Json data) {
   return null;
 }
 
+List<Json> panelTermEditFields(
+  List<Json> fields,
+  Json record, {
+  bool canCompleteTeachers = true,
+}) => [
+  for (final field in fields)
+    if (['name', 'summary', 'description'].contains(field['key']))
+      field
+    else if (record['status_code'] == 'open' && canCompleteTeachers)
+      if (['courseId', 'classroomId'].contains(field['key']))
+        {
+          ...field,
+          'hiddenWhen': {'operation': 'update'},
+          'readOnly': true,
+          'submit': false,
+        }
+      else if (field['key'] == 'teachers')
+        field,
+];
+
 /// The same transport values computed by the website's form readers.
 Json panelDialogPayload(
   String section,
@@ -417,6 +441,21 @@ Json panelDialogPayload(
     return panelDialogPayload('students', 'create', values, data);
   }
   final payload = <String, dynamic>{...values};
+  if (section == 'terms' && operation == 'update') {
+    return {
+      'metadataOnly': true,
+      'name': values['name'],
+      'summary': values['summary'] ?? '',
+      'description': values['description'] ?? '',
+      if (optionalObject(data['record'])['status_code'] == 'open' &&
+          optionalObject(data['permissions'])['isReceptionist'] != true &&
+          values.containsKey('teachers'))
+        'teachers': [
+          for (final item in values['teachers'] as List? ?? const [])
+            {'id': item is Map ? item['id'] : int.tryParse('$item') ?? item},
+        ],
+    };
+  }
   if (section == 'availability-exceptions') {
     final target = '${values['targetValue'] ?? ''}'.split(':');
     if (target.length == 2) {

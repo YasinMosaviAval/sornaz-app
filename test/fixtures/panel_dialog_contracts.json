@@ -443,6 +443,7 @@
                 "type": "select",
                 "options": {
                     "source": "terms",
+                    "openTermsOnlyOnCreate": true,
                     "match": {
                         "organizationUserId": "organizationUserId"
                     },
@@ -477,7 +478,10 @@
                 ],
                 "required": false,
                 "visibleWhen": {
-                    "_selected.termId.status": "open"
+                    "_selected.termId.status": "open",
+                    "_selected.termId.hasSessions": {
+                        "not": true
+                    }
                 }
             },
             {
