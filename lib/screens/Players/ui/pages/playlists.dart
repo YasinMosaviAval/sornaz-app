@@ -213,7 +213,10 @@ class _PlaylistsTabState extends State<PlaylistsTab> {
                           : (isExpanded
                                 ? Icons.queue_music
                                 : Icons.queue_music_outlined),
-                      isPlaying: isExpanded,
+                      isPlaying: queue.any(
+                        (file) =>
+                            file.file.path == player.currentAudio?.file.path,
+                      ),
                       onTap: () => setState(() {
                         if (!expanded.remove(key)) expanded.add(key);
                       }),

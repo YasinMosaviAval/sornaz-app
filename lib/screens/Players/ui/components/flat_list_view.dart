@@ -157,7 +157,7 @@ class _FlatListViewState extends State<FlatListView> {
                   leadingIcon: expanded.contains(row)
                       ? Icons.folder
                       : Icons.folder_outlined,
-                  isPlaying: expanded.contains(row),
+                  isPlaying: player.currentAudio?.file.parent.path == row,
                   onTap: () => setState(() {
                     if (!expanded.remove(row)) expanded.add(row);
                   }),

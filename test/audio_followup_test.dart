@@ -271,6 +271,23 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('child'), findsOneWidget);
       expect(find.byIcon(Icons.folder), findsOneWidget);
+      await tester.tap(
+        find
+            .text(files.first.file.parent.path.split(RegExp(r'[/\\]')).last)
+            .first,
+      );
+      await tester.pumpAndSettle();
+      final folderRows = tester
+          .widgetList<AudioRow>(find.byType(AudioRow))
+          .where(
+            (row) =>
+                row.leadingIcon == Icons.folder ||
+                row.leadingIcon == Icons.folder_outlined,
+          );
+      expect(
+        folderRows.where((row) => row.isPlaying).single.location,
+        files.last.file.parent.path,
+      );
       expect(
         tester
             .widgetList<AudioRow>(find.byType(AudioRow))
@@ -285,6 +302,59 @@ void main() {
     },
   );
 
+  testWidgets(
+    'playlist highlight follows its current track instead of expansion',
+    (tester) async {
+      final settings = PlayerSettings();
+      await settings.load();
+      final library = AudioLibraryManager();
+      final player = AudioPlayerProvider(
+        libraryManager: library,
+        controller: behavior.MemoryController(),
+        playbackSettings: settings,
+      );
+      final files = behavior.FolderAudio().allFiles;
+      player.setFileList(files);
+      final store = MusicPlaylists.instance;
+      await store.create('Playback A');
+      await store.create('Playback B');
+      await store.add('Playback A', [files.first.file.path]);
+      await store.add('Playback B', [files.last.file.path]);
+      await tester.pumpWidget(
+        fixture.host(
+          ChangeNotifierProvider<AudioPlayerProvider>.value(
+            value: player,
+            child: const Scaffold(body: PlaylistsTab()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      AudioRow row(String title) => tester
+          .widgetList<AudioRow>(find.byType(AudioRow))
+          .firstWhere((row) => row.title == title);
+      await tester.tap(find.text('Playback B'));
+      await tester.pumpAndSettle();
+      expect(row('Playback B').isPlaying, false);
+      await player.playFromFolder(files, 0);
+      await tester.pumpAndSettle();
+      expect(row('Playback A').isPlaying, true);
+      expect(row('Playback B').isPlaying, false);
+      await tester.tap(find.text('Playback A'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Playback A'));
+      await tester.pumpAndSettle();
+      expect(row('Playback A').isPlaying, true);
+      await player.playFromFolder(files, files.length - 1);
+      await tester.pumpAndSettle();
+      expect(row('Playback A').isPlaying, false);
+      expect(row('Playback B').isPlaying, true);
+      await tester.pumpWidget(const SizedBox());
+      player.dispose();
+      library.dispose();
+      await store.delete('Playback A');
+      await store.delete('Playback B');
+    },
+  );
   testWidgets('disabled equalizer ignores presets and band tabs', (
     tester,
   ) async {
