@@ -1,4 +1,5 @@
 import 'package:sornaz/helpers/app_appearance.dart';
+import 'package:sornaz/helpers/account_presentation.dart';
 import '../Social/media_picker.dart';
 import 'branches_page.dart';
 import 'chat_message_bubble.dart';
@@ -277,7 +278,11 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
         'download-backup',
       ],
       if (area == 'devices') 'end-session',
-      if (area == 'merges.requests') ...['cancel-merge', 'decide-merge'],
+      if (area == 'merges.requests') ...[
+        'cancel-merge',
+        'decide-merge',
+        if (AccountPresentation.readRestricted(context)) 'merge',
+      ],
     };
     return Map.fromEntries(all.entries.where((e) => keys.contains(e.key)));
   }
@@ -2123,6 +2128,10 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                   entry.key == 'create-from-classroom') &&
               entry.value['row'] == false &&
               entry.value['hidden'] != true &&
+              !(section == 'account' &&
+                  widget.accountArea == 'merges.requests' &&
+                  entry.key == 'merge' &&
+                  AccountPresentation.readRestricted(context)) &&
               !(section == 'account' &&
                   ['document', 'backup'].contains(entry.key) &&
                   optionalObject(data['profile'])['accountType'] !=

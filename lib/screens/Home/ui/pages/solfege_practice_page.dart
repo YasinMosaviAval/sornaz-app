@@ -12,9 +12,11 @@ class SolfegePracticePage extends StatelessWidget {
   const SolfegePracticePage({super.key});
 
   @override
-  Widget build(BuildContext context) => MusicPlaybackEntry(
-    reason: PlaybackInterruption.solfege,
-    child: _content(context),
+  Widget build(BuildContext context) => DevelopmentGate(
+    builder: (context) => MusicPlaybackEntry(
+      reason: PlaybackInterruption.solfege,
+      child: _content(context),
+    ),
   );
   Widget _content(BuildContext context) => Scaffold(
     appBar: SornazAppBar(

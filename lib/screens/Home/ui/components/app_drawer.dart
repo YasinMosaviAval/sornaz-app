@@ -1,4 +1,5 @@
 import 'package:sornaz/components/account_avatar.dart';
+import 'package:sornaz/helpers/account_presentation.dart';
 import 'package:sornaz/screens/Social/user_panel.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:sornaz/components/app_logo.dart';
@@ -164,16 +165,17 @@ class AppDrawer extends StatelessWidget {
                                 'جزئیات عضویت و خدمات حساب شما پس از فعال شدن طرح‌های عضویت اینجا قرار می‌گیرد.',
                           ),
                         ),
-                        AppDrawerItem(
-                          icon: Icons.emoji_events_outlined,
-                          text: 'دستاوردها',
-                          link: const SimpleInfoPage(
-                            title: 'دستاوردها',
+                        if (!AccountPresentation.restricted(context))
+                          AppDrawerItem(
                             icon: Icons.emoji_events_outlined,
-                            body:
-                                'دستاوردها و روند پیشرفت آموزشی شما در این بخش نمایش داده می‌شود.',
+                            text: 'دستاوردها',
+                            link: const SimpleInfoPage(
+                              title: 'دستاوردها',
+                              icon: Icons.emoji_events_outlined,
+                              body:
+                                  'دستاوردها و روند پیشرفت آموزشی شما در این بخش نمایش داده می‌شود.',
+                            ),
                           ),
-                        ),
                       ],
                     ),
                     Column(

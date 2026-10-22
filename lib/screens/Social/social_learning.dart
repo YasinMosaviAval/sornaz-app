@@ -14,6 +14,7 @@ import 'social_courses.dart';
 import 'social_activity.dart';
 import 'social_downloads.dart';
 import 'learning_widgets.dart';
+import '../../helpers/account_presentation.dart';
 
 class AccountDashboardBody extends StatefulWidget {
   const AccountDashboardBody({super.key, required this.api, this.accountApi});
@@ -74,6 +75,11 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
             data: const {},
             initial: initial,
             settingsCheckboxes: area == 'privacy',
+            bottomSubmitLabel: AccountPresentation.readRestricted(context)
+                ? area == 'security'
+                      ? socialText(context, 'تغییر رمز', 'Change password')
+                      : socialText(context, 'ذخیره تغییرات', 'Save changes')
+                : null,
             onSubmit: (result) async {
               await accountApi.act(
                 'account',
@@ -132,6 +138,7 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
     if (error != null) return SocialEmpty(error!, onRetry: load);
     if (data == null) return const Center(child: CircularProgressIndicator());
     final profile = object(data!['profile']);
+    final restricted = AccountPresentation.restricted(context);
     final courses = objects(data!['courses']);
     final active = courses.where((c) => number(c['progress']) < 100).toList();
     final finished = courses
@@ -173,36 +180,37 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
             ),
           ),
           const SizedBox(height: 16),
-          for (final item in [
-            (
-              Icons.bookmark_border,
-              'ذخیره‌شده‌ها',
-              'Saved',
-              SavedLibraryPage(api: widget.api),
-            ),
-            (
-              Icons.download_outlined,
-              'دانلودها',
-              'Downloads',
-              DownloadsPage(api: widget.api),
-            ),
-            (
-              Icons.notifications_none,
-              'تنظیمات اعلان',
-              'Notification settings',
-              NotificationSettingsPage(api: widget.api),
-            ),
-          ])
-            Card(
-              elevation: 0,
-              margin: const EdgeInsets.only(bottom: 12),
-              child: ListTile(
-                leading: Icon(item.$1),
-                title: AppText(socialText(context, item.$2, item.$3)),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => open(item.$4),
+          if (!restricted)
+            for (final item in [
+              (
+                Icons.bookmark_border,
+                'ذخیره‌شده‌ها',
+                'Saved',
+                SavedLibraryPage(api: widget.api),
               ),
-            ),
+              (
+                Icons.download_outlined,
+                'دانلودها',
+                'Downloads',
+                DownloadsPage(api: widget.api),
+              ),
+              (
+                Icons.notifications_none,
+                'تنظیمات اعلان',
+                'Notification settings',
+                NotificationSettingsPage(api: widget.api),
+              ),
+            ])
+              Card(
+                elevation: 0,
+                margin: const EdgeInsets.only(bottom: 12),
+                child: ListTile(
+                  leading: Icon(item.$1),
+                  title: AppText(socialText(context, item.$2, item.$3)),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => open(item.$4),
+                ),
+              ),
           for (final item in [
             ('privacy', Icons.privacy_tip_outlined, 'حریم خصوصی', 'Privacy'),
             (
@@ -211,7 +219,7 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
               'تغییر رمز عبور',
               'Change password',
             ),
-            if (humanAccount)
+            if (humanAccount && !restricted)
               (
                 'merge',
                 Icons.merge_outlined,
@@ -230,8 +238,8 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
             (
               'merges.requests',
               Icons.merge_type,
-              'درخواست‌های ادغام',
-              'Merge requests',
+              restricted ? 'درخواست ادغام حساب' : 'درخواست‌های ادغام',
+              restricted ? 'Request account merge' : 'Merge requests',
             ),
           ])
             Card(
@@ -244,131 +252,141 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
                 onTap: () => openAccount(item.$1, item.$3, item.$4),
               ),
             ),
-          LearningHeading(
-            socialText(context, 'پیشرفت یادگیری', 'Learning progress'),
-            onMore: () => open(LearningProgressPage(api: widget.api)),
-          ),
-          if (active.isEmpty)
-            AppText(
-              socialText(
-                context,
-                'برای شروع یادگیری یک دوره انتخاب کنید.',
-                'Choose a course to start learning.',
-              ),
+          if (!restricted) ...[
+            LearningHeading(
+              socialText(context, 'پیشرفت یادگیری', 'Learning progress'),
+              onMore: () => open(LearningProgressPage(api: widget.api)),
             ),
-          for (final course in active.take(2))
-            LearningCourseTile(
-              api: widget.api,
-              course: course,
-              showProgress: true,
-              onTap: () => open(
-                CourseDetailPage(api: widget.api, id: number(course['id'])),
+            if (active.isEmpty)
+              AppText(
+                socialText(
+                  context,
+                  'برای شروع یادگیری یک دوره انتخاب کنید.',
+                  'Choose a course to start learning.',
+                ),
               ),
-            ),
-          LearningHeading(
-            socialText(context, 'دوره‌های تکمیل‌شده', 'Finished courses'),
-          ),
-          if (finished.isEmpty)
-            AppText(
-              socialText(
-                context,
-                'با تکمیل درس‌ها، دوره‌ها اینجا نمایش داده می‌شوند.',
-                'Completed courses will appear here.',
+            for (final course in active.take(2))
+              LearningCourseTile(
+                api: widget.api,
+                course: course,
+                showProgress: true,
+                onTap: () => open(
+                  CourseDetailPage(api: widget.api, id: number(course['id'])),
+                ),
               ),
+            LearningHeading(
+              socialText(context, 'دوره‌های تکمیل‌شده', 'Finished courses'),
             ),
-          for (final course in finished)
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.check_circle, color: Color(0xff4f9771)),
-              title: AppText('${course['title']}'),
-              onTap: () => open(
-                CourseDetailPage(api: widget.api, id: number(course['id'])),
+            if (finished.isEmpty)
+              AppText(
+                socialText(
+                  context,
+                  'با تکمیل درس‌ها، دوره‌ها اینجا نمایش داده می‌شوند.',
+                  'Completed courses will appear here.',
+                ),
               ),
-            ),
-          LearningHeading(socialText(context, 'دستاوردها', 'Achievements')),
-          LayoutBuilder(
-            builder: (context, box) => Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                for (final badge in [
-                  (
-                    'اولین درس',
-                    'First lesson',
-                    number(data!['completed_lessons']) >= 1,
-                    Icons.school_outlined,
-                  ),
-                  (
-                    'ده درس',
-                    'Ten lessons',
-                    number(data!['completed_lessons']) >= 10,
-                    Icons.auto_stories_outlined,
-                  ),
-                  (
-                    'اولین دوره',
-                    'First course',
-                    finished.isNotEmpty,
-                    Icons.workspace_premium_outlined,
-                  ),
-                  (
-                    'سه دوره',
-                    'Three courses',
-                    finished.length >= 3,
-                    Icons.emoji_events_outlined,
-                  ),
-                ])
-                  SizedBox(
-                    width: (box.maxWidth - 12) / 2,
-                    child: Card(
-                      elevation: 0,
-                      margin: EdgeInsets.zero,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          children: [
-                            Icon(
-                              badge.$4,
-                              size: 40,
-                              color: badge.$3
-                                  ? const Color(0xffd3ae32)
-                                  : Theme.of(context).disabledColor,
-                            ),
-                            const SizedBox(height: 12),
-                            AppText(
-                              socialText(context, badge.$1, badge.$2),
-                              textAlign: TextAlign.center,
-                            ),
-                            AppText(
-                              badge.$3
-                                  ? socialText(context, 'به دست آمد', 'Earned')
-                                  : socialText(
-                                      context,
-                                      'هنوز تکمیل نشده',
-                                      'Not earned yet',
-                                    ),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 11),
-                            ),
-                          ],
+            for (final course in finished)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(
+                  Icons.check_circle,
+                  color: Color(0xff4f9771),
+                ),
+                title: AppText('${course['title']}'),
+                onTap: () => open(
+                  CourseDetailPage(api: widget.api, id: number(course['id'])),
+                ),
+              ),
+            LearningHeading(socialText(context, 'دستاوردها', 'Achievements')),
+            LayoutBuilder(
+              builder: (context, box) => Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  for (final badge in [
+                    (
+                      'اولین درس',
+                      'First lesson',
+                      number(data!['completed_lessons']) >= 1,
+                      Icons.school_outlined,
+                    ),
+                    (
+                      'ده درس',
+                      'Ten lessons',
+                      number(data!['completed_lessons']) >= 10,
+                      Icons.auto_stories_outlined,
+                    ),
+                    (
+                      'اولین دوره',
+                      'First course',
+                      finished.isNotEmpty,
+                      Icons.workspace_premium_outlined,
+                    ),
+                    (
+                      'سه دوره',
+                      'Three courses',
+                      finished.length >= 3,
+                      Icons.emoji_events_outlined,
+                    ),
+                  ])
+                    SizedBox(
+                      width: (box.maxWidth - 12) / 2,
+                      child: Card(
+                        elevation: 0,
+                        margin: EdgeInsets.zero,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            children: [
+                              Icon(
+                                badge.$4,
+                                size: 40,
+                                color: badge.$3
+                                    ? const Color(0xffd3ae32)
+                                    : Theme.of(context).disabledColor,
+                              ),
+                              const SizedBox(height: 12),
+                              AppText(
+                                socialText(context, badge.$1, badge.$2),
+                                textAlign: TextAlign.center,
+                              ),
+                              AppText(
+                                badge.$3
+                                    ? socialText(
+                                        context,
+                                        'به دست آمد',
+                                        'Earned',
+                                      )
+                                    : socialText(
+                                        context,
+                                        'هنوز تکمیل نشده',
+                                        'Not earned yet',
+                                      ),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontSize: 11),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
-          OutlinedButton.icon(
-            onPressed: () => open(CoursesPage(api: widget.api, mode: 'manage')),
-            icon: const Icon(Icons.add),
-            label: AppText(
-              socialText(
-                context,
-                'ساخت و مدیریت دوره',
-                'Create and manage courses',
+                ],
               ),
             ),
-          ),
+            const SizedBox(height: 18),
+            OutlinedButton.icon(
+              onPressed: () =>
+                  open(CoursesPage(api: widget.api, mode: 'manage')),
+              icon: const Icon(Icons.add),
+              label: AppText(
+                socialText(
+                  context,
+                  'ساخت و مدیریت دوره',
+                  'Create and manage courses',
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -652,66 +670,86 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
         ? SocialEmpty(error!, onRetry: load)
         : settings == null
         ? const Center(child: CircularProgressIndicator())
-        : ListView(
-            padding: const EdgeInsets.all(24),
-            children: [
-              LearningHeading(socialText(context, 'حساب کاربری', 'Account')),
-              Card(
-                elevation: 0,
-                child: SwitchListTile(
+        : ListTileTheme.merge(
+            titleTextStyle: Theme.of(context).textTheme.bodyMedium,
+            subtitleTextStyle: Theme.of(context).textTheme.bodySmall,
+            child: ListView(
+              padding: const EdgeInsets.all(12),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    socialText(context, 'حساب کاربری', 'Account'),
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
+                Card(
+                  elevation: 0,
+                  child: SwitchListTile(
+                    title: AppText(
+                      socialText(context, 'پیام خصوصی', 'Direct messages'),
+                    ),
+                    subtitle: AppText(
+                      socialText(
+                        context,
+                        'اعلان دریافت پیام جدید',
+                        'Notify me about new messages',
+                      ),
+                    ),
+                    value: settings!['message'] == true,
+                    onChanged: busy ? null : (v) => change('message', v),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    socialText(context, 'دنبال‌کنندگان', 'Following'),
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
+                Card(
+                  elevation: 0,
+                  child: SwitchListTile(
+                    title: AppText(
+                      socialText(context, 'دنبال‌کننده جدید', 'New followers'),
+                    ),
+                    value: settings!['follow'] == true,
+                    onChanged: busy ? null : (v) => change('follow', v),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    socialText(context, 'فعالیت‌ها', 'Activity'),
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
                   title: AppText(
-                    socialText(context, 'پیام خصوصی', 'Direct messages'),
+                    socialText(context, 'پسندیدن پست‌ها', 'Post likes'),
                   ),
                   subtitle: AppText(
                     socialText(
                       context,
-                      'اعلان دریافت پیام جدید',
-                      'Notify me about new messages',
+                      'وقتی کسی پست شما را می‌پسندد',
+                      'When someone likes your post',
                     ),
                   ),
-                  value: settings!['message'] == true,
-                  onChanged: busy ? null : (v) => change('message', v),
+                  value: settings!['like'] == true,
+                  onChanged: busy ? null : (v) => change('like', v),
                 ),
-              ),
-              LearningHeading(
-                socialText(context, 'دنبال‌کنندگان', 'Following'),
-              ),
-              Card(
-                elevation: 0,
-                child: SwitchListTile(
-                  title: AppText(
-                    socialText(context, 'دنبال‌کننده جدید', 'New followers'),
-                  ),
-                  value: settings!['follow'] == true,
-                  onChanged: busy ? null : (v) => change('follow', v),
-                ),
-              ),
-              LearningHeading(socialText(context, 'فعالیت‌ها', 'Activity')),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: AppText(
-                  socialText(context, 'پسندیدن پست‌ها', 'Post likes'),
-                ),
-                subtitle: AppText(
+                const Divider(),
+                AppText(
                   socialText(
                     context,
-                    'وقتی کسی پست شما را می‌پسندد',
-                    'When someone likes your post',
+                    'این تنظیمات برای اعلان‌های داخل اپ است.',
+                    'These settings apply to in-app notifications.',
                   ),
                 ),
-                value: settings!['like'] == true,
-                onChanged: busy ? null : (v) => change('like', v),
-              ),
-              const Divider(),
-              AppText(
-                socialText(
-                  context,
-                  'این تنظیمات برای اعلان‌های داخل اپ است.',
-                  'These settings apply to in-app notifications.',
-                ),
-              ),
-              if (busy) const LinearProgressIndicator(),
-            ],
+                if (busy) const LinearProgressIndicator(),
+              ],
+            ),
           ),
   );
 }

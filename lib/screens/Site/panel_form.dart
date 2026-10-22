@@ -45,6 +45,7 @@ class PanelFormPage extends StatefulWidget {
     this.declaredOnly = false,
     this.submitButtons = const [],
     this.suggestedTitle,
+    this.bottomSubmitLabel,
   });
   final Future<void> Function(PanelFormResult result)? onSubmit;
   final Future<void> Function(PanelFormResult result)? onRequestCode;
@@ -56,6 +57,7 @@ class PanelFormPage extends StatefulWidget {
   final bool declaredOnly;
   final List<Json> submitButtons;
   final String title;
+  final String? bottomSubmitLabel;
   final String Function(Json values)? suggestedTitle;
   final List<Json> fields;
   final Json data, initial;
@@ -701,15 +703,46 @@ class _PanelFormPageState extends State<PanelFormPage> {
         child: AppBar(
           title: Text(widget.title),
           actions: [
-            IconButton(
-              tooltip: socialText(context, 'ذخیره', 'Save'),
-              onPressed: submitting ? null : submit,
-              icon: const Icon(Icons.save_outlined),
-            ),
+            if (widget.bottomSubmitLabel == null)
+              IconButton(
+                tooltip: socialText(context, 'ذخیره', 'Save'),
+                onPressed: submitting ? null : submit,
+                icon: const Icon(Icons.save_outlined),
+              ),
           ],
         ),
       ),
-      body: content,
+      body: widget.bottomSubmitLabel == null
+          ? content
+          : Column(
+              children: [
+                Expanded(child: content),
+                SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.onPrimary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: appRadius(context),
+                          ),
+                        ),
+                        onPressed: submitting ? null : submit,
+                        child: Text(widget.bottomSubmitLabel!),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }

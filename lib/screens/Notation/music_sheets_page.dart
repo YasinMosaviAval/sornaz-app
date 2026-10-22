@@ -38,9 +38,11 @@ import '../../helpers/development_access.dart';
 class MusicSheetsPage extends StatelessWidget {
   const MusicSheetsPage({super.key});
   @override
-  Widget build(BuildContext context) => MusicPlaybackEntry(
-    reason: PlaybackInterruption.notation,
-    child: _content(context),
+  Widget build(BuildContext context) => DevelopmentGate(
+    builder: (context) => MusicPlaybackEntry(
+      reason: PlaybackInterruption.notation,
+      child: _content(context),
+    ),
   );
   Widget _content(BuildContext context) {
     final session = context.watch<AuthSession>();

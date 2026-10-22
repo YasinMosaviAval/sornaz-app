@@ -27,7 +27,7 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
   for (final offset in [-2.0, 0.0, 2.0]) {
     testWidgets(
-      'page title matches original Contact theme at font offset ' +
+      'page title follows the standard 14dp base at font offset ' +
           offset.toString(),
       (tester) async {
         await tester.pumpWidget(
@@ -63,12 +63,9 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        final original = DefaultTextStyle.of(
-          tester.element(find.text('Original contact')),
-        ).style.fontSize;
         expect(
           tester.widget<Text>(find.text('New title')).style?.fontSize,
-          original,
+          14 + offset,
         );
       },
     );
@@ -210,10 +207,7 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        expect(
-          find.text('درخواست ادغام حساب'),
-          type == 'human' ? findsOneWidget : findsNothing,
-        );
+        expect(find.text('درخواست ادغام حساب'), findsOneWidget);
         await tester.tap(find.text('حریم خصوصی'));
         await tester.pumpAndSettle();
         expect(find.byType(PanelResourcePage), findsNothing);
@@ -225,7 +219,8 @@ void main() {
         expect((tile.title as Text).style?.fontSize, 14);
         await tester.tap(find.byType(CheckboxListTile).first);
         await tester.pumpAndSettle();
-        await tester.tap(find.byIcon(Icons.save_outlined));
+        expect(find.byIcon(Icons.save_outlined), findsNothing);
+        await tester.tap(find.text('ذخیره تغییرات'));
         await tester.pumpAndSettle();
         expect(writes['privacy']?['showPublicProfile'], false);
         expect(writes['privacy']?['showContact'], true);
@@ -234,16 +229,10 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byType(TextFormField), findsNWidgets(2));
         expect(find.byType(PanelResourcePage), findsNothing);
+        expect(find.byIcon(Icons.save_outlined), findsNothing);
+        expect(find.text('تغییر رمز'), findsOneWidget);
         await tester.tap(find.byType(BackButton));
         await tester.pumpAndSettle();
-        if (type == 'human') {
-          await tester.tap(find.text('درخواست ادغام حساب'));
-          await tester.pumpAndSettle();
-          expect(find.byType(TextFormField), findsOneWidget);
-          expect(find.byType(PanelResourcePage), findsNothing);
-          await tester.tap(find.byType(BackButton));
-          await tester.pumpAndSettle();
-        }
         expect(catalogReads, 1);
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox());

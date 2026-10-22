@@ -7,6 +7,7 @@ import '../Social/social_widgets.dart';
 import 'panel_api.dart';
 import 'site_api.dart';
 import '../../components/settings_section_header.dart';
+import '../../helpers/account_presentation.dart';
 
 /// Native rendering of sections/account.php and account-templates.js.
 class PanelAccount extends StatefulWidget {
@@ -107,34 +108,64 @@ class _PanelAccountState extends State<PanelAccount> {
     String en,
     List<Widget> children, {
     Widget? trailing,
-  }) => Padding(
-    padding: const EdgeInsets.only(bottom: 24),
-    child: SettingsSectionHeader(
-      key: ValueKey('account-section-$en'),
-      title: t(fa, en),
-      initiallyExpanded: false,
-      topSpacing: 0,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(24),
-          child: Material(
-            type: MaterialType.transparency,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (trailing != null)
-                  Align(
-                    alignment: AlignmentDirectional.centerEnd,
-                    child: trailing,
-                  ),
-                ...children,
-              ],
-            ),
+  }) =>
+      AccountPresentation.restricted(context) &&
+          ([
+                'merges.requests',
+                'devices',
+                'documents',
+                'loginHistory',
+                'securityAlerts',
+              ].contains(widget.area) ||
+              [
+                'Link membership records to my account',
+                'Connected devices',
+                'Documents',
+                'Login and logout history',
+                'Security alerts',
+              ].contains(en))
+      ? Padding(
+          padding: const EdgeInsets.only(bottom: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (trailing != null)
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: trailing,
+                ),
+              ...children,
+            ],
           ),
-        ),
-      ],
-    ),
-  );
+        )
+      : Padding(
+          padding: const EdgeInsets.only(bottom: 24),
+          child: SettingsSectionHeader(
+            key: ValueKey('account-section-$en'),
+            title: t(fa, en),
+            initiallyExpanded: false,
+            topSpacing: 0,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (trailing != null)
+                        Align(
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: trailing,
+                        ),
+                      ...children,
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
   Widget value(String label, dynamic value) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 12),
     child: Column(

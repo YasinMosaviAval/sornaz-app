@@ -35,12 +35,13 @@ class MusicToolsPage extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 24),
             children: [
               for (final item in [
-                (
-                  Icons.music_note_outlined,
-                  'نت‌نویسی',
-                  'Notation',
-                  const MusicSheetsPage(),
-                ),
+                if (DevelopmentAccess.watch(context))
+                  (
+                    Icons.music_note_outlined,
+                    'نت‌نویسی',
+                    'Notation',
+                    const MusicSheetsPage(),
+                  ),
                 (
                   Icons.library_music_outlined,
                   'پخش موسیقی',
@@ -66,12 +67,13 @@ class MusicToolsPage extends StatelessWidget {
                   'Recorder',
                   const VoiceRecorderPage(),
                 ),
-                (
-                  Icons.hearing_outlined,
-                  'تمرین سولفژ',
-                  'Solfege practice',
-                  const SolfegePracticePage(),
-                ),
+                if (DevelopmentAccess.watch(context))
+                  (
+                    Icons.hearing_outlined,
+                    'تمرین سولفژ',
+                    'Solfege practice',
+                    const SolfegePracticePage(),
+                  ),
                 if (DevelopmentAccess.watch(context))
                   (
                     Icons.queue_music_outlined,
