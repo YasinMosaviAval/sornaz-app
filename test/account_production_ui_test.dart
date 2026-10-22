@@ -137,7 +137,8 @@ void main() {
       final restricted = releaseUi || id != 1;
       for (final label in ['ذخیره‌شده‌ها', 'دانلودها', 'تنظیمات اعلان'])
         expect(find.text(label), restricted ? findsNothing : findsOneWidget);
-      expect(find.text('درخواست ادغام حساب'), findsOneWidget);
+      expect(find.text('درخواست ادغام حساب'), restricted ? findsOneWidget : findsNothing);
+      expect(find.text('درخواست‌های ادغام'), findsNothing);
       if (restricted) {
         expect(find.text('درخواست‌های ادغام'), findsNothing);
         for (final label in [

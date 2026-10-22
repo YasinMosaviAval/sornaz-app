@@ -115,6 +115,11 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('پنل کاربری و پروفایل'), findsNothing);
+      expect(
+        textSize(tester, 'ورود با حساب دیگر'),
+        textSize(tester, 'درباره ما'),
+      );
+      expect(textSize(tester, 'خروج از حساب'), textSize(tester, 'درباره ما'));
       expect(find.text('ارسال بازخورد'), findsNothing);
       final themeSize = textSize(tester, 'درباره ما'),
           shareSize = textSize(tester, 'اشتراک‌گذاری برنامه');
@@ -122,6 +127,16 @@ void main() {
       await tester.pumpAndSettle();
       expect(textSize(tester, 'درباره ما'), themeSize + 2);
       expect(textSize(tester, 'اشتراک‌گذاری برنامه'), shareSize + 2);
+      for (final label in ['جامعه', 'حساب کاربری', 'عضویت']) {
+        expect(find.text(label), findsWidgets);
+      }
+      await session.save(account(2));
+      await tester.pumpAndSettle();
+      for (final label in ['جامعه', 'حساب کاربری', 'عضویت']) {
+        expect(find.text(label), findsNothing);
+      }
+      await session.switchTo(1);
+      await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('ورود با حساب دیگر'));
       await tester.tap(find.text('ورود با حساب دیگر'));
       await tester.pumpAndSettle();

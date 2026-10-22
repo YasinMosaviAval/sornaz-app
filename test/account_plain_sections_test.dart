@@ -57,7 +57,7 @@ void main() {
       expect(find.byType(SettingsSectionHeader), findsNothing);
       if (area == 'merges.requests') {
         expect(find.byType(TextFormField), findsNWidgets(3));
-        expect(find.text('ارسال درخواست بررسی'), findsOneWidget);
+        expect(find.text('ارسال درخواست ادغام'), findsOneWidget);
       } else if (area == 'devices')
         expect(find.text('Fixture device '), findsOneWidget);
       else if (area == 'documents')
@@ -69,6 +69,40 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+  testWidgets('full panel account keeps all four section boxes', (
+    tester,
+  ) async {
+    account.wide(tester);
+    final api = account.AccountUiApi(), auth = account.session(2);
+    addTearDown(api.dispose);
+    addTearDown(auth.dispose);
+    await tester.pumpWidget(
+      account.host(
+        auth,
+        SingleChildScrollView(
+          child: PanelAccount(
+            api: api,
+            data: const {
+              'profile': {'accountType': 'human'},
+            },
+            actions: const {},
+            onAction: (_, __) async {},
+            onChanged: () async {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    for (final title in [
+      'Connected devices',
+      'Documents',
+      'Login and logout history',
+      'Security alerts',
+    ]) {
+      expect(find.byKey(ValueKey('account-section-$title')), findsOneWidget);
+    }
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('merge requests submit through the single account section', (
     tester,
   ) async {
@@ -91,7 +125,7 @@ void main() {
     expect(find.byType(TextFormField), findsNWidgets(3));
     await tester.enterText(find.byType(TextFormField).at(0), '5');
     await tester.enterText(find.byType(TextFormField).at(1), '9');
-    await tester.tap(find.text('ارسال درخواست بررسی'));
+    await tester.tap(find.text('ارسال درخواست ادغام'));
     await tester.pumpAndSettle();
     expect(api.savedPayload?['action'], 'merge');
     expect(api.savedPayload?['userId'], '5');

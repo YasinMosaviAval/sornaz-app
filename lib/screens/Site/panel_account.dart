@@ -109,21 +109,15 @@ class _PanelAccountState extends State<PanelAccount> {
     List<Widget> children, {
     Widget? trailing,
   }) =>
-      AccountPresentation.restricted(context) &&
-          ([
-                'merges.requests',
-                'devices',
-                'documents',
-                'loginHistory',
-                'securityAlerts',
-              ].contains(widget.area) ||
+      ((widget.area != null &&
               [
-                'Link membership records to my account',
                 'Connected devices',
                 'Documents',
                 'Login and logout history',
                 'Security alerts',
-              ].contains(en))
+              ].contains(en)) ||
+          (AccountPresentation.restricted(context) &&
+              en == 'Link membership records to my account'))
       ? Padding(
           padding: const EdgeInsets.only(bottom: 24),
           child: Column(
@@ -574,7 +568,6 @@ class _PanelAccountState extends State<PanelAccount> {
   Widget build(BuildContext context) {
     final area = widget.area;
     bool show(String key) => area == null || area == key;
-    final human = profile['accountType'] == 'human';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Column(
@@ -681,7 +674,8 @@ class _PanelAccountState extends State<PanelAccount> {
                 ),
             ]),
           ],
-          if (human && show('merges.requests'))
+          if (AccountPresentation.restricted(context) &&
+              show('merges.requests'))
             card(
               'اتصال سوابق عضویت به حساب من',
               'Link membership records to my account',
@@ -712,16 +706,6 @@ class _PanelAccountState extends State<PanelAccount> {
                     'این بخش فقط برای حساب حقیقی کامل که سابقه ورود ثبت‌شده دارد فعال است.',
                     'A complete personal account with recorded login history is required.',
                   ),
-                if (widget.actions.containsKey('merge'))
-                  FilledButton(
-                    onPressed:
-                        saving ||
-                            optionalObject(widget.data['merges'])['eligible'] !=
-                                true
-                        ? null
-                        : () => save('merge', merge),
-                    child: Text(t('ارسال درخواست بررسی', 'Submit for review')),
-                  ),
                 for (final row in objects(
                   optionalObject(widget.data['merges'])['requests'] ?? [],
                 )) ...[
@@ -748,6 +732,18 @@ class _PanelAccountState extends State<PanelAccount> {
                     row: row,
                   ),
                 ],
+                if (widget.actions.containsKey('merge'))
+                  FilledButton(
+                    onPressed:
+                        saving ||
+                            optionalObject(widget.data['merges'])['eligible'] !=
+                                true
+                        ? null
+                        : () => save('merge', merge),
+                    child: Text(
+                      t('ارسال درخواست ادغام', 'Submit merge request'),
+                    ),
+                  ),
               ],
             ),
           if (area == null)

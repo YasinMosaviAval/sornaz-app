@@ -219,13 +219,6 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
               'تغییر رمز عبور',
               'Change password',
             ),
-            if (humanAccount && !restricted)
-              (
-                'merge',
-                Icons.merge_outlined,
-                'درخواست ادغام حساب',
-                'Request account merge',
-              ),
             (
               'securityAlerts',
               Icons.security_outlined,
@@ -235,12 +228,13 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
             ('loginHistory', Icons.history, 'تاریخچه ورود', 'Login history'),
             ('documents', Icons.description_outlined, 'اسناد', 'Documents'),
             ('devices', Icons.devices_outlined, 'دستگاه‌ها', 'Devices'),
-            (
-              'merges.requests',
-              Icons.merge_type,
-              restricted ? 'درخواست ادغام حساب' : 'درخواست‌های ادغام',
-              restricted ? 'Request account merge' : 'Merge requests',
-            ),
+            if (restricted)
+              (
+                'merges.requests',
+                Icons.merge_type,
+                restricted ? 'درخواست ادغام حساب' : 'درخواست‌های ادغام',
+                restricted ? 'Request account merge' : 'Merge requests',
+              ),
           ])
             Card(
               elevation: 0,
