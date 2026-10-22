@@ -61,7 +61,9 @@ class PanelResourcePage extends StatefulWidget {
     required this.section,
     this.params = const {},
     this.accountArea,
+    this.embedded = false,
   });
+  final bool embedded;
   final String? accountArea;
   final PanelApi api;
   final Json section;
@@ -144,6 +146,7 @@ class _PanelTabsState extends State<PanelResourcePage>
               section['initialParams'],
             ).map((k, v) => MapEntry(k, '$v')),
       accountArea: widget.accountArea,
+      embedded: widget.embedded,
       tabs: tabs.length < 2
           ? null
           : TabBar(
@@ -170,8 +173,10 @@ class _PanelResourceContent extends StatefulWidget {
     required this.titleSection,
     required this.params,
     this.accountArea,
+    this.embedded = false,
     this.tabs,
   });
+  final bool embedded;
   final PanelApi api;
   final Json section;
   final Json titleSection;
@@ -2277,6 +2282,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
         ].contains(section) &&
         collection is List;
     return PanelScaffold(
+      embedded: widget.embedded,
       appBar: ExpandingSearchBar(
         title: Row(
           children: [

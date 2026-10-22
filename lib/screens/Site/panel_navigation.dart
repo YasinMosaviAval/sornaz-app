@@ -123,7 +123,8 @@ List<Json> websitePanelNavigation(Json response) {
   };
   List<Json> resolve(List<Json> nodes) => [
     for (final node in nodes)
-      if (node['section'] != 'my-settings' && node['destination'] != 'settings')
+      if (!['account', 'my-settings'].contains(node['section']) &&
+          node['destination'] != 'settings')
         if (node['children'] is List)
           {...node, 'children': resolve(objects(node['children']))}
         else if (['notation', 'website-example'].contains(node['destination']))

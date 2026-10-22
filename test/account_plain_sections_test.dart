@@ -16,7 +16,7 @@ void main() {
     'loginHistory',
     'securityAlerts',
   ]) {
-    testWidgets('ordinary account $area content has no section box', (
+    testWidgets('account $area content is contained in a section box', (
       tester,
     ) async {
       account.wide(tester);
@@ -54,7 +54,9 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.byType(SettingsSectionHeader), findsNothing);
+      expect(find.byType(SettingsSectionHeader), findsOneWidget);
+      await tester.tap(find.byType(SettingsSectionHeader));
+      await tester.pumpAndSettle();
       if (area == 'merges.requests') {
         expect(find.byType(TextFormField), findsNWidgets(3));
         expect(find.text('ارسال درخواست ادغام'), findsOneWidget);
@@ -121,6 +123,8 @@ void main() {
         ),
       ),
     );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('درخواست ادغام حساب'));
     await tester.pumpAndSettle();
     expect(find.byType(TextFormField), findsNWidgets(3));
     await tester.enterText(find.byType(TextFormField).at(0), '5');

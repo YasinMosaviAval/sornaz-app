@@ -7,7 +7,7 @@ import '../Social/social_widgets.dart';
 import 'panel_api.dart';
 import 'site_api.dart';
 import '../../components/settings_section_header.dart';
-import '../../helpers/account_presentation.dart';
+import '../../helpers/app_typography.dart';
 
 /// Native rendering of sections/account.php and account-templates.js.
 class PanelAccount extends StatefulWidget {
@@ -64,8 +64,8 @@ class _PanelAccountState extends State<PanelAccount> {
     }
   }
 
-  Future<void> save(String action, Json values) async {
-    if (saving) return;
+  Future<bool> save(String action, Json values) async {
+    if (saving) return false;
     setState(() => saving = true);
     try {
       await widget.api.act('account', action, values: values);
@@ -74,8 +74,10 @@ class _PanelAccountState extends State<PanelAccount> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(t('تغییرات ذخیره شد.', 'Changes saved.'))),
         );
+      return true;
     } catch (error) {
       if (mounted) socialError(context, error);
+      return false;
     } finally {
       if (mounted) setState(() => saving = false);
     }
@@ -108,58 +110,34 @@ class _PanelAccountState extends State<PanelAccount> {
     String en,
     List<Widget> children, {
     Widget? trailing,
-  }) =>
-      ((widget.area != null &&
-              [
-                'Connected devices',
-                'Documents',
-                'Login and logout history',
-                'Security alerts',
-              ].contains(en)) ||
-          (AccountPresentation.restricted(context) &&
-              en == 'Link membership records to my account'))
-      ? Padding(
-          padding: const EdgeInsets.only(bottom: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (trailing != null)
-                Align(
-                  alignment: AlignmentDirectional.centerEnd,
-                  child: trailing,
-                ),
-              ...children,
-            ],
-          ),
-        )
-      : Padding(
-          padding: const EdgeInsets.only(bottom: 24),
-          child: SettingsSectionHeader(
-            key: ValueKey('account-section-$en'),
-            title: t(fa, en),
-            initiallyExpanded: false,
-            topSpacing: 0,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Material(
-                  type: MaterialType.transparency,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (trailing != null)
-                        Align(
-                          alignment: AlignmentDirectional.centerEnd,
-                          child: trailing,
-                        ),
-                      ...children,
-                    ],
+  }) => Padding(
+    padding: const EdgeInsets.only(bottom: 24),
+    child: SettingsSectionHeader(
+      key: ValueKey('account-section-$en'),
+      title: t(fa, en),
+      initiallyExpanded: false,
+      topSpacing: 0,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(24),
+          child: Material(
+            type: MaterialType.transparency,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (trailing != null)
+                  Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: trailing,
                   ),
-                ),
-              ),
-            ],
+                ...children,
+              ],
+            ),
           ),
-        );
+        ),
+      ],
+    ),
+  );
   Widget value(String label, dynamic value) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 12),
     child: Column(
@@ -476,7 +454,10 @@ class _PanelAccountState extends State<PanelAccount> {
       for (final option in options)
         CheckboxListTile(
           contentPadding: EdgeInsets.zero,
-          title: Text(t(option.$2, option.$3)),
+          title: Text(
+            t(option.$2, option.$3),
+            style: AppTypography.body3(context),
+          ),
           value: privacy[option.$1] == true,
           onChanged: widget.actions.containsKey('privacy')
               ? (v) => setState(() => privacy[option.$1] = v)
@@ -549,11 +530,11 @@ class _PanelAccountState extends State<PanelAccount> {
           values: {'field': channel, 'destination': target},
         );
       }
-      await save('security', {
+      final saved = await save('security', {
         'password': password,
         'passwordConfirmation': security['passwordConfirmation'] ?? '',
       });
-      if (mounted)
+      if (mounted && saved)
         setState(() {
           security.clear();
         });
@@ -574,16 +555,6 @@ class _PanelAccountState extends State<PanelAccount> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (area == null) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Text(
-                t(
-                  'مدیریت پروفایل، امنیت، حریم خصوصی و پشتیبان‌گیری',
-                  'Manage profile, security, privacy and backups',
-                ),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ),
             header(),
             information(),
             card('لینک دعوت من', 'My invitation link', [
@@ -674,78 +645,71 @@ class _PanelAccountState extends State<PanelAccount> {
                 ),
             ]),
           ],
-          if (AccountPresentation.restricted(context) &&
-              show('merges.requests'))
-            card(
-              'اتصال سوابق عضویت به حساب من',
-              'Link membership records to my account',
-              [
-                Text(
-                  t(
-                    'شناسه کاربری و شماره عضویتی را که از آموزشگاه یا شعبه دریافت کرده‌اید وارد کنید. انتقال سوابق فقط پس از بررسی مدیر سایت انجام می‌شود.',
-                    'Enter the user ID and membership number provided by your academy or branch. Records are transferred only after site administrator review.',
-                  ),
+          if (show('merges.requests'))
+            card('درخواست ادغام حساب', 'Link membership records to my account', [
+              Text(
+                t(
+                  'شناسه کاربری و شماره عضویتی را که از آموزشگاه یا شعبه دریافت کرده‌اید وارد کنید. انتقال سوابق فقط پس از بررسی مدیر سایت انجام می‌شود.',
+                  'Enter the user ID and membership number provided by your academy or branch. Records are transferred only after site administrator review.',
                 ),
-                const SizedBox(height: 16),
-                field(
-                  'userId',
-                  'شناسه کاربری دریافتی',
-                  'Provided user ID',
-                  merge,
+              ),
+              const SizedBox(height: 16),
+              field(
+                'userId',
+                'شناسه کاربری دریافتی',
+                'Provided user ID',
+                merge,
+              ),
+              field('memberId', 'شماره عضویت', 'Membership number', merge),
+              field(
+                'reason',
+                'توضیح اختیاری',
+                'Optional explanation',
+                merge,
+                multiline: true,
+              ),
+              if (optionalObject(widget.data['merges'])['eligible'] == false)
+                empty(
+                  'این بخش فقط برای حساب حقیقی کامل که سابقه ورود ثبت‌شده دارد فعال است.',
+                  'A complete personal account with recorded login history is required.',
                 ),
-                field('memberId', 'شماره عضویت', 'Membership number', merge),
-                field(
-                  'reason',
-                  'توضیح اختیاری',
-                  'Optional explanation',
-                  merge,
-                  multiline: true,
+              for (final row in objects(
+                optionalObject(widget.data['merges'])['requests'] ?? [],
+              )) ...[
+                value(
+                  t('وضعیت درخواست', 'Request status'),
+                  {
+                        'pending': t('در انتظار بررسی', 'Pending review'),
+                        'approved': t('تأیید شده', 'Approved'),
+                        'rejected': t('رد شده', 'Rejected'),
+                        'cancelled': t('لغو شده', 'Cancelled'),
+                      }['${row['status']}'] ??
+                      row['status'],
                 ),
-                if (optionalObject(widget.data['merges'])['eligible'] == false)
-                  empty(
-                    'این بخش فقط برای حساب حقیقی کامل که سابقه ورود ثبت‌شده دارد فعال است.',
-                    'A complete personal account with recorded login history is required.',
-                  ),
-                for (final row in objects(
-                  optionalObject(widget.data['merges'])['requests'] ?? [],
-                )) ...[
-                  value(
-                    t('وضعیت درخواست', 'Request status'),
-                    {
-                          'pending': t('در انتظار بررسی', 'Pending review'),
-                          'approved': t('تأیید شده', 'Approved'),
-                          'rejected': t('رد شده', 'Rejected'),
-                          'cancelled': t('لغو شده', 'Cancelled'),
-                        }['${row['status']}'] ??
-                        row['status'],
-                  ),
-                  action(
-                    'cancel-merge',
-                    'لغو درخواست',
-                    'Cancel request',
-                    row: row,
-                  ),
-                  action(
-                    'decide-merge',
-                    'بررسی درخواست',
-                    'Review request',
-                    row: row,
-                  ),
-                ],
-                if (widget.actions.containsKey('merge'))
-                  FilledButton(
-                    onPressed:
-                        saving ||
-                            optionalObject(widget.data['merges'])['eligible'] !=
-                                true
-                        ? null
-                        : () => save('merge', merge),
-                    child: Text(
-                      t('ارسال درخواست ادغام', 'Submit merge request'),
-                    ),
-                  ),
+                action(
+                  'cancel-merge',
+                  'لغو درخواست',
+                  'Cancel request',
+                  row: row,
+                ),
+                action(
+                  'decide-merge',
+                  'بررسی درخواست',
+                  'Review request',
+                  row: row,
+                ),
               ],
-            ),
+              if (widget.actions.containsKey('merge'))
+                FilledButton(
+                  onPressed:
+                      saving ||
+                          optionalObject(widget.data['merges'])['eligible'] !=
+                              true
+                      ? null
+                      : () => save('merge', merge),
+                  child: Text(t('ارسال درخواست ادغام', 'Submit merge request')),
+                ),
+            ]),
           if (area == null)
             card('معرفی و بیوگرافی', 'Introduction and biography', [
               biographyValue(
