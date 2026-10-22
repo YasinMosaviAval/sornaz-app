@@ -355,7 +355,7 @@ const Map<String, dynamic> panelWebPresentation = {
     "columns": [
       {"key": "name", "label": "نام کلاس"},
       {"key": "typeLabel", "label": "نوع کلاس"},
-      {"key": "branchName", "label": "شعبه"},
+      {"key": "branchName", "label": "سازمان"},
       {"key": "capacity", "label": "ظرفیت"},
       {"key": "equipment", "label": "تجهیزات"},
       {"key": "status", "label": "وضعیت", "action": "status"},
