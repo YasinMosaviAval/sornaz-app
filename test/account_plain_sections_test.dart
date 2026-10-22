@@ -9,6 +9,133 @@ import 'account_production_ui_test.dart' as account;
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+  for (final type in ['academy', 'branch', 'human']) {
+    testWidgets('merge section visibility follows account type $type', (
+      tester,
+    ) async {
+      account.wide(tester);
+      final api = account.AccountUiApi(), auth = account.session(2);
+      addTearDown(api.dispose);
+      addTearDown(auth.dispose);
+      await tester.pumpWidget(
+        account.host(
+          auth,
+          SingleChildScrollView(
+            child: PanelAccount(
+              api: api,
+              area: 'merges.requests',
+              data: {
+                'profile': {'accountType': type},
+                'merges': {'eligible': true},
+              },
+              actions: const {'merge': {}, 'end-session': {}},
+              onAction: (_, __) async {},
+              onChanged: () async {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.byType(SettingsSectionHeader),
+        type == 'human' ? findsOneWidget : findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
+  testWidgets('remove cover uses destructive colors and retains its action', (
+    tester,
+  ) async {
+    account.wide(tester);
+    final api = account.AccountUiApi(), auth = account.session(2);
+    addTearDown(api.dispose);
+    addTearDown(auth.dispose);
+    String? invoked;
+    Json? values;
+    await tester.pumpWidget(
+      account.host(
+        auth,
+        SingleChildScrollView(
+          child: PanelAccount(
+            api: api,
+            data: const {
+              'profile': {'accountType': 'human', 'coverId': 19},
+            },
+            actions: const {'delete-media': {}, 'cover': {}},
+            onAction: (key, row) async {
+              invoked = key;
+              values = row;
+            },
+            onChanged: () async {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final finder = find.widgetWithIcon(IconButton, Icons.delete_outline);
+    final button = tester.widget<IconButton>(finder);
+    final colors = Theme.of(tester.element(finder)).colorScheme;
+    expect(button.style!.backgroundColor!.resolve({}), Colors.white);
+    expect(button.style!.foregroundColor!.resolve({}), Colors.red);
+    expect(button.style!.shape!.resolve({}), isA<CircleBorder>());
+    final camera = tester.widget<IconButton>(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is IconButton && widget.tooltip == 'Change cover' ||
+            widget is IconButton && widget.tooltip == 'تغییر کاور',
+      ),
+    );
+    expect(camera.style!.backgroundColor!.resolve({}), Colors.white);
+    expect(camera.style!.foregroundColor!.resolve({}), colors.primary);
+    expect(camera.style!.shape!.resolve({}), isA<CircleBorder>());
+    expect(find.text('Change cover'), findsNothing);
+    expect(find.text('Remove cover'), findsNothing);
+    await tester.tap(finder);
+    expect(invoked, 'delete-media');
+    expect(values?['id'], 19);
+    expect(tester.takeException(), isNull);
+  });
+  testWidgets('signed out devices replace logout controls with a gray label', (
+    tester,
+  ) async {
+    account.wide(tester);
+    final api = account.AccountUiApi(), auth = account.session(2);
+    addTearDown(api.dispose);
+    addTearDown(auth.dispose);
+    await tester.pumpWidget(
+      account.host(
+        auth,
+        SingleChildScrollView(
+          child: PanelAccount(
+            api: api,
+            area: 'devices',
+            data: const {
+              'profile': {'accountType': 'human'},
+              'devices': [
+                {
+                  'id': 5,
+                  'name': 'Old device',
+                  'status': 'ended',
+                  'current': false,
+                },
+              ],
+            },
+            actions: const {'end-session': {}},
+            onAction: (_, __) async {},
+            onChanged: () async {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(SettingsSectionHeader));
+    await tester.pumpAndSettle();
+    final label = find.text('خارج شده');
+    expect(label, findsOneWidget);
+    expect(tester.widget<Text>(label).style!.color, Colors.grey);
+    expect(find.byIcon(Icons.logout), findsNothing);
+    expect(find.byType(TextButton), findsNothing);
+  });
   for (final area in [
     'merges.requests',
     'devices',

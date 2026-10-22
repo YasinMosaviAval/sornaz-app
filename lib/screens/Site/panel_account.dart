@@ -90,8 +90,25 @@ class _PanelAccountState extends State<PanelAccount> {
     Json row = const {},
     IconData? icon,
     bool filled = false,
+    bool destructive = false,
+    bool iconOnly = false,
   }) {
     if (!widget.actions.containsKey(key)) return const SizedBox.shrink();
+    if (iconOnly) {
+      return IconButton(
+        tooltip: t(fa, en),
+        style: IconButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: destructive
+              ? Colors.red
+              : Theme.of(context).colorScheme.primary,
+          shape: const CircleBorder(),
+          minimumSize: const Size(48, 48),
+        ),
+        onPressed: saving ? null : () => widget.onAction(key, row),
+        icon: Icon(icon ?? Icons.edit_outlined),
+      );
+    }
     if (filled)
       return FilledButton.icon(
         onPressed: saving ? null : () => widget.onAction(key, row),
@@ -99,6 +116,12 @@ class _PanelAccountState extends State<PanelAccount> {
         label: Text(t(fa, en)),
       );
     return TextButton.icon(
+      style: destructive
+          ? TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.onError,
+              backgroundColor: Theme.of(context).colorScheme.error,
+            )
+          : null,
       onPressed: saving ? null : () => widget.onAction(key, row),
       icon: Icon(icon ?? Icons.edit_outlined),
       label: Text(t(fa, en)),
@@ -270,11 +293,13 @@ class _PanelAccountState extends State<PanelAccount> {
                 left: 12,
                 right: 12,
                 child: Wrap(
+                  spacing: 8,
                   children: [
                     action(
                       'cover',
                       'تغییر کاور',
                       'Change cover',
+                      iconOnly: true,
                       icon: Icons.camera_alt_outlined,
                     ),
                     if (profile['coverId'] != null)
@@ -283,6 +308,8 @@ class _PanelAccountState extends State<PanelAccount> {
                         'حذف کاور',
                         'Remove cover',
                         row: {'id': profile['coverId']},
+                        destructive: true,
+                        iconOnly: true,
                         icon: Icons.delete_outline,
                       ),
                   ],
@@ -645,7 +672,7 @@ class _PanelAccountState extends State<PanelAccount> {
                 ),
             ]),
           ],
-          if (show('merges.requests'))
+          if (profile['accountType'] == 'human' && show('merges.requests'))
             card('درخواست ادغام حساب', 'Link membership records to my account', [
               Text(
                 t(
@@ -783,28 +810,43 @@ class _PanelAccountState extends State<PanelAccount> {
                       '${row['location'] ?? ''} · ${row['ip'] ?? ''} · ${row['lastActive'] ?? ''}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    if (row['current'] != true)
+                    if (row['status'] == 'ended')
+                      Text(
+                        t('خارج شده', 'Signed out'),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                      )
+                    else if (row['current'] != true)
                       action(
                         'end-session',
                         'خروج دستگاه',
                         'Sign out device',
                         row: row,
                         icon: Icons.logout,
+                        destructive: true,
                       ),
                     const Divider(),
                   ],
                 ),
-              if (objects(
-                    widget.data['devices'] ?? [],
-                  ).any((r) => r['current'] != true) &&
+              if (objects(widget.data['devices'] ?? []).any(
+                    (r) => r['current'] != true && r['status'] != 'ended',
+                  ) &&
                   widget.actions.containsKey('end-session'))
                 TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.onError,
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                  ),
                   onPressed: saving
                       ? null
                       : () async {
-                          for (final row in objects(
-                            widget.data['devices'] ?? [],
-                          ).where((r) => r['current'] != true)) {
+                          for (final row
+                              in objects(widget.data['devices'] ?? []).where(
+                                (r) =>
+                                    r['current'] != true &&
+                                    r['status'] != 'ended',
+                              )) {
                             await widget.onAction('end-session', row);
                           }
                         },
@@ -830,8 +872,12 @@ class _PanelAccountState extends State<PanelAccount> {
             card('هشدارهای امنیتی', 'Security alerts', [
               if (objects(widget.data['securityAlerts'] ?? []).isEmpty)
                 empty('هشداری نیست', 'No alerts'),
-              for (final row in objects(widget.data['securityAlerts'] ?? []))
+              for (final row in objects(
+                widget.data['securityAlerts'] ?? [],
+              )) ...[
                 ListTile(
+                  titleTextStyle: AppTypography.body3(context),
+                  subtitleTextStyle: AppTypography.body4(context),
                   title: Text('${row['title'] ?? ''}'),
                   subtitle: Text('${row['text'] ?? ''}\n${row['date'] ?? ''}'),
                   leading: Icon(
@@ -841,6 +887,8 @@ class _PanelAccountState extends State<PanelAccount> {
                         : Theme.of(context).colorScheme.primary,
                   ),
                 ),
+                const Divider(height: 16),
+              ],
             ]),
           if (show('privacy')) privacyCard(),
           if (show('security') && widget.actions.containsKey('security'))
