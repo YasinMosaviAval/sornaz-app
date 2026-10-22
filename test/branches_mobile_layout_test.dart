@@ -127,6 +127,37 @@ class BranchApi extends PanelApi {
 }
 
 void main() {
+  testWidgets('branch cards show a dash for a missing primary phone', (
+    tester,
+  ) async {
+    final data = catalog();
+    data['branches'] = [
+      {
+        ...objects(data['branches']).first,
+        'phones': [
+          {'number': null, 'is_main': true},
+        ],
+      },
+    ];
+    final api = BranchApi(data);
+    addTearDown(api.dispose);
+    tester.view.physicalSize = const Size(700, 2200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      localized.host(BranchesPage(api: api, section: section)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('null'), findsNothing);
+    final phone = find
+        .ancestor(of: find.text('تلفن اصلی'), matching: find.byType(Row))
+        .first;
+    expect(
+      find.descendant(of: phone, matching: find.text('—')),
+      findsOneWidget,
+    );
+  });
   testWidgets('ordinary accounts hide organization totals and filters reopen', (
     tester,
   ) async {

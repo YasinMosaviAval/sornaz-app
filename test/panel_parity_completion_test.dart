@@ -378,7 +378,7 @@ void main() {
       fixture.host(PanelResourcePage(api: api, section: resource('schedules'))),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('برنامه هفتگی'));
+    await tester.tap(find.text('نمایش برنامه هفتگی'));
     await tester.pumpAndSettle();
     final dates = api.calls.where((q) => q['date'] != null).toList();
     expect(dates.length, 14);

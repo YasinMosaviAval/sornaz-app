@@ -14,6 +14,7 @@ import 'package:sornaz/screens/Site/panel_page_guidance.dart';
 import 'package:sornaz/screens/Site/panel_presentation.dart';
 import 'package:sornaz/screens/Site/panel_resource_page.dart';
 import 'package:sornaz/screens/Site/panel_table_contract.dart';
+import 'package:sornaz/screens/Site/panel_section_card.dart';
 import 'package:sornaz/screens/Social/social_api.dart';
 import 'social_widget_test.dart' as fixture;
 
@@ -186,7 +187,10 @@ void main() {
       final cardContext = tester.element(card);
       expect(
         tester.widget<Card>(card).color,
-        Theme.of(cardContext).colorScheme.primary.withValues(alpha: .2),
+        Color.alphaBlend(
+          Theme.of(cardContext).colorScheme.primary.withValues(alpha: .2),
+          Theme.of(cardContext).scaffoldBackgroundColor,
+        ),
       );
       await tester.tap(
         find.descendant(of: tile, matching: find.byType(ListTile)),
@@ -334,6 +338,48 @@ void main() {
       expect(find.text('راهنمای مالی'), findsOneWidget);
       expect(find.text('مجموع مبلغ فاکتورها'), findsOneWidget);
       expect(find.byType(PanelStatistics), findsOneWidget);
+      final subscription = find.byWidgetPredicate(
+        (widget) =>
+            widget is PanelSectionCard &&
+            widget.storageId == 'finance-subscription',
+      );
+      expect(subscription, findsOneWidget);
+      final card = find.descendant(
+        of: subscription,
+        matching: find.byType(Card),
+      );
+      final theme = Theme.of(tester.element(card));
+      expect(
+        tester.widget<Card>(card).color,
+        Color.alphaBlend(
+          theme.colorScheme.primary.withValues(alpha: .2),
+          theme.scaffoldBackgroundColor,
+        ),
+      );
+      final tile = find.descendant(
+        of: subscription,
+        matching: find.byType(ExpansionTile),
+      );
+      await tester.tap(
+        find.descendant(of: tile, matching: find.byType(ListTile)),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find
+            .descendant(of: subscription, matching: find.text('ماه اول رایگان'))
+            .hitTestable(),
+        findsNothing,
+      );
+      await tester.tap(
+        find.descendant(of: tile, matching: find.byType(ListTile)),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find
+            .descendant(of: subscription, matching: find.text('ماه اول رایگان'))
+            .hitTestable(),
+        findsOneWidget,
+      );
       expect(find.byTooltip('خروجی اکسل'), findsOneWidget);
       expect(find.byTooltip('خروجی PDF'), findsOneWidget);
       await tester.ensureVisible(find.byIcon(Icons.shopping_cart_outlined));

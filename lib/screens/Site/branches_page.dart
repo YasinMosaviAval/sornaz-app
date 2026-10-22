@@ -364,7 +364,11 @@ class _BranchesPageState extends State<BranchesPage> {
         Expanded(
           flex: 3,
           child: Text(
-            '${value ?? '—'}'.isEmpty ? '—' : '$value',
+            value == null ||
+                    '$value'.trim().isEmpty ||
+                    '$value'.trim() == 'null'
+                ? '—'
+                : '$value',
             textAlign: TextAlign.end,
             style: TextStyle(fontSize: 14),
           ),

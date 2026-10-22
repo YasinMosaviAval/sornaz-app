@@ -42,13 +42,17 @@ class ScheduleApi extends PanelApi {
   Json? submitted;
   Map<String, String>? submittedParams;
   final availabilityRequests = <Map<String, String>>[];
+  final listRequests = <Map<String, String>>[];
   @override
   Future<Json> get(String path, [Map<String, String>? query]) async {
     if (path == '/schedules/week-bounds')
       return {'firstDate': '2026-10-17', 'lastDate': '2026-11-14'};
-    if (path == '/schedules/list')
+    if (path == '/schedules/list') {
+      listRequests.add({...?query});
       return {
-        'schedules': query?['date'] == null || query?['date'] == '2026-10-17'
+        'schedules':
+            query?['branch'] != 'academy' &&
+                (query?['date'] == null || query?['date'] == '2026-10-17')
             ? [session]
             : [],
         'branches': branches,
@@ -57,11 +61,14 @@ class ScheduleApi extends PanelApi {
           {'start': '09:00', 'end': '10:30'},
           {'start': '14:00', 'end': '15:30'},
         ],
-        'total': query?['date'] == null || query?['date'] == '2026-10-17'
+        'total':
+            query?['branch'] != 'academy' &&
+                (query?['date'] == null || query?['date'] == '2026-10-17')
             ? 1
             : 0,
         'perPage': 100,
       };
+    }
     if (path == '/schedules/term-context')
       return {
         'terms': [
@@ -161,12 +168,38 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byType(TabBar), findsOneWidget);
+    expect(find.byType(PanelScheduleWeek), findsOneWidget);
+    final tabs = tester.widget<TabBar>(find.byType(TabBar));
+    expect(tabs.tabs.map((tab) => (tab as Tab).text), [
+      'همه',
+      'آموزشگاه',
+      'شعبه نمونه',
+    ]);
+    await tester.tap(
+      find.descendant(of: find.byType(TabBar), matching: find.text('آموزشگاه')),
+    );
+    await tester.pumpAndSettle();
+    expect(api.listRequests.last['branch'], 'academy');
+    expect(
+      tester.widget<PanelScheduleWeek>(find.byType(PanelScheduleWeek)).rows,
+      isEmpty,
+    );
+    await tester.tap(
+      find.descendant(
+        of: find.byType(TabBar),
+        matching: find.text('شعبه نمونه'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(api.listRequests.last['branch'], '1');
+    await tester.tap(find.byKey(const ValueKey('schedule-view-table')));
+    await tester.pumpAndSettle();
     expect(find.text('upcoming'), findsNothing);
     expect(find.text('در انتظار برگزاری'), findsOneWidget);
     expect(find.text('لغو و جبرانی'), findsOneWidget);
     expect(find.byTooltip('خروجی اکسل'), findsOneWidget);
     expect(find.byTooltip('خروجی PDF'), findsOneWidget);
-    await tester.tap(find.text('برنامه هفتگی'));
+    await tester.tap(find.text('نمایش برنامه هفتگی'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('کلاس × بازه زمانی'));
     await tester.pumpAndSettle();
@@ -192,7 +225,7 @@ void main() {
     );
     expect(find.byTooltip('خروجی اکسل'), findsOneWidget);
     expect(find.byTooltip('خروجی PDF'), findsOneWidget);
-    await tester.tap(find.text('نمایش لیستی'));
+    await tester.tap(find.text('نمایش جدولی'));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.byTooltip('جزئیات'));
     await tester.tap(find.byTooltip('جزئیات'));

@@ -183,27 +183,47 @@ class _PanelResourceContent extends StatefulWidget {
 
 class _PanelResourcePageState extends State<_PanelResourceContent>
     with WidgetsBindingObserver {
+  Map<String, String> get scheduleOrganizations => {
+    '': socialText(context, 'همه', 'All'),
+    ...panelOrganizationOptions(
+      data,
+      objects(data['schedules'] ?? []),
+      fa: Localizations.localeOf(context).languageCode == 'fa',
+      includeFixedScope: true,
+    ),
+  };
   Widget pendingContent(Widget child) => Column(
     children: [
       if (widget.tabs != null) widget.tabs!,
       if (section == 'schedules')
         DefaultTabController(
-          length: 2,
-          initialIndex: weekly ? 1 : 0,
+          key: ValueKey(
+            'schedule-organizations-${scheduleOrganizations.keys.join(',')}-$organizationFilter',
+          ),
+          length: scheduleOrganizations.length,
+          initialIndex: max(
+            0,
+            scheduleOrganizations.keys.toList().indexOf(organizationFilter),
+          ),
           child: TabBar(
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            labelPadding: const EdgeInsets.symmetric(horizontal: 12),
             labelStyle: Theme.of(context).textTheme.labelLarge,
             onTap: (index) {
-              if (weekly == (index == 1)) return;
+              final organization = scheduleOrganizations.keys.elementAt(index);
+              if (organizationFilter == organization) return;
               setState(() {
-                weekly = index == 1;
+                organizationFilter = organization;
                 loading = true;
                 page = 1;
+                localPage = 1;
               });
               load();
             },
             tabs: [
-              Tab(text: socialText(context, 'نمایش لیستی', 'List view')),
-              Tab(text: socialText(context, 'برنامه هفتگی', 'Weekly schedule')),
+              for (final label in scheduleOrganizations.values)
+                Tab(text: label),
             ],
           ),
         ),
@@ -266,6 +286,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    weekly = section == 'schedules';
     mutationSubscription = widget.api.mutations.listen((resource) {
       if (['branches', 'academies', 'account'].contains(resource) && mounted) {
         unawaited(load(refresh: true));
@@ -1153,8 +1174,8 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
           );
         }
         if (['pay'].contains(key) && paymentUrl is String) {
-          final uri = Uri.tryParse(paymentUrl);
-          if (uri != null && uri.scheme == 'https') {
+          final uri = SiteApi.origin.resolve(paymentUrl);
+          if (uri.scheme == 'https') {
             await launchUrl(uri, mode: LaunchMode.externalApplication);
           }
         }
@@ -1944,6 +1965,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
             mode: section == 'dashboard'
                 ? 'branch'
                 : '${tableContract['organizationMode'] ?? 'branch'}',
+            includeFixedScope: section == 'schedules',
           )
         : <String, String>{};
     if (section == 'users' && !panelFixedBranchScope(data))
@@ -2333,6 +2355,67 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                   padding: const EdgeInsets.only(bottom: 16),
                   children: [
                     if (busy) const LinearProgressIndicator(),
+                    if (section == 'schedules')
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            for (final option in [
+                              (
+                                false,
+                                Icons.table_chart_outlined,
+                                socialText(
+                                  context,
+                                  'نمایش جدولی',
+                                  'Table view',
+                                ),
+                              ),
+                              (
+                                true,
+                                Icons.calendar_view_week_outlined,
+                                socialText(
+                                  context,
+                                  'نمایش برنامه هفتگی',
+                                  'Weekly schedule view',
+                                ),
+                              ),
+                            ])
+                              OutlinedButton.icon(
+                                key: ValueKey(
+                                  'schedule-view-${option.$1 ? 'weekly' : 'table'}',
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  backgroundColor: weekly == option.$1
+                                      ? Theme.of(
+                                          context,
+                                        ).colorScheme.primaryContainer
+                                      : Theme.of(context).colorScheme.surface,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: appRadius(context),
+                                  ),
+                                  minimumSize: const Size(0, 40),
+                                ),
+                                icon: Icon(option.$2, size: 18),
+                                label: Text(option.$3),
+                                onPressed: () {
+                                  if (weekly == option.$1) return;
+                                  setState(() {
+                                    weekly = option.$1;
+                                    loading = true;
+                                    page = 1;
+                                    localPage = 1;
+                                  });
+                                  load();
+                                },
+                              ),
+                          ],
+                        ),
+                      ),
                     PanelPageGuidance(
                       api: widget.api,
                       section: section,
@@ -2357,40 +2440,40 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                             ),
                           ),
                         ),
-                      Card(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
+                      PanelSectionCard(
+                        storageId: 'finance-subscription',
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: .2),
+                        icon: Icons.description_outlined,
+                        title: socialText(
+                          context,
+                          'اشتراک سامانه مدیریت آموزشگاه',
+                          'Academy management subscription',
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text(
-                                socialText(
-                                  context,
-                                  'اشتراک سامانه مدیریت آموزشگاه',
-                                  'Academy management subscription',
-                                ),
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                              Text(
-                                socialText(
-                                  context,
-                                  'ماه اول رایگان',
-                                  'First month free',
-                                ),
-                              ),
-                              for (final plan in objects(
-                                data['subscriptionPlans'] ?? [],
-                              ))
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
                                 Text(
-                                  '${plan['label']} — ${plan['amount']} ${socialText(context, 'تومان', 'toman')}',
+                                  socialText(
+                                    context,
+                                    'ماه اول رایگان',
+                                    'First month free',
+                                  ),
                                 ),
-                            ],
+                                for (final plan in objects(
+                                  data['subscriptionPlans'] ?? [],
+                                ))
+                                  Text(
+                                    '${plan['label']} — ${plan['amount']} ${socialText(context, 'تومان', 'toman')}',
+                                  ),
+                              ],
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(
@@ -2451,14 +2534,16 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                       ),
                     if (widget.section['key'] == 'organization-holidays')
                       PanelNationalHolidaySettings(api: widget.api),
-                    if (organizationOptions.isNotEmpty ||
+                    if (organizationOptions.isNotEmpty &&
+                            section != 'schedules' ||
                         filterFields.isNotEmpty)
                       PanelSectionCard(
                         key: ValueKey('panel-filters-$section'),
                         storageId: 'filters-$section',
                         title: socialText(context, 'فیلترها', 'Filters'),
                         children: [
-                          if (organizationOptions.isNotEmpty)
+                          if (organizationOptions.isNotEmpty &&
+                              section != 'schedules')
                             PanelField(
                               field: {
                                 'key': 'organization',
@@ -2490,7 +2575,11 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                             ),
                           for (final field in filterFields.where(
                             (field) =>
-                                panelFieldVisible(field, {'_form': filters}),
+                                panelFieldVisible(field, {'_form': filters}) &&
+                                !(section == 'schedules' &&
+                                    ['branch', 'organization'].contains(
+                                      field['queryKey'] ?? field['key'],
+                                    )),
                           ))
                             PanelField(
                               field: {...field, 'filter': true},
@@ -2639,7 +2728,20 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                       PanelScheduleWeek(
                         preferences: schedulePreferences,
                         rows: filtered,
-                        data: data,
+                        data: {
+                          ...data,
+                          'branches': [
+                            {
+                              'id': 0,
+                              'name': socialText(
+                                context,
+                                'آموزشگاه',
+                                'Academy',
+                              ),
+                            },
+                            ...objects(data['branches'] ?? []),
+                          ],
+                        },
                         branch: organizationFilter,
                         start: weekStart,
                         first: firstScheduleWeek,

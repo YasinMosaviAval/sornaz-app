@@ -6,9 +6,10 @@ Map<String, String> panelOrganizationOptions(
   List<Json> rows, {
   required bool fa,
   String mode = 'branch',
+  bool includeFixedScope = false,
 }) {
   final options = <String, String>{};
-  if (panelFixedBranchScope(data)) return options;
+  if (panelFixedBranchScope(data) && !includeFixedScope) return options;
   if (mode == 'owner') {
     for (final organization in objects(data['organizations'] ?? [])) {
       options['owner:${organization['id']}'] = '${organization['name'] ?? ''}';
