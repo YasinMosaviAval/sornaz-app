@@ -1,3 +1,4 @@
+import 'package:sornaz/components/settings_section_header.dart';
 import 'account_membership_request.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
 import '../Social/media_picker.dart';
@@ -65,6 +66,33 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
 
   final selected = <String>{};
   String get section => '${widget.section['key']}';
+  Widget accountSection(String key, List<Widget> children) {
+    if (widget.accountArea != null ||
+        ![
+          'devices',
+          'documents',
+          'loginHistory',
+          'securityAlerts',
+        ].contains(key)) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      );
+    }
+    final labels = {
+      'devices': ('دستگاه‌ها', 'Devices'),
+      'documents': ('اسناد', 'Documents'),
+      'loginHistory': ('تاریخچه ورود', 'Login history'),
+      'securityAlerts': ('هشدارهای امنیتی', 'Security alerts'),
+    };
+    final label = labels[key]!;
+    return SettingsSectionHeader(
+      title: socialText(context, label.$1, label.$2),
+      initiallyExpanded: false,
+      children: children,
+    );
+  }
+
   Json get actions {
     final all = optionalObject(widget.section['actions']);
     final area = widget.accountArea;
@@ -1079,8 +1107,6 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                     )
                   else if (section == 'account') ...[
                     if (widget.accountArea == 'merges.requests' &&
-                        optionalObject(data['profile'])['accountType'] ==
-                            'human' &&
                         actions.containsKey('merge'))
                       AccountMembershipRequest(
                         api: widget.api,
@@ -1104,25 +1130,26 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                       ('merges.requests', ['cancel-merge', 'decide-merge']),
                     ])
                       if (widget.accountArea == null ||
-                          widget.accountArea == pair.$1) ...[
-                        for (final row
-                            in (panelValue(data, pair.$1) is List
-                                ? objects(panelValue(data, pair.$1))
-                                : <Json>[]))
-                          recordRow(row, only: pair.$2),
-                        if (panelValue(data, pair.$1) is! List ||
-                            (panelValue(data, pair.$1) as List).isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Text(
-                              socialText(
-                                context,
-                                'موردی برای نمایش وجود ندارد.',
-                                'No records to display.',
+                          widget.accountArea == pair.$1)
+                        accountSection(pair.$1, [
+                          for (final row
+                              in (panelValue(data, pair.$1) is List
+                                  ? objects(panelValue(data, pair.$1))
+                                  : <Json>[]))
+                            recordRow(row, only: pair.$2),
+                          if (panelValue(data, pair.$1) is! List ||
+                              (panelValue(data, pair.$1) as List).isEmpty)
+                            Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Text(
+                                socialText(
+                                  context,
+                                  'موردی برای نمایش وجود ندارد.',
+                                  'No records to display.',
+                                ),
                               ),
                             ),
-                          ),
-                      ],
+                        ]),
                     if ((widget.accountArea == null ||
                             widget.accountArea == 'documents') &&
                         data['backup'] is Map)
@@ -1132,10 +1159,14 @@ class _PanelResourcePageState extends State<PanelResourcePage> {
                       ),
                     if (widget.accountArea == null ||
                         widget.accountArea == 'loginHistory')
-                      PanelDataView(value: data['loginHistory']),
+                      accountSection('loginHistory', [
+                        PanelDataView(value: data['loginHistory']),
+                      ]),
                     if (widget.accountArea == null ||
                         widget.accountArea == 'securityAlerts')
-                      PanelDataView(value: data['securityAlerts']),
+                      accountSection('securityAlerts', [
+                        PanelDataView(value: data['securityAlerts']),
+                      ]),
                   ] else if (['dashboard', 'reports'].contains(section)) ...[
                     PanelStatistics(stats: optionalObject(data['stats'])),
                     const SizedBox(height: 16),

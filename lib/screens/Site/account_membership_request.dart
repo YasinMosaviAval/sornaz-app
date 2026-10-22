@@ -122,7 +122,7 @@ class _AccountMembershipRequestState extends State<AccountMembershipRequest> {
               shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
             ),
             onPressed: saving || !widget.eligible ? null : submit,
-            child: Text(t('ارسال درخواست بررسی', 'Submit for review')),
+            child: Text(t('ارسال درخواست ادغام', 'Submit merge request')),
           ),
         ],
       ),

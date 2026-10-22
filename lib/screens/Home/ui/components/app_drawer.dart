@@ -140,30 +140,34 @@ class AppDrawer extends StatelessWidget {
                           ),
                           link: const AppReleaseInfo(rating: true),
                         ),
-                        const Divider(),
-                        const Padding(
-                          padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
-                          child: AppText(
-                            'جامعه',
-                            style: TextStyle(color: Colors.grey),
+                        if (session.isAuthenticated &&
+                            session.token!.trim().isNotEmpty &&
+                            authUser?.id == 1) ...[
+                          const Divider(),
+                          const Padding(
+                            padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
+                            child: AppText(
+                              'جامعه',
+                              style: TextStyle(color: Colors.grey),
+                            ),
                           ),
-                        ),
-                        AppDrawerItem(
-                          icon: Icons.manage_accounts_outlined,
-                          text: 'حساب کاربری',
-                          link: const UserPanelPage(initialTab: 2),
-                        ),
+                          AppDrawerItem(
+                            icon: Icons.manage_accounts_outlined,
+                            text: 'حساب کاربری',
+                            link: const UserPanelPage(initialTab: 2),
+                          ),
 
-                        AppDrawerItem(
-                          icon: Icons.card_membership_outlined,
-                          text: 'عضویت',
-                          link: const SimpleInfoPage(
-                            title: 'عضویت',
+                          AppDrawerItem(
                             icon: Icons.card_membership_outlined,
-                            body:
-                                'جزئیات عضویت و خدمات حساب شما پس از فعال شدن طرح‌های عضویت اینجا قرار می‌گیرد.',
+                            text: 'عضویت',
+                            link: const SimpleInfoPage(
+                              title: 'عضویت',
+                              icon: Icons.card_membership_outlined,
+                              body:
+                                  'جزئیات عضویت و خدمات حساب شما پس از فعال شدن طرح‌های عضویت اینجا قرار می‌گیرد.',
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                     Column(
@@ -211,6 +215,9 @@ class AppDrawer extends StatelessWidget {
                                     authUser == null
                                         ? 'ورود یا ثبت‌نام'
                                         : 'ورود با حساب دیگر',
+                                    style: AppTypography.appDrawerItemTitle(
+                                      context,
+                                    ),
                                   ),
                                   onTap: session.isChanging
                                       ? null
@@ -219,7 +226,12 @@ class AppDrawer extends StatelessWidget {
                                 if (authUser != null)
                                   ListTile(
                                     textColor: AppColors.error,
-                                    title: const AppText('خروج از حساب'),
+                                    title: AppText(
+                                      'خروج از حساب',
+                                      style: AppTypography.appDrawerItemTitle(
+                                        context,
+                                      ),
+                                    ),
                                     onTap: session.isChanging
                                         ? null
                                         : () async {
