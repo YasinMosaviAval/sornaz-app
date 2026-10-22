@@ -639,6 +639,15 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
     return true;
   }
 
+  String rowActionTitle(String key, Json record) {
+    if (section == 'terms' &&
+        key == 'classroom' &&
+        (num.tryParse('${record['classroomId']}') ?? 0) > 0) {
+      return socialText(context, 'تغییر کلاس', 'Change classroom');
+    }
+    return panelLabel(context, optionalObject(actions[key]));
+  }
+
   Future<void> perform(
     String key, [
     Json record = const {},
@@ -852,6 +861,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
         context: context,
         builder: (_) => PanelFormPage(
           dialog: true,
+          termAssignment: section == 'terms' && key == 'assign-student',
           lookupMemberUser:
               ((['students', 'members'].contains(section) && key == 'create') ||
                   (section == 'terms' && key == 'assign-student'))
@@ -877,7 +887,15 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                   'terms',
                   'schedule-preview',
                   params: {'id': '${values['termId'] ?? record['id']}'},
-                  values: optionalObject(values['studentSchedule']),
+                  values: {
+                    ...optionalObject(values['studentSchedule']),
+                    'classroomId': section == 'terms' && key == 'assign-student'
+                        ? values['classroomId'] ?? 0
+                        : optionalObject(
+                                values['studentSchedule'],
+                              )['classroomId'] ??
+                              0,
+                  },
                 )
               : null,
           loadOptions:
@@ -940,7 +958,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                   widget.params['collection'] ?? 'gallery',
                   fa: Localizations.localeOf(context).languageCode == 'fa',
                 )
-              : panelLabel(context, action),
+              : rowActionTitle(key, record),
           suggestedTitle: gallerySection && key == 'create'
               ? (values) => panelGallerySuggestedTitle(values, {
                   ...data,
@@ -1064,6 +1082,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
           },
           initial: section == 'terms' && key == 'assign-student'
               ? {
+                  'classroomId': record['classroomId'],
                   'organizationUserId': objects(data['courses'] ?? [])
                       .where(
                         (course) =>
@@ -1185,20 +1204,6 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
           }
         }
         await load();
-        if (mounted && section == 'terms' && key == 'assign-student') {
-          setState(() => busy = false);
-          final updated = objects(
-            panelValue(data, '${widget.section['rows'] ?? 'items'}') ?? [],
-          ).where((row) => '${row['id']}' == '${record['id']}').firstOrNull;
-          await perform(
-            'classroom',
-            updated ??
-                {
-                  ...record,
-                  'students': [<String, dynamic>{}],
-                },
-          );
-        }
         if (mounted)
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -1459,9 +1464,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                           Navigator.pop(context);
                           perform(key, row);
                         },
-                        child: Text(
-                          panelLabel(context, optionalObject(actions[key])),
-                        ),
+                        child: Text(rowActionTitle(key, row)),
                       ),
                 if (available('update', row))
                   TextButton(
@@ -1740,9 +1743,9 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                                 child: Text(
                                   key == 'details'
                                       ? socialText(context, 'جزئیات', 'Details')
-                                      : panelLabel(
-                                          context,
-                                          optionalObject(actions[key]),
+                                      : rowActionTitle(
+                                          key,
+                                          optionalObject(row['_record']),
                                         ),
                                 ),
                               ),
@@ -1841,9 +1844,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                               : Icons.edit_outlined,
                           size: 18,
                         ),
-                        label: Text(
-                          panelLabel(context, optionalObject(actions[key])),
-                        ),
+                        label: Text(rowActionTitle(key, row)),
                       ),
                 ],
               ),
@@ -2122,6 +2123,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
         .where(
           (entry) =>
               entry.key != 'list' &&
+              !(section == 'students' && entry.key == 'create') &&
               !(section == 'terms' && entry.key == 'available-times') &&
               section != 'account' &&
               !(section == 'classroom-types' &&

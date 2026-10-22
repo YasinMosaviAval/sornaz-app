@@ -46,6 +46,7 @@ class PanelFormPage extends StatefulWidget {
     this.submitButtons = const [],
     this.suggestedTitle,
     this.bottomSubmitLabel,
+    this.termAssignment = false,
   });
   final Future<void> Function(PanelFormResult result)? onSubmit;
   final Future<void> Function(PanelFormResult result)? onRequestCode;
@@ -55,6 +56,7 @@ class PanelFormPage extends StatefulWidget {
   final Future<Json> Function()? loadOptions;
   final bool settingsCheckboxes, dialog;
   final bool declaredOnly;
+  final bool termAssignment;
   final List<Json> submitButtons;
   final String title;
   final String? bottomSubmitLabel;
@@ -66,6 +68,35 @@ class PanelFormPage extends StatefulWidget {
 }
 
 class _PanelFormPageState extends State<PanelFormPage> {
+  int assignmentStep = 0;
+  int fieldStep(Json field) => switch (field['key']) {
+    'addresses' => 1,
+    'studentSchedule' => 2,
+    'classroomId' => 3,
+    _ => 0,
+  };
+
+  void nextAssignmentStep() {
+    final current = effectiveFields
+        .where((field) => fieldStep(field) == assignmentStep)
+        .toList();
+    final invalid = panelInvalidField(current, values, liveData);
+    if (invalid != null) {
+      setState(
+        () => validationError = socialText(
+          context,
+          'اطلاعات این مرحله را کامل کنید.',
+          'Complete this step.',
+        ),
+      );
+      return;
+    }
+    setState(() {
+      assignmentStep++;
+      validationError = null;
+    });
+  }
+
   Json? existingUser;
   bool lookupBusy = false, previewBusy = false;
   String userQuery = '';
@@ -371,6 +402,7 @@ class _PanelFormPageState extends State<PanelFormPage> {
         final field = effectiveFields
             .where((field) => field['key'] == invalid)
             .first;
+        if (widget.termAssignment) assignmentStep = fieldStep(field);
         setState(
           () => validationError =
               '${Localizations.localeOf(context).languageCode == 'fa' ? field['label'] : field['en'] ?? invalid}: ${socialText(context, 'اطلاعات این فیلد را بررسی کنید.', 'Check this field.')}',
@@ -437,7 +469,77 @@ class _PanelFormPageState extends State<PanelFormPage> {
               ? EdgeInsets.zero
               : const EdgeInsets.all(16),
           children: [
-            if (widget.lookupMemberUser != null) ...[
+            if (widget.termAssignment) ...[
+              Row(
+                children: [
+                  for (var index = 0; index < 4; index++)
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(2),
+                        child: Semantics(
+                          selected: index == assignmentStep,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: index == assignmentStep
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.surfaceContainerHighest,
+                              borderRadius: appRadius(context),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Text(
+                                '${index + 1}',
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: index == assignmentStep
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.onPrimary
+                                          : Theme.of(
+                                              context,
+                                            ).colorScheme.onSurface,
+                                    ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              Text(
+                socialText(
+                  context,
+                  [
+                    'انتخاب هنرجو',
+                    'آدرس هنرجو',
+                    'تاریخ جلسات ترم',
+                    'کلاس برگزاری',
+                  ][assignmentStep],
+                  [
+                    'Select student',
+                    'Student address',
+                    'Session dates',
+                    'Classroom',
+                  ][assignmentStep],
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (assignmentStep == 2 &&
+                  optionalObject(liveData['record'])['hasSessions'] == true)
+                Text(
+                  socialText(
+                    context,
+                    'تاریخ جلسات ثبت‌شده حفظ می‌شود.',
+                    'The existing session dates will be retained.',
+                  ),
+                ),
+            ],
+            if (widget.lookupMemberUser != null &&
+                (!widget.termAssignment || assignmentStep == 0)) ...[
               TextField(
                 decoration: InputDecoration(
                   labelText: socialText(
@@ -488,7 +590,8 @@ class _PanelFormPageState extends State<PanelFormPage> {
                   ),
                 ),
             ],
-            if (widget.previewStudentSchedule != null &&
+            if ((!widget.termAssignment || assignmentStep == 2) &&
+                widget.previewStudentSchedule != null &&
                 effectiveFields.any(
                   (field) =>
                       field['key'] == 'studentSchedule' &&
@@ -586,35 +689,42 @@ class _PanelFormPageState extends State<PanelFormPage> {
                 panelFormContext(effectiveFields, values, liveData),
               ),
             ))
-              Padding(
-                padding: EdgeInsets.only(
-                  bottom: widget.settingsCheckboxes ? 0 : 16,
-                ),
-                child: PanelField(
-                  key: ValueKey(field['key']),
-                  field: {
-                    ...field,
-                    if (widget.loadBatchTimes != null &&
-                        ['rangeStart', 'rangeEnd'].contains(field['key'])) ...{
-                      'type': 'select',
-                      'options': batchRangeOptions('${field['key']}'),
+              Offstage(
+                offstage:
+                    widget.termAssignment && fieldStep(field) != assignmentStep,
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    bottom: widget.settingsCheckboxes ? 0 : 16,
+                  ),
+                  child: PanelField(
+                    key: ValueKey(field['key']),
+                    field: {
+                      ...field,
+                      if (widget.loadBatchTimes != null &&
+                          [
+                            'rangeStart',
+                            'rangeEnd',
+                          ].contains(field['key'])) ...{
+                        'type': 'select',
+                        'options': batchRangeOptions('${field['key']}'),
+                      },
+                      'required': panelFieldRequired(
+                        field,
+                        panelFormContext(effectiveFields, values, liveData),
+                      ),
+                      if (widget.settingsCheckboxes) 'type': 'settingsCheckbox',
                     },
-                    'required': panelFieldRequired(
-                      field,
-                      panelFormContext(effectiveFields, values, liveData),
-                    ),
-                    if (widget.settingsCheckboxes) 'type': 'settingsCheckbox',
-                  },
-                  value: values['${field['key']}'],
-                  data: panelFormContext(effectiveFields, values, liveData),
-                  changed: (value) => change(field, value),
-                  onFile: (file) {
-                    final previous = files['${field['key']}'];
-                    if (previous != null)
-                      unawaited(releasePickedMedia(previous));
-                    files['${field['key']}'] = file;
-                    setState(() => values['${field['key']}'] = file.name);
-                  },
+                    value: values['${field['key']}'],
+                    data: panelFormContext(effectiveFields, values, liveData),
+                    changed: (value) => change(field, value),
+                    onFile: (file) {
+                      final previous = files['${field['key']}'];
+                      if (previous != null)
+                        unawaited(releasePickedMedia(previous));
+                      files['${field['key']}'] = file;
+                      setState(() => values['${field['key']}'] = file.name);
+                    },
+                  ),
                 ),
               ),
           ],
@@ -656,10 +766,19 @@ class _PanelFormPageState extends State<PanelFormPage> {
                   ),
                 ),
                 const SizedBox(width: 12),
+                if (widget.termAssignment && assignmentStep > 0)
+                  TextButton(
+                    onPressed: submitting
+                        ? null
+                        : () => setState(() => assignmentStep--),
+                    child: Text(socialText(context, 'قبلی', 'Previous')),
+                  ),
                 Expanded(
                   child: FilledButton(
                     onPressed: submitting
                         ? null
+                        : widget.termAssignment && assignmentStep < 3
+                        ? nextAssignmentStep
                         : () => submit(
                             overrides: widget.submitButtons.isEmpty
                                 ? {}
@@ -668,7 +787,9 @@ class _PanelFormPageState extends State<PanelFormPage> {
                                   ),
                           ),
                     child: Text(
-                      widget.submitButtons.isEmpty
+                      widget.termAssignment && assignmentStep < 3
+                          ? socialText(context, 'بعدی', 'Next')
+                          : widget.submitButtons.isEmpty
                           ? socialText(context, 'ذخیره تغییرات', 'Save changes')
                           : socialText(
                               context,
