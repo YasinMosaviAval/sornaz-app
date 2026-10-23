@@ -11,6 +11,8 @@ import 'package:sornaz/components/bottom_nav.dart';
 import 'package:sornaz/components/join_community.dart';
 import 'package:sornaz/components/main_tabs.dart';
 import 'package:sornaz/helpers/app_data.dart';
+import 'package:provider/provider.dart';
+import 'package:sornaz/screens/Articles/provider/articles_provider.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 import 'package:sornaz/screens/Home/ui/pages/learning_home.dart';
 import 'package:sornaz/screens/Site/academy_search.dart';
@@ -73,21 +75,18 @@ void main() {
         );
         await tester.pumpWidget(
           fixture.host(
-            HomePage(api: api, academyApi: site, articleLoader: () async => []),
+            ChangeNotifierProvider(
+              create: (_) => ArticlesProvider(autoStart: false),
+              child: const HomePage(),
+            ),
             AppData(),
             session,
           ),
         );
         await tester.pumpAndSettle();
-        expect(
-          find.byType(AcademySearchCard),
-          type == 'human' ? findsOneWidget : findsNothing,
-        );
-        expect(
-          find.byType(AcademyRegistrationCard),
-          type == 'human' ? findsOneWidget : findsNothing,
-        );
-        expect(optionRequests, type == 'human' ? 1 : 0);
+        expect(find.byType(AcademySearchCard), findsNothing);
+        expect(find.byType(AcademyRegistrationCard), findsNothing);
+        expect(optionRequests, 0);
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox());
         api.dispose();
@@ -183,7 +182,7 @@ void main() {
     },
   );
   testWidgets(
-    'home replaces new courses with academy search while keeping updated courses',
+    'ordinary home shows articles without requesting course or academy sections',
     (tester) async {
       final site = optionsApi();
       final api = SocialApi(
@@ -212,24 +211,19 @@ void main() {
       await session.save(fixture.account(7));
       await tester.pumpWidget(
         fixture.host(
-          HomePage(api: api, academyApi: site, articleLoader: () async => []),
+          ChangeNotifierProvider(
+            create: (_) => ArticlesProvider(autoStart: false),
+            child: const HomePage(),
+          ),
           AppData(),
           session,
         ),
       );
       await tester.pumpAndSettle();
       expect(find.text('دوره‌های جدید'), findsNothing);
-      expect(find.byType(AcademySearchCard), findsOneWidget);
-      await tester.scrollUntilVisible(
-        find.text('دوره‌های به‌روزشده'),
-        200,
-        scrollable: find
-            .byWidgetPredicate(
-              (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
-            )
-            .first,
-      );
-      expect(find.text('دوره‌های به‌روزشده'), findsOneWidget);
+      expect(find.byType(AcademySearchCard), findsNothing);
+      expect(find.text('دوره‌های به‌روزشده'), findsNothing);
+      expect(find.byKey(const Key('article-list')), findsOneWidget);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
       site.dispose();

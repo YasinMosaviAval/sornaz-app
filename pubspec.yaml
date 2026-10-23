@@ -1,7 +1,7 @@
 name: sornaz
 description: "A new Flutter project."
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: ^3.9.2
@@ -77,8 +77,6 @@ flutter_launcher_icons:
 flutter:
   uses-material-design: true
   assets:
-    - assets/notation/
-    - assets/notation/vendor/
     - assets/images/
     - assets/icons/
     - assets/icons/notes/notes/
@@ -87,12 +85,6 @@ flutter:
     - assets/audio/accent.wav
     - assets/audio/tick.wav
     - assets/audio/sub_tick.wav
-    - assets/audio/interval_piano/
-    - assets/audio/interval_guitar/
-    - assets/audio/interval_violin/
-    - assets/audio/interval_viola/
-    - assets/audio/interval_cello/
-    - assets/audio/INTERVAL_INSTRUMENTS_NOTICE.md
   fonts:
     - family: iran_sansx_fa
       fonts:

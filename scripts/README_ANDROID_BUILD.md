@@ -7,10 +7,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build_android.ps1 
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build_android.ps1 -Mode All -Offline
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build_android.ps1 -Mode Universal -Offline
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build_android.ps1 -Mode Bundle -Offline
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build_android.ps1 -Mode BundleArm64 -Offline
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build_android.ps1 -Mode Debug -Offline
 ```
 
-حالت پیش‌فرض `Arm64` است. برای ساخت بدون محدودکردن Gradle به کش آفلاین، `-Offline` را بردارید. حالت `All` به‌ترتیب APK عمومی، APKهای تفکیک‌شده و AAB را می‌سازد. هر مرحله باید موفق شود و فایل خروجی وجود داشته باشد. اگر Gradle فایل قبلی را دوباره استفاده کند، گزارش آن را با `producedThisRun: false` مشخص می‌کند؛ آن فایل خروجی تازه محسوب نمی‌شود. گزارش `build-report.json` شامل اندازه، هش SHA-256، نسخه، شناسهٔ برنامه و در صورت امکان اثرانگشت گواهی APK است. `build.log` خروجی ساخت را نگه می‌دارد. خروجی‌های این شاخه فعلاً با کلید Debug امضا می‌شوند و برای انتشار در Google Play آماده نیستند.
+حالت پیش‌فرض `Arm64` است. برای ساخت بدون محدودکردن Gradle به کش آفلاین، `-Offline` را بردارید. حالت `All` به‌ترتیب APK عمومی، APKهای تفکیک‌شده و AAB را می‌سازد. هر مرحله باید موفق شود و فایل خروجی وجود داشته باشد. اگر Gradle فایل قبلی را دوباره استفاده کند، گزارش آن را با `producedThisRun: false` مشخص می‌کند؛ آن فایل خروجی تازه محسوب نمی‌شود. گزارش `build-report.json` شامل اندازه، هش SHA-256، نسخه، شناسهٔ برنامه و در صورت امکان اثرانگشت گواهی APK است. `build.log` خروجی ساخت را نگه می‌دارد. خروجی‌های Release باید با کلید upload معرفی‌شده در فایل محلی `android/key.properties` امضا شوند؛ در نبود تنظیمات کامل، ساخت متوقف می‌شود و fallback به Debug وجود ندارد. فایل کلید و رمزها را وارد Git نکنید. نتیجهٔ آزمون گوشی و مسیر AAB تأییدشده در `docs/google-play-device-validation.fa.md` آمده است.
 
 برای اولین بار، Flutter SDK و Android SDK و وابستگی‌های قفل‌شدهٔ `pubspec.lock` باید از قبل در کش دستگاه موجود باشند. حالت آفلاین، Gradle و Cargo را آفلاین می‌کند و از `--no-pub` استفاده می‌کند. اگر `.dart_tool/package_config.json` یا بسته‌ای در کش موجود نباشد، یک بار در محیط دارای اینترنت `flutter pub get --enforce-lockfile` را اجرا کنید؛ سپس دوباره دستور آفلاین را بزنید. اسکریپت `flutter clean` یا `flutter pub upgrade` اجرا نمی‌کند و نسخهٔ ابزارها را عوض نمی‌کند. اگر ساخت به‌خاطر کش Gradle یا کتابخانهٔ Native شکست خورد، متن دقیق `build.log` را بررسی کنید؛ تا رفع وابستگی مفقود، آفلاین بودن ساخت تضمین نمی‌شود. در آزمایش فعلی کش Release کامل است، اما کش Debug شامل همهٔ کتابخانه‌های Gradle نیست. برای آماده‌کردن Debug، یک‌بار در محیط دارای اینترنت دستور `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build_android.ps1 -Mode Debug` را اجرا کنید. سپس حالت `-Offline` را دوباره آزمایش کنید.
 
@@ -33,3 +34,5 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\diagnose_android.p
 ```
 
 `VERSION` و `RUN` را با نام پوشه‌های واقعی خروجی جایگزین کنید. برای خطای صفحهٔ سیاه، گزارش عیب‌یابی همان نسخه‌ای را ارسال کنید که روی گوشی نصب شده است. موفقیت Build به‌تنهایی به‌معنای رفع خطای اجرا نیست.
+
+حالت Bundle شامل ARMv7، ARM64 و x86_64 است؛ BundleArm64 فقط arm64-v8a را در تمام کتابخانه‌های برنامه و افزونه‌ها نگه می‌دارد و نبود معماری‌های اضافی را کنترل می‌کند. هر دو از کنترل‌های استاندارد Flutter و امضای upload استفاده می‌کنند. دو فایل نسخهٔ یکسان، گزینه‌های جایگزین برای بارگذاری‌اند. گزارش جدید در docs/article-home-release-size.fa.md است.

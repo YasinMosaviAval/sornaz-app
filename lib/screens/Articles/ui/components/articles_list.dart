@@ -40,7 +40,7 @@ class ArticlesListWidget extends StatelessWidget {
           return SingleChildScrollView(
             key: const Key('article-filters'),
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
               children: [
                 for (var i = 0; i < filters.length; i++) ...[
@@ -49,9 +49,13 @@ class ArticlesListWidget extends StatelessWidget {
                     padding: EdgeInsets.zero,
                     child: InkWell(
                       borderRadius: appRadius(context),
-                      onTap: () => provider.updateCategory(
-                        filters[i]['id']?.toString() ?? AppStrings.all,
-                      ),
+                      onTap: () {
+                        provider.updateCategory(
+                          filters[i]['id']?.toString() ?? AppStrings.all,
+                        );
+                        if (scrollController.hasClients)
+                          scrollController.jumpTo(0);
+                      },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,

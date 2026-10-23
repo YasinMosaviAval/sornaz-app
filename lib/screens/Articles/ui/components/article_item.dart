@@ -25,7 +25,7 @@ class ArticleItemWidget extends StatelessWidget {
         : '';
     final en = Localizations.localeOf(context).languageCode == 'en';
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.fromLTRB(12, 16, 12, 0),
       child: Material(
         color: AppColors.article_item_box_decoration_color(isDark: isDark),
         borderRadius: appRadius(context),

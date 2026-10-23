@@ -41,7 +41,7 @@ void main() async {
     musicAudioHandler = await AudioService.init<MusicAudioHandler>(
       builder: () => MusicAudioHandler(customUndo: sdk >= 33),
       config: const AudioServiceConfig(
-        androidNotificationChannelId: 'com.example.sornaz.music',
+        androidNotificationChannelId: 'com.sornaz.music',
         androidNotificationChannelName: 'Sornaz music',
         androidNotificationIcon: 'drawable/ic_music_notification',
         androidNotificationOngoing: true,

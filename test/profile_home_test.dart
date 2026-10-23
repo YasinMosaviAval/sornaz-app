@@ -11,6 +11,8 @@ import 'package:http/testing.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sornaz/helpers/app_data.dart';
+import 'package:sornaz/helpers/app_locale_provider.dart';
+import 'package:sornaz/screens/Articles/provider/articles_provider.dart';
 import 'package:sornaz/screens/Home/ui/pages/home.dart';
 import 'package:sornaz/screens/Social/social_api.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
@@ -52,8 +54,12 @@ Widget host(
   Widget child, {
   bool dark = false,
   Locale locale = const Locale('fa'),
-}) => ChangeNotifierProvider(
-  create: (_) => AppData()..toggleDarkMode(dark),
+}) => MultiProvider(
+  providers: [
+    ChangeNotifierProvider(create: (_) => AppData()..toggleDarkMode(dark)),
+    ChangeNotifierProvider(create: (_) => LocaleProvider()),
+    ChangeNotifierProvider<ArticlesProvider>(create: (_) => _StaticArticles()),
+  ],
   child: MaterialApp(
     locale: locale,
     supportedLocales: const [Locale('fa'), Locale('en')],
@@ -65,6 +71,12 @@ Widget host(
     home: child,
   ),
 );
+
+class _StaticArticles extends ArticlesProvider {
+  _StaticArticles() : super(autoStart: false);
+  @override
+  Future<void> refreshArticles() async {}
+}
 
 void main() {
   setUpAll(() async {

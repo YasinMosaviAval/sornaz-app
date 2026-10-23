@@ -32,14 +32,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     if (MainTabsScope.maybeOf(context) == null)
       return MainTabs(initialIndex: 0, initialChild: this);
-    final token = context.watch<AuthSession?>()?.token ?? '';
-    return HomeContent(
-      key: ValueKey(token),
-      api: api,
-      token: token,
-      articleLoader: articleLoader,
-      academyApi: academyApi,
-    );
+    return const ArticlesPage(asHome: true);
   }
 }
 

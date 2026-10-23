@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('All','Arm64','Universal','Bundle','Debug')]
+    [ValidateSet('All','Arm64','Universal','Bundle','BundleArm64','Debug')]
     [string]$Mode = 'Arm64',
     [switch]$Offline
 )
@@ -56,6 +56,14 @@ function Invoke-BuildStep([string[]]$Arguments, [string[]]$Names) {
     foreach ($name in $Names) {
         $path = if ($name.EndsWith('.aab')) { Join-Path $script:root "build/app/outputs/bundle/release/$name" } else { Join-Path $script:root "build/app/outputs/flutter-apk/$name" }
         if (!(Test-Path $path)) { throw "Build succeeded but artifact is missing: $path" }
+        if ($script:Mode -eq 'BundleArm64' -and $name.EndsWith('.aab')) {
+            Add-Type -AssemblyName System.IO.Compression.FileSystem
+            $zip = [IO.Compression.ZipFile]::OpenRead($path)
+            try {
+                $abis = @($zip.Entries | Where-Object { $_.FullName -match '^base/lib/([^/]+)/' } | ForEach-Object { ($_.FullName -split '/')[2] } | Sort-Object -Unique)
+                if ($abis.Count -ne 1 -or $abis[0] -ne 'arm64-v8a') { throw ('ARM64-only bundle contains unexpected ABIs: ' + ($abis -join ', ')) }
+            } finally { $zip.Dispose() }
+        }
         $source = Get-Item $path
         $fresh = $source.LastWriteTime -ge $stepStart.AddSeconds(-2)
         if (!$fresh) { Write-Warning "Gradle reused an existing artifact; this file was not newly produced: $path" }
@@ -68,7 +76,7 @@ function Invoke-BuildStep([string[]]$Arguments, [string[]]$Names) {
             $apksigner = Get-ChildItem (Join-Path $script:sdk 'build-tools') -Filter apksigner.bat -Recurse -ErrorAction SilentlyContinue | Sort-Object FullName -Descending | Select-Object -First 1
             if ($apksigner) {
                 $verify = & $apksigner.FullName verify --print-certs $destination 2>&1
-                if ($LASTEXITCODE -eq 0) { $cert = @($verify | Select-String 'Signer #1 certificate SHA-256 digest' | Select-Object -First 1).ToString() }
+                if ($LASTEXITCODE -eq 0) { $cert = ($verify | Select-String 'Signer #1 certificate SHA-256 digest' | Select-Object -First 1).Line }
             }
         }
         $script:artifacts.Add([ordered]@{ type=$name; path=$copy.FullName; bytes=$copy.Length; sha256=(Get-FileHash $copy.FullName -Algorithm SHA256).Hash; signedCertificate=$cert; producedUtc=$source.LastWriteTimeUtc.ToString('o'); producedThisRun=$fresh })
@@ -85,7 +93,7 @@ try {
         # Local native preparation and Flutter-engine Maven seed are required by this repository.
         & (Join-Path $root 'tool/prepare_offline_native.ps1')
         if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw 'Offline native preparation failed.' }
-        $platforms = if ($Mode -eq 'Arm64') { @('android-arm64') } else { @('android-arm','android-arm64','android-x64') }
+        $platforms = if ($Mode -in @('Arm64','BundleArm64')) { @('android-arm64') } else { @('android-arm','android-arm64','android-x64') }
         & (Join-Path $root 'tool/seed_flutter_engine_maven.ps1') -Flutter $flutter -TargetPlatform $platforms
         if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw 'Flutter engine cache preparation failed.' }
     }
@@ -93,6 +101,7 @@ try {
     if ($Mode -eq 'Arm64') { Invoke-BuildStep @('build','apk','--release','--split-per-abi','--target-platform','android-arm64','--no-pub') @('app-arm64-v8a-release.apk') }
     if ($Mode -eq 'All') { Invoke-BuildStep @('build','apk','--release','--split-per-abi','--no-pub') @('app-armeabi-v7a-release.apk','app-arm64-v8a-release.apk','app-x86_64-release.apk') }
     if ($Mode -in @('All','Bundle')) { Invoke-BuildStep @('build','appbundle','--release','--no-pub') @('app-release.aab') }
+    if ($Mode -eq 'BundleArm64') { Invoke-BuildStep @('build','appbundle','--release','--target-platform','android-arm64','--android-project-arg=sornaz-arm64-only=true','--android-project-arg=disable-abi-filtering=true','--no-pub') @('app-release.aab') }
     if ($Mode -eq 'Debug') { Invoke-BuildStep @('build','apk','--debug','--no-pub') @('app-debug.apk') }
     if ((Get-FileHash (Join-Path $root 'pubspec.lock') -Algorithm SHA256).Hash -ne $lockHash) { throw 'pubspec.lock changed unexpectedly.' }
     $status = 'success'

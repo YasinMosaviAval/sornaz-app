@@ -123,7 +123,7 @@ class _ExpandingSearchBarState extends State<ExpandingSearchBar> {
                             controller: field,
                             textDirection: Directionality.of(context),
                             autofocus: true,
-                            style: const TextStyle(fontSize: 13),
+                            style: Theme.of(context).textTheme.bodyMedium,
                             onChanged: widget.onChanged,
                             decoration: InputDecoration(
                               hintText: widget.hint,
@@ -134,23 +134,26 @@ class _ExpandingSearchBarState extends State<ExpandingSearchBar> {
                                 size: widget.searchIconSize,
                                 color: widget.searchIconColor,
                               ),
-                              suffixIcon: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (widget.onFilter != null)
+                              suffixIcon: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (widget.onFilter != null)
+                                      IconButton(
+                                        icon: const Icon(Icons.tune),
+                                        onPressed: widget.onFilter,
+                                      ),
                                     IconButton(
-                                      icon: const Icon(Icons.tune),
-                                      onPressed: widget.onFilter,
+                                      icon: const Icon(Icons.close),
+                                      onPressed: () {
+                                        field.clear();
+                                        widget.onChanged('');
+                                        setState(() => open = false);
+                                      },
                                     ),
-                                  IconButton(
-                                    icon: const Icon(Icons.close),
-                                    onPressed: () {
-                                      field.clear();
-                                      widget.onChanged('');
-                                      setState(() => open = false);
-                                    },
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),

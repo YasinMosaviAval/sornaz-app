@@ -5,6 +5,12 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+def uploadPropertiesFile = rootProject.file('key.properties')
+def uploadProperties = new Properties()
+if (uploadPropertiesFile.exists()) {
+    uploadPropertiesFile.withInputStream { uploadProperties.load(it) }
+}
+
 android {
     namespace = "com.example.sornaz"
     compileSdk = flutter.compileSdkVersion
@@ -21,22 +27,36 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.sornaz"
+        applicationId = "com.sornaz"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 24
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // The ARM64-only bundle also filters prebuilt libraries from plugins.
+        if (project.findProperty('sornaz-arm64-only') == 'true') {
+            ndk {
+                abiFilters.clear()
+                abiFilters.add('arm64-v8a')
+            }
+        }
     }
 
 
+    signingConfigs {
+        release {
+            keyAlias = uploadProperties['keyAlias']
+            keyPassword = uploadProperties['keyPassword']
+            storeFile = uploadProperties['storeFile'] ? rootProject.file(uploadProperties['storeFile']) : null
+            storePassword = uploadProperties['storePassword']
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
+            signingConfig = signingConfigs.release
+            ndk { debugSymbolLevel = 'SYMBOL_TABLE' }
         }
     }
 }
@@ -71,6 +91,21 @@ tasks.register('verifyOfflineReleaseDependencies') {
                 if (!artifact.isFile()) throw new GradleException("Missing artifact: " + artifact)
             }
             println("Verified offline " + name + ": " + artifacts.size() + " artifacts")
+        }
+    }
+}
+
+// Never produce a release artifact with a fallback debug key or no signature.
+tasks.configureEach { task ->
+    if (task.name == 'preReleaseBuild') {
+        task.doFirst {
+            def required = ['storeFile', 'storePassword', 'keyAlias', 'keyPassword']
+            if (!uploadPropertiesFile.isFile() || required.any { !uploadProperties[it]?.trim() || uploadProperties[it].startsWith('REPLACE_WITH_') }) {
+                throw new GradleException('Release signing requires android/key.properties with storeFile, storePassword, keyAlias and keyPassword. Keep passwords local; no debug fallback is allowed.')
+            }
+            if (!rootProject.file(uploadProperties['storeFile']).isFile()) {
+                throw new GradleException('The upload keystore configured in android/key.properties does not exist.')
+            }
         }
     }
 }

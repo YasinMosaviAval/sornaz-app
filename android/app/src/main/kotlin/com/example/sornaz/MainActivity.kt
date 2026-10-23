@@ -15,12 +15,10 @@ class MainActivity : AudioServiceActivity() {
         if (storyMedia?.permissions(requestCode) == true) return
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
-    private var notationStorage: NotationStorage? = null
     private var recordingWorkspace: RecordingWorkspace? = null
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (deviceVideos?.onResult(requestCode, resultCode) == true) return
         if (storyMedia?.onResult(requestCode, resultCode, data) == true) return
-        if (notationStorage?.onResult(requestCode, resultCode, data) == true) return
         if (recordingWorkspace?.onResult(requestCode, resultCode, data) == true) return
         super.onActivityResult(requestCode, resultCode, data)
     }
@@ -37,7 +35,6 @@ class MainActivity : AudioServiceActivity() {
         }
         storyMedia = StoryMedia(this, flutterEngine.dartExecutor.binaryMessenger)
         practiceMetronome = PracticeMetronome(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
-        notationStorage = NotationStorage(this, flutterEngine.dartExecutor.binaryMessenger)
         MusicMetadata(flutterEngine.dartExecutor.binaryMessenger)
         MusicTools(this, flutterEngine.dartExecutor.binaryMessenger)
         AudioCrop(this, flutterEngine.dartExecutor.binaryMessenger)
