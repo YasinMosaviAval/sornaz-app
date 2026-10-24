@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'panel_navigation.dart';
+
+import 'package:url_launcher/url_launcher.dart';
+import 'package:sornaz/components/app_bar.dart';
 import 'branch_style.dart';
 import 'panel_list_item.dart';
 import 'package:flutter/material.dart';
@@ -52,10 +55,10 @@ class _NativePanelState extends State<NativePanel> {
             mounted && context.read<AuthSession?>()?.token == widget.token,
       );
   List<Json> sections = [];
+  List<Json> navigation = [];
   int unreadMessages = 0, unreadNotifications = 0;
   bool loading = true;
   Object? error;
-  String query = '';
   bool contentOverflows = false;
   bool measure(ScrollMetricsNotification n) {
     if (n.depth == 0) {
@@ -88,14 +91,20 @@ class _NativePanelState extends State<NativePanel> {
     fetching = true;
     try {
       final result = await (refresh ? api.refresh('') : api.get(''));
+      final menu = websitePanelNavigation(result);
       if (mounted) {
         setState(() {
-          sections = objects(result['sections'] ?? []);
+          final catalog = objects(result['sections'] ?? []);
+          sections = [
+            for (final item in catalog) panelSectionWithTabs(item, catalog),
+          ];
+          navigation = menu;
           error = null;
         });
         unawaited(loadUnread());
       }
     } catch (e) {
+      if (e is PanelNavigationUnavailable) api.invalidate();
       if (mounted) setState(() => error = e);
     } finally {
       fetching = false;
@@ -105,6 +114,7 @@ class _NativePanelState extends State<NativePanel> {
 
   bool hasSection(String key) =>
       sections.any((section) => section['key'] == key);
+  String get pointsSection => hasSection('my-points') ? 'my-points' : 'points';
 
   Future<void> loadUnread({bool refresh = false}) async {
     if (!hasSection('messages') && !hasSection('notifications')) return;
@@ -145,7 +155,6 @@ class _NativePanelState extends State<NativePanel> {
       );
 
   IconData icon(String key) => switch (key) {
-    'tests' => Icons.science_outlined,
     'posts' => Icons.description_outlined,
     'post-categories' => Icons.folder_open_outlined,
     'pages' => Icons.content_copy_outlined,
@@ -155,11 +164,13 @@ class _NativePanelState extends State<NativePanel> {
     'reports' => Icons.bar_chart_outlined,
     'dashboard' => Icons.home_outlined,
     'account' => Icons.manage_accounts_outlined,
+    'notation' => Icons.music_note_outlined,
     'chat' => Icons.mark_chat_unread_outlined,
     'my-classrooms' => Icons.co_present_outlined,
     'my-courses' || 'courses' || 'publications' => Icons.menu_book_outlined,
     'my-terms' || 'terms' => Icons.event_available_outlined,
-    'achievements-menu' => Icons.emoji_events_outlined,
+    'achievements-menu' ||
+    'profileAchievementsSubmenu' => Icons.emoji_events_outlined,
     'awards' => Icons.workspace_premium_outlined,
     'badges' => Icons.military_tech_outlined,
     'experiences' => Icons.work_outline,
@@ -169,15 +180,22 @@ class _NativePanelState extends State<NativePanel> {
     'polls' => Icons.poll_outlined,
     'tracking' => Icons.trending_up,
     'national-holidays' => Icons.event_busy_outlined,
-    'branches-menu' || 'branches' => Icons.business_outlined,
+    'branches-menu' ||
+    'branchesSubmenu' ||
+    'branches' => Icons.business_outlined,
     'branch-types' => Icons.layers_outlined,
-    'access-menu' => Icons.badge_outlined,
+    'access-menu' || 'profilesSubmenu' => Icons.badge_outlined,
     'users' || 'students' => Icons.groups_outlined,
     'roles' => Icons.person_outline,
     'permissions' => Icons.key_outlined,
-    'gallery-menu' => Icons.photo_library_outlined,
+    'gallery-menu' || 'gallerySubmenu' => Icons.photo_library_outlined,
     'gallery' => Icons.collections_outlined,
-    'lessons-menu' || 'lessons' => Icons.book_outlined,
+    'my-gallery' => Icons.collections_outlined,
+    'my-lessons' => Icons.book_outlined,
+    'my-schedule' => Icons.calendar_month_outlined,
+    'my-finance' => Icons.payments_outlined,
+    'settings' || 'my-settings' => Icons.settings_outlined,
+    'lessons-menu' || 'lessonsSubmenu' || 'lessons' => Icons.book_outlined,
     'course-levels' => Icons.signal_cellular_alt,
     'teachers' || 'members' => Icons.co_present_outlined,
     'classes-menu' || 'classrooms' => Icons.meeting_room_outlined,
@@ -192,36 +210,22 @@ class _NativePanelState extends State<NativePanel> {
     'notifications' => Icons.notifications_outlined,
     _ => Icons.view_list_outlined,
   };
-  bool matches(Json section) =>
-      query.isEmpty ||
-      ('${section['label']} ${section['en']}').toLowerCase().contains(
-        query.toLowerCase(),
-      ) ||
-      (section['children'] is List &&
-          objects(section['children']).any(matches));
   Widget menuItem(Json section, [int depth = 0]) {
     final children = section['children'];
     if (children is List)
       return PanelListItem(
         child: ExpansionTile(
-          key: PageStorageKey('${section['key']}-${query.isNotEmpty}'),
+          key: PageStorageKey('${section['key']}'),
           tilePadding: EdgeInsetsDirectional.only(
             start: 24 + depth * 20.0,
             end: 8,
           ),
           title: Text(panelLabel(context, section)),
           leading: Icon(icon('${section['key']}')),
-          initiallyExpanded: query.isNotEmpty,
           shape: const Border(),
           collapsedShape: const Border(),
           children: [
-            for (final child in objects(children))
-              if (query.isEmpty ||
-                  matches(child) ||
-                  ('${section['label']} ${section['en']}')
-                      .toLowerCase()
-                      .contains(query.toLowerCase()))
-                menuItem(child, depth + 1),
+            for (final child in objects(children)) menuItem(child, depth + 1),
           ],
         ),
       );
@@ -235,13 +239,15 @@ class _NativePanelState extends State<NativePanel> {
         title: Text(panelLabel(context, section)),
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => PanelResourcePage(
-              api: api,
-              section: section,
-              params: optionalObject(
-                section['initialParams'],
-              ).map((k, v) => MapEntry(k, '$v')),
-            ),
+            builder: (_) => section['destination'] == 'website-example'
+                ? _WebsitePanelExample(section: section)
+                : PanelResourcePage(
+                    api: api,
+                    section: section,
+                    params: optionalObject(
+                      section['initialParams'],
+                    ).map((k, v) => MapEntry(k, '$v')),
+                  ),
           ),
         ),
       ),
@@ -255,12 +261,10 @@ class _NativePanelState extends State<NativePanel> {
       index: 1,
       appBar: HomeTopBar(
         showLogo: false,
-        onSearch: (v) => setState(() => query = v),
-        hint: socialText(context, 'جستجو در پنل کاربری', 'Search user panel'),
         extraActions: [
-          if (hasSection('points'))
+          if (hasSection(pointsSection))
             topSection(
-              'points',
+              pointsSection,
               SvgPicture.asset(
                 'assets/icons/coins.svg',
                 width: 24,
@@ -299,8 +303,12 @@ class _NativePanelState extends State<NativePanel> {
           ? SocialEmpty(
               socialText(
                 context,
-                'پنل دریافت نشد. دوباره تلاش کنید.',
-                'Could not load your panel. Please retry.',
+                error is PanelNavigationUnavailable
+                    ? 'برای نمایش منوی مطابق وب، API پنل سایت باید به‌روزرسانی شود.'
+                    : 'پنل دریافت نشد. دوباره تلاش کنید.',
+                error is PanelNavigationUnavailable
+                    ? 'Update the website panel API to load its authorized menu.'
+                    : 'Could not load your panel. Please retry.',
               ),
               onRetry: load,
             )
@@ -311,12 +319,63 @@ class _NativePanelState extends State<NativePanel> {
                 child: ListView(
                   padding: const EdgeInsets.only(bottom: 24),
                   children: [
-                    for (final section in panelNavigation(sections))
-                      if (matches(section)) menuItem(section),
+                    for (final section in navigation) menuItem(section),
                   ],
                 ),
               ),
             ),
+    ),
+  );
+}
+
+class _WebsitePanelExample extends StatelessWidget {
+  const _WebsitePanelExample({required this.section});
+  final Json section;
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: SornazAppBar(title: panelLabel(context, section)),
+    body: Padding(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            socialText(
+              context,
+              'این بخش در وب یک گالری نمایشی نمودارهاست و API دادهٔ عملیاتی ندارد. نسخهٔ بومی آن در اپلیکیشن پیاده‌سازی نشده است.',
+              'This website section is a chart demonstration without a live data API. Its native application view is not implemented.',
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              final base = Uri.parse(SocialApi.base);
+              final url = base.replace(
+                path: '/analytics/admin-panel',
+                query: null,
+                fragment: 'chart-gallery',
+              );
+              if (!await launchUrl(url, mode: LaunchMode.externalApplication) &&
+                  context.mounted) {
+                socialError(
+                  context,
+                  socialText(
+                    context,
+                    'باز کردن وب‌سایت ممکن نشد.',
+                    'Could not open the website.',
+                  ),
+                );
+              }
+            },
+            child: Text(
+              socialText(
+                context,
+                'مشاهده در وب‌سایت (نیازمند ورود)',
+                'Open website (sign-in required)',
+              ),
+            ),
+          ),
+        ],
+      ),
     ),
   );
 }

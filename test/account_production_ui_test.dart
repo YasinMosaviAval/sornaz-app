@@ -9,7 +9,7 @@ import 'package:sornaz/screens/Authentication/models/auth_user.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 import 'package:sornaz/screens/Home/ui/pages/music_tools.dart';
 import 'package:sornaz/screens/Site/panel_api.dart';
-import 'package:sornaz/screens/Site/panel_form.dart';
+import 'package:sornaz/screens/Site/panel_account.dart';
 import 'package:sornaz/screens/Social/social_api.dart';
 import 'package:sornaz/screens/Social/social_learning.dart';
 import 'social_widget_test.dart' as fixture;
@@ -134,11 +134,12 @@ void main() {
         host(auth, AccountDashboardBody(api: api, accountApi: panel)),
       );
       await tester.pumpAndSettle();
-      final restricted = releaseUi || id != 1;
       for (final label in ['ذخیره‌شده‌ها', 'دانلودها', 'تنظیمات اعلان'])
-        expect(find.text(label), restricted ? findsNothing : findsOneWidget);
+        expect(find.text(label), findsNothing);
+      expect(find.byType(PanelAccount), findsOneWidget);
       expect(find.text('درخواست ادغام حساب'), findsOneWidget);
-      if (restricted) {
+      expect(find.text('درخواست‌های ادغام'), findsNothing);
+      {
         expect(find.text('درخواست‌های ادغام'), findsNothing);
         for (final label in [
           'پیشرفت یادگیری',
@@ -186,37 +187,40 @@ void main() {
         host(auth, AccountDashboardBody(api: api, accountApi: panel)),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('تغییر رمز عبور'));
+      await tester.ensureVisible(find.text('تنظیمات امنیتی حساب'));
+      await tester.tap(find.text('تنظیمات امنیتی حساب'));
       await tester.pumpAndSettle();
-      expect(find.byType(PanelFormPage), findsOneWidget);
+      expect(find.byType(PanelAccount), findsOneWidget);
       expect(find.byIcon(Icons.save_outlined), findsNothing);
-      final button = find.widgetWithText(FilledButton, 'تغییر رمز');
+      final button = find.widgetWithText(FilledButton, 'ذخیره تغییرات');
       expect(button, findsOneWidget);
-      final theme = Theme.of(tester.element(button)),
-          style = tester.widget<FilledButton>(button).style!;
-      expect(style.backgroundColor!.resolve({}), theme.colorScheme.primary);
-      expect(style.foregroundColor!.resolve({}), theme.colorScheme.onPrimary);
       await tester.enterText(
-        find.byType(TextFormField).at(0),
+        find.byKey(const ValueKey('account-password')),
         'example-secret',
       );
       await tester.enterText(
-        find.byType(TextFormField).at(1),
+        find.byKey(const ValueKey('account-passwordConfirmation')),
         'example-secret',
       );
       panel.failSave = true;
+      await tester.ensureVisible(button);
       await tester.tap(button);
       await tester.pumpAndSettle();
-      expect(find.byType(PanelFormPage), findsOneWidget);
+      expect(find.byType(PanelAccount), findsOneWidget);
       expect(
         tester
-            .widget<TextFormField>(find.byType(TextFormField).first)
-            .controller!
+            .widget<EditableText>(
+              find.descendant(
+                of: find.byKey(const ValueKey('account-password')),
+                matching: find.byType(EditableText),
+              ),
+            )
+            .controller
             .text,
         'example-secret',
       );
       ScaffoldMessenger.of(
-        tester.element(find.byType(PanelFormPage)),
+        tester.element(find.byType(PanelAccount)),
       ).clearSnackBars();
       await tester.pumpAndSettle();
       panel.failSave = false;
@@ -235,12 +239,14 @@ void main() {
       host(auth, AccountDashboardBody(api: api, accountApi: panel)),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('حریم خصوصی'));
+    await tester.ensureVisible(find.text('حریم خصوصی و نمایش عمومی'));
+    await tester.tap(find.text('حریم خصوصی و نمایش عمومی'));
     await tester.pumpAndSettle();
     expect(find.byIcon(Icons.save_outlined), findsNothing);
-    await tester.tap(find.byType(CheckboxListTile));
+    await tester.tap(find.byType(CheckboxListTile).first);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('ذخیره تغییرات'));
+    await tester.ensureVisible(find.text('ذخیره تنظیمات حریم خصوصی'));
+    await tester.tap(find.text('ذخیره تنظیمات حریم خصوصی'));
     await tester.pumpAndSettle();
     expect(panel.savedPayload?['showPublicProfile'], false);
   });

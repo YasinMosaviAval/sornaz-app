@@ -15,8 +15,13 @@ class LayoutApi extends PanelApi {
   final queries = <Map<String, String>>[];
   final writes = <(String, Json)>[];
   final rows = <Json>[
-    {'id': 1, 'title': 'دوره گیتار', 'status': 'فعال'},
-    {'id': 2, 'title': 'دوره فقط خواندنی', 'status': 'فعال', 'read_only': true},
+    {'id': 1, 'title': 'دوره گیتار', 'status': 'inactive'},
+    {
+      'id': 2,
+      'title': 'دوره فقط خواندنی',
+      'status': 'active',
+      'read_only': true,
+    },
   ];
   @override
   Future<Json> get(String path, [Map<String, String>? query]) async {
@@ -33,7 +38,8 @@ class LayoutApi extends PanelApi {
     Map<String, PlatformFile> files = const {},
   }) async {
     writes.add((action, {...values}));
-    if (action == 'create') rows.add({'id': 3, ...values});
+    if (action == 'create')
+      rows.add({'id': 3, 'status': 'inactive', ...values});
     if (action == 'delete')
       rows.removeWhere((row) => '${row['id']}' == params['id']);
     if (action == 'update')
@@ -44,6 +50,24 @@ class LayoutApi extends PanelApi {
 
 const section = <String, dynamic>{
   'key': 'courses',
+  'presentation': {
+    'version': 2,
+    'columns': [
+      {'key': 'title', 'label': 'عنوان'},
+      {'key': 'status', 'label': 'وضعیت'},
+    ],
+    'rowActions': ['update', 'delete'],
+    'filters': [
+      {
+        'key': 'status',
+        'queryKey': 'status',
+        'rowPath': 'status',
+        'label': 'وضعیت',
+        'type': 'select',
+        'options': {'active': 'فعال', 'inactive': 'غیرفعال'},
+      },
+    ],
+  },
   'label': 'مدیریت دوره‌ها',
   'en': 'Courses',
   'rows': 'items',
@@ -93,7 +117,7 @@ void main() {
         );
         await tester.pumpAndSettle();
         expect(find.byIcon(Icons.refresh), findsNothing);
-        expect(find.byIcon(Icons.file_download_outlined), findsOneWidget);
+        expect(find.byIcon(Icons.table_view), findsOneWidget);
         expect(find.byIcon(Icons.picture_as_pdf_outlined), findsOneWidget);
         await tester.tap(find.byType(PanelValueRow));
         await tester.pumpAndSettle();
@@ -112,13 +136,19 @@ void main() {
           true,
         );
         await tester.enterText(find.byType(TextFormField), 'دوره جدید');
-        await tester.tap(find.byIcon(Icons.save_outlined));
+        final submit = find
+            .descendant(
+              of: find.byType(PanelFormPage),
+              matching: find.byType(FilledButton),
+            )
+            .last;
+        await tester.ensureVisible(submit);
+        await tester.tap(submit);
         await tester.pumpAndSettle();
         expect(api.writes.last.$1, 'create');
         expect(api.writes.last.$2, {'title': 'دوره جدید'});
         expect(find.text('دوره جدید'), findsOneWidget);
-        await tester.tap(find.byIcon(Icons.table_rows_outlined));
-        await tester.pumpAndSettle();
+
         expect(find.byType(DataTable), findsOneWidget);
         expect(find.byIcon(Icons.edit_outlined), findsNWidgets(2));
         expect(find.byIcon(Icons.delete_outline), findsNWidgets(2));
@@ -168,7 +198,7 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('statistics fit a compact row on a narrow screen', (
+  testWidgets('statistics stack readable cards on a narrow screen', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(320, 600);
@@ -185,10 +215,10 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(tester.getSize(find.byType(Card).first).height, 40);
+    expect(tester.getSize(find.byType(Card).first).height, greaterThan(40));
     expect(
       tester.getTopLeft(find.byType(Card).first).dy,
-      tester.getTopLeft(find.byType(Card).last).dy,
+      lessThan(tester.getTopLeft(find.byType(Card).last).dy),
     );
     expect(tester.takeException(), null);
   });

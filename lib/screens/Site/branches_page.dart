@@ -1,4 +1,6 @@
 import 'package:sornaz/helpers/app_appearance.dart';
+import 'dart:async';
+import 'dart:convert';
 import '../../components/app_top_bar_direction.dart';
 import '../../components/expanding_search_bar.dart';
 import 'branch_export.dart';
@@ -9,9 +11,19 @@ import 'panel_api.dart';
 import 'panel_presentation.dart';
 import 'branch_style.dart';
 import 'branch_form.dart';
+import 'panel_page_guidance.dart';
+import 'panel_section_card.dart';
+import 'panel_table_contract.dart';
+import 'panel_form.dart';
 
 class BranchesPage extends StatefulWidget {
-  const BranchesPage({super.key, required this.api, required this.section});
+  const BranchesPage({
+    super.key,
+    required this.api,
+    required this.section,
+    this.tabs,
+  });
+  final Widget? tabs;
   final PanelApi api;
   final Json section;
   @override
@@ -19,6 +31,13 @@ class BranchesPage extends StatefulWidget {
 }
 
 class _BranchesPageState extends State<BranchesPage> {
+  Widget withTabs(Widget child) => Column(
+    children: [
+      if (widget.tabs != null) widget.tabs!,
+      Expanded(child: child),
+    ],
+  );
+
   Json data = {};
   bool loading = true, busy = false, table = false, initialized = false;
   Object? error;
@@ -50,19 +69,48 @@ class _BranchesPageState extends State<BranchesPage> {
       !readOnly &&
       row['canDelete'] != false &&
       (typesOnly ||
-          (!branchFlag(row['is_main']) && data['can_delete_branch'] != false));
+          (data['can_delete_branch'] != false &&
+              (!branchFlag(row['is_main']) ||
+                  (data['main_delete_academy_ids'] as List? ?? const []).any(
+                    (id) => '$id' == '${row['academy_id']}',
+                  ))));
   @override
   void initState() {
     super.initState();
     load();
+    updates = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (mounted &&
+          !busy &&
+          !loading &&
+          !polling &&
+          ModalRoute.of(context)?.isCurrent == true &&
+          WidgetsBinding.instance.lifecycleState != AppLifecycleState.paused) {
+        load(background: true);
+      }
+    });
   }
 
-  Future<void> load({bool refresh = false}) async {
+  Timer? updates;
+  bool polling = false;
+  @override
+  void dispose() {
+    updates?.cancel();
+    super.dispose();
+  }
+
+  Future<void> load({bool refresh = false, bool background = false}) async {
+    polling = true;
     try {
-      final value = await (refresh ? widget.api.refresh : widget.api.get)(
-        '/$resource/list',
-      );
+      final value = await (background
+          ? widget.api.live
+          : refresh
+          ? widget.api.refresh
+          : widget.api.get)('/$resource/list');
       if (!mounted) return;
+      final changed =
+          background &&
+          jsonEncode(data[typesOnly ? 'types' : 'branches']) !=
+              jsonEncode(value[typesOnly ? 'types' : 'branches']);
       setState(() {
         data = value;
         error = null;
@@ -72,12 +120,22 @@ class _BranchesPageState extends State<BranchesPage> {
           initialized = true;
         }
       });
+      if (changed)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              t('تغییرات سازمان اعمال شد.', 'Organization changes applied.'),
+            ),
+          ),
+        );
     } catch (e) {
-      if (mounted)
+      if (mounted && !background)
         setState(() {
           error = e;
           loading = false;
         });
+    } finally {
+      polling = false;
     }
   }
 
@@ -132,7 +190,50 @@ class _BranchesPageState extends State<BranchesPage> {
         ),
       ),
     );
-    if (saved == true && mounted) await load();
+    if (saved == true && mounted) {
+      await load();
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(t('اطلاعات سازمان ذخیره شد.', 'Organization saved.')),
+          ),
+        );
+    }
+  }
+
+  Future<void> registerAccount() async {
+    if (busy || !canCreate || !actions.containsKey('register-account')) return;
+    final action = optionalObject(actions['register-account']);
+    final result = await showDialog<PanelFormResult>(
+      context: context,
+      builder: (_) => PanelFormPage(
+        title: t('ثبت حساب شعبه', 'Register branch account'),
+        fields: objects(action['fields'] ?? []),
+        data: data,
+        initial: {
+          'academy_id': academy.isNotEmpty
+              ? academy
+              : objects(data['academies'] ?? []).firstOrNull?['id'],
+        },
+        dialog: true,
+        declaredOnly: true,
+        onRequestCode: (result) async {
+          await widget.api.act(
+            'branches',
+            'registration-otp',
+            values: result.values,
+          );
+        },
+        onSubmit: (result) async {
+          await widget.api.act(
+            'branches',
+            'register-account',
+            values: result.values,
+          );
+        },
+      ),
+    );
+    if (result != null && mounted) await load();
   }
 
   Future<void> remove(Json row) async {
@@ -185,6 +286,14 @@ class _BranchesPageState extends State<BranchesPage> {
         values: values,
       );
       await load();
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              t('تغییرات سازمان اعمال شد.', 'Organization changes applied.'),
+            ),
+          ),
+        );
     } catch (e) {
       if (mounted) socialError(context, e);
     } finally {
@@ -255,7 +364,11 @@ class _BranchesPageState extends State<BranchesPage> {
         Expanded(
           flex: 3,
           child: Text(
-            '${value ?? '—'}'.isEmpty ? '—' : '$value',
+            value == null ||
+                    '$value'.trim().isEmpty ||
+                    '$value'.trim() == 'null'
+                ? '—'
+                : '$value',
             textAlign: TextAlign.end,
             style: TextStyle(fontSize: 14),
           ),
@@ -348,10 +461,10 @@ class _BranchesPageState extends State<BranchesPage> {
       key: ValueKey('branch-card-${row['id']}'),
       color: branchFlag(row['is_main'])
           ? branchHighlight(context)
-          : Colors.white,
+          : Theme.of(context).colorScheme.surface,
       border: branchFlag(row['is_main'])
           ? const Color(0xfffcd34d)
-          : Colors.transparent,
+          : Theme.of(context).colorScheme.outline,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -780,6 +893,14 @@ class _BranchesPageState extends State<BranchesPage> {
             page = 1;
           }),
           actions: [
+            if (canCreate &&
+                !typesOnly &&
+                actions.containsKey('register-account'))
+              IconButton(
+                tooltip: t('ثبت حساب شعبه', 'Register branch account'),
+                onPressed: loading || busy ? null : registerAccount,
+                icon: const Icon(Icons.person_add_alt),
+              ),
             if (canCreate)
               IconButton(
                 tooltip: typesOnly
@@ -805,95 +926,116 @@ class _BranchesPageState extends State<BranchesPage> {
             ],
           ],
         ),
-        body: loading
-            ? const Center(child: CircularProgressIndicator())
-            : error != null
-            ? Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      t('دریافت اطلاعات ممکن نشد.', 'Could not load branches.'),
-                    ),
-                    TextButton(
-                      onPressed: () => load(refresh: true),
-                      child: Text(t('تلاش دوباره', 'Retry')),
-                    ),
-                  ],
-                ),
-              )
-            : RefreshIndicator(
-                onRefresh: () => load(refresh: true),
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    if (!typesOnly) ...[
-                      Row(
-                        children: [
-                          Expanded(
-                            child: stat(
-                              t('تعداد آموزشگاه‌ها', 'Academies'),
-                              objects(data['academies'] ?? []).isNotEmpty
-                                  ? objects(data['academies']).length
-                                  : branches
-                                        .map((r) => r['academy_id'])
-                                        .toSet()
-                                        .length,
-                              const Color(0xfff5f3ff),
-                              const Color(0xff6d28d9),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: stat(
-                              t('تعداد شعبه‌ها', 'Branches'),
-                              branches.length,
-                              const Color(0xffeef2ff),
-                              const Color(0xff4338ca),
-                            ),
-                          ),
-                        ],
+        body: withTabs(
+          loading
+              ? const Center(child: CircularProgressIndicator())
+              : error != null
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        t(
+                          'دریافت اطلاعات ممکن نشد.',
+                          'Could not load branches.',
+                        ),
                       ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          for (final option in [
-                            (
-                              true,
-                              Icons.table_chart_outlined,
-                              t('نمایش جدولی', 'Table view'),
-                            ),
-                            (
-                              false,
-                              Icons.grid_view,
-                              t('نمایش کارتی', 'Card view'),
-                            ),
-                          ])
-                            OutlinedButton.icon(
-                              style: OutlinedButton.styleFrom(
-                                minimumSize: const Size(0, 40),
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
+                      TextButton(
+                        onPressed: () => load(refresh: true),
+                        child: Text(t('تلاش دوباره', 'Retry')),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: () => load(refresh: true),
+                  child: ListView(
+                    padding: const EdgeInsets.all(12),
+                    children: [
+                      PanelPageGuidance(
+                        api: widget.api,
+                        section: resource,
+                        defaults: optionalObject(
+                          panelTableContract(widget.section)['guidance'],
+                        ),
+                        enabled: widget.section['pageGuidance'] is Map,
+                        canEdit:
+                            optionalObject(
+                              widget.section['pageGuidance'],
+                            )['canEdit'] ==
+                            true,
+                      ),
+                      if (!typesOnly) ...[
+                        if (branchFlag(data['site_admin'])) ...[
+                          Row(
+                            children: [
+                              Expanded(
+                                child: stat(
+                                  t('تعداد آموزشگاه‌ها', 'Academies'),
+                                  objects(data['academies'] ?? []).isNotEmpty
+                                      ? objects(data['academies']).length
+                                      : branches
+                                            .map((r) => r['academy_id'])
+                                            .toSet()
+                                            .length,
+                                  const Color(0xfff5f3ff),
+                                  const Color(0xff6d28d9),
                                 ),
-                                backgroundColor: table == option.$1
-                                    ? const Color(0xffeef2ff)
-                                    : Colors.white,
                               ),
-                              onPressed: () =>
-                                  setState(() => table = option.$1),
-                              icon: Icon(option.$2, size: 18),
-                              label: Text(option.$3),
-                            ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: stat(
+                                  t('تعداد شعبه‌ها', 'Branches'),
+                                  branches.length,
+                                  const Color(0xffeef2ff),
+                                  const Color(0xff4338ca),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
                         ],
-                      ),
-                      const SizedBox(height: 20),
-                      BranchSurface(
-                        padding: 0,
-                        child: Column(
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            for (final option in [
+                              (
+                                true,
+                                Icons.table_chart_outlined,
+                                t('نمایش جدولی', 'Table view'),
+                              ),
+                              (
+                                false,
+                                Icons.grid_view,
+                                t('نمایش کارتی', 'Card view'),
+                              ),
+                            ])
+                              OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  minimumSize: const Size(0, 40),
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  backgroundColor: table == option.$1
+                                      ? const Color(0xffeef2ff)
+                                      : Colors.white,
+                                ),
+                                onPressed: () =>
+                                    setState(() => table = option.$1),
+                                icon: Icon(option.$2, size: 18),
+                                label: Text(option.$3),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        PanelSectionCard(
+                          horizontalInset: 0,
+                          storageId: 'organization-filters',
+                          title: t('فیلترها', 'Filters'),
                           children: [
                             filter(
                               'type',
@@ -947,89 +1089,91 @@ class _BranchesPageState extends State<BranchesPage> {
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-                    if (busy) const LinearProgressIndicator(),
-                    if (rows.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 64),
-                        child: Center(
-                          child: Text(
-                            t(
-                              typesOnly
-                                  ? 'نوع آموزشی ثبت نشده است.'
-                                  : 'شعبه‌ای یافت نشد',
-                              'No results found',
-                            ),
-                            style: TextStyle(color: branchSecondary(context)),
-                          ),
-                        ),
-                      )
-                    else if (table)
-                      tableView(shown)
-                    else
-                      for (final row in shown) ...[
-                        card(row),
                         const SizedBox(height: 24),
                       ],
-                    if (!typesOnly && branches.length >= 11) ...[
-                      const SizedBox(height: 20),
-                      BranchSurface(
-                        padding: 16,
-                        child: Column(
-                          children: [
-                            Text(
+                      if (busy) const LinearProgressIndicator(),
+                      if (rows.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 64),
+                          child: Center(
+                            child: Text(
                               t(
-                                'نمایش ${digits(rows.isEmpty ? 0 : (current - 1) * pageSize + 1)} تا ${digits(((current - 1) * pageSize + shown.length))} از ${digits(rows.length)} شعبه',
-                                '${rows.length} branches',
+                                typesOnly
+                                    ? 'نوع آموزشی ثبت نشده است.'
+                                    : 'شعبه‌ای یافت نشد',
+                                'No results found',
                               ),
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: branchSecondary(context),
+                              style: TextStyle(color: branchSecondary(context)),
+                            ),
+                          ),
+                        )
+                      else if (table)
+                        tableView(shown)
+                      else
+                        for (final row in shown) ...[
+                          card(row),
+                          const SizedBox(height: 24),
+                        ],
+                      if (!typesOnly && branches.length >= 11) ...[
+                        const SizedBox(height: 20),
+                        BranchSurface(
+                          padding: 16,
+                          child: Column(
+                            children: [
+                              Text(
+                                t(
+                                  'نمایش ${digits(rows.isEmpty ? 0 : (current - 1) * pageSize + 1)} تا ${digits(((current - 1) * pageSize + shown.length))} از ${digits(rows.length)} شعبه',
+                                  '${rows.length} branches',
+                                ),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: branchSecondary(context),
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 12),
-                            Wrap(
-                              spacing: 8,
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              children: [
-                                DropdownButton<int>(
-                                  value: pageSize,
-                                  items: [
-                                    for (final n in [10, 20, 50, 100])
-                                      DropdownMenuItem(
-                                        value: n,
-                                        child: Text(digits(n)),
-                                      ),
-                                  ],
-                                  onChanged: (v) => setState(() {
-                                    pageSize = v!;
-                                    page = 1;
-                                  }),
-                                ),
-                                OutlinedButton(
-                                  onPressed: current > 1
-                                      ? () => setState(() => page = current - 1)
-                                      : null,
-                                  child: Text(t('قبلی', 'Previous')),
-                                ),
-                                Text('${digits(current)} / ${digits(pages)}'),
-                                OutlinedButton(
-                                  onPressed: current < pages
-                                      ? () => setState(() => page = current + 1)
-                                      : null,
-                                  child: Text(t('بعدی', 'Next')),
-                                ),
-                              ],
-                            ),
-                          ],
+                              const SizedBox(height: 12),
+                              Wrap(
+                                spacing: 8,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  DropdownButton<int>(
+                                    value: pageSize,
+                                    items: [
+                                      for (final n in [10, 20, 50, 100])
+                                        DropdownMenuItem(
+                                          value: n,
+                                          child: Text(digits(n)),
+                                        ),
+                                    ],
+                                    onChanged: (v) => setState(() {
+                                      pageSize = v!;
+                                      page = 1;
+                                    }),
+                                  ),
+                                  OutlinedButton(
+                                    onPressed: current > 1
+                                        ? () =>
+                                              setState(() => page = current - 1)
+                                        : null,
+                                    child: Text(t('قبلی', 'Previous')),
+                                  ),
+                                  Text('${digits(current)} / ${digits(pages)}'),
+                                  OutlinedButton(
+                                    onPressed: current < pages
+                                        ? () =>
+                                              setState(() => page = current + 1)
+                                        : null,
+                                    child: Text(t('بعدی', 'Next')),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
+        ),
       ),
     );
   }

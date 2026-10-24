@@ -10,6 +10,7 @@ class PanelApi {
   PanelApi(this.token, {http.Client? client, this.isCurrentAccount})
     : client = client ?? http.Client();
   final String token;
+  String? _sessionCookie;
   final bool Function()? isCurrentAccount;
   void checkAccount() {
     if (_disposed || isCurrentAccount?.call() == false) {
@@ -27,6 +28,9 @@ class PanelApi {
     'Authorization': 'Bearer $token',
     'Accept': 'application/json',
     'Accept-Language': SocialApi.locale,
+    'X-Sornaz-Panel-Forms': '2',
+    'X-Sornaz-Panel-Features': '3',
+    'Cookie': ?_sessionCookie,
   };
   // Session-only cache: no background revalidation or automatic retry.
   final Map<String, (DateTime, String)> _cache = {};
@@ -37,12 +41,15 @@ class PanelApi {
   Object? _lastFailure;
   bool _disposed = false;
   int _revision = 0;
+  bool branchContext = false;
+  final _mutations = StreamController<String>.broadcast();
+  Stream<String> get mutations => _mutations.stream;
 
   String _key(String path, Map<String, String>? query) {
     final sorted = Map.fromEntries(
       (query ?? {}).entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
     );
-    return '${SocialApi.locale}:${uri(path, sorted)}';
+    return 'panel-v3:${SocialApi.locale}:${uri(path, sorted)}';
   }
 
   Future<Json> refresh(String path, [Map<String, String>? query]) {
@@ -60,7 +67,16 @@ class PanelApi {
     checkAccount();
     final value = await ChatCache.read(token, _key(path, query));
     checkAccount();
-    return value is Map ? object(value) : null;
+    if (value is! Map) return null;
+    final result = object(value);
+    if (path.isEmpty) branchContext = result['branchContext'] == true;
+    return result;
+  }
+
+  /// Only the visible panel polls. Bypass the session cache for these reads.
+  Future<Json> live(String path, [Map<String, String>? query]) {
+    _cache.remove(_key(path, query));
+    return get(path, query);
   }
 
   Future<Json> get(String path, [Map<String, String>? query]) async {
@@ -68,9 +84,13 @@ class PanelApi {
     final key = _key(path, query);
     final cached = _cache[key];
     if (cached != null && DateTime.now().isBefore(cached.$1)) {
-      return object(jsonDecode(cached.$2));
+      final value = object(jsonDecode(cached.$2));
+      if (path.isEmpty) branchContext = value['branchContext'] == true;
+      return value;
     }
-    final pending = _pending[key];
+    final revision = _revision;
+    final pendingKey = '$revision:$key';
+    final pending = _pending[pendingKey];
     if (pending != null) return object(jsonDecode(jsonEncode(await pending)));
     if (_pending.length >= 16) {
       throw const SocialException('Please wait for the current request.');
@@ -78,7 +98,6 @@ class PanelApi {
     final previous = _queue;
     final done = Completer<void>();
     _queue = done.future;
-    final revision = _revision;
     final future = () async {
       await previous;
       checkAccount();
@@ -108,6 +127,7 @@ class PanelApi {
           );
         }
         final value = decode(response);
+        if (path.isEmpty) branchContext = value['branchContext'] == true;
         if (path.isEmpty || path.startsWith('/chat/'))
           await ChatCache.write(token, key, value);
         if (revision == _revision) {
@@ -127,7 +147,11 @@ class PanelApi {
           if (ChatCache.mayUseOffline(error)) {
             final saved = await ChatCache.read(token, key);
             checkAccount();
-            if (saved is Map) return {...object(saved), '_offline': true};
+            if (saved is Map) {
+              final value = object(saved);
+              if (path.isEmpty) branchContext = value['branchContext'] == true;
+              return {...value, '_offline': true};
+            }
           } else {
             await ChatCache.remove(token, key);
           }
@@ -143,11 +167,11 @@ class PanelApi {
         rethrow;
       }
     }();
-    _pending[key] = future;
+    _pending[pendingKey] = future;
     try {
       return object(jsonDecode(jsonEncode(await future)));
     } finally {
-      _pending.remove(key);
+      _pending.remove(pendingKey);
       done.complete();
     }
   }
@@ -192,9 +216,17 @@ class PanelApi {
       await client.send(request).timeout(const Duration(minutes: 2)),
     );
     checkAccount();
+    final cookie = response.headers['set-cookie'];
+    if (cookie != null) {
+      final session = RegExp(
+        r'(?:^|,\s*)(PHPSESSID=[^;,\s]+)',
+      ).firstMatch(cookie);
+      if (session != null) _sessionCookie = session.group(1);
+    }
     final value = decode(response);
     _revision++;
     _cache.clear();
+    _mutations.add(section);
     return value;
   }
 
@@ -261,6 +293,7 @@ class PanelApi {
 
   void dispose() {
     _disposed = true;
+    unawaited(_mutations.close());
     _cache.clear();
     client.close();
   }
@@ -269,8 +302,15 @@ class PanelApi {
 dynamic panelValue(dynamic value, String path) {
   if (path.isEmpty) return value;
   for (final part in path.split('.')) {
-    if (value is! Map) return null;
-    value = value[part];
+    if (value is List) {
+      final index = int.tryParse(part);
+      if (index == null || index < 0 || index >= value.length) return null;
+      value = value[index];
+    } else if (value is Map) {
+      value = value[part];
+    } else {
+      return null;
+    }
   }
   return value;
 }

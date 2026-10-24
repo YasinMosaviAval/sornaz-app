@@ -6,13 +6,21 @@ import 'branch_style.dart';
 
 /// The compact visual language shared by all authenticated panel pages.
 class PanelScaffold extends StatelessWidget {
-  const PanelScaffold({super.key, this.appBar, this.body});
+  const PanelScaffold({
+    super.key,
+    this.appBar,
+    this.body,
+    this.embedded = false,
+  });
+  final bool embedded;
   final PreferredSizeWidget? appBar;
   final Widget? body;
   @override
   Widget build(BuildContext context) => Theme(
     data: branchTheme(context),
-    child: ScrollAwareScaffold(appBar: appBar, body: body),
+    child: embedded
+        ? body ?? const SizedBox.shrink()
+        : ScrollAwareScaffold(appBar: appBar, body: body),
   );
 }
 
@@ -92,7 +100,10 @@ class PanelValueRow extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                  child: Text(title, style: const TextStyle(fontSize: 13)),
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Flexible(
@@ -100,7 +111,7 @@ class PanelValueRow extends StatelessWidget {
                   child: Text(
                     value,
                     textAlign: TextAlign.end,
-                    style: const TextStyle(fontSize: 12),
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
               ],

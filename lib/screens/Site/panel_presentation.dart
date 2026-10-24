@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:archive/archive.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'dart:convert';
@@ -9,6 +10,7 @@ import '../Social/social_api.dart';
 import '../Social/social_widgets.dart';
 import 'panel_api.dart';
 import 'site_api.dart';
+import 'panel_parity.dart';
 
 String panelCsv(List<Json> rows) {
   final columns = rows
@@ -36,15 +38,62 @@ String panelCsv(List<Json> rows) {
 }
 
 Future<void> exportPanelRows(String name, List<Json> rows) async {
-  final bytes = utf8.encode(panelCsv(rows));
+  final bytes = Uint8List.fromList(panelExcelBytes(rows));
   final path = await FilePicker.platform.saveFile(
-    fileName: '$name.csv',
+    fileName: '$name.xlsx',
     bytes: bytes,
   );
   if (path != null &&
       (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
     await File(path).writeAsBytes(bytes);
   }
+}
+
+/// A real XLSX workbook with inline text cells: user content is never a formula.
+List<int> panelExcelBytes(List<Json> rows) {
+  String xml(dynamic value) => '$value'
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&apos;');
+  final columns = rows.expand((row) => row.keys).toSet().toList();
+  final table = [
+    columns,
+    for (final row in rows) [for (final key in columns) row[key] ?? ''],
+  ];
+  final sheet =
+      '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0" rightToLeft="1"/></sheetViews><sheetData>${[
+        for (final row in table) '<row>${[for (final cell in row) '<c t="inlineStr"><is><t xml:space="preserve">${xml(cell)}</t></is></c>'].join()}</row>',
+      ].join()}</sheetData></worksheet>';
+  final files = {
+    '[Content_Types].xml':
+        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>',
+    '_rels/.rels':
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>',
+    'xl/workbook.xml':
+        '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Data" sheetId="1" r:id="rId1"/></sheets></workbook>',
+    'xl/_rels/workbook.xml.rels':
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>',
+    'xl/worksheets/sheet1.xml': sheet,
+  };
+  final archive = Archive();
+  for (final file in files.entries) {
+    final bytes = utf8.encode(file.value);
+    archive.addFile(ArchiveFile(file.key, bytes.length, bytes));
+  }
+  return ZipEncoder().encode(archive);
+}
+
+Future<void> exportPanelExcel(String name, List<Json> rows) async {
+  final bytes = Uint8List.fromList(panelExcelBytes(rows));
+  final path = await FilePicker.platform.saveFile(
+    fileName: '$name.xlsx',
+    bytes: bytes,
+  );
+  if (path != null &&
+      (Platform.isWindows || Platform.isLinux || Platform.isMacOS))
+    await File(path).writeAsBytes(bytes);
 }
 
 class PanelProfileHeader extends StatelessWidget {
@@ -103,14 +152,17 @@ class PanelStatistics extends StatelessWidget {
   static const labels = {
     'activeStudents': ('هنرجویان فعال', 'Active students'),
     'todayClasses': ('کلاس‌های امروز', 'Today’s classes'),
-    'monthlyIncome': ('درآمد ماه', 'Monthly income'),
-    'attendanceRate': ('حضور در کلاس', 'Attendance'),
-    'pendingPayments': ('اقساط معوق', 'Overdue payments'),
+    'monthlyIncome': ('درآمد ماهانه', 'Monthly income'),
+    'attendanceRate': ('نرخ حضور', 'Attendance rate'),
+    'pendingPayments': ('پرداخت‌های معوق', 'Overdue payments'),
     'absencesToday': ('غیبت‌های امروز', 'Absences today'),
     'newMessages': ('پیام‌های جدید', 'New messages'),
     'urgentAlerts': ('موارد نیازمند رسیدگی', 'Action required'),
-    'newStudentsWeek': ('ثبت‌نام‌های هفته', 'Weekly enrollments'),
-    'pointsAwarded': ('امتیازهای اعطاشده', 'Points awarded'),
+    'newStudentsWeek': ('ثبت‌نام هفته', 'Weekly registrations'),
+    'pointsAwarded': ('امتیازهای اهداشده', 'Points awarded'),
+    'total': ('مجموع مبلغ فاکتورها', 'Total invoice amount'),
+    'paid': ('اقساط پرداخت‌شده', 'Paid installments'),
+    'remaining': ('مانده قابل پرداخت', 'Remaining payable'),
   };
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -120,12 +172,14 @@ class PanelStatistics extends StatelessWidget {
       children: [
         for (final entry in stats.entries)
           SizedBox(
-            width: (size.maxWidth - 8) / 2,
-            height: 40,
+            width: size.maxWidth < 600
+                ? size.maxWidth
+                : (size.maxWidth - (size.maxWidth >= 1100 ? 3 : 1) * 8) /
+                      (size.maxWidth >= 1100 ? 4 : 2),
             child: Card(
               margin: EdgeInsets.zero,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
                     Expanded(
@@ -135,22 +189,24 @@ class PanelStatistics extends StatelessWidget {
                           labels[entry.key]?.$1 ?? entry.key,
                           labels[entry.key]?.$2 ?? entry.key,
                         ),
-                        maxLines: 2,
-                        style: const TextStyle(fontSize: 11),
+                        key: ValueKey('panel-stat-label-${entry.key}'),
+                        maxLines: 1,
+                        style: Theme.of(context).textTheme.bodyMedium,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(width: 6),
-                    Flexible(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          '${entry.value}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
+                    Text(
+                      key: ValueKey('panel-stat-value-${entry.key}'),
+                      panelNumber(
+                        entry.value,
+                        fa:
+                            Localizations.localeOf(context).languageCode ==
+                            'fa',
+                      ),
+                      textAlign: TextAlign.end,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ],

@@ -127,6 +127,71 @@ class BranchApi extends PanelApi {
 }
 
 void main() {
+  testWidgets('branch cards show a dash for a missing primary phone', (
+    tester,
+  ) async {
+    final data = catalog();
+    data['branches'] = [
+      {
+        ...objects(data['branches']).first,
+        'phones': [
+          {'number': null, 'is_main': true},
+        ],
+      },
+    ];
+    final api = BranchApi(data);
+    addTearDown(api.dispose);
+    tester.view.physicalSize = const Size(700, 2200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      localized.host(BranchesPage(api: api, section: section)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('null'), findsNothing);
+    final phone = find
+        .ancestor(of: find.text('تلفن اصلی'), matching: find.byType(Row))
+        .first;
+    expect(
+      find.descendant(of: phone, matching: find.text('—')),
+      findsOneWidget,
+    );
+  });
+  testWidgets('ordinary accounts hide organization totals and filters reopen', (
+    tester,
+  ) async {
+    final api = BranchApi(catalog());
+    addTearDown(api.dispose);
+    tester.view.physicalSize = const Size(500, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      localized.host(BranchesPage(api: api, section: section)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('stat-تعداد آموزشگاه‌ها')), findsNothing);
+    expect(find.byKey(const ValueKey('stat-تعداد شعبه‌ها')), findsNothing);
+    final filter = find.byKey(const ValueKey('branch-filter-mode'));
+    expect(filter.hitTestable(), findsOneWidget);
+    await tester.tap(find.text('فیلترها'));
+    await tester.pumpAndSettle();
+    expect(filter.hitTestable(), findsNothing);
+    await tester.tap(find.text('فیلترها'));
+    await tester.pumpAndSettle();
+    expect(filter.hitTestable(), findsOneWidget);
+    await tester.tap(filter);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('آنلاین'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('فیلترها'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('فیلترها'));
+    await tester.pumpAndSettle();
+    expect(find.text('آنلاین'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
   testWidgets(
     'toolbar actions, compact statistics, modal filters and PDF palettes',
     (tester) async {
@@ -259,7 +324,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       await tester.pump(const Duration(seconds: 10));
-      expect(api.reads, 1);
+      expect(api.reads, greaterThan(1));
     });
   }
   testWidgets(

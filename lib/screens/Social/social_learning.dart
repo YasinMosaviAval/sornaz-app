@@ -1,4 +1,3 @@
-import '../Site/panel_form.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 import '../Site/panel_api.dart';
@@ -12,9 +11,9 @@ import 'social_widgets.dart';
 import 'social_profile.dart';
 import 'social_courses.dart';
 import 'social_activity.dart';
-
 import 'learning_widgets.dart';
 
+/// The same native account page is used by bottom navigation and the admin drawer.
 class AccountDashboardBody extends StatefulWidget {
   const AccountDashboardBody({super.key, required this.api, this.accountApi});
   final PanelApi? accountApi;
@@ -33,79 +32,8 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
             (context.read<AuthSession?>()?.token ?? widget.api.token) ==
                 widget.api.token,
       );
-  Json? accountSection;
-  bool openingAccount = false;
-  bool get humanAccount =>
-      (optionalObject(data?['profile'])['type'] ??
-          context.read<AuthSession?>()?.user?.type) ==
-      'human';
-  @override
-  void dispose() {
-    if (widget.accountApi == null) accountApi.dispose();
-    super.dispose();
-  }
-
-  Future<void> openAccount(String area, String fa, String en) async {
-    if (openingAccount || (area == 'merge' && !humanAccount)) return;
-    openingAccount = true;
-    try {
-      accountSection ??= objects(
-        (await accountApi.get(''))['sections'],
-      ).firstWhere((s) => s['key'] == 'account');
-      if (!mounted) return;
-      if (['privacy', 'security', 'merge'].contains(area)) {
-        final action = optionalObject(
-          optionalObject(accountSection!['actions'])[area],
-        );
-        if (action.isEmpty) return;
-        final initial = area == 'privacy'
-            ? optionalObject(
-                optionalObject(
-                  (await accountApi.get('/account/list'))['profile'],
-                )['privacy'],
-              )
-            : <String, dynamic>{};
-        if (!mounted) return;
-        await socialPush(
-          context,
-          PanelFormPage(
-            title: socialText(context, fa, en),
-            fields: objects(action['fields']),
-            data: const {},
-            initial: initial,
-            settingsCheckboxes: area == 'privacy',
-            bottomSubmitLabel: area == 'security'
-                ? socialText(context, 'تغییر رمز', 'Change password')
-                : socialText(context, 'ذخیره تغییرات', 'Save changes'),
-            onSubmit: (result) async {
-              await accountApi.act(
-                'account',
-                area,
-                values: result.values,
-                files: result.files,
-              );
-            },
-          ),
-        );
-        return;
-      }
-      await socialPush(
-        context,
-        PanelResourcePage(
-          api: accountApi,
-          section: {...accountSection!, 'label': fa, 'en': en},
-          accountArea: area,
-        ),
-      );
-    } catch (e) {
-      if (mounted) socialError(context, e);
-    } finally {
-      openingAccount = false;
-    }
-  }
-
-  Json? data;
-  String? error;
+  Json? section;
+  Object? error;
   @override
   void initState() {
     super.initState();
@@ -114,101 +42,37 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
 
   Future<void> load() async {
     try {
-      final result = object(await widget.api.get('/dashboard'));
+      final catalog = objects((await accountApi.get(''))['sections']);
+      final account = catalog.firstWhere((item) => item['key'] == 'account');
       if (mounted)
         setState(() {
-          data = result;
+          section = account;
           error = null;
         });
-    } catch (e) {
-      if (mounted) setState(() => error = userFacingError(e));
+    } catch (failure) {
+      if (mounted) setState(() => error = failure);
     }
   }
 
-  Future<void> open(Widget page) async {
-    await socialPush(context, page);
-    if (mounted) await load();
+  @override
+  void dispose() {
+    if (widget.accountApi == null) accountApi.dispose();
+    super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
-    if (error != null) return SocialEmpty(error!, onRetry: load);
-    if (data == null) return const Center(child: CircularProgressIndicator());
-    final profile = object(data!['profile']);
-    return RefreshIndicator(
-      onRefresh: load,
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: [
-          Center(
-            child: SocialAvatar(api: widget.api, user: profile, size: 104),
+  Widget build(BuildContext context) => section != null
+      ? PanelResourcePage(api: accountApi, section: section!, embedded: true)
+      : error != null
+      ? SocialEmpty(
+          socialText(
+            context,
+            'اطلاعات حساب دریافت نشد. دوباره تلاش کنید.',
+            'Could not load your account. Please retry.',
           ),
-          const SizedBox(height: 14),
-          AppText(
-            '${profile['name']}',
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
-          ),
-          AppText(
-            '@${profile['username']}',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Theme.of(context).hintColor),
-          ),
-          const SizedBox(height: 14),
-          AppText(
-            '${profile['bio'] ?? ''}',
-            textAlign: TextAlign.center,
-            maxLines: 4,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 14),
-          OutlinedButton(
-            onPressed: () =>
-                open(EditProfilePage(api: widget.api, profile: profile)),
-            child: AppText(
-              socialText(context, 'ویرایش پروفایل', 'Edit profile'),
-            ),
-          ),
-          const SizedBox(height: 16),
-          for (final item in [
-            ('privacy', Icons.privacy_tip_outlined, 'حریم خصوصی', 'Privacy'),
-            (
-              'security',
-              Icons.lock_outline,
-              'تغییر رمز عبور',
-              'Change password',
-            ),
-            (
-              'securityAlerts',
-              Icons.security_outlined,
-              'هشدارهای امنیتی',
-              'Security alerts',
-            ),
-            ('loginHistory', Icons.history, 'تاریخچه ورود', 'Login history'),
-            ('documents', Icons.description_outlined, 'اسناد', 'Documents'),
-            ('devices', Icons.devices_outlined, 'دستگاه‌ها', 'Devices'),
-            (
-              'merges.requests',
-              Icons.merge_type,
-              'درخواست ادغام حساب',
-              'Request account merge',
-            ),
-          ])
-            Card(
-              elevation: 0,
-              margin: const EdgeInsets.only(bottom: 12),
-              child: ListTile(
-                leading: Icon(item.$2),
-                title: AppText(socialText(context, item.$3, item.$4)),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => openAccount(item.$1, item.$3, item.$4),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
+          onRetry: load,
+        )
+      : const Center(child: CircularProgressIndicator());
 }
 
 class LearningProgressPage extends StatelessWidget {
@@ -488,66 +352,86 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
         ? SocialEmpty(error!, onRetry: load)
         : settings == null
         ? const Center(child: CircularProgressIndicator())
-        : ListView(
-            padding: const EdgeInsets.all(24),
-            children: [
-              LearningHeading(socialText(context, 'حساب کاربری', 'Account')),
-              Card(
-                elevation: 0,
-                child: SwitchListTile(
+        : ListTileTheme.merge(
+            titleTextStyle: Theme.of(context).textTheme.bodyMedium,
+            subtitleTextStyle: Theme.of(context).textTheme.bodySmall,
+            child: ListView(
+              padding: const EdgeInsets.all(12),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    socialText(context, 'حساب کاربری', 'Account'),
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
+                Card(
+                  elevation: 0,
+                  child: SwitchListTile(
+                    title: AppText(
+                      socialText(context, 'پیام خصوصی', 'Direct messages'),
+                    ),
+                    subtitle: AppText(
+                      socialText(
+                        context,
+                        'اعلان دریافت پیام جدید',
+                        'Notify me about new messages',
+                      ),
+                    ),
+                    value: settings!['message'] == true,
+                    onChanged: busy ? null : (v) => change('message', v),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    socialText(context, 'دنبال‌کنندگان', 'Following'),
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
+                Card(
+                  elevation: 0,
+                  child: SwitchListTile(
+                    title: AppText(
+                      socialText(context, 'دنبال‌کننده جدید', 'New followers'),
+                    ),
+                    value: settings!['follow'] == true,
+                    onChanged: busy ? null : (v) => change('follow', v),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    socialText(context, 'فعالیت‌ها', 'Activity'),
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
                   title: AppText(
-                    socialText(context, 'پیام خصوصی', 'Direct messages'),
+                    socialText(context, 'پسندیدن پست‌ها', 'Post likes'),
                   ),
                   subtitle: AppText(
                     socialText(
                       context,
-                      'اعلان دریافت پیام جدید',
-                      'Notify me about new messages',
+                      'وقتی کسی پست شما را می‌پسندد',
+                      'When someone likes your post',
                     ),
                   ),
-                  value: settings!['message'] == true,
-                  onChanged: busy ? null : (v) => change('message', v),
+                  value: settings!['like'] == true,
+                  onChanged: busy ? null : (v) => change('like', v),
                 ),
-              ),
-              LearningHeading(
-                socialText(context, 'دنبال‌کنندگان', 'Following'),
-              ),
-              Card(
-                elevation: 0,
-                child: SwitchListTile(
-                  title: AppText(
-                    socialText(context, 'دنبال‌کننده جدید', 'New followers'),
-                  ),
-                  value: settings!['follow'] == true,
-                  onChanged: busy ? null : (v) => change('follow', v),
-                ),
-              ),
-              LearningHeading(socialText(context, 'فعالیت‌ها', 'Activity')),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: AppText(
-                  socialText(context, 'پسندیدن پست‌ها', 'Post likes'),
-                ),
-                subtitle: AppText(
+                const Divider(),
+                AppText(
                   socialText(
                     context,
-                    'وقتی کسی پست شما را می‌پسندد',
-                    'When someone likes your post',
+                    'این تنظیمات برای اعلان‌های داخل اپ است.',
+                    'These settings apply to in-app notifications.',
                   ),
                 ),
-                value: settings!['like'] == true,
-                onChanged: busy ? null : (v) => change('like', v),
-              ),
-              const Divider(),
-              AppText(
-                socialText(
-                  context,
-                  'این تنظیمات برای اعلان‌های داخل اپ است.',
-                  'These settings apply to in-app notifications.',
-                ),
-              ),
-              if (busy) const LinearProgressIndicator(),
-            ],
+                if (busy) const LinearProgressIndicator(),
+              ],
+            ),
           ),
   );
 }

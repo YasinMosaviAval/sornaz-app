@@ -1,3 +1,4 @@
+import 'package:sornaz/screens/Site/panel_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,6 +13,31 @@ import 'drawer_accounts_test.dart' as fixture;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  test(
+    'release panel excludes experimental notation and keeps authorized posts',
+    () {
+      final menu = websitePanelNavigation({
+        'navigationVersion': 1,
+        'sections': [
+          {
+            'key': 'posts',
+            'actions': {'list': {}},
+          },
+        ],
+        'navigation': [
+          {'key': 'notation', 'destination': 'notation'},
+          {'key': 'posts', 'section': 'posts'},
+          {'key': 'settings', 'destination': 'settings'},
+        ],
+      });
+      expect(menu.map((item) => item['key']), ['posts']);
+      expect(menu.single['pageTabs'], hasLength(1));
+      expect(
+        () => websitePanelNavigation({'sections': []}),
+        throwsA(isA<PanelNavigationUnavailable>()),
+      );
+    },
+  );
 
   testWidgets('release tabs use existing chat and account destinations', (
     tester,

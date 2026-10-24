@@ -1,4 +1,4 @@
-﻿import 'package:sornaz/helpers/app_appearance.dart';
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:flutter/material.dart';
 
 /// Continuous saturation/value plane with a continuous hue control.
@@ -35,7 +35,10 @@ class _BranchColorPickerState extends State<BranchColorPicker> {
         Row(
           children: [
             Expanded(
-              child: Text(widget.label, style: const TextStyle(fontSize: 13)),
+              child: Text(
+                widget.label,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
             ),
             Container(
               width: 28,
