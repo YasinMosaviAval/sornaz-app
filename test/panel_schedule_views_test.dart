@@ -233,6 +233,56 @@ void main() {
     expect(find.textContaining('upcoming'), findsNothing);
     expect(find.textContaining('در انتظار برگزاری'), findsWidgets);
   });
+  testWidgets(
+    'calendar controls appear once outside multiple organization cards',
+    (tester) async {
+      wide(tester);
+      await tester.pumpWidget(
+        fixture.host(
+          Scaffold(
+            body: SingleChildScrollView(
+              child: PanelScheduleWeek(
+                rows: const [],
+                start: DateTime(2026, 10, 17),
+                open: (_) {},
+                data: const {
+                  'branches': [
+                    {'id': 1, 'name': 'One'},
+                    {'id': 2, 'name': 'Two'},
+                  ],
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(Card), findsNWidgets(2));
+      expect(find.byType(ChoiceChip), findsNWidgets(3));
+      expect(
+        find.descendant(
+          of: find.byType(Card),
+          matching: find.byType(ChoiceChip),
+        ),
+        findsNothing,
+      );
+      expect(find.byIcon(Icons.swap_horiz), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(Card),
+          matching: find.byIcon(Icons.swap_horiz),
+        ),
+        findsNothing,
+      );
+      final scrolls = tester.widgetList<SingleChildScrollView>(
+        find.byType(SingleChildScrollView),
+      );
+      expect(
+        scrolls.where((s) => s.scrollDirection == Axis.horizontal).length,
+        4,
+      );
+    },
+  );
   testWidgets('weekly branch matrix supports layouts empty axes and swapping', (
     tester,
   ) async {

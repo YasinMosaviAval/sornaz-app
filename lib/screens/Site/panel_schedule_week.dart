@@ -88,6 +88,7 @@ class _PanelScheduleWeekState extends State<PanelScheduleWeek> {
               '${date(widget.start)} ${tr('تا', 'to')} ${date(widget.start.add(const Duration(days: 6)))}',
             ),
           ),
+          calendarControls(),
           for (final branch in branches.values)
             if (selected.isEmpty || '${branch['id']}' == selected)
               branchTable(branch),
@@ -129,23 +130,87 @@ class _PanelScheduleWeekState extends State<PanelScheduleWeek> {
       );
     }
 
-    return Wrap(
-      spacing: 8,
-      runSpacing: 4,
-      children: [
-        button(tr('اول', 'First'), widget.first),
+    return horizontalControls([
+      button(tr('اول', 'First'), widget.first),
+      button(
+        tr('قبلی', 'Previous'),
+        widget.start.subtract(const Duration(days: 7)),
+      ),
+      for (var i = 0; i < 5; i++)
         button(
-          tr('قبلی', 'Previous'),
-          widget.start.subtract(const Duration(days: 7)),
+          date(start.add(Duration(days: i * 7))),
+          start.add(Duration(days: i * 7)),
+          active: start.add(Duration(days: i * 7)) == widget.start,
         ),
-        for (var i = 0; i < 5; i++)
-          button(
-            date(start.add(Duration(days: i * 7))),
-            start.add(Duration(days: i * 7)),
-            active: start.add(Duration(days: i * 7)) == widget.start,
+      button(tr('بعدی', 'Next'), widget.start.add(const Duration(days: 7))),
+      button(tr('آخر', 'Last'), widget.last),
+    ]);
+  }
+
+  Widget horizontalControls(List<Widget> children) => SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: Row(
+      children: [
+        for (final child in children)
+          Padding(
+            padding: const EdgeInsetsDirectional.only(end: 8),
+            child: child,
           ),
-        button(tr('بعدی', 'Next'), widget.start.add(const Duration(days: 7))),
-        button(tr('آخر', 'Last'), widget.last),
+      ],
+    ),
+  );
+
+  Widget calendarControls() {
+    const id = 'all';
+    final mode = layouts['all'] ?? 'class-day';
+    Widget emptyFilter(Set<String> values, String fa, String en) => FilterChip(
+      shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
+      label: Text(
+        tr(
+          '${values.contains(id) ? 'پنهان‌کردن' : 'نمایش'} $fa',
+          '${values.contains(id) ? 'Hide' : 'Show'} $en',
+        ),
+      ),
+      selected: values.contains(id),
+      onSelected: (_) => toggle(values, id),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        navigation(),
+        const SizedBox(height: 8),
+        horizontalControls([
+          Text(tr('نوع چیدمان:', 'Layout:')),
+          for (final layout in [
+            ('class-day', 'کلاس × روز', 'Class × day'),
+            ('class-time', 'کلاس × بازه زمانی', 'Class × time range'),
+            ('day-time', 'روز هفته × بازه زمانی', 'Weekday × time range'),
+          ])
+            ChoiceChip(
+              shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
+              label: Text(tr(layout.$2, layout.$3)),
+              selected: mode == layout.$1,
+              onSelected: (_) => setState(() => layouts[id] = layout.$1),
+            ),
+        ]),
+        const SizedBox(height: 8),
+        horizontalControls([
+          if (mode != 'day-time')
+            emptyFilter(emptyRooms, 'کلاس‌های خالی', 'empty classes'),
+          if (mode != 'class-time')
+            emptyFilter(emptyDays, 'روزهای خالی', 'empty days'),
+          if (mode != 'class-day')
+            emptyFilter(emptyTimes, 'بازه‌های زمانی خالی', 'empty time ranges'),
+        ]),
+        const SizedBox(height: 8),
+        horizontalControls([
+          OutlinedButton.icon(
+            onPressed: () => toggle(swapped, id),
+            icon: const Icon(Icons.swap_horiz),
+            label: Text(tr('جابه‌جایی سطر و ستون', 'Swap rows and columns')),
+          ),
+        ]),
+        const SizedBox(height: 12),
       ],
     );
   }
@@ -155,7 +220,7 @@ class _PanelScheduleWeekState extends State<PanelScheduleWeek> {
     final sessions = widget.rows
         .where((s) => '${s['branchId']}' == id)
         .toList();
-    final mode = layouts[id] ?? 'class-day';
+    final mode = layouts['all'] ?? 'class-day';
     var rooms = <Json>[
       for (final room in objects(widget.data['classrooms'] ?? []))
         if ('${room['branchId']}' == id) {...room, 'kind': 'class'},
@@ -196,15 +261,15 @@ class _PanelScheduleWeekState extends State<PanelScheduleWeek> {
         'kind': 'day',
       },
     );
-    if (!emptyRooms.contains(id))
+    if (!emptyRooms.contains('all'))
       rooms = rooms
           .where((r) => sessions.any((s) => roomMatches(s, r)))
           .toList();
-    if (!emptyDays.contains(id))
+    if (!emptyDays.contains('all'))
       days = days
           .where((d) => sessions.any((s) => s['date'] == d['id']))
           .toList();
-    final sourceTimes = emptyTimes.contains(id)
+    final sourceTimes = emptyTimes.contains('all')
         ? objects(widget.data['timeRanges'] ?? [])
         : [
             for (final s in sessions)
@@ -229,7 +294,7 @@ class _PanelScheduleWeekState extends State<PanelScheduleWeek> {
         : mode == 'class-time'
         ? [tr('کلاس', 'Class'), tr('بازه زمانی', 'Time range')]
         : [tr('روز', 'Day'), tr('بازه زمانی', 'Time range')];
-    if (swapped.contains(id)) {
+    if (swapped.contains('all')) {
       final old = rows;
       rows = columns;
       columns = old;
@@ -249,17 +314,6 @@ class _PanelScheduleWeekState extends State<PanelScheduleWeek> {
         style: Theme.of(context).textTheme.labelLarge,
       ),
     );
-    Widget emptyFilter(Set<String> values, String fa, String en) => FilterChip(
-      shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
-      label: Text(
-        tr(
-          '${values.contains(id) ? 'پنهان‌کردن' : 'نمایش'} $fa',
-          '${values.contains(id) ? 'Hide' : 'Show'} $en',
-        ),
-      ),
-      selected: values.contains(id),
-      onSelected: (_) => toggle(values, id),
-    );
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Column(
@@ -273,52 +327,6 @@ class _PanelScheduleWeekState extends State<PanelScheduleWeek> {
                 Text(
                   '${branch['name'] ?? ''}',
                   style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 8),
-                navigation(),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Text(tr('نوع چیدمان:', 'Layout:')),
-                    for (final layout in [
-                      ('class-day', 'کلاس × روز', 'Class × day'),
-                      ('class-time', 'کلاس × بازه زمانی', 'Class × time range'),
-                      (
-                        'day-time',
-                        'روز هفته × بازه زمانی',
-                        'Weekday × time range',
-                      ),
-                    ])
-                      ChoiceChip(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: appRadius(context),
-                        ),
-                        label: Text(tr(layout.$2, layout.$3)),
-                        selected: mode == layout.$1,
-                        onSelected: (_) =>
-                            setState(() => layouts[id] = layout.$1),
-                      ),
-                    if (mode != 'day-time')
-                      emptyFilter(emptyRooms, 'کلاس‌های خالی', 'empty classes'),
-                    if (mode != 'class-time')
-                      emptyFilter(emptyDays, 'روزهای خالی', 'empty days'),
-                    if (mode != 'class-day')
-                      emptyFilter(
-                        emptyTimes,
-                        'بازه‌های زمانی خالی',
-                        'empty time ranges',
-                      ),
-                    OutlinedButton.icon(
-                      onPressed: () => toggle(swapped, id),
-                      icon: const Icon(Icons.swap_horiz),
-                      label: Text(
-                        tr('جابه‌جایی سطر و ستون', 'Swap rows and columns'),
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
