@@ -253,7 +253,7 @@ void main() {
   );
 
   testWidgets(
-    'guests use release chat and account tabs while notation stays in tools',
+    'guests use release chat and account tabs without experimental notation',
     (tester) async {
       await tester.pumpWidget(
         accounts.host(
@@ -284,7 +284,7 @@ void main() {
             .toList(),
         ['خانه', 'پنل کاربری', 'گفتگو', 'ابزار موسیقی', 'حساب کاربری'],
       );
-      expect(find.widgetWithText(ListTile, 'نت‌نویسی'), findsOneWidget);
+      expect(find.widgetWithText(ListTile, 'نت‌نویسی'), findsNothing);
       await tester.tap(
         find.descendant(
           of: find.byType(BottomNavBarWidget),

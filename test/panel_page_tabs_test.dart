@@ -94,6 +94,10 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   testWidgets('posts switch between internal resources', (tester) async {
+    tester.view.physicalSize = const Size(1800, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     final api = TabsApi();
     final catalog = ['posts', 'post-categories'].map(section).toList();
     await tester.pumpWidget(
@@ -177,6 +181,10 @@ void main() {
   testWidgets(
     'personal lesson levels use the authorized read-only data endpoint',
     (tester) async {
+      tester.view.physicalSize = const Size(1800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       final api = TabsApi();
       final lessons = section('my-lessons');
       await tester.pumpWidget(
@@ -202,6 +210,10 @@ void main() {
   testWidgets(
     'personal point rules remain read-only and use the personal endpoint',
     (tester) async {
+      tester.view.physicalSize = const Size(1800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       final api = TabsApi();
       final points = section('my-points');
       await tester.pumpWidget(
@@ -231,6 +243,10 @@ void main() {
     testWidgets('${group.first} tabs load on selection and show only tables', (
       tester,
     ) async {
+      tester.view.physicalSize = const Size(1800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       final api = TabsApi();
       final catalog = group.map(section).toList();
       await tester.pumpWidget(
@@ -263,6 +279,10 @@ void main() {
   testWidgets('tabs remain available after a section fails to load', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(1800, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     final api = TabsApi()..failUsers = true;
     final catalog = ['members', 'users'].map(section).toList();
     await tester.pumpWidget(

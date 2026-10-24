@@ -193,7 +193,7 @@ Json panelDisplayRow(String section, Json row, Json data) {
         const {
           'general': 'عمومی',
           'professional': 'حرفه‌ای',
-          'specialized': 'حرفه‌ای',
+          'specialized': 'تخصصی',
         }[row['type']] ??
         row['type'];
     result['category'] =

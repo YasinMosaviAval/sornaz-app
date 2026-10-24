@@ -306,6 +306,11 @@ const Map<String, dynamic> panelWebPresentation = {
       {"key": "parentPhone", "label": "تماس سرپرست"},
       {"key": "summary", "label": "خلاصه"},
       {"key": "description", "label": "توضیحات"},
+      {
+        "key": "teacherNotes",
+        "label": "یادداشت‌های استاد",
+        "en": "Teacher notes",
+      },
     ],
     "filters": [
       {
@@ -584,9 +589,11 @@ const Map<String, dynamic> panelWebPresentation = {
       "cancel-approve",
       "cancel-reject",
       "restore",
+      "attendance",
       "available-times",
       "assign-student",
       "classroom",
+      "schedule-preview",
     ],
     "detailFields": [
       {"key": "name", "label": "نام ترم"},
@@ -617,6 +624,8 @@ const Map<String, dynamic> panelWebPresentation = {
           "در انتظار تأیید": "در انتظار تأیید",
           "پایان یافته": "پایان یافته",
           "باز": "باز",
+          "لغو شده": "لغو شده",
+          "تعلیق شده": "تعلیق شده",
         },
         "optionSource": null,
         "distinct": false,
@@ -824,7 +833,7 @@ const Map<String, dynamic> panelWebPresentation = {
       {"key": "type", "label": "نوع"},
       {"key": "status", "label": "وضعیت"},
     ],
-    "rowActions": ["details", "attendance"],
+    "rowActions": ["details", "attendance", "cancel"],
     "filters": [
       {
         "key": "filterScheduleDay",
@@ -2420,17 +2429,6 @@ const Map<String, dynamic> panelWebPresentation = {
     "rowActions": ["details", "update", "delete", "reply"],
     "filters": [
       {
-        "key": "commentPostFilter",
-        "webId": "commentPostFilter",
-        "label": "همه نوشته‌ها",
-        "type": "select",
-        "rowPath": "postId",
-        "options": [],
-        "optionSource": {"source": "posts"},
-        "distinct": true,
-        "queryKey": "post",
-      },
-      {
         "key": "status",
         "label": "وضعیت",
         "type": "select",
@@ -2480,26 +2478,9 @@ const Map<String, dynamic> panelWebPresentation = {
     "rowActions": ["update"],
     "filters": [
       {
-        "key": "mediaType",
-        "webId": "mediaType",
-        "label": "همه رسانه‌ها",
-        "type": "select",
-        "rowPath": "type",
-        "options": {
-          "image": "تصویر",
-          "video": "ویدیو",
-          "audio": "صوت",
-          "document": "سند",
-          "archive": "فایل فشرده",
-        },
-        "optionSource": null,
-        "distinct": false,
-        "queryKey": "type",
-      },
-      {
         "key": "mediaMonth",
         "webId": "mediaMonth",
-        "label": "همه تاریخ‌ها",
+        "label": "فیلتر",
         "type": "select",
         "rowPath": "month",
         "options": [],
@@ -2985,36 +2966,6 @@ const Map<String, dynamic> panelWebPresentation = {
       {"key": "content", "label": "متن راهنما"},
     ],
   },
-  "pages": {
-    "version": 2,
-    "columns": [
-      {"key": "title", "label": "عنوان"},
-      {"key": "texts", "label": "متن‌های ویرایش‌شده"},
-      {"key": "images", "label": "تصاویر"},
-      {"key": "icons", "label": "آیکن‌ها"},
-      {"key": "status", "label": "وضعیت"},
-    ],
-    "rowActions": ["details"],
-    "filters": [],
-    "organizationMode": "branch",
-    "organizationFilter": false,
-    "guidance": {
-      "title": {"fa": "روش ویرایش:", "en": "How to edit"},
-      "body": {
-        "fa":
-            "روی «ویرایش محتوا» بزنید؛ صفحه واقعی در تب جدید باز می‌شود. سپس روی هر متن، تصویر یا آیکن کلیک کنید و مقدار جدید را ثبت کنید. تغییرات مستقیماً در دیتابیس ذخیره و برای بازدیدکنندگان اعمال می‌شوند.",
-        "en":
-            "Select Edit content to open the actual page in a new tab. Click any text, image or icon and save its new value. Changes are saved directly to the database and shown to visitors.",
-      },
-    },
-    "detailFields": [
-      {"key": "title", "label": "عنوان"},
-      {"key": "texts", "label": "متن‌های ویرایش‌شده"},
-      {"key": "images", "label": "تصاویر"},
-      {"key": "icons", "label": "آیکن‌ها"},
-      {"key": "status", "label": "وضعیت"},
-    ],
-  },
   "availabilities": {
     "version": 2,
     "columns": [
@@ -3229,6 +3180,7 @@ const Map<String, dynamic> panelWebPresentation = {
     "summaries": [
       {"label": "امتیاز عمومی من", "path": "balance.general"},
       {"label": "امتیاز حرفه‌ای من", "path": "balance.professional"},
+      {"label": "امتیاز تخصصی من", "path": "balance.specialized"},
     ],
     "filters": [
       {

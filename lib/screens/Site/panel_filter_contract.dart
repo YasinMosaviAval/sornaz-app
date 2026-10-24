@@ -73,7 +73,7 @@ List<Json> panelWebFilters(Json section, Json data, List<Json> rows) {
                         ? const {
                                 'general': 'عمومی',
                                 'professional': 'حرفه‌ای',
-                                'specialized': 'حرفه‌ای',
+                                'specialized': 'تخصصی',
                               }['$value'] ??
                               panelTableText(value)
                         : panelTableText(value),

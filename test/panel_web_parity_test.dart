@@ -48,7 +48,7 @@ void main() {
       ]);
       expect(
         objects(menu.single['children']).map((item) => item['key']),
-        containsAll(['pages', 'settings', 'guides', 'inline-translations']),
+        containsAll(['settings', 'guides', 'inline-translations']),
       );
       expect(
         panelNavigation([
@@ -86,6 +86,10 @@ void main() {
   testWidgets(
     'personal settings prefill overrides defaults and submit only declared settings',
     (tester) async {
+      tester.view.physicalSize = const Size(1800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       final api = ParityApi({
         'defaults': {'language': 'fa', 'fontWeight': 2, 'fonts': []},
         'personal': {'language': 'en'},
@@ -128,7 +132,14 @@ void main() {
       await tester.tap(find.text('ذخیره تنظیمات شخصی'));
       await tester.pumpAndSettle();
       expect(find.text('English'), findsOneWidget);
-      await tester.tap(find.byIcon(Icons.save_outlined));
+      final submit = find
+          .descendant(
+            of: find.byType(PanelFormPage),
+            matching: find.byType(FilledButton),
+          )
+          .last;
+      await tester.ensureVisible(submit);
+      await tester.tap(submit);
       await tester.pumpAndSettle();
       expect(api.written, {'language': 'en', 'fontWeight': 2});
       api.dispose();
@@ -138,6 +149,10 @@ void main() {
   testWidgets('schedule form only validates the applicable scheduling mode', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(1800, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
       fixture.host(
         const PanelFormPage(
@@ -172,6 +187,10 @@ void main() {
   testWidgets(
     'academy holiday setting maps the selected academy into route params',
     (tester) async {
+      tester.view.physicalSize = const Size(1800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       final api = ParityApi({
         'holidays': [],
         'academies': [
@@ -222,7 +241,14 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('آموزشگاه نمونه').last);
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.save_outlined));
+      final submit = find
+          .descendant(
+            of: find.byType(PanelFormPage),
+            matching: find.byType(FilledButton),
+          )
+          .last;
+      await tester.ensureVisible(submit);
+      await tester.tap(submit);
       await tester.pumpAndSettle();
       expect(api.parameters?['academyId'], '7');
       api.dispose();
@@ -232,6 +258,10 @@ void main() {
   testWidgets(
     'waiting approval uses request identity and prefills student data',
     (tester) async {
+      tester.view.physicalSize = const Size(1800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       final api = ParityApi({
         'actionItems': [
           {
@@ -277,7 +307,14 @@ void main() {
       await tester.tap(find.text('تأیید هنرجو'));
       await tester.pumpAndSettle();
       expect(find.text('هنرجوی نمونه'), findsWidgets);
-      await tester.tap(find.byIcon(Icons.save_outlined));
+      final submit = find
+          .descendant(
+            of: find.byType(PanelFormPage),
+            matching: find.byType(FilledButton),
+          )
+          .last;
+      await tester.ensureVisible(submit);
+      await tester.tap(submit);
       await tester.pumpAndSettle();
       expect(api.parameters?['id'], '52');
       expect(api.written?['name'], 'هنرجوی نمونه');
@@ -288,6 +325,10 @@ void main() {
   testWidgets(
     'direct permission edits preserve covered grants and do not send roleIds',
     (tester) async {
+      tester.view.physicalSize = const Size(1800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       final api = ParityApi({
         'users': [
           {
@@ -340,13 +381,22 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('ویرایش مجوزها'));
-      await tester.tap(find.text('ویرایش مجوزها'));
+      await tester.ensureVisible(
+        find.widgetWithText(OutlinedButton, 'تعیین دسترسی‌ها'),
+      );
+      await tester.tap(find.widgetWithText(OutlinedButton, 'تعیین دسترسی‌ها'));
       await tester.pumpAndSettle();
       expect(find.text('مجوز نقش'), findsNothing);
       await tester.tap(find.text('مجوز مستقیم'));
       await tester.tap(find.text('مجوز تازه'));
-      await tester.tap(find.byIcon(Icons.save_outlined));
+      final submit = find
+          .descendant(
+            of: find.byType(PanelFormPage),
+            matching: find.byType(FilledButton),
+          )
+          .last;
+      await tester.ensureVisible(submit);
+      await tester.tap(submit);
       await tester.pumpAndSettle();
       expect(api.written?['permissionIds'], unorderedEquals([1, 3]));
       expect(api.written?.containsKey('roleIds'), isFalse);

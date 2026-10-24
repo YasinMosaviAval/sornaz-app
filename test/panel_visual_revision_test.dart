@@ -174,7 +174,7 @@ void main() {
         expect(find.text('معرفی و بیوگرافی'), findsOneWidget);
         expect(find.text('لینک دعوت من'), findsOneWidget);
         expect(
-          find.text('اتصال سوابق عضویت به حساب من'),
+          find.text('درخواست ادغام حساب'),
           type == 'human' ? findsOneWidget : findsNothing,
         );
         expect(

@@ -55,7 +55,17 @@ Json panelSectionWithTabs(Json section, List<Json> sections) {
   final groups = [
     ['post-categories', 'posts', 'media', 'comments'],
     ['course-levels', 'lessons', 'courses'],
-    ['members', 'users', 'member-schedules', 'employee-leaves'],
+    if (catalog.containsKey('roles') || catalog.containsKey('permissions'))
+      [
+        'roles',
+        'permissions',
+        'users',
+        'members',
+        'member-schedules',
+        'employee-leaves',
+      ]
+    else
+      ['members', 'users', 'member-schedules', 'employee-leaves'],
     ['branches', 'availabilities', 'scheduling-rules', 'organization-holidays'],
     ['terms', 'term-discounts'],
     ['classroom-types', 'classrooms'],
@@ -65,6 +75,8 @@ Json panelSectionWithTabs(Json section, List<Json> sections) {
   final group = groups.where((keys) => keys.contains(key)).firstOrNull;
   if (group == null) return section;
   const labels = {
+    'roles': ('نقش‌ها', 'Roles'),
+    'permissions': ('دسترسی‌ها', 'Permissions'),
     'media': ('رسانه‌ها', 'Media'),
     'comments': ('دیدگاه‌ها', 'Comments'),
     'posts': ('نوشته‌ها', 'Posts'),

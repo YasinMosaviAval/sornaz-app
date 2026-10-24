@@ -144,7 +144,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byType(TabBar), findsOneWidget);
         expect(
-          api.calls.last,
+          api.calls.lastWhere((path) => path != '/national-holidays/list'),
           '/${['branches', 'availabilities', 'scheduling-rules', 'organization-holidays'][index]}/list',
         );
         expect(tester.takeException(), isNull);

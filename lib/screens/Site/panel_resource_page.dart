@@ -46,6 +46,8 @@ import 'panel_web_contracts.dart';
 import 'panel_page_guidance.dart';
 import 'panel_section_card.dart';
 import 'panel_account.dart';
+import 'panel_insight_charts.dart';
+import 'panel_term_status.dart';
 import 'site_api.dart';
 import 'package:sornaz/components/media_dialogs.dart';
 
@@ -439,6 +441,33 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
           ...panelSubscriptionRows(subscriptions),
         ];
         value['subscriptionPlans'] = subscriptions['plans'];
+      }
+      if (section == 'schedules' && !weekly && actions.containsKey('heatmap')) {
+        if (!mounted || request != generation) return;
+        try {
+          final summary =
+              await (background
+                  ? widget.api.live
+                  : refresh
+                  ? widget.api.refresh
+                  : widget.api.get)('/schedules/heatmap', {
+                ...widget.params,
+                ...panelFilterQuery(
+                  panelWebFilters(widget.section, value, const []),
+                  filters,
+                  organizationFilter,
+                  section,
+                ),
+                if (query.trim().isNotEmpty) 'search': query.trim(),
+              });
+          if (summary['heatmap'] is! List)
+            throw const SocialException('Invalid heatmap response.');
+          value['_panelHeatmap'] = summary['heatmap'];
+        } catch (error) {
+          if (error is SocialException && [401, 403].contains(error.status))
+            rethrow;
+          value['_panelHeatmapError'] = true;
+        }
       }
       if (mounted && request == generation) {
         final rowsPath = '${widget.section['rows'] ?? 'items'}';
@@ -1495,11 +1524,33 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
 
   Future<void> changeStatus(Json row, String action) async {
     if (busy || !available(action, row)) return;
+    var operation = action;
+    Json values = const {};
+    if (section == 'terms' && actions.containsKey('set-status')) {
+      final previous =
+          '${row['status_code'] ?? row['statusCode'] ?? row['status']}';
+      final field = objects(
+        optionalObject(actions['set-status'])['fields'] ?? [],
+      ).firstOrNull;
+      final options = optionalObject(
+        data['statusOptions'] ?? field?['options'],
+      );
+      final selectedStatus = await selectPanelTermStatus(
+        context,
+        previous,
+        options,
+      );
+      if (!mounted || selectedStatus == null || selectedStatus == previous)
+        return;
+      operation = 'set-status';
+      values = {'status': selectedStatus, 'fromStatus': previous};
+    }
     setState(() => busy = true);
     try {
       await widget.api.act(
         section,
-        action,
+        operation,
+        values: values,
         params: {...widget.params, 'id': '${row['id']}'},
       );
       if (mounted) await load();
@@ -1513,6 +1564,8 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
         );
     } catch (e) {
       if (mounted) socialError(context, e);
+      if (e is SocialException && e.status == 409 && mounted)
+        await load(refresh: true);
     } finally {
       if (mounted) setState(() => busy = false);
     }
@@ -2879,6 +2932,13 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                       )
                     else
                       PanelDataView(value: data),
+                    PanelInsightCharts(
+                      section: '${widget.section['key']}',
+                      rows: filtered,
+                      data: data,
+                      weekly: weekly,
+                      contractType: '${filters['filterStaffType'] ?? ''}',
+                    ),
                     if (section == 'my-finance')
                       PanelDataView(
                         value: {
