@@ -6,6 +6,11 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+# Prefer this machine's transferred environment when no SDK was explicitly selected.
+$offlineActivation = Join-Path (Split-Path $PSScriptRoot -Parent) '20261022-windows-offline-kit/runtime/Activate-Offline.ps1'
+if (!$PSBoundParameters.ContainsKey('Flutter') -and (Test-Path -LiteralPath $offlineActivation)) {
+    . $offlineActivation -Project (Split-Path $PSScriptRoot -Parent)
+}
 $Flutter = (Get-Command $Flutter -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
 $previousOffline = $env:SORNAZ_GRADLE_OFFLINE
 $previousCi = $env:CI

@@ -1,5 +1,53 @@
 # ساخت APK آفلاین در ویندوز
 
+## بستهٔ منتقل‌شدهٔ ۲۰۲۶/۱۰/۲۲
+
+در این سیستم، محیط منتقل‌شده در
+`20261022-windows-offline-kit/runtime` قرار دارد. اسکریپت
+`tool/build_apk_offline.ps1` در صورت وجود این محیط و نبود پارامتر صریح
+`-Flutter`، ابتدا آن را فعال می‌کند. SDKها و کش‌های قدیمی حذف نشده‌اند.
+این پوشه شامل کلید خصوصی است و در Git قرار نمی‌گیرد.
+
+برای کار مستقیم با Flutter، در هر ترمینال PowerShell جدید از ریشهٔ پروژه اجرا کنید:
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+. .\20261022-windows-offline-kit\runtime\Activate-Offline.ps1 -Project (Get-Location).Path
+```
+
+برای بازسازی تنظیم بسته‌ها پس از تغییر مسیر یا lockfile، به فرمان فعال‌سازی
+`-ResolvePackages` اضافه کنید. نصب اولیهٔ کلید مشترک با پشتیبان‌گیری انجام می‌شود؛
+در فعال‌سازی روزمره سوییچ `-InstallSharedDebugKey` لازم نیست.
+راهنمای بسته مربوط به سورس مبدا است؛ در این worktree اسکریپت ساخت موجود
+`tool/build_apk_offline.ps1` است، نه `scripts/build_android.ps1`.
+
+برای بررسی وابستگی‌ها بدون تولید APK، پس از فعال‌سازی:
+
+```powershell
+Push-Location android
+try { .\gradlew.bat --offline :app:verifyOfflineReleaseDependencies -Ptarget-platform=android-arm64 }
+finally { Pop-Location }
+```
+
+برای بازگشت، اسکریپت ساخت را با `-Flutter` و مسیر SDK قبلی اجرا کنید و
+`android/local.properties` را از پشتیبان `local.properties.before-offline-*`
+برگردانید. تنظیمات قبلی Flutter در
+`20261022-windows-offline-kit/flutter-settings.before-activation.json` و کلید
+قبلی در `%USERPROFILE%\.android\debug.keystore.before-sornaz-*` نگهداری می‌شوند.
+برای استفاده از محیط قبلی، ترمینال تازه با متغیرهای محیطی قبلی باز کنید و
+مسیرهای Android SDK و JDK قبلی را با `flutter config` تنظیم کنید.
+هماهنگی ابزار و کلید، برابری خروجی نهایی را بدون هماهنگی سورس، lockfile و
+شمارهٔ ساخت تضمین نمی‌کند.
+
+اعتبارسنجی این انتقال در ۲۰۲۶/۱۰/۲۳: هش ZIP و اندازه و SHA-256 هر
+۱۷۷٬۸۳۷ فایل استخراج‌شده پیش از فعال‌سازی تأیید شد. حل بسته‌ها با
+`--offline --enforce-lockfile` و بررسی Gradle با ۵۸ artifact کامپایل و
+۱۱۱ artifact اجرا موفق بود. نسخه‌ها Flutter 3.47.2، Dart 3.13.2،
+JDK 17.0.20.1 و Gradle 8.14 هستند. کلید نصب‌شده با بسته تطابق دارد و
+کلید قبلی پشتیبان‌گیری شده است. به‌دلیل تفاوت مالکیت فایل‌های استخراج‌شده،
+فقط مسیر دقیق SDK Flutter به `safe.directory` در تنظیمات Git داخل بسته
+اضافه شد. APK ساخته نشده و نصب روی گوشی و قطع کامل شبکه آزموده نشده‌اند.
+
 در VS Code از منوی Terminal گزینهٔ New Terminal را انتخاب کنید و در ترمینال
 PowerShell این دو دستور را اجرا کنید:
 

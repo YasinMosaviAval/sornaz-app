@@ -32,6 +32,9 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+# Local offline SDKs, caches, archives and private signing key.
+/20261022-windows-offline-kit/
+/android/local.properties.before-offline-*
 /android/offline-maven/io/flutter/armeabi_v7a_release/
 /android/offline-maven/io/flutter/x86_64_release/
 /.native-*/
