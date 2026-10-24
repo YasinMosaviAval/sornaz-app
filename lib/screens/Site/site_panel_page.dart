@@ -155,7 +155,6 @@ class _NativePanelState extends State<NativePanel> {
       );
 
   IconData icon(String key) => switch (key) {
-    'tests' => Icons.science_outlined,
     'posts' => Icons.description_outlined,
     'post-categories' => Icons.folder_open_outlined,
     'pages' => Icons.content_copy_outlined,

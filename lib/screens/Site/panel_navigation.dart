@@ -53,6 +53,7 @@ Json panelSectionWithTabs(Json section, List<Json> sections) {
   }
   final personalLearning = !catalog.containsKey('members');
   final groups = [
+    ['post-categories', 'posts', 'media', 'comments'],
     ['course-levels', 'lessons', 'courses'],
     ['members', 'users', 'member-schedules', 'employee-leaves'],
     ['branches', 'availabilities', 'scheduling-rules', 'organization-holidays'],
@@ -64,6 +65,10 @@ Json panelSectionWithTabs(Json section, List<Json> sections) {
   final group = groups.where((keys) => keys.contains(key)).firstOrNull;
   if (group == null) return section;
   const labels = {
+    'media': ('رسانه‌ها', 'Media'),
+    'comments': ('دیدگاه‌ها', 'Comments'),
+    'posts': ('نوشته‌ها', 'Posts'),
+    'post-categories': ('دسته‌بندی نوشته‌ها', 'Post categories'),
     'course-levels': ('سطح درس‌ها', 'Lesson levels'),
     'lessons': ('درس‌ها', 'Lessons'),
     'courses': ('دوره‌ها', 'Courses'),
@@ -123,7 +128,15 @@ List<Json> websitePanelNavigation(Json response) {
   };
   List<Json> resolve(List<Json> nodes) => [
     for (final node in nodes)
-      if (!['account', 'my-settings'].contains(node['section']) &&
+      if (![
+            'account',
+            'my-settings',
+            'tests',
+            'post-categories',
+            'media',
+            'comments',
+            'pages',
+          ].contains(node['section']) &&
           node['destination'] != 'settings')
         if (node['children'] is List)
           {...node, 'children': resolve(objects(node['children']))}
@@ -155,6 +168,11 @@ List<Json> panelNavigation(List<Json> sections) {
   final remaining = {
     for (final s in sections)
       if (![
+        'tests',
+        'post-categories',
+        'media',
+        'comments',
+        'pages',
         'account',
         'my-settings',
         'chat',
@@ -250,23 +268,18 @@ List<Json> panelNavigation(List<Json> sections) {
     'site-management-menu',
     'مدیریت سایت',
     'Site management',
-    ['pages', 'settings', 'site-settings', 'inline-translations', 'guides'],
+    ['settings', 'site-settings', 'inline-translations', 'guides'],
   );
   // Match the website sidebar while retaining only server-authorized entries.
   List<Json> take(List<String> keys) => [
     for (final key in keys)
-      if (remaining.containsKey(key)) remaining.remove(key)!,
+      if (remaining.containsKey(key))
+        key == 'posts'
+            ? panelSectionWithTabs(remaining.remove(key)!, sections)
+            : remaining.remove(key)!,
   ];
   return [
-    ...take([
-      'tests',
-      'posts',
-      'post-categories',
-      'media',
-      'comments',
-      'chart-gallery',
-      'reports',
-    ]),
+    ...take(['posts', 'chart-gallery', 'reports']),
     ...take([
       'dashboard',
       'waiting-approvals',

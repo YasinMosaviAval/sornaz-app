@@ -41,7 +41,82 @@ class TabsApi extends PanelApi {
 }
 
 void main() {
+  test('posts expose four ordered authorized tabs', () {
+    final keys = ['post-categories', 'posts', 'media', 'comments'];
+    final catalog = [...keys.map(section), section('pages')];
+    final menu = websitePanelNavigation({
+      'navigationVersion': 1,
+      'sections': catalog,
+      'navigation': [
+        for (final key in [...keys, 'pages']) {'key': key, 'section': key},
+      ],
+    });
+    expect(menu.map((item) => item['key']), ['posts']);
+    expect(objects(menu.single['pageTabs']).map((item) => item['key']), keys);
+    expect(
+      objects(
+        panelSectionWithTabs(section('posts'), [
+          section('posts'),
+          {...section('media'), 'hidden': true},
+        ])['pageTabs'],
+      ).map((item) => item['key']),
+      ['posts'],
+    );
+  });
+  test('posts have authorized internal tabs and one menu entry', () {
+    final posts = section('posts');
+    final categories = section('post-categories');
+    final menu = websitePanelNavigation({
+      'navigationVersion': 1,
+      'sections': [posts, categories, section('tests')],
+      'navigation': [
+        {'key': 'posts', 'section': 'posts'},
+        {'key': 'post-categories', 'section': 'post-categories'},
+        {'key': 'tests', 'section': 'tests'},
+      ],
+    });
+    expect(menu.map((item) => item['key']), ['posts']);
+    expect(objects(menu.single['pageTabs']).map((tab) => tab['key']), [
+      'post-categories',
+      'posts',
+    ]);
+    expect(objects(panelSectionWithTabs(posts, [posts])['pageTabs']).length, 1);
+    expect(
+      panelNavigation([
+        posts,
+        categories,
+        section('tests'),
+      ]).map((s) => s['key']),
+      ['posts'],
+    );
+  });
+
   setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  testWidgets('posts switch between internal resources', (tester) async {
+    final api = TabsApi();
+    final catalog = ['posts', 'post-categories'].map(section).toList();
+    await tester.pumpWidget(
+      fixture.host(
+        PanelResourcePage(
+          api: api,
+          section: panelSectionWithTabs(catalog.first, catalog),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(api.calls, ['/posts/list']);
+    expect(find.byType(TabBar), findsOneWidget);
+    await tester.tap(find.byType(Tab).at(0));
+    await tester.pumpAndSettle();
+    expect(api.calls.last, '/post-categories/list');
+    expect(find.byType(TabBar), findsOneWidget);
+    await tester.tap(find.byType(Tab).at(1));
+    await tester.pumpAndSettle();
+    expect(api.calls.last, '/posts/list');
+    expect(tester.takeException(), isNull);
+    api.dispose();
+  });
 
   test(
     'internal tabs use authorized sections without adding sidebar entries',
