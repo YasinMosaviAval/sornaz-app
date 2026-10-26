@@ -146,6 +146,27 @@ class PanelHeatmapData {
   final int sessions, unknown;
 }
 
+PanelHeatmapData panelClassroomHeatmap(List<Json> rooms, List<Json> rows) {
+  final cells = List.generate(7, (_) => List.filled(24, 0));
+  var unknown = 0;
+  final grouped = <String, List<Json>>{};
+  for (final row in rows) {
+    grouped.putIfAbsent('${row['classroomId']}', () => []).add(row);
+  }
+  for (final room in rooms.where(
+    (room) => room['statusValue'] == 'available',
+  )) {
+    final value = panelHeatmapData(grouped['${room['id']}'] ?? []);
+    unknown += value.unknown;
+    for (var day = 0; day < 7; day++) {
+      for (var hour = 0; hour < 24; hour++) {
+        if (value.cells[day][hour] > 0) cells[day][hour]++;
+      }
+    }
+  }
+  return PanelHeatmapData(cells, 0, unknown);
+}
+
 PanelHeatmapData panelHeatmapData(List<Json> rows) {
   final cells = List.generate(7, (_) => List.filled(24, 0));
   final seen = <String>{};

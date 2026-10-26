@@ -47,6 +47,7 @@ import 'panel_page_guidance.dart';
 import 'panel_section_card.dart';
 import 'panel_account.dart';
 import 'panel_insight_charts.dart';
+import 'panel_classroom_heatmap.dart';
 import 'panel_term_status.dart';
 import 'site_api.dart';
 import 'package:sornaz/components/media_dialogs.dart';
@@ -2932,13 +2933,21 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                       )
                     else
                       PanelDataView(value: data),
-                    PanelInsightCharts(
-                      section: '${widget.section['key']}',
-                      rows: filtered,
-                      data: data,
-                      weekly: weekly,
-                      contractType: '${filters['filterStaffType'] ?? ''}',
-                    ),
+                    if (section == 'classrooms')
+                      PanelClassroomHeatmap(
+                        api: widget.api,
+                        rooms: filtered,
+                        enabled: actions.containsKey('heatmap'),
+                        refreshKey: data,
+                      )
+                    else
+                      PanelInsightCharts(
+                        section: '${widget.section['key']}',
+                        rows: filtered,
+                        data: data,
+                        weekly: weekly,
+                        contractType: '${filters['filterStaffType'] ?? ''}',
+                      ),
                     if (section == 'my-finance')
                       PanelDataView(
                         value: {
