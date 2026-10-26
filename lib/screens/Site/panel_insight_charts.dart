@@ -268,6 +268,7 @@ class _PanelInsightChartsState extends State<PanelInsightCharts> {
   }
 
   Widget heatmap() {
+    final occupancy = widget.section == 'classrooms';
     if (!widget.weekly && widget.data['_panelHeatmap'] is! List) {
       return Text(
         widget.data['_panelHeatmapError'] == true
@@ -281,9 +282,17 @@ class _PanelInsightChartsState extends State<PanelInsightCharts> {
               ),
       );
     }
-    final data = panelHeatmapData(
-      widget.weekly ? widget.rows : objects(widget.data['_panelHeatmap']),
-    );
+    final data = occupancy
+        ? panelClassroomHeatmap(
+            widget.rows,
+            objects(widget.data['_panelHeatmap']),
+          )
+        : panelHeatmapData(
+            widget.weekly ? widget.rows : objects(widget.data['_panelHeatmap']),
+          );
+    final available = widget.rows
+        .where((room) => room['statusValue'] == 'available')
+        .length;
     final maxValue = data.cells
         .expand((row) => row)
         .fold<int>(1, math.max)
@@ -299,19 +308,28 @@ class _PanelInsightChartsState extends State<PanelInsightCharts> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (occupancy) Text('${widget.data['_occupancyWeek'] ?? ''}'),
         Text(
           t(
-            '${n(data.sessions)} جلسه مستقل · ${n(data.unknown)} زمان نامشخص',
-            '${n(data.sessions)} distinct sessions · ${n(data.unknown)} with invalid time',
+            occupancy
+                ? '${n(available)} کلاس در دسترس · ${n(widget.rows.length - available)} خارج از دسترس/در انتظار'
+                : '${n(data.sessions)} جلسه مستقل · ${n(data.unknown)} زمان نامشخص',
+            occupancy
+                ? '${n(available)} available classrooms · ${n(widget.rows.length - available)} unavailable/pending'
+                : '${n(data.sessions)} distinct sessions · ${n(data.unknown)} with invalid time',
           ),
         ),
         Text(
           t(
-            'جلسه چندساعته در چند سلول شمرده می‌شود.',
-            'A multi-hour session appears in multiple cells.',
+            occupancy
+                ? 'هر سلول تعداد کلاس‌های پر است. صفر یعنی بدون رزرو، نه تضمین امکان رزرو؛ تعطیلی و ساعات کاری لحاظ نمی‌شوند.'
+                : 'جلسه چندساعته در چند سلول شمرده می‌شود.',
+            occupancy
+                ? 'Cells count occupied classrooms. Zero means no booking, not guaranteed availability; closures and working hours are not included.'
+                : 'A multi-hour session appears in multiple cells.',
           ),
         ),
-        if (data.sessions == 0)
+        if (occupancy ? widget.rows.isEmpty : data.sessions == 0)
           empty()
         else ...[
           Text(
@@ -360,7 +378,7 @@ class _PanelInsightChartsState extends State<PanelInsightCharts> {
                           Expanded(
                             child: Tooltip(
                               message:
-                                  '${days[day]} ${hour.toString().padLeft(2, '0')}:00 · ${n(data.cells[day][hour])}',
+                                  '${days[day]} ${hour.toString().padLeft(2, '0')}:00 · ${n(data.cells[day][hour])}${occupancy ? t(' کلاس پر · ${n(available - data.cells[day][hour])} بدون رزرو', ' occupied · ${n(available - data.cells[day][hour])} without bookings') : ''}',
                               child: Container(
                                 height: 28,
                                 margin: const EdgeInsets.all(1),
@@ -415,6 +433,7 @@ class _PanelInsightChartsState extends State<PanelInsightCharts> {
       'terms',
       'my-points',
       'schedules',
+      'classrooms',
     ].contains(widget.section)) {
       return const SizedBox.shrink();
     }
@@ -429,10 +448,14 @@ class _PanelInsightChartsState extends State<PanelInsightCharts> {
         'Student terms by lesson and attendance mode',
       ),
       'my-points' => t('نمودار امتیازهای من', 'My point balances'),
+      'classrooms' => t(
+        'نقشه حرارتی پر و خالی کلاس‌ها',
+        'Classroom occupancy heatmap',
+      ),
       _ => t('نقشه حرارتی تقویم کلاس‌ها', 'Class calendar heatmap'),
     };
     Widget content;
-    if (widget.section == 'schedules') {
+    if (['schedules', 'classrooms'].contains(widget.section)) {
       content = heatmap();
     } else if (['students', 'terms'].contains(widget.section)) {
       content = lessons(
@@ -483,7 +506,10 @@ class _PanelInsightChartsState extends State<PanelInsightCharts> {
                   tooltip: t('ذخیره نمودار PNG', 'Save chart as PNG'),
                   onPressed:
                       exporting ||
-                          (widget.section == 'schedules' &&
+                          ([
+                                'schedules',
+                                'classrooms',
+                              ].contains(widget.section) &&
                               !widget.weekly &&
                               widget.data['_panelHeatmap'] is! List)
                       ? null

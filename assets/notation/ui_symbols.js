@@ -9,6 +9,13 @@ function note(value){
  for(let i=0;i<flags;i++)content+='<path d="M12 '+(3+i*4)+'c1 4 8 4 6 10 4-7-4-8-6-10" fill="currentColor"/>';
  return '<svg class="note-glyph" viewBox="0 0 24 34" aria-hidden="true">'+content+'</svg>';
 }
+function rest(value){
+ let content;
+ if(value==='w'||value==='h'){const y=value==='w'?12:18;content=`<path d="M4 ${y}h16" stroke="currentColor" stroke-width="1.6"/><rect x="7" y="${value==='w'?y:y-5}" width="10" height="5" fill="currentColor"/>`;}
+ else if(value==='q')content='<path d="m13 3 5 7-7 8 6 6c-8-3-10 2-5 6-10-5-8-11-3-12l-6-6 8-9Z" fill="currentColor"/>';
+ else{const count={8:1,16:2,32:3,64:4,128:5,256:6}[value]||1;content='<path d="M17 4 8 31" stroke="currentColor" stroke-width="1.8"/>';for(let i=0;i<count;i++)content+=`<circle cx="10" cy="${7+i*3}" r="2.2" fill="currentColor"/><path d="M10 ${7+i*3}q5 2 6-3" fill="none" stroke="currentColor" stroke-width="1.5"/>`;}
+ return '<svg class="rest-glyph" viewBox="0 0 24 34" aria-hidden="true">'+content+'</svg>';
+}
 // Conventional overlapping practice ranges, in beats of the selected beat unit.
 const tempoRanges=[['Larghissimo',20,24],['Grave',25,45],['Largo',40,60],['Lento',45,60],['Larghetto',60,66],['Adagio',66,76],['Adagietto',70,80],['Andante',76,108],['Andantino',80,108],['Marcia moderato',83,85],['Andante moderato',92,112],['Moderato',108,120],['Allegretto',112,120],['Allegro moderato',116,120],['Allegro',120,168],['Vivace',168,176],['Vivacissimo',172,176],['Allegrissimo',172,176],['Presto',168,200],['Prestissimo',200,300]];
 function tempos(unit,bpm){return unit&&Number(bpm)>=20&&Number(bpm)<=300?tempoRanges.filter(([,lo,hi])=>Number(bpm)>=lo&&Number(bpm)<=hi).map(([name,lo,hi])=>[name,name+' ('+lo+'–'+hi+' BPM)']):[];}
@@ -19,5 +26,5 @@ function center(scope){
   svg.setAttribute('viewBox',[box.x+box.width/2-width/2,box.y+box.height/2-height/2,width,height].join(' '));
  }
 }
-root.NotationSymbols={icon,note,tempos,center};
+root.NotationSymbols={icon,note,rest,tempos,center};
 })(globalThis);

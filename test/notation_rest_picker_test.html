@@ -1,0 +1,23 @@
+<!doctype html><html><meta charset="utf-8"><link rel="stylesheet" href="../assets/notation/notation.css"><body data-result="pending"><main id="app"></main><div id="toast"></div>
+<script>
+window.NOTATION_BOOT={locale:new URL(location.href).searchParams.get('locale')||'fa',userId:1,embedded:true,nativeToolbar:true,durationMode:1,cornerRadius:17,fontWeight:600,fontScale:1.1};
+window.SornazNotation={postMessage(raw){const d=JSON.parse(raw);if(!d.id)return;let value=true;if(d.action==='list')value={items:[],has_more:false};if(d.action==='instruments')value=[{id:'Piano',en:'Piano',fa:'پیانو'}];if(d.action==='export'){window.exported=JSON.parse(d.content);}queueMicrotask(()=>Notation.receive(d.id,value,null));}};
+</script>
+<script src="../assets/notation/vendor/vexflow.js"></script><script src="../assets/notation/model.js"></script><script src="../assets/notation/ui_symbols.js"></script><script src="../assets/notation/score_renderer.js"></script><script src="../assets/notation/importer.js"></script><script src="../assets/notation/notation.js"></script>
+<script>
+(async()=>{const pause=()=>new Promise(r=>setTimeout(r,30)),click=selector=>{const e=document.querySelector(selector);if(!e)throw Error('Missing '+selector);e.click();};try{
+ await pause();const s=NotationModel.fresh();s.metadata.title='Rest picker';s.metadata.instrument='Piano';s.score.measures[0].notes=[{pitch:'C4',duration:'q',dots:0,staff:1,voice:1,at:0}];
+ const imported=Notation.importContent(JSON.stringify({format:'sornaz-notation',version:1,metadata:s.metadata,score:s.score}),'rest.json');await pause();click('[data-action=confirm-import]');await imported;
+ const before=document.querySelectorAll('#score .note-hit').length;click('.rest-key');await pause();const dialog=document.querySelector('.rest-duration-picker');
+ if(!dialog?.open||dialog.querySelectorAll('[data-rest-duration]').length<9)throw Error('Rest choices not shown');
+ if(getComputedStyle(dialog).borderRadius!=='17px')throw Error('Shared corner preference ignored');
+ dialog.dispatchEvent(new Event('cancel',{cancelable:true}));if(document.querySelectorAll('#score .note-hit').length!==before)throw Error('Cancel changed the score');
+ click('.rest-key');await pause();click('[data-rest-duration="8"][data-rest-dots="1"]');await pause();if(document.querySelector('.rest-duration-picker'))throw Error('Picker did not close');
+ Notation.command('export');await pause();let notes=exported.score.measures.flatMap(b=>b.notes);const rest=notes.find(n=>n.rest);if(!rest||rest.duration!=='8'||rest.dots!==1)throw Error('Selected rest duration was lost');if(rest.tieNext||rest.tiePrevious)throw Error('Rest inherited ties');
+ Notation.command('undo');await pause();Notation.command('export');await pause();if(exported.score.measures.flatMap(b=>b.notes).some(n=>n.rest))throw Error('Undo did not remove rest');
+ Notation.command('redo');await pause();Notation.command('export');await pause();if(!exported.score.measures.flatMap(b=>b.notes).some(n=>n.rest))throw Error('Redo did not restore rest');
+ click('.piano [data-pitch="D4"]');await pause();Notation.command('export');await pause();const normal=exported.score.measures.flatMap(b=>b.notes).find(n=>n.pitch==='D4');if(!normal||normal.duration!=='q'||normal.dots!==0)throw Error('Rest selection changed ordinary note duration');
+ click('.rest-key');await pause();await Notation.back();if(document.querySelector('.rest-duration-picker'))throw Error('Back did not close the picker');if(!document.querySelector('#score'))throw Error('Back left the editor');
+ document.body.dataset.result='PASS';
+ }catch(error){document.body.dataset.result='FAIL '+error.message;}})();
+</script></body></html>
