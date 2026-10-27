@@ -1,0 +1,27 @@
+<!doctype html><html><meta charset="utf-8"><link rel="stylesheet" href="../assets/notation/notation.css"><body data-result="pending"><main id="app"></main><div id="toast"></div>
+<script>
+window.onerror=(_,__,___,____,error)=>document.body.dataset.result='FAIL '+(error?.message||_);
+window.NOTATION_BOOT={locale:new URL(location.href).searchParams.get('locale')||'fa',userId:1,embedded:true,nativeToolbar:true,durationMode:0,cornerRadius:17,fontWeight:600,fontScale:1.1};
+window.SornazNotation={postMessage(raw){const data=JSON.parse(raw);if(!data.id)return;let value=true;if(data.action==='list')value={items:[],has_more:false};if(data.action==='instruments')value=[{id:'Piano',en:'Piano',fa:'پیانو',staves:[{clef:'treble'},{clef:'bass'}]}];if(data.action==='export')window.exported=JSON.parse(data.content);queueMicrotask(()=>Notation.receive(data.id,value,null));}};
+</script>
+<script src="../assets/notation/vendor/vexflow.js"></script><script src="../assets/notation/model.js"></script><script src="../assets/notation/ui_symbols.js"></script><script src="../assets/notation/score_renderer.js"></script><script src="../assets/notation/importer.js"></script><script src="../assets/notation/notation.js"></script>
+<script>
+(async()=>{const pause=()=>new Promise(resolve=>setTimeout(resolve,30)),click=selector=>{const element=document.querySelector(selector);if(!element)throw Error('Missing '+selector);element.click();};try{
+ await pause();const sheet=NotationModel.fresh();Object.assign(sheet.metadata,{title:'Toolbar and legacy durations',instrument:'Piano',staves:[{clef:'treble'},{clef:'bass'}],tempo_note:'128',tempo_dots:0});
+ sheet.score.measures=[{notes:[{pitch:'C4',duration:'256',dots:0,staff:1,voice:1,at:0},{pitch:'D4',duration:'128',dots:0,staff:1,voice:1,at:NotationModel.wholeUnits/256}]},{notes:[],preserve:true}];
+ const imported=Notation.importContent(JSON.stringify({format:'sornaz-notation',version:1,metadata:sheet.metadata,score:sheet.score}),'toolbar.json');await pause();click('[data-action=confirm-import]');await imported;
+ const buttons=[...document.querySelectorAll('.notation-top-tools button')];if(buttons.length!==6||buttons.some(button=>!button.querySelector('svg')||!button.querySelector('span')?.textContent.trim()||!button.title))throw Error('Upper music actions need visible labels, icons and tooltips');
+ if(document.querySelectorAll('.notation-top-tools [role=group]').length!==3)throw Error('Staff, voice and measure groups are missing');
+ if(!document.querySelector('.measure-tools summary svg')||document.querySelector('.notation-measure-badge')?.textContent.trim()!=='1'&&document.querySelector('.notation-measure-badge')?.textContent.trim()!=='۱')throw Error('Measure summary icon or number is missing');
+ const style=getComputedStyle(buttons[0]);if(style.borderRadius!=='17px'||style.fontWeight!=='600'||Math.abs(parseFloat(style.fontSize)-13.2)>.1)throw Error('Application typography or corner preference is ignored');
+ click('[data-action=staff][data-staff="2"]');if(document.querySelector('[data-action=staff][data-staff="2"]')?.getAttribute('aria-pressed')!=='true')throw Error('Staff selection is not retained');
+ click('[data-action=voice][data-voice="2"]');if(document.querySelector('[data-action=voice][data-voice="2"]')?.getAttribute('aria-pressed')!=='true')throw Error('Voice selection is not retained');
+ click('[data-action=add-bar]');await pause();Notation.command('export');await pause();if(exported.score.measures.length!==3)throw Error('Add measure action failed');
+ click('[data-action=remove-bar]');await pause();Notation.command('export');await pause();if(exported.score.measures.length!==2)throw Error('Remove measure action failed');
+ const legacy=exported.score.measures[0].notes;if(legacy[0]?.duration!=='256'||legacy[1]?.duration!=='128')throw Error('Legacy note durations changed on export');
+ click('[data-action=metadata]');await pause();const form=document.getElementById('metadata');if(form.elements.tempo_unit.value!=='128:0')throw Error('Legacy tempo unit was lost');
+ form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));await pause();Notation.command('export');await pause();if(exported.metadata.tempo_note!=='128')throw Error('Metadata editing replaced a legacy tempo unit');
+ if(document.querySelector('[data-action=duration][data-value="128"],[data-action=duration][data-value="256"]'))throw Error('Legacy durations leaked into new note choices');
+ document.body.dataset.result='PASS';
+}catch(error){document.body.dataset.result='FAIL '+error.message;}})();
+</script></body></html>

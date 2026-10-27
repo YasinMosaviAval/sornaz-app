@@ -300,6 +300,12 @@ setInterval(async()=>{
       const assets = {
         'index.html': 'text/html',
         'notation.js': 'text/javascript',
+        'ui_symbols.js': 'text/javascript',
+        'ui_glyphs.js': 'text/javascript',
+        'ui_controls.js': 'text/javascript',
+        'ui_controls.css': 'text/css',
+        'score_renderer.js': 'text/javascript',
+        'importer.js': 'text/javascript',
         'model.js': 'text/javascript',
         'notation.css': 'text/css',
         'vendor/vexflow.js': 'text/javascript',

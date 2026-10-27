@@ -1,0 +1,39 @@
+/* Compact horizontal tool strips; labels remain available to assistive technology. */
+.notation-control-label{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.measure-tools>div,.notation-selected-tools{display:flex!important;flex-wrap:nowrap!important;align-items:center;gap:6px!important;min-width:0;max-width:100%;padding:8px!important;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scrollbar-width:thin;white-space:nowrap}
+.notation-selected-tools{margin:4px 12px 8px;border:1px solid var(--line);border-radius:var(--app-corner-radius,4px);background:var(--panel)}
+.notation-selected-tools>.chord-controls,.notation-selected-tools .chord-controls{display:contents!important}
+.measure-tools .chord-controls{display:contents!important}
+.notation-symbol-field{position:relative!important;display:inline-flex!important;flex:0 0 auto!important;align-items:center!important;gap:4px!important;min-width:0!important;max-width:none!important;width:auto!important;margin:0!important;padding:0!important;font:inherit}
+.notation-original-select{position:absolute!important;inset:0 auto auto 0!important;width:1px!important;height:1px!important;min-height:0!important;padding:0!important;opacity:0!important;pointer-events:none!important;border:0!important}
+.notation-symbol-picker,.notation-selected-tools .notation-symbol-action,.measure-tools .notation-symbol-action{display:inline-flex!important;flex:0 0 auto;align-items:center;justify-content:center;min-width:44px!important;max-width:none!important;width:auto!important;height:44px!important;min-height:44px!important;margin:0!important;padding:5px 8px!important;gap:0!important;border:1px solid var(--line)!important;border-radius:var(--app-corner-radius,4px)!important;background:var(--panel)!important;color:var(--ink)!important;font:inherit!important;line-height:1!important;white-space:nowrap!important;box-sizing:border-box;cursor:pointer}
+.notation-symbol-picker:hover,.notation-selected-tools .notation-symbol-action:hover{border-color:var(--accent)!important;background:color-mix(in srgb,var(--accent) 8%,var(--panel))!important}
+.notation-symbol-picker:focus-visible,.notation-symbol-field:focus-visible,.notation-selected-tools .notation-symbol-action:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.notation-selected-tools .notation-symbol-action.is-active{color:var(--accent)!important;border-color:var(--accent)!important;background:color-mix(in srgb,var(--accent) 12%,var(--panel))!important}
+.notation-control-glyph,.notation-symbol-picker>svg,.notation-symbol-option>svg{display:block;flex:0 0 auto;width:32px;height:32px;overflow:visible;color:inherit}
+.notation-symbol-field.is-disabled .notation-symbol-picker,.notation-symbol-field.is-disabled input{opacity:.38;cursor:not-allowed}
+.notation-symbol-field.is-disabled .notation-symbol-picker,.notation-symbol-field.is-disabled input{pointer-events:none}
+.notation-symbol-field.is-disabled{cursor:help}
+.notation-symbol-action{position:relative}
+.notation-tone-badge{direction:ltr;font:inherit;font-size:calc(9px * var(--font-scale,1));line-height:1;margin-inline-start:3px;align-self:flex-end}
+.notation-disabled-action{display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;cursor:help}
+.notation-disabled-action>button{pointer-events:none;opacity:.38}
+.notation-disabled-action:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--app-corner-radius,4px)}
+.notation-symbol-input{height:44px;border:1px solid var(--line);border-radius:var(--app-corner-radius,4px);background:var(--panel);overflow:hidden}
+.notation-field-icon{display:flex;align-items:center;justify-content:center;flex:0 0 34px;width:34px;height:40px;color:var(--accent);pointer-events:none}
+.notation-symbol-input input{min-width:40px!important;width:56px!important;max-width:108px!important;height:42px!important;min-height:42px!important;border:0!important;border-radius:0!important;padding:4px!important;margin:0!important;font-family:inherit!important;font-size:calc(12px * var(--font-scale,1))!important;font-weight:var(--app-font-weight,400)!important;background:transparent!important;color:var(--ink)!important;box-sizing:border-box}
+.notation-symbol-input[data-control-key=rehearsal] input{width:58px!important}
+.notation-symbol-input[data-control-key=text] input,.notation-symbol-input[data-control-key=note-lyric] input{width:100px!important}
+.notation-symbol-input[data-control-key=beamPattern] input,.notation-symbol-input[data-control-key=note-chord-symbol] input{width:72px!important;direction:ltr}
+.notation-symbol-popup,.notation-control-help{position:fixed;inset:auto;z-index:100100;margin:0;box-sizing:border-box;border:1px solid var(--line);border-radius:var(--app-corner-radius,4px);background:var(--panel);color:var(--ink);box-shadow:0 10px 30px #0003;font-family:inherit;font-size:calc(12px * var(--font-scale,1));font-weight:var(--app-font-weight,400);text-align:start;overscroll-behavior:contain}
+.notation-symbol-popup::backdrop,.notation-control-help::backdrop{background:transparent;backdrop-filter:none}
+.notation-symbol-popup{display:grid;grid-template-columns:repeat(auto-fit,minmax(48px,1fr));gap:6px;width:min(332px,calc(100vw - 16px));padding:8px;overflow:auto;scrollbar-width:thin}
+.notation-symbol-option{display:flex;align-items:center;justify-content:center;min-width:46px;min-height:48px;padding:5px;border:1px solid transparent;border-radius:var(--app-corner-radius,4px);background:transparent;color:inherit;font:inherit;cursor:pointer}
+.notation-symbol-option:hover,.notation-symbol-option:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;background:color-mix(in srgb,var(--accent) 8%,var(--panel))}
+.notation-symbol-option[aria-selected=true]{color:var(--accent);border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--panel))}
+.notation-symbol-option:disabled{opacity:.35;cursor:not-allowed}
+.notation-control-help{display:block;width:min(310px,calc(100vw - 16px));padding:10px 12px;line-height:1.8;overflow:auto;pointer-events:none}
+.notation-control-help strong{display:block;margin-bottom:4px;color:var(--accent);font-size:inherit;font-weight:var(--app-font-weight,400)}
+.website-panel .notation-selected-tools{margin:0 0 12px;border-radius:12px}
+.website-panel .notation-symbol-picker,.website-panel .notation-selected-tools .notation-symbol-action,.website-panel .notation-symbol-input{border-radius:10px!important}
+.website-panel .notation-symbol-popup,.website-panel .notation-control-help{border-radius:12px}

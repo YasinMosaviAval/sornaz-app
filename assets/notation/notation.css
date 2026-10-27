@@ -111,3 +111,21 @@ h1,h2,h3,h4,h5,h6,strong,b{font-weight:var(--app-font-weight,400)}
 .rest-duration-cancel{width:100%;margin-top:10px;border-radius:var(--app-corner-radius,4px);font:inherit}
 .import-entry{padding:8px 12px;text-align:start}.import-entry button,.import-preview button{font-family:NotationTheme,sans-serif;font-size:calc(12px * var(--font-scale,1));font-weight:var(--app-font-weight,400);border-radius:var(--app-corner-radius,4px)}.import-preview{max-width:420px;border-radius:var(--app-corner-radius,4px)}.import-preview h2{font-size:calc(16px * var(--font-scale,1));font-weight:var(--app-font-weight,400)}.import-preview p{font-size:calc(12px * var(--font-scale,1));line-height:1.8}
 .import-score-preview{max-height:260px;min-height:120px;overflow:auto;direction:ltr;border:1px solid var(--line);border-radius:var(--app-corner-radius,4px);background:var(--panel)}.import-score-preview svg{display:block}
+
+/* Labeled music tools remain readable and reachable on narrow editor screens. */
+.notation-top-tools{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;padding:6px 12px}
+.notation-top-tools>.measure-controls{display:contents}
+.notation-control-group,.notation-top-tools>.staff-picker{display:flex;flex-direction:column;gap:5px;max-width:100%;min-width:0;margin:0;padding:8px;border:1px solid var(--line);border-radius:var(--app-corner-radius,4px);background:var(--panel);overflow:visible;white-space:normal}
+.notation-group-label{color:var(--muted);font-size:calc(11px * var(--font-scale,1));font-weight:var(--app-font-weight,400);line-height:1.4}
+.notation-group-buttons{display:flex;flex-wrap:wrap;gap:4px;min-width:0}
+.notation-tool-button,.measure-controls .notation-tool-button{display:inline-flex;align-items:center;justify-content:center;gap:6px;max-width:100%;min-height:44px;padding:6px 9px;border:1px solid transparent;border-radius:var(--app-corner-radius,4px);background:transparent;color:var(--ink);font-family:NotationTheme,sans-serif;font-size:calc(12px * var(--font-scale,1));font-weight:var(--app-font-weight,400);line-height:1.4;text-align:start;white-space:normal}
+.notation-tool-icon{width:24px;height:24px;flex:0 0 24px}
+.notation-tool-button:hover{background:color-mix(in srgb,var(--accent) 7%,var(--panel))}
+.notation-tool-button.is-active,.measure-controls .notation-tool-button.is-active{background:color-mix(in srgb,var(--accent) 12%,var(--panel));color:var(--accent);border-color:var(--accent)}
+.measure-tools summary{display:flex;align-items:center;gap:8px;min-height:44px;list-style:none}
+.measure-tools summary::-webkit-details-marker{display:none}
+.measure-tools summary>.notation-measure-badge{margin-inline-start:auto;min-width:25px;padding:2px 6px;border-radius:var(--app-corner-radius,4px);background:color-mix(in srgb,var(--accent) 10%,var(--panel));color:var(--accent);text-align:center}
+.measure-tools summary>svg:last-child{width:16px;height:16px;flex:0 0 16px;transition:transform .15s ease}
+.measure-tools[open] summary>svg:last-child{transform:rotate(180deg)}
+.measure-tools[open] summary{border-bottom:1px solid var(--line)}
+@media(max-width:480px){.notation-top-tools{gap:6px;padding-inline:4px}.notation-control-group,.notation-top-tools>.staff-picker{flex:1 1 145px;padding:6px}.notation-group-buttons>.notation-tool-button{flex:1 1 auto;padding-inline:6px}.measure-tools{margin-inline:4px}}
