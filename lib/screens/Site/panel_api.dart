@@ -2,6 +2,8 @@ import 'dart:async';
 import 'chat_cache.dart';
 import 'dart:convert';
 import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import '../Social/social_api.dart';
@@ -29,7 +31,7 @@ class PanelApi {
     'Accept': 'application/json',
     'Accept-Language': SocialApi.locale,
     'X-Sornaz-Panel-Forms': '2',
-    'X-Sornaz-Panel-Features': '3',
+    'X-Sornaz-Panel-Features': '4',
     'Cookie': ?_sessionCookie,
   };
   // Session-only cache: no background revalidation or automatic retry.
@@ -49,7 +51,7 @@ class PanelApi {
     final sorted = Map.fromEntries(
       (query ?? {}).entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
     );
-    return 'panel-v3:${SocialApi.locale}:${uri(path, sorted)}';
+    return 'panel-v4:${SocialApi.locale}:${uri(path, sorted)}';
   }
 
   Future<Json> refresh(String path, [Map<String, String>? query]) {
@@ -65,6 +67,7 @@ class PanelApi {
 
   Future<Json?> saved(String path, [Map<String, String>? query]) async {
     checkAccount();
+    if (path.startsWith('/database-management/')) return null;
     final value = await ChatCache.read(token, _key(path, query));
     checkAccount();
     if (value is! Map) return null;
@@ -80,6 +83,9 @@ class PanelApi {
   }
 
   Future<Json> get(String path, [Map<String, String>? query]) async {
+    if (path.startsWith('/database-management/')) {
+      return sensitiveGet(path, query);
+    }
     checkAccount();
     final key = _key(path, query);
     final cached = _cache[key];
@@ -236,6 +242,9 @@ class PanelApi {
     Map<String, String> params,
     String filename,
   ) async {
+    if (section == 'database-management') {
+      return downloadDatabase(action, params, filename);
+    }
     checkAccount();
     final request = http.Request('GET', uri('/$section/$action', params))
       ..followRedirects = false
@@ -256,6 +265,136 @@ class PanelApi {
         (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
       await File(path).writeAsBytes(response.bodyBytes);
     }
+  }
+
+  /// Database records never enter the session or persistent offline cache.
+  Future<Json> sensitiveGet(String path, [Map<String, String>? query]) async {
+    checkAccount();
+    final request = http.Request('GET', uri(path, query))
+      ..followRedirects = false
+      ..headers.addAll({...headers, 'Cache-Control': 'no-store'});
+    final response = await http.Response.fromStream(
+      await client.send(request).timeout(const Duration(seconds: 30)),
+    );
+    checkAccount();
+    final status = privateErrorStatus(response.body, response.statusCode);
+    if ([401, 403].contains(status))
+      throw SocialException('دسترسی لازم برای این بخش را ندارید.', status);
+    return decode(response);
+  }
+
+  /// Stream SQL to a private temporary file rather than buffering a database.
+  Future<void> downloadDatabase(
+    String action,
+    Map<String, String> params,
+    String filename,
+  ) async {
+    checkAccount();
+    final request =
+        http.Request('GET', uri('/database-management/$action', params))
+          ..followRedirects = false
+          ..headers.addAll({
+            ...headers,
+            'Accept': 'application/sql',
+            'Cache-Control': 'no-store',
+          });
+    final response = await client
+        .send(request)
+        .timeout(const Duration(minutes: 2));
+    Directory? folder;
+    IOSink? output;
+    var handled = false;
+    try {
+      checkAccount();
+      final contentType =
+          response.headers['content-type']
+              ?.split(';')
+              .first
+              .trim()
+              .toLowerCase() ??
+          '';
+      if (response.statusCode != 200 ||
+          ![
+            'application/sql',
+            'application/octet-stream',
+            'text/plain',
+            'text/x-sql',
+          ].contains(contentType)) {
+        handled = true;
+        var status = response.statusCode;
+        if (contentType == 'application/json') {
+          final bytes = <int>[];
+          await for (final chunk in response.stream.timeout(
+            const Duration(seconds: 30),
+          )) {
+            bytes.addAll(chunk.take(65536 - bytes.length));
+            if (bytes.length >= 65536) break;
+          }
+          status = privateErrorStatus(
+            utf8.decode(bytes, allowMalformed: true),
+            status,
+          );
+        } else {
+          await response.stream.listen((_) {}).cancel();
+        }
+        throw SocialException('دریافت فایل انجام نشد.', status);
+      }
+      final exportFolder = await (await getTemporaryDirectory()).createTemp(
+        'sornaz-db-',
+      );
+      folder = exportFolder;
+      final safe = filename.replaceAll(RegExp(r'[/\\<>:"|?*]'), '_');
+      final file = File(
+        '${exportFolder.path}/${safe.endsWith('.sql') ? safe : '$safe.sql'}',
+      );
+      output = file.openWrite();
+      handled = true;
+      await for (final chunk in response.stream.timeout(
+        const Duration(minutes: 2),
+      )) {
+        checkAccount();
+        output.add(chunk);
+        await output.flush();
+      }
+      await output.flush();
+      await output.close();
+      output = null;
+      checkAccount();
+      if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+        final target = await FilePicker.platform.saveFile(
+          fileName: file.uri.pathSegments.last,
+        );
+        checkAccount();
+        if (target != null) await file.copy(target);
+      } else {
+        await Share.shareXFiles([
+          XFile(file.path, mimeType: 'application/sql'),
+        ]);
+      }
+    } finally {
+      try {
+        await output?.close();
+      } finally {
+        try {
+          if (!handled) await response.stream.listen((_) {}).cancel();
+        } finally {
+          if (folder != null && await folder.exists())
+            await folder.delete(recursive: true);
+        }
+      }
+    }
+  }
+
+  static int privateErrorStatus(String body, int fallback) {
+    try {
+      final value = jsonDecode(body);
+      if (value is Map)
+        for (final item in [value, if (value['data'] is Map) value['data']]) {
+          final status = int.tryParse('${item['status'] ?? item['code']}');
+          if ([401, 403].contains(status)) return status!;
+        }
+    } catch (_) {}
+    return fallback;
   }
 
   static Json decode(http.Response response) {

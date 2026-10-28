@@ -80,7 +80,10 @@ bool panelFieldRequired(Json field, Json data) =>
         panelConditionsMatch(field['requiredWhen'], data);
 
 Map<String, String> panelSelectOptions(Json field, Json data) {
-  final config = optionalObject(field['options']);
+  final localized = SocialApi.locale.startsWith('en')
+      ? field['optionsEn']
+      : null;
+  final config = optionalObject(localized ?? field['options']);
   if (config['sources'] is List) {
     return {
       for (final source in _rows(config['sources']))
@@ -206,7 +209,7 @@ Map<String, String> panelSelectOptions(Json field, Json data) {
         allowed != null && !allowed.contains('$id'))
       continue;
     options['${config['prefix'] ?? ''}$id'] =
-        '${config['label'] == null ? item['title'] ?? item['label'] ?? panelTitle(item) : panelValue(item, '${config['label']}') ?? panelTitle(item)}';
+        '${config['label'] == null ? item['title'] ?? item['label'] ?? panelTitle(item) : panelValue(item, '${SocialApi.locale.startsWith('en') ? config['labelEn'] ?? config['label'] : config['label']}') ?? panelTitle(item)}';
   }
   if (config['source'] == null) {
     for (final entry in config.entries) options[entry.key] = '${entry.value}';
@@ -224,6 +227,14 @@ Json panelInitialValues(
   final values = <String, dynamic>{...initial};
   for (final field in fields) {
     final key = '${field['key']}';
+    if (field['csv'] == true && values[key] is String) {
+      values[key] = (values[key] as String)
+          .split(RegExp('[,،]'))
+          .map((item) => item.trim())
+          .where((item) => item.isNotEmpty)
+          .map((item) => int.tryParse(item) ?? item)
+          .toList();
+    }
     final forced = optionalObject(field['valueWhen']);
     if (forced.isNotEmpty &&
         panelConditionsMatch(
@@ -380,9 +391,11 @@ String? panelInvalidField(List<Json> fields, Json values, Json data) {
             '${panelValue(context, '${field['maxItemsFrom'] ?? ''}')}',
           );
       if (max != null && (value as List).length > max) return key;
-      if ((value as List).any(
-        (item) => !options.containsKey('${item is Map ? item['id'] : item}'),
-      ))
+      if (field['preserveUnknown'] != true &&
+          (value as List).any(
+            (item) =>
+                !options.containsKey('${item is Map ? item['id'] : item}'),
+          ))
         return key;
     }
     if (type == 'object') {
@@ -441,6 +454,18 @@ Json panelDialogPayload(
     return panelDialogPayload('students', 'create', values, data);
   }
   final payload = <String, dynamic>{...values};
+  if (section == 'posts') {
+    for (final key in ['categories', 'related_posts_id']) {
+      if (payload[key] is List) payload[key] = (payload[key] as List).join(',');
+    }
+    payload.remove('coverFile');
+    if (operation != 'metadata' &&
+        optionalObject(data['record']).containsKey('visibility_user_id')) {
+      payload['visibility_user_id'] = optionalObject(
+        data['record'],
+      )['visibility_user_id'];
+    }
+  }
   if (section == 'terms' && operation == 'update') {
     return {
       'metadataOnly': true,

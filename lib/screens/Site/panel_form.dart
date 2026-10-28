@@ -4,6 +4,7 @@ import 'panel_ui.dart';
 import 'panel_caption.dart';
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' show max;
 import 'package:sornaz/helpers/app_typography.dart';
 
 import 'package:sornaz/components/app_top_bar_direction.dart';
@@ -47,6 +48,8 @@ class PanelFormPage extends StatefulWidget {
     this.suggestedTitle,
     this.bottomSubmitLabel,
     this.termAssignment = false,
+    this.embedded = false,
+    this.onCancel,
   });
   final Future<void> Function(PanelFormResult result)? onSubmit;
   final Future<void> Function(PanelFormResult result)? onRequestCode;
@@ -57,6 +60,8 @@ class PanelFormPage extends StatefulWidget {
   final bool settingsCheckboxes, dialog;
   final bool declaredOnly;
   final bool termAssignment;
+  final bool embedded;
+  final VoidCallback? onCancel;
   final List<Json> submitButtons;
   final String title;
   final String? bottomSubmitLabel;
@@ -73,6 +78,7 @@ class _PanelFormPageState extends State<PanelFormPage> {
     'addresses' => 1,
     'studentSchedule' => 2,
     'classroomId' => 3,
+    'installmentCount' || 'discountId' => 4,
     _ => 0,
   };
 
@@ -118,6 +124,23 @@ class _PanelFormPageState extends State<PanelFormPage> {
         {
           ...field,
           'visibleWhen': {'_form._existingUnder18': true},
+        }
+      else if (widget.termAssignment &&
+          ['installmentCount', 'discountId'].contains(field['key']))
+        {
+          ...field,
+          if (field['key'] == 'installmentCount') ...{
+            'min': 1,
+            'max': max(
+              2,
+              int.tryParse(
+                    '${optionalObject(liveData['record'])['sessionCount'] ?? 1}',
+                  ) ??
+                  1,
+            ),
+            'step': 1,
+          },
+          if (optionalObject(liveData['record'])['cost'] == 0) 'readOnly': true,
         }
       else
         field,
@@ -446,7 +469,7 @@ class _PanelFormPageState extends State<PanelFormPage> {
         await widget.onSubmit!(result);
         if (mounted) {
           handedOff = true;
-          Navigator.pop(context, result);
+          if (!widget.embedded) Navigator.pop(context, result);
         }
       } catch (e) {
         if (mounted) socialError(context, e);
@@ -463,8 +486,10 @@ class _PanelFormPageState extends State<PanelFormPage> {
       child: Form(
         key: form,
         child: ListView(
-          shrinkWrap: widget.dialog,
-          physics: widget.dialog ? const NeverScrollableScrollPhysics() : null,
+          shrinkWrap: widget.dialog || widget.embedded,
+          physics: widget.dialog || widget.embedded
+              ? const NeverScrollableScrollPhysics()
+              : null,
           padding: widget.settingsCheckboxes
               ? EdgeInsets.zero
               : const EdgeInsets.all(16),
@@ -472,7 +497,7 @@ class _PanelFormPageState extends State<PanelFormPage> {
             if (widget.termAssignment) ...[
               Row(
                 children: [
-                  for (var index = 0; index < 4; index++)
+                  for (var index = 0; index < 5; index++)
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.all(2),
@@ -518,12 +543,14 @@ class _PanelFormPageState extends State<PanelFormPage> {
                     'آدرس هنرجو',
                     'تاریخ جلسات ترم',
                     'کلاس برگزاری',
+                    'اقساط و تخفیف',
                   ][assignmentStep],
                   [
                     'Select student',
                     'Student address',
                     'Session dates',
                     'Classroom',
+                    'Payment options',
                   ][assignmentStep],
                 ),
               ),
@@ -731,94 +758,89 @@ class _PanelFormPageState extends State<PanelFormPage> {
         ),
       ),
     );
-    if (widget.dialog)
-      return PanelModal(
-        title: widget.title,
-        busy: submitting,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            content,
-            const SizedBox(height: 12),
-            if (widget.onRequestCode != null &&
-                existingUser == null &&
-                (values['type'] == null ||
-                    ['manager', 'receptionist'].contains(values['type'])))
-              OutlinedButton(
-                onPressed: submitting ? null : () => submit(requestCode: true),
-                child: Text(
-                  socialText(
-                    context,
-                    'ارسال کد تأیید',
-                    'Send verification code',
-                  ),
-                ),
+    if (widget.dialog || widget.embedded) {
+      final body = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          content,
+          const SizedBox(height: 12),
+          if (widget.onRequestCode != null &&
+              existingUser == null &&
+              (values['type'] == null ||
+                  ['manager', 'receptionist'].contains(values['type'])))
+            OutlinedButton(
+              onPressed: submitting ? null : () => submit(requestCode: true),
+              child: Text(
+                socialText(context, 'ارسال کد تأیید', 'Send verification code'),
               ),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.grey,
-                    ),
-                    onPressed: submitting ? null : () => Navigator.pop(context),
-                    child: Text(socialText(context, 'انصراف', 'Cancel')),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                if (widget.termAssignment && assignmentStep > 0)
-                  TextButton(
-                    onPressed: submitting
-                        ? null
-                        : () => setState(() => assignmentStep--),
-                    child: Text(socialText(context, 'قبلی', 'Previous')),
-                  ),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: submitting
-                        ? null
-                        : widget.termAssignment && assignmentStep < 3
-                        ? nextAssignmentStep
-                        : () => submit(
-                            overrides: widget.submitButtons.isEmpty
-                                ? {}
-                                : optionalObject(
-                                    widget.submitButtons.first['values'],
-                                  ),
-                          ),
-                    child: Text(
-                      widget.termAssignment && assignmentStep < 3
-                          ? socialText(context, 'بعدی', 'Next')
-                          : widget.submitButtons.isEmpty
-                          ? socialText(context, 'ذخیره تغییرات', 'Save changes')
-                          : socialText(
-                              context,
-                              '${widget.submitButtons.first['label']}',
-                              '${widget.submitButtons.first['en'] ?? widget.submitButtons.first['label']}',
-                            ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-              ],
             ),
-            for (final button in widget.submitButtons.skip(1))
-              TextButton(
-                onPressed: submitting
-                    ? null
-                    : () => submit(overrides: optionalObject(button['values'])),
-                child: Text(
-                  socialText(
-                    context,
-                    '${button['label']}',
-                    '${button['en'] ?? button['label']}',
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(foregroundColor: Colors.grey),
+                  onPressed: submitting
+                      ? null
+                      : widget.onCancel ?? () => Navigator.pop(context),
+                  child: Text(socialText(context, 'انصراف', 'Cancel')),
+                ),
+              ),
+              const SizedBox(width: 12),
+              if (widget.termAssignment && assignmentStep > 0)
+                TextButton(
+                  onPressed: submitting
+                      ? null
+                      : () => setState(() => assignmentStep--),
+                  child: Text(socialText(context, 'قبلی', 'Previous')),
+                ),
+              Expanded(
+                child: FilledButton(
+                  onPressed: submitting
+                      ? null
+                      : widget.termAssignment && assignmentStep < 4
+                      ? nextAssignmentStep
+                      : () => submit(
+                          overrides: widget.submitButtons.isEmpty
+                              ? {}
+                              : optionalObject(
+                                  widget.submitButtons.first['values'],
+                                ),
+                        ),
+                  child: Text(
+                    widget.termAssignment && assignmentStep < 4
+                        ? socialText(context, 'بعدی', 'Next')
+                        : widget.submitButtons.isEmpty
+                        ? socialText(context, 'ذخیره تغییرات', 'Save changes')
+                        : socialText(
+                            context,
+                            '${widget.submitButtons.first['label']}',
+                            '${widget.submitButtons.first['en'] ?? widget.submitButtons.first['label']}',
+                          ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
-          ],
-        ),
+            ],
+          ),
+          for (final button in widget.submitButtons.skip(1))
+            TextButton(
+              onPressed: submitting
+                  ? null
+                  : () => submit(overrides: optionalObject(button['values'])),
+              child: Text(
+                socialText(
+                  context,
+                  '${button['label']}',
+                  '${button['en'] ?? button['label']}',
+                ),
+              ),
+            ),
+        ],
       );
+      if (widget.embedded) return body;
+      return PanelModal(title: widget.title, busy: submitting, child: body);
+    }
     return PanelScaffold(
       appBar: AppTopBarDirection(
         child: AppBar(
@@ -886,6 +908,7 @@ class PanelField extends StatefulWidget {
 }
 
 class _PanelFieldState extends State<PanelField> {
+  PlatformFile? pickedImage;
   late final text = TextEditingController(
     text: widget.value == null ? '' : '${widget.value}',
   );
@@ -988,7 +1011,9 @@ class _PanelFieldState extends State<PanelField> {
       );
     }
     if (type == 'file') {
-      return OutlinedButton.icon(
+      final preview =
+          '${panelValue(widget.data, '_form.${field['previewUrlKey']}') ?? panelValue(widget.data, 'record.${field['previewUrlKey']}') ?? ''}';
+      final button = OutlinedButton.icon(
         icon: const Icon(Icons.attach_file),
         label: Text(widget.value == null ? label : '$label: ${widget.value}'),
         onPressed: () async {
@@ -1001,11 +1026,51 @@ class _PanelFieldState extends State<PanelField> {
             if (file != null && mounted) widget.onFile?.call(file);
             return;
           }
-          final result = await FilePicker.platform.pickFiles(withData: true);
+          final extensions = (field['extensions'] as List? ?? [])
+              .map((value) => '$value')
+              .toList();
+          final result = await FilePicker.platform.pickFiles(
+            withData: true,
+            type: extensions.isEmpty ? FileType.any : FileType.custom,
+            allowedExtensions: extensions.isEmpty ? null : extensions,
+          );
           if (result != null && mounted) {
+            if (field['previewUrlKey'] != null)
+              setState(() => pickedImage = result.files.single);
             widget.onFile?.call(result.files.single);
           }
         },
+      );
+      if (field['previewUrlKey'] == null) return button;
+      final uri = Uri.tryParse(preview);
+      final base = Uri.parse(SocialApi.base);
+      final image = uri == null ? null : base.resolveUri(uri);
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (pickedImage?.bytes != null)
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: Image.memory(pickedImage!.bytes!, fit: BoxFit.contain),
+            )
+          else if (preview.isNotEmpty &&
+              image != null &&
+              image.origin == base.origin)
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: Image.network(
+                image.toString(),
+                fit: BoxFit.contain,
+                headers: {
+                  'Authorization':
+                      'Bearer ${context.read<AuthSession?>()?.token ?? ''}',
+                },
+                errorBuilder: (_, _, _) =>
+                    const Icon(Icons.broken_image_outlined),
+              ),
+            ),
+          button,
+        ],
       );
     }
     if (type == 'select' || type == 'multi') {
@@ -1018,6 +1083,18 @@ class _PanelFieldState extends State<PanelField> {
         final selected = (widget.value is List ? widget.value as List : [])
             .map((v) => v is Map ? '${v['id']}' : '$v')
             .toSet();
+        if (field['preserveUnknown'] == true)
+          for (final key in selected)
+            options.putIfAbsent(
+              key,
+              () => int.tryParse(key) == null
+                  ? key
+                  : socialText(
+                      context,
+                      'مورد قبلی در دسترس نیست',
+                      'Previously selected item unavailable',
+                    ),
+            );
         if (field['key'] == 'userIds' && source is List) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1290,8 +1367,8 @@ class _PanelFieldState extends State<PanelField> {
       controller: text,
       obscureText: type == 'password',
       maxLength: field['maxLength'] as int?,
-      minLines: type == 'multiline' ? 3 : 1,
-      maxLines: type == 'multiline' ? 8 : 1,
+      minLines: type == 'multiline' ? (field['minLines'] as int? ?? 3) : 1,
+      maxLines: type == 'multiline' ? (field['maxLines'] as int? ?? 8) : 1,
       readOnly: date || time || field['readOnly'] == true,
       enabled: field['readOnly'] != true,
       keyboardType: type == 'number'

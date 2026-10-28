@@ -1,6 +1,8 @@
 # Miscellaneous
 *.class
 *.log
+# JVM heap dumps contain process memory and are not source files.
+*.hprof
 *.pyc
 *.swp
 .DS_Store

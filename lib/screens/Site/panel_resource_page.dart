@@ -49,8 +49,10 @@ import 'panel_account.dart';
 import 'panel_insight_charts.dart';
 import 'panel_classroom_heatmap.dart';
 import 'panel_term_status.dart';
+import 'panel_database.dart';
 import 'site_api.dart';
 import 'package:sornaz/components/media_dialogs.dart';
+part 'panel_posts.dart';
 
 String panelLabel(BuildContext context, Json item) =>
     Localizations.localeOf(context).languageCode == 'fa'
@@ -130,6 +132,8 @@ class _PanelTabsState extends State<PanelResourcePage>
 
   @override
   Widget build(BuildContext context) {
+    if (widget.section['key'] == 'database-management')
+      return PanelDatabasePage(api: widget.api);
     final tabs = pageTabs;
     final initial = tabs.indexWhere(
       (tab) => tab['key'] == widget.section['key'],
@@ -241,6 +245,15 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
   );
 
   Json data = {}, filters = {};
+  String? expandedPostId;
+  Json? expandedPost, expandedPostData;
+  Object? expandedPostError;
+  int postRequest = 0;
+  final postCoverUploads = Expando<Json>();
+  void updatePostUi(VoidCallback update) {
+    if (mounted) setState(update);
+  }
+
   bool loading = true, busy = false;
   Object? error;
   String query = '';
@@ -317,6 +330,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
     if (!mounted ||
         (auth != null && auth.token != widget.api.token) ||
         busy ||
+        expandedPostId != null ||
         activeLoads > 0 ||
         selected.isNotEmpty ||
         loading ||
@@ -400,12 +414,18 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
       }
       for (final option
           in widget.section['optionActions'] as List? ?? const []) {
-        value.addAll(
-          await (background || refresh ? widget.api.live : widget.api.get)(
-            '/$section/$option',
-            widget.params,
-          ),
-        );
+        final response = await (background || refresh
+            ? widget.api.live
+            : widget.api.get)('/$section/$option', widget.params);
+        final resultKey = optionalObject(actions['$option'])['optionResultKey'];
+        if (resultKey is String)
+          value[resultKey] =
+              response['items'] ??
+              response[resultKey] ??
+              response['posts'] ??
+              [];
+        else
+          value.addAll(response);
       }
       value['branchContext'] =
           value['branchContext'] == true ||
@@ -892,244 +912,256 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
     Json? submittedResponse;
     formData.addAll({'record': record, 'operation': key});
     if (fields.isNotEmpty) {
-      result = await showDialog<PanelFormResult>(
-        context: context,
-        builder: (_) => PanelFormPage(
-          dialog: true,
-          termAssignment: section == 'terms' && key == 'assign-student',
-          lookupMemberUser:
-              ((['students', 'members'].contains(section) && key == 'create') ||
-                  (section == 'terms' && key == 'assign-student'))
-              ? (values, query) async {
-                  final course = objects(formData['courses'] ?? [])
-                      .where((row) => '${row['id']}' == '${record['courseId']}')
-                      .firstOrNull;
-                  return widget.api.act(
-                    section == 'members' ? 'members' : 'students',
-                    'user-lookup',
-                    values: {
-                      'organizationUserId':
-                          values['organizationUserId'] ??
-                          course?['organizationUserId'],
-                      'query': query,
-                    },
-                  );
-                }
-              : null,
-          previewStudentSchedule:
-              fields.any((field) => field['key'] == 'studentSchedule')
-              ? (values) => widget.api.act(
-                  'terms',
-                  'schedule-preview',
-                  params: {'id': '${values['termId'] ?? record['id']}'},
+      final buildForm = (BuildContext _) => PanelFormPage(
+        dialog: section != 'posts',
+        termAssignment: section == 'terms' && key == 'assign-student',
+        lookupMemberUser:
+            ((['students', 'members'].contains(section) && key == 'create') ||
+                (section == 'terms' && key == 'assign-student'))
+            ? (values, query) async {
+                final course = objects(formData['courses'] ?? [])
+                    .where((row) => '${row['id']}' == '${record['courseId']}')
+                    .firstOrNull;
+                return widget.api.act(
+                  section == 'members' ? 'members' : 'students',
+                  'user-lookup',
                   values: {
-                    ...optionalObject(values['studentSchedule']),
-                    'classroomId': section == 'terms' && key == 'assign-student'
-                        ? values['classroomId'] ?? 0
-                        : optionalObject(
-                                values['studentSchedule'],
-                              )['classroomId'] ??
-                              0,
+                    'organizationUserId':
+                        values['organizationUserId'] ??
+                        course?['organizationUserId'],
+                    'query': query,
                   },
+                );
+              }
+            : null,
+        previewStudentSchedule:
+            fields.any((field) => field['key'] == 'studentSchedule')
+            ? (values) => widget.api.act(
+                'terms',
+                'schedule-preview',
+                params: {'id': '${values['termId'] ?? record['id']}'},
+                values: {
+                  ...optionalObject(values['studentSchedule']),
+                  'classroomId': section == 'terms' && key == 'assign-student'
+                      ? values['classroomId'] ?? 0
+                      : optionalObject(
+                              values['studentSchedule'],
+                            )['classroomId'] ??
+                            0,
+                },
+              )
+            : null,
+        loadOptions:
+            section == 'terms' ||
+                fields.any(
+                  (field) => RegExp(
+                    r'organization|branch|academy|owner',
+                    caseSensitive: false,
+                  ).hasMatch(jsonEncode(field)),
                 )
-              : null,
-          loadOptions:
-              section == 'terms' ||
-                  fields.any(
-                    (field) => RegExp(
-                      r'organization|branch|academy|owner',
-                      caseSensitive: false,
-                    ).hasMatch(jsonEncode(field)),
-                  )
-              ? () async {
-                  final latest = await widget.api.live(
-                    '/$section/list',
-                    widget.params,
+            ? () async {
+                final latest = await widget.api.live(
+                  '/$section/list',
+                  widget.params,
+                );
+                for (final option
+                    in widget.section['optionActions'] as List? ?? const []) {
+                  latest.addAll(
+                    await widget.api.live('/$section/$option', widget.params),
                   );
-                  for (final option
-                      in widget.section['optionActions'] as List? ?? const []) {
-                    latest.addAll(
-                      await widget.api.live('/$section/$option', widget.params),
-                    );
-                  }
-                  if (section == 'terms') {
-                    latest.addAll(
-                      panelTermOptionData(
-                        latest,
-                        await widget.api.live('/courses/list'),
-                      ),
-                    );
-                  }
-                  if (section == 'terms' && key == 'assign-student') {
-                    latest.addAll(await widget.api.live('/students/options'));
-                  }
-                  // Submit and availability callbacks must use the same catalogs
-                  // as the open form, including newly created organizations.
-                  formData.addAll(latest);
-                  return {
-                    for (final name in [
-                      'organizations',
-                      'branches',
-                      'academies',
-                      'owners',
-                      'classrooms',
-                      'courses',
-                      'members',
-                      'staff_catalog',
-                      'terms',
-                      'currencies',
-                      'discounts',
-                      'permissions',
-                    ])
-                      if (latest.containsKey(name)) name: latest[name],
-                  };
                 }
-              : null,
-          declaredOnly:
-              action['formContractVersion'] == 2 ||
-              action['strictFields'] == true,
-          title: gallerySection && key == 'create'
-              ? panelGalleryAddTitle(
-                  widget.params['collection'] ?? 'gallery',
-                  fa: Localizations.localeOf(context).languageCode == 'fa',
-                )
-              : rowActionTitle(key, record),
-          suggestedTitle: gallerySection && key == 'create'
-              ? (values) => panelGallerySuggestedTitle(values, {
-                  ...data,
-                  '_ownerName': context.read<AuthSession?>()?.user?.fullName,
-                }, fa: Localizations.localeOf(context).languageCode == 'fa')
-              : null,
-          submitButtons: objects(action['submitButtons'] ?? []),
-          loadBatchTimes: section == 'terms' && key == 'batch'
-              ? (values) async {
-                  final organization = objects(formData['organizations'] ?? [])
-                      .where(
-                        (row) =>
-                            '${row['user_id']}' ==
-                            '${values['organizationUserId']}',
-                      )
-                      .firstOrNull;
-                  if (organization == null || values['weekday'] == null) {
-                    return {};
-                  }
-                  final room = objects(formData['classrooms'] ?? [])
-                      .where(
-                        (row) => '${row['id']}' == '${values['classroomId']}',
-                      )
-                      .firstOrNull;
-                  final result = await widget.api.get('/terms/available-times', {
-                    'branch':
-                        '${room?['branchId'] ?? (organization['kind'] == 'branch' ? organization['id'] : 0)}',
-                    'academy':
-                        '${organization['kind'] == 'academy' ? organization['id'] : organization['academyId'] ?? 0}',
-                    'weekday': '${values['weekday']}',
-                    'duration': '5',
-                  });
-                  return result;
-                }
-              : null,
-          onRequestCode:
-              section == 'members' &&
-                  key == 'create' &&
-                  actions.containsKey('registration-otp')
-              ? (result) async {
-                  await widget.api.act(
-                    section,
-                    'registration-otp',
-                    values: panelDialogPayload(
-                      section,
-                      key,
-                      result.values,
-                      formData,
+                if (section == 'terms') {
+                  latest.addAll(
+                    panelTermOptionData(
+                      latest,
+                      await widget.api.live('/courses/list'),
                     ),
                   );
-                  if (mounted)
-                    ScaffoldMessenger.of(this.context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          socialText(
-                            this.context,
-                            'کد ارسال شد؛ کد را وارد و ثبت‌نام را نهایی کنید.',
-                            'Code sent. Enter it to complete registration.',
-                          ),
-                        ),
-                      ),
-                    );
                 }
-              : null,
-          onSubmit:
-              action['formContractVersion'] == 2 && action['method'] == 'POST'
-              ? (result) async {
-                  submittedResponse = await widget.api.act(
+                if (section == 'terms' && key == 'assign-student') {
+                  latest.addAll(await widget.api.live('/students/options'));
+                }
+                // Submit and availability callbacks must use the same catalogs
+                // as the open form, including newly created organizations.
+                formData.addAll(latest);
+                return {
+                  for (final name in [
+                    'organizations',
+                    'branches',
+                    'academies',
+                    'owners',
+                    'classrooms',
+                    'courses',
+                    'members',
+                    'staff_catalog',
+                    'terms',
+                    'currencies',
+                    'discounts',
+                    'permissions',
+                  ])
+                    if (latest.containsKey(name)) name: latest[name],
+                };
+              }
+            : null,
+        declaredOnly:
+            action['formContractVersion'] == 2 ||
+            action['strictFields'] == true,
+        title: gallerySection && key == 'create'
+            ? panelGalleryAddTitle(
+                widget.params['collection'] ?? 'gallery',
+                fa: Localizations.localeOf(context).languageCode == 'fa',
+              )
+            : rowActionTitle(key, record),
+        suggestedTitle: gallerySection && key == 'create'
+            ? (values) => panelGallerySuggestedTitle(values, {
+                ...data,
+                '_ownerName': context.read<AuthSession?>()?.user?.fullName,
+              }, fa: Localizations.localeOf(context).languageCode == 'fa')
+            : null,
+        submitButtons: objects(action['submitButtons'] ?? []),
+        loadBatchTimes: section == 'terms' && key == 'batch'
+            ? (values) async {
+                final organization = objects(formData['organizations'] ?? [])
+                    .where(
+                      (row) =>
+                          '${row['user_id']}' ==
+                          '${values['organizationUserId']}',
+                    )
+                    .firstOrNull;
+                if (organization == null || values['weekday'] == null) {
+                  return {};
+                }
+                final room = objects(formData['classrooms'] ?? [])
+                    .where(
+                      (row) => '${row['id']}' == '${values['classroomId']}',
+                    )
+                    .firstOrNull;
+                final result = await widget.api.get('/terms/available-times', {
+                  'branch':
+                      '${room?['branchId'] ?? (organization['kind'] == 'branch' ? organization['id'] : 0)}',
+                  'academy':
+                      '${organization['kind'] == 'academy' ? organization['id'] : organization['academyId'] ?? 0}',
+                  'weekday': '${values['weekday']}',
+                  'duration': '5',
+                });
+                return result;
+              }
+            : null,
+        onRequestCode:
+            section == 'members' &&
+                key == 'create' &&
+                actions.containsKey('registration-otp')
+            ? (result) async {
+                await widget.api.act(
+                  section,
+                  'registration-otp',
+                  values: panelDialogPayload(
                     section,
                     key,
-                    values: panelDialogPayload(
-                      section,
-                      key,
-                      result.values,
-                      formData,
+                    result.values,
+                    formData,
+                  ),
+                );
+                if (mounted)
+                  ScaffoldMessenger.of(this.context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        socialText(
+                          this.context,
+                          'کد ارسال شد؛ کد را وارد و ثبت‌نام را نهایی کنید.',
+                          'Code sent. Enter it to complete registration.',
+                        ),
+                      ),
                     ),
-                    params: params,
-                    files: result.files,
                   );
-                }
-              : null,
-          fields: [
-            for (final field in fields)
-              if (['finance', 'my-finance'].contains(section) &&
-                  [
-                    'status',
-                    'statusCode',
-                    'status_code',
-                  ].contains(field['key']))
-                panelInvoiceStatusField(field)
-              else if (gallerySection && field['type'] == 'file')
-                {
-                  ...field,
-                  'mediaPicker': true,
-                  'imagesOnly': [
-                    'cover',
-                    'logo',
-                  ].contains(widget.params['collection']),
-                }
-              else if (gallerySection && field['key'] == 'collection')
-                {
-                  ...field,
-                  'label': 'نوع رسانه',
-                  'en': 'Media type',
-                  'readOnly': key == 'create',
-                }
-              else if (field['key'] == 'founded' &&
-                  optionalObject(data['profile'])['accountType'] == 'human')
-                {...field, 'label': 'تاریخ تولد', 'en': 'Date of birth'}
-              else
-                field,
-          ],
-          data: {
-            ...formData,
-            'operation': key,
-            'record': record,
-            if (section == 'polls') 'options': record['options'],
-            if (section == 'schedules') 'attendance': record['attendance'],
-            if (section == 'schedules')
-              'canWriteTeacherNote': record['canWriteTeacherNote'],
-          },
-          initial: section == 'terms' && key == 'assign-student'
-              ? {
-                  'classroomId': record['classroomId'],
-                  'organizationUserId': objects(data['courses'] ?? [])
-                      .where(
-                        (course) =>
-                            '${course['id']}' == '${record['courseId']}',
-                      )
-                      .firstOrNull?['organizationUserId'],
-                }
-              : key == 'create' && !gallerySection
-              ? {...widget.params}
-              : initial,
-        ),
+              }
+            : null,
+        onSubmit:
+            action['formContractVersion'] == 2 && action['method'] == 'POST'
+            ? (result) async {
+                submittedResponse = section == 'posts'
+                    ? await submitPost(key, result, record, formData)
+                    : await widget.api.act(
+                        section,
+                        key,
+                        values: panelDialogPayload(
+                          section,
+                          key,
+                          result.values,
+                          formData,
+                        ),
+                        params: params,
+                        files: result.files,
+                      );
+              }
+            : null,
+        fields: [
+          for (final field in fields)
+            if (['finance', 'my-finance'].contains(section) &&
+                ['status', 'statusCode', 'status_code'].contains(field['key']))
+              panelInvoiceStatusField(field)
+            else if (gallerySection && field['type'] == 'file')
+              {
+                ...field,
+                'mediaPicker': true,
+                'imagesOnly': [
+                  'cover',
+                  'logo',
+                ].contains(widget.params['collection']),
+              }
+            else if (gallerySection && field['key'] == 'collection')
+              {
+                ...field,
+                'label': 'نوع رسانه',
+                'en': 'Media type',
+                'readOnly': key == 'create',
+              }
+            else if (field['key'] == 'founded' &&
+                optionalObject(data['profile'])['accountType'] == 'human')
+              {...field, 'label': 'تاریخ تولد', 'en': 'Date of birth'}
+            else
+              field,
+        ],
+        data: {
+          ...formData,
+          'operation': key,
+          'record': record,
+          if (section == 'polls') 'options': record['options'],
+          if (section == 'schedules') 'attendance': record['attendance'],
+          if (section == 'schedules')
+            'canWriteTeacherNote': record['canWriteTeacherNote'],
+        },
+        initial: section == 'terms' && key == 'assign-student'
+            ? {
+                'classroomId': record['classroomId'],
+                'termId': record['id'],
+                'installmentCount': record['cost'] == 0
+                    ? 1
+                    : record['installmentCount'] ??
+                          (objects(record['installments']).isEmpty
+                              ? 1
+                              : objects(record['installments']).length),
+                'discountId': record['cost'] == 0
+                    ? 0
+                    : record['discountId'] ?? 0,
+                'organizationUserId': objects(data['courses'] ?? [])
+                    .where(
+                      (course) => '${course['id']}' == '${record['courseId']}',
+                    )
+                    .firstOrNull?['organizationUserId'],
+              }
+            : key == 'create' && !gallerySection
+            ? {...widget.params}
+            : initial,
       );
+      result = section == 'posts'
+          ? await Navigator.of(
+              context,
+            ).push<PanelFormResult>(MaterialPageRoute(builder: buildForm))
+          : await showDialog<PanelFormResult>(
+              context: context,
+              builder: buildForm,
+            );
       if (result == null || !mounted) return;
       if (action['queryFields'] == true) {
         final visibleFields = fields.where(
@@ -1573,6 +1605,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
   }
 
   Widget recordTable(List<Json> rows, {int offset = 0}) {
+    if (section == 'posts') return postTable(rows, offset: offset);
     final contract = tableContract;
     final columns = panelTableColumns(contract, data);
     final effectiveColumns = columns.isEmpty
@@ -1713,7 +1746,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                           ),
                         for (final key in rowActions)
                           if (key == 'details' || available('$key', row))
-                            if (section == 'users')
+                            if (section == 'users' && key != 'details')
                               Padding(
                                 padding: const EdgeInsetsDirectional.only(
                                   end: 8,
@@ -1751,6 +1784,8 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                               'update',
                               'delete',
                               'usage',
+                              'preview',
+                              'metadata',
                             ].contains(key))
                               IconButton(
                                 tooltip: key == 'details'
@@ -1769,6 +1804,8 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                                   switch (key) {
                                     'details' => Icons.info_outline,
                                     'update' => Icons.edit_outlined,
+                                    'metadata' => Icons.edit_outlined,
+                                    'preview' => Icons.visibility_outlined,
                                     'delete' => Icons.delete_outline,
                                     _ => Icons.fact_check_outlined,
                                   },
@@ -2212,7 +2249,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
         )
         .toList();
     bool isAdd(MapEntry<String, dynamic> e) =>
-        ['create', 'add', 'document', 'upload'].contains(e.key) ||
+        ['create', 'add', 'document', 'upload', 'batch'].contains(e.key) ||
         '${e.value['label']}'.startsWith('افزودن');
     final additions = pageActions.where(isAdd).toList();
     final toolbar = <IconButton>[
@@ -2356,25 +2393,16 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
         hint: socialText(context, 'جستجو', 'Search'),
         onChanged: searchChanged,
         actions: [
-          if (!loading && error == null && additions.length == 1)
+          for (final addition
+              in !loading && error == null
+                  ? additions
+                  : <MapEntry<String, dynamic>>[])
             IconButton(
-              tooltip: '${additions.single.value['label']}',
-              icon: const Icon(Icons.add),
-              onPressed: busy ? null : () => perform(additions.single.key),
-            ),
-          if (!loading && error == null && additions.length > 1)
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.add),
-              tooltip: socialText(context, 'افزودن', 'Add'),
-              onSelected: perform,
-              enabled: !busy,
-              itemBuilder: (_) => [
-                for (final e in additions)
-                  PopupMenuItem(
-                    value: e.key,
-                    child: Text('${e.value['label']}'),
-                  ),
-              ],
+              tooltip: panelLabel(context, optionalObject(addition.value)),
+              icon: Icon(
+                addition.key == 'batch' ? Icons.playlist_add : Icons.add,
+              ),
+              onPressed: busy ? null : () => perform(addition.key),
             ),
           if ((!loading || section == 'schedules') && error == null)
             ...exportButtons.map(

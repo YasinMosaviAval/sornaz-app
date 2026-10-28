@@ -29,8 +29,9 @@ const galleryData = <String, dynamic>{
 class GalleryFixture extends PanelApi {
   GalleryFixture() : super('test');
   @override
-  Future<Json> get(String path, [Map<String, String>? query]) async =>
-      galleryData;
+  Future<Json> get(String path, [Map<String, String>? query]) async => {
+    ...galleryData,
+  };
 }
 
 void main() {

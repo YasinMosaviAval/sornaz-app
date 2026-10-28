@@ -235,7 +235,7 @@ class _PanelGalleryState extends State<PanelGallery> {
                           canDelete: widget.canDelete,
                           onChanged: widget.onChanged,
                           compactCard: true,
-                          detailed: true,
+                          detailed: false,
                           onView: () => view(row),
                         ),
                       ),

@@ -2,14 +2,47 @@ param(
     [string]$Flutter = 'flutter',
     [ValidateSet('android-arm', 'android-arm64', 'android-x64')]
     [string[]]$TargetPlatform = @('android-arm64'),
-    [string]$BuildNumber
+    [string]$BuildNumber,
+    [ValidateRange(1, 1024)]
+    [int]$MinimumFreeSpaceGB = 2
 )
 
 $ErrorActionPreference = 'Stop'
+$projectRoot = Split-Path $PSScriptRoot -Parent
+
+function Assert-BuildFreeSpace {
+    param([string]$Path, [string]$Purpose)
+
+    $fullPath = [IO.Path]::GetFullPath($Path)
+    $volumeRoot = [IO.Path]::GetPathRoot($fullPath)
+    try {
+        $availableBytes = ([IO.DriveInfo]::new($volumeRoot)).AvailableFreeSpace
+    } catch {
+        throw "Cannot check free disk space for $Purpose at '$fullPath'. $($_.Exception.Message)"
+    }
+    if ($availableBytes -lt ($MinimumFreeSpaceGB * 1GB)) {
+        throw ("Not enough free disk space for {0} on {1}: {2:N2} GB available; at least {3} GB required. Path: '{4}'. Free space on this volume before retrying; no files were deleted." -f $Purpose, $volumeRoot, ($availableBytes / 1GB), $MinimumFreeSpaceGB, $fullPath)
+    }
+}
+
 # Prefer this machine's transferred environment when no SDK was explicitly selected.
-$offlineActivation = Join-Path (Split-Path $PSScriptRoot -Parent) '20261022-windows-offline-kit/runtime/Activate-Offline.ps1'
-if (!$PSBoundParameters.ContainsKey('Flutter') -and (Test-Path -LiteralPath $offlineActivation)) {
-    . $offlineActivation -Project (Split-Path $PSScriptRoot -Parent)
+$offlineActivation = Join-Path $projectRoot '20261022-windows-offline-kit/runtime/Activate-Offline.ps1'
+$activateOfflineKit = !$PSBoundParameters.ContainsKey('Flutter') -and (Test-Path -LiteralPath $offlineActivation)
+if ($activateOfflineKit) {
+    $gradleCachePath = Join-Path (Split-Path $offlineActivation -Parent) 'caches/gradle'
+} elseif (![string]::IsNullOrWhiteSpace($env:GRADLE_USER_HOME)) {
+    $gradleCachePath = $env:GRADLE_USER_HOME
+    if (![IO.Path]::IsPathRooted($gradleCachePath)) {
+        $gradleCachePath = Join-Path (Join-Path $projectRoot 'android') $gradleCachePath
+    }
+} else {
+    $gradleCachePath = Join-Path $env:USERPROFILE '.gradle'
+}
+# Fail before activation, package resolution or Gradle can write to a full volume.
+Assert-BuildFreeSpace -Path $projectRoot -Purpose 'project output'
+Assert-BuildFreeSpace -Path $gradleCachePath -Purpose 'Gradle cache'
+if ($activateOfflineKit) {
+    . $offlineActivation -Project $projectRoot
 }
 $Flutter = (Get-Command $Flutter -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
 $previousOffline = $env:SORNAZ_GRADLE_OFFLINE
@@ -19,7 +52,7 @@ $previousLinux = $env:FLUTTER_LINUX
 $previousPubHost = $env:PUB_HOSTED_URL
 $previousCargoOffline = $env:CARGO_NET_OFFLINE
 $previousCargoJobs = $env:CARGO_BUILD_JOBS
-Push-Location (Split-Path $PSScriptRoot -Parent)
+Push-Location $projectRoot
 $buildWatch = [Diagnostics.Stopwatch]::StartNew()
 $buildStage = 'offline package resolution'
 try {

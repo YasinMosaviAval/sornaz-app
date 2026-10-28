@@ -267,7 +267,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('ویرایش محتوا'));
+    await tester.tap(find.byTooltip('ویرایش محتوا'));
     await tester.pumpAndSettle();
     expect(find.byType(PanelFormPage), findsOneWidget);
     expect(find.text('خوش آمدید'), findsWidgets);

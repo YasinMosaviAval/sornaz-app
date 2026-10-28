@@ -156,6 +156,7 @@ class _NativePanelState extends State<NativePanel> {
 
   IconData icon(String key) => switch (key) {
     'posts' => Icons.description_outlined,
+    'database-management' => Icons.storage_outlined,
     'post-categories' => Icons.folder_open_outlined,
     'pages' => Icons.content_copy_outlined,
     'media' => Icons.perm_media_outlined,
