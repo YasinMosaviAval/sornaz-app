@@ -34,7 +34,7 @@ void main() {
         fixture.host(
           MainTabs(
             pages: List.generate(
-              5,
+              6,
               (index) => MainTabScaffold(
                 index: index,
                 appBar: AppBar(title: Text('header $index')),
@@ -63,6 +63,10 @@ void main() {
       await tester.tap(find.byIcon(Icons.tune).first);
       await tester.pumpAndSettle();
       expect(find.text('page 3'), findsOneWidget);
+      await tester.tap(find.byIcon(Icons.quiz_outlined).first);
+      await tester.pumpAndSettle();
+      expect(find.text('page 5'), findsOneWidget);
+      expect(tester.getRect(find.byType(BottomNavBarWidget)), barRect);
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect(find.text('page 0'), findsOneWidget);

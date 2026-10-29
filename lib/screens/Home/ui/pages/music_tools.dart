@@ -13,8 +13,6 @@ import 'package:sornaz/screens/Metronome/ui/pages/metronome_page.dart';
 import 'package:sornaz/screens/Tuner/ui/pages/tuner_page.dart';
 import 'package:sornaz/screens/Voice%20Recorder/ui/pages/voice_recorder.dart';
 import 'package:sornaz/screens/Notation/music_analysis_test_page.dart';
-import 'solfege_practice_page.dart';
-import 'rhythm_practice_page.dart';
 import '../../../../helpers/development_access.dart';
 
 class MusicToolsPage extends StatelessWidget {
@@ -67,20 +65,6 @@ class MusicToolsPage extends StatelessWidget {
                   'Recorder',
                   const VoiceRecorderPage(),
                 ),
-                if (DevelopmentAccess.watch(context))
-                  (
-                    Icons.hearing_outlined,
-                    'تمرین سولفژ',
-                    'Solfege practice',
-                    const SolfegePracticePage(),
-                  ),
-                if (DevelopmentAccess.watch(context))
-                  (
-                    Icons.queue_music_outlined,
-                    'تمرین ریتم',
-                    'Rhythm practice',
-                    const RhythmPracticePage(),
-                  ),
                 if (DevelopmentAccess.watch(context))
                   (
                     Icons.analytics_outlined,

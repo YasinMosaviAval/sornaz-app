@@ -1,4 +1,5 @@
 import 'main_tabs.dart';
+import '../screens/MusicPractice/practice_page.dart';
 import '../helpers/development_access.dart';
 import '../screens/Social/chat_tab_page.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +19,7 @@ class BottomNavBarWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final data = context.watch<AppData>();
-    final current = selectedIndex ?? data.bottomNavIndex.clamp(0, 4);
+    final current = selectedIndex ?? data.bottomNavIndex.clamp(0, 5);
     final inactive = data.isDark ? Colors.white60 : Colors.black54;
     final background = data.isDark
         ? const Color(0xff202020)
@@ -39,6 +40,7 @@ class BottomNavBarWidget extends StatelessWidget {
               'حساب کاربری',
               'Account',
             ),
+      (Icons.quiz_outlined, Icons.quiz, 'آزمون‌ها', 'Tests'),
     ];
     void select(int index) {
       if (index == current) return;
@@ -58,6 +60,7 @@ class BottomNavBarWidget extends StatelessWidget {
             development
                 ? const MyProfilePage()
                 : const UserPanelPage(initialTab: 2, mainTabIndex: 4),
+            const MusicPracticePage(),
           ][index],
         ),
       );

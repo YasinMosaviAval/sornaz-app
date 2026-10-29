@@ -1,5 +1,6 @@
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'bottom_nav.dart';
+import '../screens/MusicPractice/practice_page.dart';
 import '../helpers/development_access.dart';
 import '../screens/Social/chat_tab_page.dart';
 import 'package:sornaz/screens/Players/providers/audio_player_provider.dart';
@@ -79,6 +80,7 @@ class _MainTabsState extends State<MainTabs> {
       development
           ? const MyProfilePage()
           : const UserPanelPage(initialTab: 2, mainTabIndex: 4),
+      const MusicPracticePage(),
     ][value];
   }
 
@@ -154,7 +156,7 @@ class _MainTabsState extends State<MainTabs> {
           reverse: true,
           controller: controller,
           physics: editorOpen ? const NeverScrollableScrollPhysics() : null,
-          itemCount: 5,
+          itemCount: widget.pages?.length ?? 6,
           onPageChanged: (value) {
             setState(() => index = value);
             context.read<AppData>().setBottomNavIndex(value);
