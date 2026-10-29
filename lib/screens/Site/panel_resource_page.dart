@@ -777,6 +777,13 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
     var fields = action['fields'] is List
         ? objects(action['fields'])
         : <Json>[];
+    if (section == 'my-settings') {
+      fields = fields
+          .where(
+            (field) => !['fontWeight', 'cornerRadius'].contains(field['key']),
+          )
+          .toList();
+    }
     if (section == 'term-discounts' &&
         key == 'update' &&
         (num.tryParse('${record['organizationUserId']}') ?? 0) > 0) {
@@ -2206,6 +2213,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
               !(entry.key == 'create' &&
                   (section == 'term-discounts' && data['ready'] == false ||
                       data['can_create_branch'] == false ||
+                      data['canCreate'] == false ||
                       section == 'classroom-types' &&
                           optionalObject(data['permissions'])['canCreate'] ==
                               false)),

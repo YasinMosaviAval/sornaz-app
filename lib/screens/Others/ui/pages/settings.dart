@@ -2,6 +2,7 @@ import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:sornaz/components/color_palette_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 import 'package:sornaz/components/app_bar.dart';
 import 'package:sornaz/components/language_switch_tile.dart';
 import 'package:sornaz/components/settings_section_header.dart';
@@ -22,6 +23,10 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final appData = Provider.of<AppData>(context);
     final bool isDark = appData.isDark;
+    final user = context.watch<AuthSession?>()?.user;
+    final isSiteAdmin =
+        user?.id == 1 ||
+        ['admin', 'superadmin', 'site_admin'].contains(user?.type);
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
     final bool isEnglish =
         localeProvider.locale.languageCode == AppConstants.LOCALIZATION_EN;
@@ -114,86 +119,89 @@ class SettingsPage extends StatelessWidget {
                       divisions: 4,
                       onChanged: appData.updateFontSize,
                     ),
-                    ListTile(
-                      title: Text(
-                        AppStrings.font_weight.translate(context),
-                        style: AppTypography.settingsItemTitle(context),
-                      ),
-                      textColor: AppColors.settings_list_tile_text_color(
-                        isDark: isDark,
-                      ),
-                      subtitle: Text(
-                        AppStrings.font_weight_description.translate(context),
-                        style: AppTypography.settingsItemSubtitle(context),
-                      ),
-                      trailing: SizedBox(
-                        height: AppSpacing.space_36,
-                        width: AppSpacing.space_36,
-                        child: Container(
-                          alignment: Alignment.center,
-                          padding: const EdgeInsets.all(AppSpacing.space_8),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: AppColors.settings_list_tile_border_color(
-                                isDark: isDark,
+                    if (isSiteAdmin) ...[
+                      ListTile(
+                        title: Text(
+                          AppStrings.font_weight.translate(context),
+                          style: AppTypography.settingsItemTitle(context),
+                        ),
+                        textColor: AppColors.settings_list_tile_text_color(
+                          isDark: isDark,
+                        ),
+                        subtitle: Text(
+                          AppStrings.font_weight_description.translate(context),
+                          style: AppTypography.settingsItemSubtitle(context),
+                        ),
+                        trailing: SizedBox(
+                          height: AppSpacing.space_36,
+                          width: AppSpacing.space_36,
+                          child: Container(
+                            alignment: Alignment.center,
+                            padding: const EdgeInsets.all(AppSpacing.space_8),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color:
+                                    AppColors.settings_list_tile_border_color(
+                                      isDark: isDark,
+                                    ),
                               ),
+                              color:
+                                  AppColors.settings_list_tile_decoration_color(
+                                    isDark: isDark,
+                                  ),
                             ),
-                            color:
-                                AppColors.settings_list_tile_decoration_color(
-                                  isDark: isDark,
-                                ),
-                          ),
-                          child: Text(
-                            appData.fontWeight.toInt().toString(),
-                            style: AppTypography.settingsItemContent(context),
-                            textDirection: TextDirection.ltr,
+                            child: Text(
+                              appData.fontWeight.toInt().toString(),
+                              style: AppTypography.settingsItemContent(context),
+                              textDirection: TextDirection.ltr,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    Slider(
-                      activeColor: AppColors.settings_slider_active_color(
-                        isDark: isDark,
+                      Slider(
+                        activeColor: AppColors.settings_slider_active_color(
+                          isDark: isDark,
+                        ),
+                        inactiveColor: AppColors.settings_slider_inactive_color(
+                          isDark: isDark,
+                        ),
+                        label: appData.fontWeight.toInt().toString(),
+                        value: appData.fontWeight,
+                        min: 0,
+                        max: 5,
+                        divisions: 5,
+                        onChanged: appData.updateFontWeight,
                       ),
-                      inactiveColor: AppColors.settings_slider_inactive_color(
-                        isDark: isDark,
+                      ListTile(
+                        title: Text(
+                          isEnglish
+                              ? 'Element corner radius'
+                              : 'زاویهٔ گوشهٔ المان‌ها',
+                          style: AppTypography.settingsItemTitle(context),
+                        ),
+                        subtitle: Text(
+                          isEnglish
+                              ? 'Cards, dialogs and buttons'
+                              : 'کارت‌ها، دیالوگ‌ها و دکمه‌ها',
+                          style: AppTypography.settingsItemSubtitle(context),
+                        ),
+                        trailing: Text(
+                          '${appData.cornerRadius.round()} dp',
+                          style: AppTypography.settingsItemContent(context),
+                        ),
                       ),
-                      label: appData.fontWeight.toInt().toString(),
-                      value: appData.fontWeight,
-                      min: 0,
-                      max: 5,
-                      divisions: 5,
-                      onChanged: appData.updateFontWeight,
-                    ),
-                    ListTile(
-                      title: Text(
-                        isEnglish
-                            ? 'Element corner radius'
-                            : 'زاویهٔ گوشهٔ المان‌ها',
-                        style: AppTypography.settingsItemTitle(context),
+                      Slider(
+                        value: appData.cornerRadius,
+                        min: 0,
+                        max: 16,
+                        divisions: 16,
+                        label: '${appData.cornerRadius.round()} dp',
+                        activeColor: AppColors.settings_slider_active_color(
+                          isDark: isDark,
+                        ),
+                        onChanged: appData.updateCornerRadius,
                       ),
-                      subtitle: Text(
-                        isEnglish
-                            ? 'Cards, dialogs and buttons'
-                            : 'کارت‌ها، دیالوگ‌ها و دکمه‌ها',
-                        style: AppTypography.settingsItemSubtitle(context),
-                      ),
-                      trailing: Text(
-                        '${appData.cornerRadius.round()} dp',
-                        style: AppTypography.settingsItemContent(context),
-                      ),
-                    ),
-                    Slider(
-                      value: appData.cornerRadius,
-                      min: 0,
-                      max: 16,
-                      divisions: 16,
-                      label: '${appData.cornerRadius.round()} dp',
-                      activeColor: AppColors.settings_slider_active_color(
-                        isDark: isDark,
-                      ),
-                      onChanged: appData.updateCornerRadius,
-                    ),
+                    ],
                     ListTile(
                       title: Text(
                         AppStrings.select_font_title.translate(context),

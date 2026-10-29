@@ -67,6 +67,15 @@ Json panelSectionWithTabs(Json section, List<Json> sections) {
     else
       ['members', 'users', 'member-schedules', 'employee-leaves'],
     ['branches', 'availabilities', 'scheduling-rules', 'organization-holidays'],
+    [
+      'educations',
+      'certificates',
+      'awards',
+      'experiences',
+      'events',
+      'publications',
+      'badges',
+    ],
     ['terms', 'term-discounts'],
     ['classroom-types', 'classrooms'],
     if (personalLearning) ['dashboard', 'my-terms', 'my-classrooms'],
@@ -75,6 +84,13 @@ Json panelSectionWithTabs(Json section, List<Json> sections) {
   final group = groups.where((keys) => keys.contains(key)).firstOrNull;
   if (group == null) return section;
   const labels = {
+    'educations': ('تحصیلات', 'Education'),
+    'certificates': ('گواهی‌ها', 'Certificates'),
+    'awards': ('پاداش‌ها و جوایز', 'Awards'),
+    'experiences': ('سوابق کاری', 'Work experience'),
+    'events': ('رویدادها', 'Events'),
+    'publications': ('آثار منتشر شده', 'Publications'),
+    'badges': ('نشان‌ها', 'Badges'),
     'roles': ('نقش‌ها', 'Roles'),
     'permissions': ('دسترسی‌ها', 'Permissions'),
     'media': ('رسانه‌ها', 'Media'),
@@ -209,14 +225,13 @@ List<Json> panelNavigation(List<Json> sections) {
     'سوابق و دستاوردها',
     'Background and achievements',
     [
-      'awards',
-      'badges',
-      'experiences',
-      'certificates',
       'educations',
+      'certificates',
+      'awards',
+      'experiences',
       'events',
-      'polls',
       'publications',
+      'badges',
     ],
   );
   if (achievements != null)
@@ -302,9 +317,9 @@ List<Json> panelNavigation(List<Json> sections) {
       'my-courses',
       'my-terms',
     ]),
-    ?achievements,
     ...take(['tracking', 'national-holidays']),
     ?branches,
+    ?achievements,
     ?roles,
     ?galleryMenu,
     ?lessons,
@@ -313,7 +328,8 @@ List<Json> panelNavigation(List<Json> sections) {
     ?classes,
     ...take(['courses', 'terms', 'students']),
     ?schedules,
-    ...take(['finance']),
+    ...take(['finance', 'my-finance']),
+    ...take(['polls']),
     ?siteManagement,
     // Keep app-only and future authorized sections available at the end.
     ...remaining.values,
