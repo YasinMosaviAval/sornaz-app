@@ -1,0 +1,11 @@
+# Shared achievements and appearance controls
+
+The development and Google Play release worktrees contain the same selective changes for this feature. Release-specific AGENTS.md, OMR exclusions, startup behavior, app IDs, signing and backend configuration are preserved. No application output was built.
+
+The website remains the navigation authority. Its authorized menu places Records and achievements after Organization and Polls after Finance. Achievements have seven ordered internal tabs: Education, Certificates, Awards, Work experience, Events, Publications, Badges. Polls remain independent. Server-scoped data supports personal profiles, academy branches and branch-only visibility. Badge mutation operations are administrator-only; the API supplies `canCreate`, `canManage`, `canChangeStatus` and `badge_title`.
+
+`panel_navigation.dart` implements the ordered tabs and separate poll destination. `panel_resource_page.dart` respects server `canCreate` and removes font-weight/corner-radius fields from personal settings even when an older cached contract supplies them. `screens/Others/ui/pages/settings.dart` retains those two global appearance controls for the site administrator and hides them for other accounts. Existing selected typography and shared configurable shapes still drive all widgets. Flutter's existing Original palette remains the default; matching blue/light and gold/dark support was added to the website.
+
+Deploy the updated web API before distributing a client update. No new route or database migration is required for these menu/appearance changes. The web repository's `docs/achievements-appearance-deployment.fa.md` lists exact files, safe ordering, rollback and server smoke checks.
+
+Focused tests: `appearance_permissions_test.dart`, `panel_achievements_test.dart`, `panel_page_tabs_test.dart`, `panel_sidebar_contract_test.dart`. Broader `account_settings_test.dart` has three older account-merge expectations that conflict with existing restricted account presentation; these are separate from the new menu/appearance tests. Neither branch is declared ready for publication without real Android startup verification; the release worktree's pre-existing startup limitation remains.

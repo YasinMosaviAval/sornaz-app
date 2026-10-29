@@ -41,7 +41,7 @@ class RegistrationFake extends AcademyRegistrationApi {
     expect(otp, admin ? '' : '123456');
     if (step == 'academy') {
       academies++;
-      stage = 'choice';
+      stage = 'complete';
     } else {
       branches++;
       stage = 'complete';
@@ -101,7 +101,7 @@ Future<void> register(
 
 void main() {
   testWidgets(
-    'administrator registers academy and branch without requesting OTP',
+    'administrator finishes academy registration without branch or OTP steps',
     (tester) async {
       final api = RegistrationFake()..admin = true;
       await tester.pumpWidget(
@@ -111,58 +111,69 @@ void main() {
       await register(tester, admin: true);
       expect(api.academies, 1);
       expect(api.sentStep, isNull);
-      await tester.tap(find.widgetWithText(FilledButton, 'ثبت شعبه اصلی'));
-      await tester.pumpAndSettle();
-      await register(tester, branch: true, admin: true);
-      expect(api.branches, 1);
+      expect(api.branches, 0);
+      expect(api.skips, 0);
       expect(api.sentStep, isNull);
       expect(find.byKey(const ValueKey('registration-otp')), findsNothing);
+      expect(find.byKey(const ValueKey('registration-panel')), findsOneWidget);
+      expect(find.text('ثبت شعبه اصلی'), findsNothing);
       await tester.pumpWidget(const SizedBox());
     },
   );
-  for (final branch in [false, true]) {
-    testWidgets('native academy registration completes with branch=$branch', (
+  for (final signedIn in [false, true]) {
+    testWidgets(
+      'native academy registration finishes directly signedIn=$signedIn',
+      (tester) async {
+        tester.view.physicalSize = const Size(360, 800);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final api = RegistrationFake();
+        await tester.pumpWidget(
+          fixture.host(
+            AcademyRegistrationPage(
+              api: api,
+              userId: signedIn ? 9 : 0,
+              token: signedIn ? 'token' : '',
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await register(tester);
+        expect(api.academies, 1);
+        expect(find.byKey(const ValueKey('without-branch')), findsNothing);
+        expect(find.text('ثبت شعبه اصلی'), findsNothing);
+        expect(
+          find.byKey(const ValueKey('registration-panel')),
+          findsOneWidget,
+        );
+        expect(find.textContaining('منوی سازمان'), findsOneWidget);
+        expect(api.branches, 0);
+        expect(api.skips, 0);
+        expect(api.stage, 'complete');
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox());
+        api.dispose();
+      },
+    );
+  }
+  for (final stage in ['choice', 'branch', 'complete']) {
+    testWidgets('resuming legacy $stage ends at the Organization instruction', (
       tester,
     ) async {
-      tester.view.physicalSize = const Size(360, 800);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      final api = RegistrationFake();
+      final api = RegistrationFake()..stage = stage;
       await tester.pumpWidget(fixture.host(AcademyRegistrationPage(api: api)));
       await tester.pumpAndSettle();
-      await register(tester);
-      expect(api.academies, 1);
-      expect(find.byKey(const ValueKey('without-branch')), findsOneWidget);
-      if (branch) {
-        await tester.tap(find.widgetWithText(FilledButton, 'ثبت شعبه اصلی'));
-        await tester.pumpAndSettle();
-        await register(tester, branch: true);
-        expect(api.branches, 1);
-        expect(api.skips, 0);
-      } else {
-        await tester.tap(find.byKey(const ValueKey('without-branch')));
-        await tester.pumpAndSettle();
-        expect(api.branches, 0);
-        expect(api.skips, 1);
-      }
-      expect(api.stage, 'complete');
-      expect(tester.takeException(), isNull);
+      expect(find.byKey(const ValueKey('without-branch')), findsNothing);
+      expect(find.text('ثبت شعبه اصلی'), findsNothing);
+      expect(find.byKey(const ValueKey('registration-panel')), findsOneWidget);
+      expect(find.byKey(const ValueKey('email')), findsNothing);
+      expect(api.branches, 0);
+      expect(api.skips, 0);
       await tester.pumpWidget(const SizedBox());
       api.dispose();
     });
   }
-  testWidgets('resuming academy registration offers optional branch creation', (
-    tester,
-  ) async {
-    final api = RegistrationFake()..stage = 'choice';
-    await tester.pumpWidget(fixture.host(AcademyRegistrationPage(api: api)));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('without-branch')), findsOneWidget);
-    expect(find.byKey(const ValueKey('email')), findsNothing);
-    await tester.pumpWidget(const SizedBox());
-    api.dispose();
-  });
   test(
     'native client keeps its OTP session and flow proof between requests',
     () async {

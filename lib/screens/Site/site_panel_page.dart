@@ -19,8 +19,9 @@ import 'panel_api.dart';
 import 'panel_resource_page.dart';
 
 class SitePanelPage extends StatelessWidget {
-  const SitePanelPage({super.key, this.api});
+  const SitePanelPage({super.key, this.api, this.initialSection = ''});
   final PanelApi? api;
+  final String initialSection;
   @override
   Widget build(BuildContext context) {
     if (MainTabsScope.maybeOf(context) == null) {
@@ -34,14 +35,25 @@ class SitePanelPage extends StatelessWidget {
         body: JoinCommunity(),
       );
     }
-    return NativePanel(key: ValueKey(token), token: token, api: api);
+    return NativePanel(
+      key: ValueKey(token),
+      token: token,
+      api: api,
+      initialSection: initialSection,
+    );
   }
 }
 
 class NativePanel extends StatefulWidget {
-  const NativePanel({super.key, required this.token, this.api});
+  const NativePanel({
+    super.key,
+    required this.token,
+    this.api,
+    this.initialSection = '',
+  });
   final String token;
   final PanelApi? api;
+  final String initialSection;
   @override
   State<NativePanel> createState() => _NativePanelState();
 }
@@ -60,6 +72,7 @@ class _NativePanelState extends State<NativePanel> {
   bool loading = true;
   Object? error;
   bool contentOverflows = false;
+  bool initialOpened = false;
   bool measure(ScrollMetricsNotification n) {
     if (n.depth == 0) {
       final overflow =
@@ -102,6 +115,14 @@ class _NativePanelState extends State<NativePanel> {
           error = null;
         });
         unawaited(loadUnread());
+        if (!initialOpened &&
+            widget.initialSection.isNotEmpty &&
+            hasSection(widget.initialSection)) {
+          initialOpened = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) unawaited(openTopSection(widget.initialSection));
+          });
+        }
       }
     } catch (e) {
       if (e is PanelNavigationUnavailable) api.invalidate();

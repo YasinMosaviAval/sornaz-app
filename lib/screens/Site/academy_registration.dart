@@ -9,6 +9,7 @@ import 'package:sornaz/helpers/user_facing_error.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 import '../Social/social_widgets.dart';
 import 'academy_registration_api.dart';
+import 'site_panel_page.dart';
 
 class AcademyRegistrationCard extends StatelessWidget {
   const AcademyRegistrationCard({super.key});
@@ -43,8 +44,8 @@ class AcademyRegistrationCard extends StatelessWidget {
           Text(
             socialText(
               context,
-              'آموزشگاه خود را به جامعه سرناز اضافه کنید. می‌توانید بدون شعبه ثبت‌نام کنید یا شعبه اصلی را هم بسازید؛ افزودن شعبه در آینده نیز امکان‌پذیر است.',
-              'Join the Sornaz community with your academy. Register without a branch or create its main branch too; you can add branches later.',
+              'آموزشگاه خود را به جامعه سرناز اضافه کنید. شعبه‌های اصلی و فرعی را پس از ثبت از منوی سازمان در پنل کاربری مدیریت کنید.',
+              'Join the Sornaz community with your academy. Manage main and subsidiary branches from Organization in your panel after registration.',
             ),
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
@@ -127,6 +128,10 @@ class _AcademyRegistrationPageState extends State<AcademyRegistrationPage> {
   DateTime? resendAt, expiresAt;
   Timer? timer;
   String t(String fa, String en) => socialText(context, fa, en);
+  String registrationStage(dynamic value) => switch (value) {
+    'complete' || 'choice' || 'branch' => 'complete',
+    _ => 'academy',
+  };
   @override
   void initState() {
     super.initState();
@@ -154,7 +159,7 @@ class _AcademyRegistrationPageState extends State<AcademyRegistrationPage> {
       if (mounted) {
         setState(() {
           info = data;
-          phase = data['stage']?.toString() ?? 'academy';
+          phase = registrationStage(data['stage']);
         });
       }
     } catch (e) {
@@ -243,9 +248,8 @@ class _AcademyRegistrationPageState extends State<AcademyRegistrationPage> {
     }
   }
 
-  Future<void> finish({bool withoutBranch = false}) async {
-    if (!withoutBranch &&
-        info['otp_required'] != false &&
+  Future<void> finish() async {
+    if (info['otp_required'] != false &&
         !RegExp(r'^\d{6}$').hasMatch(code.text)) {
       setState(
         () =>
@@ -258,13 +262,11 @@ class _AcademyRegistrationPageState extends State<AcademyRegistrationPage> {
       error = null;
     });
     try {
-      final data = withoutBranch
-          ? await api.withoutBranch()
-          : await api.submit(pending, phase, code.text);
+      final data = await api.submit(pending, 'academy', code.text);
       if (mounted) {
         setState(() {
           info = data;
-          phase = data['stage'].toString();
+          phase = registrationStage(data['stage']);
           verifying = false;
           pending = {};
           timer?.cancel();
@@ -285,18 +287,9 @@ class _AcademyRegistrationPageState extends State<AcademyRegistrationPage> {
   Future<void> terms() => showDialog<void>(
     context: context,
     builder: (c) => AlertDialog(
-      title: Text(
-        t(
-          phase == 'branch'
-              ? 'قوانین ثبت و فعالیت شعبه'
-              : 'قوانین ثبت و فعالیت آموزشگاه',
-          'Registration terms',
-        ),
-      ),
+      title: Text(t('قوانین ثبت و فعالیت آموزشگاه', 'Registration terms')),
       content: SingleChildScrollView(
-        child: Text(
-          (info[phase == 'branch' ? 'branch_terms' : 'terms'] ?? '').toString(),
-        ),
+        child: Text((info['terms'] ?? '').toString()),
       ),
       actions: [
         TextButton(
@@ -386,12 +379,7 @@ class _AcademyRegistrationPageState extends State<AcademyRegistrationPage> {
 
   @override
   Widget build(BuildContext context) => ScrollAwareScaffold(
-    appBar: SornazAppBar(
-      title: t(
-        phase == 'branch' ? 'ثبت شعبه اصلی' : 'ثبت آموزشگاه',
-        phase == 'branch' ? 'Register main branch' : 'Register academy',
-      ),
-    ),
+    appBar: SornazAppBar(title: t('ثبت آموزشگاه', 'Register academy')),
     body: loading
         ? const Center(child: CircularProgressIndicator())
         : SingleChildScrollView(
@@ -415,66 +403,34 @@ class _AcademyRegistrationPageState extends State<AcademyRegistrationPage> {
                     onPressed: load,
                     child: Text(t('تلاش دوباره', 'Retry')),
                   )
-                else if (phase == 'choice') ...[
-                  const Icon(Icons.check_circle_outline, size: 56),
-                  const SizedBox(height: 16),
-                  Text(
-                    t('آموزشگاه شما ثبت شد', 'Your academy is registered'),
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    t(
-                      'ایجاد شعبه اختیاری است. می‌توانید بدون شعبه ادامه دهید یا شعبه اصلی را همین حالا ثبت کنید. بعداً هم از پنل کاربری می‌توانید شعبه اضافه کنید.',
-                      'Creating a branch is optional. Continue without one or register the main branch now. You can add branches from your panel later.',
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: busy
-                        ? null
-                        : () => setState(() {
-                            phase = 'branch';
-                            fields['academy_name']!.text =
-                                (info['academy_name'] ?? '').toString() +
-                                t(' - شعبه اصلی', ' - Main branch');
-                          }),
-                    child: Text(t('ثبت شعبه اصلی', 'Register main branch')),
-                  ),
-                  OutlinedButton(
-                    key: const ValueKey('without-branch'),
-                    onPressed: busy ? null : () => finish(withoutBranch: true),
-                    child: Text(
-                      t('ادامه بدون شعبه', 'Continue without a branch'),
-                    ),
-                  ),
-                ] else if (phase == 'complete') ...[
+                else if (phase == 'complete') ...[
                   const Icon(Icons.check_circle, color: Colors.green, size: 56),
                   const SizedBox(height: 16),
                   Text(
-                    t(
-                      info['without_branch'] == true
-                          ? 'آموزشگاه شما بدون شعبه ثبت شد.'
-                          : 'آموزشگاه و شعبه اصلی ثبت شدند.',
-                      info['without_branch'] == true
-                          ? 'Your academy was registered without a branch.'
-                          : 'Your academy and main branch are registered.',
-                    ),
+                    t('آموزشگاه شما ثبت شد.', 'Your academy is registered.'),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     t(
-                      'برای مدیریت آموزشگاه می‌توانید از پنل کاربری استفاده کنید. اگر مهمان هستید، با حساب آموزشگاه وارد شوید.',
-                      'Use the user panel to manage your academy. If you registered as a guest, sign in with your academy account.',
+                      'ثبت و مدیریت شعبه‌های اصلی و فرعی از منوی سازمان در پنل کاربری انجام می‌شود. اگر مهمان هستید، ابتدا با حساب آموزشگاه وارد شوید.',
+                      'Create and manage main and subsidiary branches from Organization in your panel. If you registered as a guest, sign in with your academy account first.',
                     ),
                   ),
                   const SizedBox(height: 24),
                   FilledButton(
+                    key: const ValueKey('registration-panel'),
                     onPressed: () async {
                       await api.forget();
-                      if (context.mounted) Navigator.pop(context);
+                      if (context.mounted) {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                const SitePanelPage(initialSection: 'branches'),
+                          ),
+                        );
+                      }
                     },
-                    child: Text(t('بازگشت به خانه', 'Back to home')),
+                    child: Text(t('ورود به پنل کاربری', 'Open user panel')),
                   ),
                 ] else if (verifying) ...[
                   Text(
@@ -538,24 +494,16 @@ class _AcademyRegistrationPageState extends State<AcademyRegistrationPage> {
                       children: [
                         Text(
                           t(
-                            phase == 'branch'
-                                ? 'شعبه اصلی آموزشگاهتان را ثبت کنید'
-                                : 'آموزشگاهتان را به سُرناز بیاورید',
-                            phase == 'branch'
-                                ? 'Register your main branch'
-                                : 'Bring your academy to Sornaz',
+                            'آموزشگاهتان را به سُرناز بیاورید',
+                            'Bring your academy to Sornaz',
                           ),
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const SizedBox(height: 12),
                         Text(
                           t(
-                            phase == 'branch'
-                                ? 'اطلاعات و حساب کاربری شعبه را وارد کنید.'
-                                : 'آموزشگاه خود را به جامعه سرناز اضافه کنید. ایجاد شعبه اختیاری است.',
-                            phase == 'branch'
-                                ? 'Enter your branch details and account information.'
-                                : 'Join the Sornaz community with your academy. Creating a branch is optional.',
+                            'اطلاعات آموزشگاه را وارد کنید. ثبت شعبه‌های اصلی و فرعی پس از ثبت از منوی سازمان انجام می‌شود.',
+                            'Enter your academy details. Register main and subsidiary branches from Organization after completing registration.',
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -594,10 +542,7 @@ class _AcademyRegistrationPageState extends State<AcademyRegistrationPage> {
                         ),
                         field(
                           'academy_name',
-                          t(
-                            phase == 'branch' ? 'نام شعبه' : 'نام آموزشگاه',
-                            phase == 'branch' ? 'Branch name' : 'Academy name',
-                          ),
+                          t('نام آموزشگاه', 'Academy name'),
                           required: true,
                         ),
                         field('slogan', t('شعار', 'Slogan')),
@@ -658,18 +603,6 @@ class _AcademyRegistrationPageState extends State<AcademyRegistrationPage> {
                                   ),
                           ),
                         ),
-                        if (phase == 'branch')
-                          TextButton(
-                            onPressed: busy
-                                ? null
-                                : () => setState(() => phase = 'choice'),
-                            child: Text(
-                              t(
-                                'بازگشت به انتخاب وضعیت شعبه',
-                                'Back to branch options',
-                              ),
-                            ),
-                          ),
                       ],
                     ),
                   ),

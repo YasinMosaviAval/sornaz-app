@@ -9,6 +9,7 @@ import 'panel_ui.dart';
 import 'panel_access_badges.dart';
 import 'panel_national_holiday_settings.dart';
 import 'panel_term_attendance.dart';
+import 'panel_session_files.dart';
 import 'branch_style.dart';
 import 'branch_export.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
@@ -797,6 +798,13 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
     var fields = action['fields'] is List
         ? objects(action['fields'])
         : <Json>[];
+    if (section == 'my-settings') {
+      fields = fields
+          .where(
+            (field) => !['fontWeight', 'cornerRadius'].contains(field['key']),
+          )
+          .toList();
+    }
     if (section == 'term-discounts' &&
         key == 'update' &&
         (num.tryParse('${record['organizationUserId']}') ?? 0) > 0) {
@@ -1436,7 +1444,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
               row: panelDisplayRow(section, row, data),
               data: {...data, '_section': section},
             ),
-            if (section == 'terms')
+            if (['terms', 'my-terms', 'my-classrooms'].contains(section))
               for (final session
                   in (row['sessions'] is List
                       ? objects(row['sessions'])
@@ -1456,6 +1464,24 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                       ),
                       Wrap(
                         children: [
+                          TextButton.icon(
+                            key: ValueKey(
+                              'session-files-${session['sessionId'] ?? session['id']}',
+                            ),
+                            icon: const Icon(Icons.attach_file),
+                            label: Text(
+                              socialText(
+                                context,
+                                'فایل‌های جلسه',
+                                'Session files',
+                              ),
+                            ),
+                            onPressed: () => showPanelSessionFiles(
+                              context,
+                              widget.api,
+                              session,
+                            ),
+                          ),
                           for (final key in [
                             'cancel',
                             'cancel-approve',
@@ -1523,6 +1549,18 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
             Wrap(
               spacing: 8,
               children: [
+                if (['schedules', 'my-classrooms'].contains(section))
+                  TextButton.icon(
+                    key: ValueKey(
+                      'session-files-${row['sessionId'] ?? row['id']}',
+                    ),
+                    icon: const Icon(Icons.attach_file),
+                    label: Text(
+                      socialText(context, 'فایل‌های جلسه', 'Session files'),
+                    ),
+                    onPressed: () =>
+                        showPanelSessionFiles(context, widget.api, row),
+                  ),
                 if (section == 'schedules')
                   for (final key in ['cancel', 'attendance'])
                     if (actions.containsKey(key) && available(key, row))
@@ -2243,6 +2281,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
               !(entry.key == 'create' &&
                   (section == 'term-discounts' && data['ready'] == false ||
                       data['can_create_branch'] == false ||
+                      data['canCreate'] == false ||
                       section == 'classroom-types' &&
                           optionalObject(data['permissions'])['canCreate'] ==
                               false)),

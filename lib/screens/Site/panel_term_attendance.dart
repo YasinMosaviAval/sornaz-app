@@ -5,6 +5,7 @@ import 'panel_api.dart';
 import 'panel_form.dart';
 import 'panel_parity.dart';
 import 'panel_ui.dart';
+import 'panel_session_files.dart';
 
 class PanelTermAttendance extends StatefulWidget {
   const PanelTermAttendance({
@@ -162,7 +163,22 @@ class _PanelTermAttendanceState extends State<PanelTermAttendance> {
                   subtitle: Text(
                     '${panelDate(session['date'], fa: Localizations.localeOf(context).languageCode == 'fa')} · ${session['time'] ?? ''}',
                   ),
-                  trailing: const Icon(Icons.fact_check_outlined),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        tooltip: socialText(
+                          context,
+                          'فایل‌های جلسه',
+                          'Session files',
+                        ),
+                        onPressed: () =>
+                            showPanelSessionFiles(context, widget.api, session),
+                        icon: const Icon(Icons.attach_file),
+                      ),
+                      const Icon(Icons.fact_check_outlined),
+                    ],
+                  ),
                   onTap: () => edit(session),
                 ),
             ],

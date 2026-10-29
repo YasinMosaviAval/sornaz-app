@@ -67,7 +67,9 @@ class PanelApi {
 
   Future<Json?> saved(String path, [Map<String, String>? query]) async {
     checkAccount();
-    if (path.startsWith('/database-management/')) return null;
+    if (path.startsWith('/database-management/') ||
+        path == '/schedules/session-files')
+      return null;
     final value = await ChatCache.read(token, _key(path, query));
     checkAccount();
     if (value is! Map) return null;
@@ -83,7 +85,8 @@ class PanelApi {
   }
 
   Future<Json> get(String path, [Map<String, String>? query]) async {
-    if (path.startsWith('/database-management/')) {
+    if (path.startsWith('/database-management/') ||
+        path == '/schedules/session-files') {
       return sensitiveGet(path, query);
     }
     checkAccount();
@@ -288,16 +291,56 @@ class PanelApi {
     String action,
     Map<String, String> params,
     String filename,
-  ) async {
+  ) => _downloadPrivateAttachment(
+    path: '/database-management/$action',
+    params: params,
+    filename: filename,
+    folderPrefix: 'sornaz-db-',
+    acceptedTypes: const {
+      'application/sql',
+      'application/octet-stream',
+      'text/plain',
+      'text/x-sql',
+    },
+    saveMime: 'application/sql',
+    sql: true,
+  );
+
+  Future<void> downloadSessionFile(
+    String sessionId,
+    String fileId,
+    String filename, {
+    required String mime,
+  }) => _downloadPrivateAttachment(
+    path: '/schedules/session-file-download',
+    params: {'id': sessionId, 'file': fileId},
+    filename: filename,
+    folderPrefix: 'sornaz-session-',
+    acceptedTypes: {mime.toLowerCase(), 'application/octet-stream'},
+    saveMime: mime,
+    requireAttachment: true,
+    maxBytes: 100 * 1024 * 1024,
+  );
+
+  Future<void> _downloadPrivateAttachment({
+    required String path,
+    required Map<String, String> params,
+    required String filename,
+    required String folderPrefix,
+    required Set<String> acceptedTypes,
+    required String saveMime,
+    bool sql = false,
+    bool requireAttachment = false,
+    int? maxBytes,
+  }) async {
     checkAccount();
-    final request =
-        http.Request('GET', uri('/database-management/$action', params))
-          ..followRedirects = false
-          ..headers.addAll({
-            ...headers,
-            'Accept': 'application/sql',
-            'Cache-Control': 'no-store',
-          });
+    final request = http.Request('GET', uri(path, params))
+      ..followRedirects = false
+      ..headers.addAll({
+        ...headers,
+        'Accept': sql ? 'application/sql' : 'application/octet-stream',
+        'Cache-Control': 'no-store',
+      });
     final response = await client
         .send(request)
         .timeout(const Duration(minutes: 2));
@@ -314,12 +357,12 @@ class PanelApi {
               .toLowerCase() ??
           '';
       if (response.statusCode != 200 ||
-          ![
-            'application/sql',
-            'application/octet-stream',
-            'text/plain',
-            'text/x-sql',
-          ].contains(contentType)) {
+          !acceptedTypes.contains(contentType) ||
+          requireAttachment &&
+              !RegExp(
+                r'^attachment(?:;|$)',
+                caseSensitive: false,
+              ).hasMatch(response.headers['content-disposition'] ?? '')) {
         handled = true;
         var status = response.statusCode;
         if (contentType == 'application/json') {
@@ -340,19 +383,24 @@ class PanelApi {
         throw SocialException('دریافت فایل انجام نشد.', status);
       }
       final exportFolder = await (await getTemporaryDirectory()).createTemp(
-        'sornaz-db-',
+        folderPrefix,
       );
       folder = exportFolder;
-      final safe = filename.replaceAll(RegExp(r'[/\\<>:"|?*]'), '_');
+      var safe = filename.replaceAll(RegExp(r'[/\\<>:"|?*\x00-\x1f]'), '_');
+      if (safe.isEmpty || safe == '.' || safe == '..') safe = 'download';
       final file = File(
-        '${exportFolder.path}/${safe.endsWith('.sql') ? safe : '$safe.sql'}',
+        '${exportFolder.path}/${sql && !safe.endsWith('.sql') ? '$safe.sql' : safe}',
       );
       output = file.openWrite();
       handled = true;
+      var received = 0;
       await for (final chunk in response.stream.timeout(
         const Duration(minutes: 2),
       )) {
         checkAccount();
+        received += chunk.length;
+        if (maxBytes != null && received > maxBytes)
+          throw const SocialException('حجم فایل بیشتر از حد مجاز است.', 413);
         output.add(chunk);
         await output.flush();
       }
@@ -360,6 +408,8 @@ class PanelApi {
       await output.close();
       output = null;
       checkAccount();
+      if (response.contentLength != null && received != response.contentLength)
+        throw const SocialException('دریافت فایل کامل نشد. دوباره تلاش کنید.');
       if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
         final target = await FilePicker.platform.saveFile(
           fileName: file.uri.pathSegments.last,
@@ -367,9 +417,7 @@ class PanelApi {
         checkAccount();
         if (target != null) await file.copy(target);
       } else {
-        await Share.shareXFiles([
-          XFile(file.path, mimeType: 'application/sql'),
-        ]);
+        await Share.shareXFiles([XFile(file.path, mimeType: saveMime)]);
       }
     } finally {
       try {
