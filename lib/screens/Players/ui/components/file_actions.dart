@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_dialog.dart';
 import 'player_dialog.dart';
 import 'audio_selection.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
@@ -119,7 +120,7 @@ void showDeleteConfirm(BuildContext context, AudioFile file) {
   showDialog(
     context: context,
     builder: (dialogCtx) {
-      return PlayerDialog(
+      return AppDialog(
         title: Text(AppStrings.file_action_remove_file.translate(context)),
         content: Text(
           AppStrings.file_action_remove_file_from_list_or_memory.translate(
@@ -127,13 +128,14 @@ void showDeleteConfirm(BuildContext context, AudioFile file) {
           ),
         ),
         actions: [
-          PlayerDialogButton(
-            primary: false,
+          AppDialogAction(
+            role: AppDialogActionRole.cancel,
             child: Text(AppStrings.file_action_discard.translate(context)),
             onPressed: () => Navigator.pop(dialogCtx),
           ),
 
-          PlayerDialogButton(
+          AppDialogAction(
+            role: AppDialogActionRole.destructive,
             child: Text(
               AppStrings.file_action_remove_file_from_list.translate(context),
             ),
@@ -168,7 +170,8 @@ void showDeleteConfirm(BuildContext context, AudioFile file) {
             },
           ),
 
-          PlayerDialogButton(
+          AppDialogAction(
+            role: AppDialogActionRole.destructive,
             child: Text(
               AppStrings.file_action_delete_file_from_memory.translate(context),
             ),

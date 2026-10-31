@@ -1,3 +1,4 @@
+import 'package:sornaz/components/settings_switch_tile.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:flutter/foundation.dart';
 import 'story_composer.dart';
@@ -157,7 +158,7 @@ class _PublishPageState extends State<PublishPage> {
                   ),
                 ),
                 if (widget.kind == 'post') ...[
-                  SwitchListTile(
+                  SettingsSwitchTile.widgets(
                     contentPadding: EdgeInsets.zero,
                     title: Text(
                       socialText(context, 'افزودن نظرسنجی', 'Add poll'),

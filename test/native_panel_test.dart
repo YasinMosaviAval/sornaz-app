@@ -419,7 +419,7 @@ void main() {
       await tester.tap(
         find.descendant(
           of: find.byType(AlertDialog),
-          matching: find.byType(FilledButton),
+          matching: find.widgetWithText(TextButton, 'حذف'),
         ),
       );
       await tester.pumpAndSettle();

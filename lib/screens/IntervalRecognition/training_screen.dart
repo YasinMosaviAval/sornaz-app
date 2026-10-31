@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import 'dart:async';
 import '../../helpers/development_access.dart';
 import 'package:flutter/material.dart';
@@ -184,7 +185,7 @@ class _IntervalTrainingScreenState extends State<IntervalTrainingScreen>
                       ),
                     ),
               body: c.initializing
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const AppLoadingIndicator()
                   : SafeArea(
                       child: LayoutBuilder(
                         builder: (context, constraints) => SingleChildScrollView(

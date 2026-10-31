@@ -1,3 +1,5 @@
+import 'package:sornaz/components/app_async_state.dart';
+import 'package:sornaz/components/app_dialog.dart';
 import 'protected_media.dart';
 import 'protected_media_view.dart';
 import 'course_cache.dart';
@@ -251,7 +253,7 @@ class _DownloadsPageState extends State<DownloadsPage> {
     body: error != null
         ? SocialEmpty(error!, onRetry: load)
         : rows == null
-        ? const Center(child: CircularProgressIndicator())
+        ? const AppLoadingIndicator()
         : RefreshIndicator(
             onRefresh: load,
             child: ListView(
@@ -276,21 +278,9 @@ class _DownloadsPageState extends State<DownloadsPage> {
                       tooltip: 'حذف دانلود',
                       icon: const Icon(Icons.delete_outline),
                       onPressed: () async {
-                        final yes = await showDialog<bool>(
-                          context: context,
-                          builder: (c) => AlertDialog(
-                            title: const Text('حذف فایل‌های دانلودشده؟'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(c, false),
-                                child: const Text('انصراف'),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(c, true),
-                                child: const Text('حذف'),
-                              ),
-                            ],
-                          ),
+                        final yes = await showDeleteConfirmation(
+                          context,
+                          title: 'حذف فایل‌های دانلودشده؟',
                         );
                         if (yes != true) return;
                         try {

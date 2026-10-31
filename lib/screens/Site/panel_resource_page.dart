@@ -1,3 +1,5 @@
+import 'package:sornaz/components/app_view_mode_selector.dart';
+import 'package:sornaz/components/app_async_state.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/helpers/account_presentation.dart';
 import '../Social/media_picker.dart';
@@ -2477,7 +2479,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
       ),
       body: pendingContent(
         loading
-            ? const Center(child: CircularProgressIndicator())
+            ? const AppLoadingIndicator()
             : error != null
             ? SocialEmpty(
                 socialText(
@@ -2499,59 +2501,40 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                           horizontal: 12,
                           vertical: 12,
                         ),
-                        child: Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            for (final option in [
-                              (
-                                false,
-                                Icons.table_chart_outlined,
-                                socialText(
-                                  context,
-                                  'نمایش جدولی',
-                                  'Table view',
-                                ),
+                        child: AppViewModeSelector<bool>(
+                          value: weekly,
+                          options: [
+                            AppViewMode(
+                              value: false,
+                              icon: Icons.table_chart_outlined,
+                              label: socialText(
+                                context,
+                                'نمایش جدولی',
+                                'Table view',
                               ),
-                              (
-                                true,
-                                Icons.calendar_view_week_outlined,
-                                socialText(
-                                  context,
-                                  'نمایش برنامه هفتگی',
-                                  'Weekly schedule view',
-                                ),
+                              key: const ValueKey('schedule-view-table'),
+                            ),
+                            AppViewMode(
+                              value: true,
+                              icon: Icons.calendar_view_week_outlined,
+                              label: socialText(
+                                context,
+                                'نمایش برنامه هفتگی',
+                                'Weekly schedule view',
                               ),
-                            ])
-                              OutlinedButton.icon(
-                                key: ValueKey(
-                                  'schedule-view-${option.$1 ? 'weekly' : 'table'}',
-                                ),
-                                style: OutlinedButton.styleFrom(
-                                  backgroundColor: weekly == option.$1
-                                      ? Theme.of(
-                                          context,
-                                        ).colorScheme.primaryContainer
-                                      : Theme.of(context).colorScheme.surface,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: appRadius(context),
-                                  ),
-                                  minimumSize: const Size(0, 40),
-                                ),
-                                icon: Icon(option.$2, size: 18),
-                                label: Text(option.$3),
-                                onPressed: () {
-                                  if (weekly == option.$1) return;
-                                  setState(() {
-                                    weekly = option.$1;
-                                    loading = true;
-                                    page = 1;
-                                    localPage = 1;
-                                  });
-                                  load();
-                                },
-                              ),
+                              key: const ValueKey('schedule-view-weekly'),
+                            ),
                           ],
+                          onChanged: (v) {
+                            if (weekly == v) return;
+                            setState(() {
+                              weekly = v;
+                              loading = true;
+                              page = 1;
+                              localPage = 1;
+                            });
+                            load();
+                          },
                         ),
                       ),
                     PanelPageGuidance(
@@ -3879,7 +3862,7 @@ class _PanelGroupDetailsState extends State<PanelGroupDetails> {
         ),
       ),
       body: loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppLoadingIndicator()
           : error != null
           ? SocialEmpty(
               socialText(

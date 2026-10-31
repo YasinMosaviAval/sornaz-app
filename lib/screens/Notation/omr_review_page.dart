@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import '../../helpers/development_access.dart';
 import 'package:flutter/foundation.dart';
@@ -225,7 +226,7 @@ class _OmrReviewPageState extends State<_OmrReview> {
                   ),
                 ),
               ),
-            if (_busy) const Center(child: CircularProgressIndicator()),
+            if (_busy) const AppLoadingIndicator(),
             if (notes == null && !_busy)
               FilledButton.icon(
                 onPressed: _detect,

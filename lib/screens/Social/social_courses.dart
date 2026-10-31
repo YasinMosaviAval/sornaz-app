@@ -1,3 +1,5 @@
+import 'package:sornaz/components/app_async_state.dart';
+import 'package:sornaz/components/app_dialog.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/components/home_top_bar.dart';
 import 'lesson_media.dart';
@@ -170,7 +172,7 @@ class _CoursesBodyState extends State<CoursesBody>
       else if (items == null)
         const Padding(
           padding: EdgeInsets.all(32),
-          child: Center(child: CircularProgressIndicator()),
+          child: const AppLoadingIndicator(),
         )
       else if (items!.isEmpty)
         const SocialEmpty('هنوز دوره‌ای در این بخش نیست.')
@@ -376,7 +378,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     body: error != null
         ? SocialEmpty(error!, onRetry: load)
         : course == null
-        ? const Center(child: CircularProgressIndicator())
+        ? const AppLoadingIndicator()
         : RefreshIndicator(
             onRefresh: load,
             child: CourseExperience(
@@ -651,21 +653,9 @@ class _CourseEditorPageState extends State<CourseEditorPage> {
   }
 
   Future<void> remove(List items, int index) async {
-    final yes = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const AppText('این بخش حذف شود؟'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const AppText('انصراف'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const AppText('حذف'),
-          ),
-        ],
-      ),
+    final yes = await showDeleteConfirmation(
+      context,
+      title: 'این بخش حذف شود؟'.translate(context),
     );
     if (yes == true && mounted)
       setState(() {
@@ -706,7 +696,7 @@ class _CourseEditorPageState extends State<CourseEditorPage> {
     child: SocialScaffold(
       title: 'استودیوی ساخت دوره',
       body: loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppLoadingIndicator()
           : error != null
           ? SocialEmpty(error!, onRetry: load)
           : AbsorbPointer(

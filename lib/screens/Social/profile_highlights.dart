@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_dialog.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -241,21 +242,9 @@ class _HighlightEditorState extends State<HighlightEditor> {
   }
 
   Future<void> remove() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: Text(socialText(c, 'هایلایت حذف شود؟', 'Delete highlight?')),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(c, false),
-            child: Text(socialText(c, 'خیر', 'No')),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(c, true),
-            child: Text(socialText(c, 'بلی', 'Yes')),
-          ),
-        ],
-      ),
+    final confirmed = await showDeleteConfirmation(
+      context,
+      title: socialText(context, 'هایلایت حذف شود؟', 'Delete highlight?'),
     );
     if (confirmed != true || !mounted) return;
     setState(() => busy = true);

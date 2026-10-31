@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import '../../services/media_file_operations.dart';
 import 'package:path/path.dart' as p;
 import 'package:sornaz/helpers/app_platform.dart';
@@ -1008,19 +1009,12 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
             ),
           Expanded(
             child: loading
-                ? const Center(child: CircularProgressIndicator())
+                ? const AppLoadingIndicator()
                 : error != null
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(error!),
-                        TextButton(
-                          onPressed: load,
-                          child: Text(t('تلاش دوباره', 'Retry')),
-                        ),
-                      ],
-                    ),
+                ? AppErrorState(
+                    message: error!,
+                    onRetry: load,
+                    retryLabel: t('تلاش دوباره', 'Retry'),
                   )
                 : TabBarView(
                     controller: tabs,
@@ -1028,10 +1022,12 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
                       for (final i in visibleTabs)
                         if (i == 0)
                           visible.isEmpty
-                              ? Center(
-                                  child: Text(
-                                    t('ویدیویی پیدا نشد', 'No videos found'),
+                              ? AppEmptyState(
+                                  message: t(
+                                    'ویدیویی پیدا نشد',
+                                    'No videos found',
                                   ),
+                                  icon: Icons.video_library_outlined,
                                 )
                               : gridView
                               ? _grid(visible)
@@ -1563,7 +1559,7 @@ class _DeviceVideoPlaybackState extends State<DeviceVideoPlayback>
               ),
             )
           : player == null
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppLoadingIndicator()
           : LayoutBuilder(
               builder: (context, box) => GestureDetector(
                 behavior: HitTestBehavior.opaque,

@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import 'package:flutter/material.dart';
 import '../Social/social_api.dart';
 import '../Social/social_widgets.dart';
@@ -145,7 +146,7 @@ class _PanelTermAttendanceState extends State<PanelTermAttendance> {
             child: Text(socialText(context, 'تلاش دوباره', 'Retry')),
           )
         : sessions == null
-        ? const Center(child: CircularProgressIndicator())
+        ? const AppLoadingIndicator()
         : Column(
             mainAxisSize: MainAxisSize.min,
             children: [

@@ -18,14 +18,15 @@ class MyProfilePage extends StatelessWidget {
   final SocialApi? api;
   @override
   Widget build(BuildContext context) {
-    if (!DevelopmentAccess.watch(context))
-      return const UserPanelPage(initialTab: 2, mainTabIndex: 4);
+    if (!DevelopmentAccess.watch(context)) {
+      return const UserPanelPage(initialTab: 2, mainTabIndex: 5);
+    }
     if (MainTabsScope.maybeOf(context) == null) {
-      return MainTabs(initialIndex: 4, initialChild: this);
+      return MainTabs(initialIndex: 5, initialChild: this);
     }
     return MusicPlaybackEntry(
       reason: PlaybackInterruption.stageAndProfile,
-      active: MainTabsScope.maybeOf(context)?.index == 4,
+      active: MainTabsScope.maybeOf(context)?.index == 5,
       child: _content(context),
     );
   }
@@ -34,7 +35,7 @@ class MyProfilePage extends StatelessWidget {
     final auth = context.watch<AuthSession>();
     if (!auth.isAuthenticated) {
       return SocialScaffold(
-        tabIndex: 4,
+        tabIndex: 5,
         appBar: const HomeTopBar(),
         title: socialText(context, 'پروفایل', 'Profile'),
         body: const JoinCommunity(),
@@ -74,7 +75,7 @@ class _MyProfileState extends State<_MyProfile> {
 
   @override
   Widget build(BuildContext context) => SocialScaffold(
-    tabIndex: 4,
+    tabIndex: 5,
     title: socialText(context, 'پروفایل', 'Profile'),
     appBar: HomeTopBar(
       trailingWidget: CreateContentButton(

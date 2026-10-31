@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'dart:async';
@@ -381,7 +382,7 @@ class _AcademyRegistrationPageState extends State<AcademyRegistrationPage> {
   Widget build(BuildContext context) => ScrollAwareScaffold(
     appBar: SornazAppBar(title: t('ثبت آموزشگاه', 'Register academy')),
     body: loading
-        ? const Center(child: CircularProgressIndicator())
+        ? const AppLoadingIndicator()
         : SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(

@@ -24,7 +24,7 @@ class IntervalPlayButton extends StatelessWidget {
             isDark: isDark,
           );
     final iconColor = playing
-        ? AppColors.metronome_page_accent_beat_icon_active_color(isDark: isDark)
+        ? Colors.white
         : AppColors.metronome_page_accent_beat_icon_inactive_color(
             isDark: isDark,
           );
@@ -45,8 +45,9 @@ class IntervalPlayButton extends StatelessWidget {
               style: IconButton.styleFrom(
                 shape: const CircleBorder(),
                 foregroundColor: iconColor,
+                disabledForegroundColor: iconColor,
               ),
-              icon: const Icon(Icons.play_arrow),
+              icon: Icon(Icons.play_arrow, color: iconColor),
             ),
           ),
         ),

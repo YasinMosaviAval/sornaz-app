@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import 'package:sornaz/helpers/desktop_media_channel.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
 import '../Site/chat_media.dart';
@@ -1095,7 +1096,7 @@ class _StoryComposerState extends State<StoryComposer>
               const Positioned.fill(
                 child: ColoredBox(
                   color: Colors.black54,
-                  child: Center(child: CircularProgressIndicator()),
+                  child: const AppLoadingIndicator(),
                 ),
               ),
           ],

@@ -1,4 +1,5 @@
-﻿import 'package:sornaz/helpers/app_appearance.dart';
+import 'package:sornaz/components/app_async_state.dart';
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'dart:convert';
@@ -523,7 +524,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
             ),
           ),
           body: _loading && post == null
-              ? const Center(child: CircularProgressIndicator())
+              ? const AppLoadingIndicator()
               : post == null
               ? Center(
                   child: TextButton(
@@ -691,9 +692,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 if (_loadingComments)
-                                  const Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
+                                  const AppLoadingIndicator(),
                                 if (_commentError != null)
                                   TextButton(
                                     onPressed: () => _loadComments(reset: true),

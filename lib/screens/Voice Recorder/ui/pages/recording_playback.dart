@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import '../../services/recording_waveforms.dart';
 
 import 'package:flutter/material.dart';
@@ -343,7 +344,7 @@ class _RecordingPlaybackPageState extends State<RecordingPlaybackPage> {
                                 },
                               )
                             : loading
-                            ? const Center(child: CircularProgressIndicator())
+                            ? const AppLoadingIndicator()
                             : error != null
                             ? Center(
                                 child: TextButton(

@@ -1,3 +1,5 @@
+import 'package:sornaz/components/app_text_input_dialog.dart';
+import 'package:sornaz/components/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:sornaz/components/audio_crop_page.dart';
@@ -13,7 +15,6 @@ import 'package:sornaz/screens/Players/services/music_playlists.dart';
 import 'package:sornaz/screens/Players/ui/components/audio_item.dart';
 import 'package:sornaz/screens/Players/ui/components/audio_controls.dart';
 import 'package:sornaz/screens/Players/ui/components/audio_slider.dart';
-import 'package:sornaz/screens/Players/ui/components/player_dialog.dart';
 import 'package:sornaz/screens/Players/ui/components/player_slide_navigation.dart';
 import 'package:sornaz/screens/Players/ui/pages/playlists.dart';
 import '../../provider/voice_recorder_provider.dart';
@@ -493,50 +494,12 @@ Future<String?> recordingNameDialog(
   BuildContext context,
   String title,
   String initial,
-) async {
-  var value = initial;
-  return showDialog<String>(
-    context: context,
-    builder: (c) => PlayerDialog(
-      title: Text(title),
-      content: TextFormField(
-        initialValue: initial,
-        autofocus: true,
-        maxLength: 100,
-        style: const TextStyle(fontSize: 14),
-        onChanged: (text) => value = text,
-      ),
-      actions: [
-        PlayerDialogButton(
-          primary: false,
-          onPressed: () => Navigator.pop(c),
-          child: const Text('انصراف'),
-        ),
-        PlayerDialogButton(
-          onPressed: () => Navigator.pop(c, value.trim()),
-          child: const Text('ذخیره'),
-        ),
-      ],
-    ),
-  );
-}
+) => showTextInputDialog(
+  context,
+  title: title,
+  initialValue: initial,
+  maxLength: 100,
+);
 
 Future<bool> confirmRecordingDelete(BuildContext context, String title) async =>
-    await showDialog<bool>(
-      context: context,
-      builder: (c) => PlayerDialog(
-        title: Text(title),
-        actions: [
-          PlayerDialogButton(
-            primary: false,
-            onPressed: () => Navigator.pop(c, false),
-            child: const Text('انصراف'),
-          ),
-          PlayerDialogButton(
-            onPressed: () => Navigator.pop(c, true),
-            child: const Text('حذف'),
-          ),
-        ],
-      ),
-    ) ??
-    false;
+    await showDeleteConfirmation(context, title: title);

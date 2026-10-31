@@ -27,9 +27,12 @@ class MainActivity : AudioServiceActivity() {
         super.onActivityResult(requestCode, resultCode, data)
     }
     private var practiceMetronome: PracticeMetronome? = null
-    override fun onDestroy() { practiceMetronome?.stop(); storyMedia?.dispose(); super.onDestroy() }
+    private var practiceNetwork: PracticeNetwork? = null
+    override fun onDestroy() { practiceNetwork?.dispose(); practiceMetronome?.stop(); storyMedia?.dispose(); super.onDestroy() }
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        practiceNetwork?.dispose()
+        practiceNetwork = PracticeNetwork(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "sornaz/app_info").setMethodCallHandler { call, result ->
             if (call.method == "version") {
                 val info = packageManager.getPackageInfo(packageName, 0)

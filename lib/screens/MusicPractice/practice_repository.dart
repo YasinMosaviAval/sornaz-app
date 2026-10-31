@@ -23,6 +23,7 @@ class MusicPracticeRepository {
   final http.Client client;
   String get scope => 'user.${userId ?? 0}';
   bool offline = false;
+  Object? lastSyncError;
   bool disposed = false;
   static Future<void> _queue = Future.value();
   Future<void>? _syncing;
@@ -51,7 +52,15 @@ class MusicPracticeRepository {
     if (disposed || token() != credential) {
       throw const SocialException('حساب کاربری تغییر کرده است.', 401);
     }
-    final body = jsonDecode(utf8.decode(response.bodyBytes)) as Map;
+    Map body;
+    try {
+      body = jsonDecode(utf8.decode(response.bodyBytes)) as Map;
+    } catch (_) {
+      throw SocialException(
+        'پاسخ سرور آزمون‌ها معتبر نیست (${response.statusCode}).',
+        response.statusCode,
+      );
+    }
     final envelope = Map<String, dynamic>.from(
       body['data'] is Map ? body['data'] as Map : body,
     );
@@ -66,40 +75,94 @@ class MusicPracticeRepository {
     );
   }
 
-  Future<PracticeJson> catalog({bool manage = false}) async {
+  Future<PracticeJson> catalog({
+    bool manage = false,
+    bool allowCached = true,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     try {
       final data = await request('catalog${manage ? '?manage=1' : ''}');
       if (data['viewerId'] != (userId ?? 0)) {
         throw const SocialException('حساب کاربری تغییر کرده است.', 401);
       }
+      _validateCatalog(data);
       if (!manage) {
+        final archive = await box;
+        final versions = <String, String>{};
+        for (final exam in data['exams'] as List? ?? []) {
+          if (exam['access'] == true && exam['config'] is Map) {
+            versions['$scope.definition.${exam['id']}.${exam['version']}'] =
+                jsonEncode(exam);
+          }
+        }
+        if (versions.isNotEmpty) await archive.putAll(versions);
         await prefs.setString(
           'music.practice.catalog.$scope',
           jsonEncode(data),
         );
       }
       offline = false;
-      return data;
+      lastSyncError = null;
+      return manage ? data : (await cachedCatalog())!;
     } catch (e) {
-      if (manage || e is SocialException && [401, 403].contains(e.status)) {
+      lastSyncError = e;
+      if (!allowCached ||
+          manage ||
+          e is SocialException && [401, 403].contains(e.status)) {
         if (e is SocialException && [401, 403].contains(e.status)) {
           await prefs.remove('music.practice.catalog.$scope');
         }
         rethrow;
       }
-      final saved = prefs.getString('music.practice.catalog.$scope');
-      if (saved == null) rethrow;
+      final saved = await cachedCatalog();
+      if (saved == null ||
+          (saved['nodes'] as List).isEmpty &&
+              (saved['exams'] as List).isEmpty) {
+        rethrow;
+      }
       offline = true;
-      return Map<String, dynamic>.from(jsonDecode(saved) as Map);
+      return saved;
     }
   }
 
-  Future<List<PracticeJson>> progress() async {
+  Future<PracticeJson?> cachedCatalog() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString('music.practice.catalog.$scope');
+    if (saved == null) return null;
+    try {
+      final data = Map<String, dynamic>.from(jsonDecode(saved) as Map);
+      _validateCatalog(data);
+      return data;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _validateCatalog(PracticeJson data) {
+    if (data['nodes'] is! List ||
+        data['exams'] is! List ||
+        data['viewerId'] != (userId ?? 0)) {
+      throw const SocialException(
+        'ساختار فهرست آزمون‌های دریافتی معتبر نیست.',
+        502,
+      );
+    }
+    for (final row in [...data['nodes'] as List, ...data['exams'] as List]) {
+      if (row is! Map || row['id'] is! int) {
+        throw const SocialException(
+          'ساختار فهرست آزمون‌های دریافتی معتبر نیست.',
+          502,
+        );
+      }
+    }
+  }
+
+  Future<List<PracticeJson>> progress({bool refresh = true}) async {
     final prefs = await SharedPreferences.getInstance();
     List<PracticeJson> result = [];
     if (userId != null) {
       try {
+        if (!refresh) throw const SocialException('Cached progress');
         final data = await request('progress');
         result = (data['progress'] as List)
             .map((e) => Map<String, dynamic>.from(e as Map))
@@ -119,6 +182,7 @@ class MusicPracticeRepository {
                 .toList();
       }
     }
+    await _mergeLegacy(result);
     for (final run in await runs()) {
       if (run['passed'] != true) continue;
       final exam = Map<String, dynamic>.from(run['exam'] as Map);
@@ -141,6 +205,51 @@ class MusicPracticeRepository {
           .clamp(0, 5);
     }
     return result;
+  }
+
+  Future<void> _mergeLegacy(List<PracticeJson> result) async {
+    final saved = await cachedCatalog();
+    if (saved == null) return;
+    final branches = <String, IntervalProgress>{};
+    for (final music in IntervalMusic.values) {
+      branches[music.name] = await IntervalProgressRepository(
+        userId: userId,
+        music: music,
+        journal: IntervalResultJournal(userId: userId, music: music),
+      ).load();
+    }
+    for (final exam in saved['exams'] as List? ?? []) {
+      if (exam['version'] != 1 || exam['legacyKey'] is! String) continue;
+      final parts = (exam['legacyKey'] as String).split(':');
+      if (parts.length != 2) continue;
+      final level = int.tryParse(parts[1]);
+      if (level == null) continue;
+      final count = branches[parts[0]]?.starsFor(level) ?? 0;
+      if (count == 0) continue;
+      final matches = result.where(
+        (p) => p['examId'] == exam['id'] && p['version'] == 1,
+      );
+      final p = matches.isEmpty
+          ? <String, dynamic>{
+              'examId': exam['id'],
+              'version': 1,
+              'completedStages': <dynamic>[],
+            }
+          : matches.first;
+      if (matches.isEmpty) result.add(p);
+      final stages = List<dynamic>.from(p['completedStages'] as List);
+      for (
+        var stage = 1;
+        stage <= count && stage <= (exam['stageCount'] as int);
+        stage++
+      ) {
+        if (!stages.contains(stage)) stages.add(stage);
+      }
+      p['completedStages'] = stages;
+      p['stars'] = (stages.length * 5 / (exam['stageCount'] as int))
+          .floor()
+          .clamp(0, 5);
+    }
   }
 
   Future<void> uploadLegacy() async {

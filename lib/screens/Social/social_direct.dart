@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
@@ -146,7 +147,7 @@ class _DirectPageState extends State<DirectPage> {
   Widget conversationList(bool group) {
     if (error != null) return SocialEmpty(error!, onRetry: load);
     if (conversations == null)
-      return const Center(child: CircularProgressIndicator());
+      return const AppLoadingIndicator();
     final rows = conversations!
         .where((c) => (c['type'] == 'group') == group)
         .toList();
@@ -316,7 +317,7 @@ class _ChatPageState extends State<ChatPage> {
                 userFacingError(snapshot.error!),
                 onRetry: () => setState(() => section = chatSection(panel)),
               )
-            : const Center(child: CircularProgressIndicator()),
+            : const AppLoadingIndicator(),
       );
     },
   );

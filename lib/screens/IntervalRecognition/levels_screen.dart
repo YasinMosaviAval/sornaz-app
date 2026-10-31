@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import 'dart:async';
 import '../../helpers/development_access.dart';
 import 'package:flutter/material.dart';
@@ -219,7 +220,7 @@ class _IntervalLevelsScreenState extends State<IntervalLevelsScreen>
                 ),
               )
             : _progress == null
-            ? const Center(child: CircularProgressIndicator())
+            ? const AppLoadingIndicator()
             : SafeArea(
                 child: ListView.separated(
                   padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),

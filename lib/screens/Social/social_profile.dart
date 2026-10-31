@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import 'package:sornaz/components/jalali_date_picker.dart';
 import 'profile_highlights.dart';
 import 'profile_articles.dart';
@@ -111,7 +112,7 @@ class _ProfileBodyState extends State<ProfileBody> {
   @override
   Widget build(BuildContext context) {
     if (error != null) return SocialEmpty(error!, onRetry: load);
-    if (user == null) return const Center(child: CircularProgressIndicator());
+    if (user == null) return const AppLoadingIndicator();
     final u = user!;
     return RefreshIndicator(
       onRefresh: load,
@@ -490,7 +491,7 @@ class _PeoplePageState extends State<PeoplePage> {
           child: error != null
               ? SocialEmpty(error!, onRetry: load)
               : users == null
-              ? const Center(child: CircularProgressIndicator())
+              ? const AppLoadingIndicator()
               : users!.isEmpty
               ? const SocialEmpty('کاربری پیدا نشد.')
               : RefreshIndicator(
@@ -917,7 +918,7 @@ class _SavedPostsPageState extends State<SavedPostsPage> {
                 setState(() => data = widget.api.get('/posts?saved=1')),
           );
         if (!snapshot.hasData)
-          return const Center(child: CircularProgressIndicator());
+          return const AppLoadingIndicator();
         final rows = objects(snapshot.data);
         return rows.isEmpty
             ? const SocialEmpty('هنوز پستی ذخیره نکرده‌اید.')

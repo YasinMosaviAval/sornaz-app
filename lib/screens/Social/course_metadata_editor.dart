@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import 'package:sornaz/helpers/user_facing_error.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:convert';
@@ -180,7 +181,7 @@ class _CourseMetadataEditorState extends State<CourseMetadataEditor> {
   Widget build(BuildContext context) => SocialScaffold(
     title: socialText(context, 'جزئیات تکمیلی دوره', 'Course details'),
     body: loading
-        ? const Center(child: CircularProgressIndicator())
+        ? const AppLoadingIndicator()
         : error != null
         ? SocialEmpty(error!, onRetry: load)
         : ListView(

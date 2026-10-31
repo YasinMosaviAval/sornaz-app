@@ -1,4 +1,4 @@
-﻿import 'package:sornaz/helpers/app_appearance.dart';
+import 'package:sornaz/components/app_dialog.dart';
 import '../components/recording_timer.dart';
 import 'package:sornaz/screens/Players/providers/audio_player_provider.dart';
 import 'package:sornaz/screens/Players/services/player_settings.dart';
@@ -52,45 +52,25 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
         if (!mounted) return;
         final choice = await showDialog<String>(
           context: context,
-          builder: (c) {
-            final colors = Theme.of(c).colorScheme;
-            return AlertDialog(
-              title: const Text(
-                'صدای ضبط شده را ذخیره می کنید یا حذف؟',
-                style: TextStyle(fontSize: 14),
+          builder: (c) => AppDialog(
+            title: Text('صدای ضبط شده را ذخیره می کنید یا حذف؟'),
+            actions: [
+              AppDialogAction(
+                role: AppDialogActionRole.cancel,
+                onPressed: () => Navigator.pop(c, 'cancel'),
+                child: Text('ادامه ضبط'),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(c, 'cancel'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.grey,
-                    textStyle: const TextStyle(fontSize: 12),
-                  ),
-                  child: const Text('ادامه ضبط'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(c, 'delete'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: colors.onSurface,
-                    textStyle: const TextStyle(fontSize: 12),
-                  ),
-                  child: const Text('حذف'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(c, 'save'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: colors.onPrimary,
-                    backgroundColor: colors.primary,
-                    textStyle: const TextStyle(fontSize: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: appRadius(context),
-                    ),
-                  ),
-                  child: const Text('ذخیره'),
-                ),
-              ],
-            );
-          },
+              AppDialogAction(
+                role: AppDialogActionRole.destructive,
+                onPressed: () => Navigator.pop(c, 'delete'),
+                child: Text('حذف'),
+              ),
+              AppDialogAction(
+                onPressed: () => Navigator.pop(c, 'save'),
+                child: Text('ذخیره'),
+              ),
+            ],
+          ),
         );
         if (choice == 'save') {
           await vm.stopRecording();

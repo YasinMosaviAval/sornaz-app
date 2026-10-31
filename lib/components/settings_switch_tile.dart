@@ -1,106 +1,68 @@
 import 'package:flutter/material.dart';
-import 'package:sornaz/helpers/app_colors.dart';
-import 'package:sornaz/helpers/app_spacing.dart';
-import 'package:sornaz/helpers/app_typography.dart';
+import '../helpers/app_appearance.dart';
 
+/// Shared switch row; a null callback always remains read-only.
 class SettingsSwitchTile extends StatelessWidget {
-  final String title;
-  final String subtitle;
-
-  final bool value;
-  final bool isDark;
-  final bool enabled;
-  final double? horizontalPadding;
-
-  final IconData? leadingIcon;
-  final ValueChanged<bool> onChanged;
-
   const SettingsSwitchTile({
     super.key,
     required this.title,
     required this.subtitle,
     required this.value,
-    required this.isDark,
     required this.onChanged,
+    this.isDark = false,
     this.leadingIcon,
     this.enabled = true,
     this.horizontalPadding,
-  });
+    this.contentPadding,
+  }) : _title = null,
+       _subtitle = null,
+       _secondary = null;
+  const SettingsSwitchTile.widgets({
+    super.key,
+    required Widget title,
+    Widget? subtitle,
+    Widget? secondary,
+    required this.value,
+    required this.onChanged,
+    this.enabled = true,
+    this.contentPadding,
+  }) : _title = title,
+       _subtitle = subtitle,
+       _secondary = secondary,
+       title = '',
+       subtitle = '',
+       isDark = false,
+       leadingIcon = null,
+       horizontalPadding = null;
+  final String title, subtitle;
+  final Widget? _title, _subtitle, _secondary;
+  final bool value, enabled;
 
+  /// Compatibility field; colors follow the application theme.
+  final bool isDark;
+  final double? horizontalPadding;
+  final EdgeInsetsGeometry? contentPadding;
+  final IconData? leadingIcon;
+  final ValueChanged<bool>? onChanged;
   @override
   Widget build(BuildContext context) {
-    final effectiveTitleColor = !enabled
-        ? AppColors.settings_switch_tile_not_enabled_title_color(isDark: isDark)
-        : AppColors.settings_switch_tile_enabled_title_color(isDark: isDark);
-
-    final effectiveSubtitleColor = !enabled
-        ? AppColors.settings_switch_tile_not_enabled_subtitle_color(
-            isDark: isDark,
-          )
-        : AppColors.settings_switch_tile_enabled_subtitle_color(isDark: isDark);
-
-    return InkWell(
-      // onTap: enabled ? () => onChanged(!value) : null,
-      borderRadius: BorderRadius.circular(AppSpacing.space_2),
-      child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 250),
-        opacity: enabled ? 1 : 0.5,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.space_0),
-          child: ListTile(
-            contentPadding: horizontalPadding == null
-                ? const EdgeInsets.fromLTRB(
-                    AppSpacing.space_16,
-                    0,
-                    AppSpacing.space_24,
-                    0,
-                  )
-                : EdgeInsets.symmetric(horizontal: horizontalPadding!),
-
-            // ===== Leading Icon (optional)
-            leading: leadingIcon != null
-                ? Icon(leadingIcon, color: effectiveTitleColor)
-                : null,
-
-            title: Text(
-              title,
-              style: AppTypography.settingsSwitchTileItemTitle(
-                context,
-                effectiveTitleColor,
-              ),
-            ),
-
-            subtitle: Text(
-              subtitle,
-              style: AppTypography.settingsSwitchTileItemSubtitle(
-                context,
-                effectiveSubtitleColor,
-              ),
-            ),
-
-            // ===== Switch
-            trailing: Switch(
-              value: value,
-              onChanged: enabled ? onChanged : null,
-              inactiveThumbColor:
-                  AppColors.settings_switch_tile_inactive_thumb_color(
-                    isDark: isDark,
-                  ),
-              inactiveTrackColor:
-                  AppColors.settings_switch_tile_inactive_track_color(
-                    isDark: isDark,
-                  ),
-              activeTrackColor:
-                  AppColors.settings_switch_tile_active_track_color(
-                    isDark: isDark,
-                  ),
-              activeThumbColor:
-                  AppColors.settings_switch_tile_active_thumb_color(
-                    isDark: isDark,
-                  ),
-            ),
-            onTap: null,
-          ),
+    final theme = Theme.of(context);
+    return Material(
+      type: MaterialType.transparency,
+      child: ListTileTheme.merge(
+        titleTextStyle: theme.textTheme.bodyMedium,
+        subtitleTextStyle: theme.textTheme.bodySmall,
+        child: SwitchListTile(
+          shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
+          contentPadding:
+              contentPadding ??
+              EdgeInsets.symmetric(horizontal: horizontalPadding ?? 12),
+          title: _title ?? Text(title),
+          subtitle: _subtitle ?? (subtitle.isEmpty ? null : Text(subtitle)),
+          secondary:
+              _secondary ?? (leadingIcon == null ? null : Icon(leadingIcon)),
+          value: value,
+          onChanged: enabled ? onChanged : null,
         ),
       ),
     );

@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import 'package:sornaz/helpers/app_platform.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
@@ -123,15 +124,13 @@ class _RecordDetailsPageState extends State<RecordDetailsPage> {
                   future: waveformFuture,
                   builder: (context, waveformSnap) {
                     if (!waveformSnap.hasData) {
-                      return const Center(child: CircularProgressIndicator());
+                      return const AppLoadingIndicator();
                     }
                     return FutureBuilder<Duration>(
                       future: durationFuture,
                       builder: (context, durationSnap) {
                         if (!durationSnap.hasData) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
+                          return const AppLoadingIndicator();
                         }
                         return WaveformPlayerView(
                           samples: waveformSnap.data!,

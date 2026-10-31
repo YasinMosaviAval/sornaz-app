@@ -65,7 +65,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Original'), findsOneWidget);
     await tester.enterText(find.byType(TextFormField), '  Updated  ');
-    await tester.tap(find.byType(FilledButton));
+    await tester.pump();
+    await tester.tap(find.widgetWithText(TextButton, 'Save'));
     await tester.pumpAndSettle();
     expect(saved, 'Updated');
     expect(find.byType(AlertDialog), findsNothing);

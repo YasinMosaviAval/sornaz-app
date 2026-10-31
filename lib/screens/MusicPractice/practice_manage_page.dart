@@ -1,323 +1,11 @@
+import 'package:sornaz/components/settings_switch_tile.dart';
 import 'package:flutter/material.dart';
 import '../../components/app_bar.dart';
 import '../../helpers/app_appearance.dart';
 import '../Social/social_widgets.dart';
 import 'practice_repository.dart';
-
-class MusicPracticeManagePage extends StatefulWidget {
-  const MusicPracticeManagePage({super.key, required this.repository});
-  final MusicPracticeRepository repository;
-  @override
-  State<MusicPracticeManagePage> createState() =>
-      _MusicPracticeManagePageState();
-}
-
-class _MusicPracticeManagePageState extends State<MusicPracticeManagePage> {
-  PracticeJson? catalog, plans;
-  String? error;
-  @override
-  void initState() {
-    super.initState();
-    load();
-  }
-
-  Future<void> load() async {
-    try {
-      final c = await widget.repository.catalog(manage: true),
-          p = await widget.repository.request('plans');
-      if (mounted) {
-        setState(() {
-          catalog = c;
-          plans = p;
-          error = null;
-        });
-      }
-    } catch (e) {
-      if (mounted) setState(() => error = e.toString());
-    }
-  }
-
-  List<PracticeJson> rows(String key) =>
-      ((key == 'plans' ? plans : catalog)?[key] as List? ?? [])
-          .map((x) => Map<String, dynamic>.from(x as Map))
-          .toList();
-  String title(PracticeJson row) =>
-      row[Localizations.localeOf(context).languageCode == 'en'
-              ? 'titleEn'
-              : 'titleFa']
-          .toString();
-  Future<void> edit(String kind, [PracticeJson? item]) async {
-    await socialPush(
-      context,
-      MusicPracticeEditPage(
-        repository: widget.repository,
-        catalog: catalog!,
-        kind: kind,
-        item: item,
-      ),
-    );
-    if (mounted) await load();
-  }
-
-  Future<void> publish(String kind, PracticeJson item) async {
-    try {
-      await widget.repository.request('publish', {
-        'kind': kind,
-        'id': item['id'],
-        'version': item['version'],
-        'published': item['published'] != true,
-      });
-      if (mounted) await load();
-    } catch (e) {
-      if (mounted) setState(() => error = e.toString());
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final caps = Map<String, dynamic>.from(
-      catalog?['capabilities'] as Map? ?? {},
-    );
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: SornazAppBar(
-          title: socialText(context, 'مدیریت آزمون‌ها', 'Manage tests'),
-          actions: [
-            IconButton(
-              tooltip: socialText(context, 'به‌روزرسانی', 'Refresh'),
-              onPressed: load,
-              icon: const Icon(Icons.refresh),
-            ),
-          ],
-        ),
-        body: Column(
-          children: [
-            TabBar(
-              tabs: [
-                Tab(text: socialText(context, 'بخش‌ها', 'Sections')),
-                Tab(text: socialText(context, 'آزمون‌ها', 'Tests')),
-                Tab(text: socialText(context, 'اشتراک‌ها', 'Subscriptions')),
-              ],
-            ),
-            if (error != null)
-              Padding(padding: const EdgeInsets.all(12), child: Text(error!)),
-            if (catalog == null)
-              const LinearProgressIndicator()
-            else
-              Expanded(
-                child: TabBarView(
-                  children: [
-                    ListView(
-                      padding: const EdgeInsets.all(12),
-                      children: [
-                        if (caps['create'] == true)
-                          FilledButton.icon(
-                            onPressed: () => edit('nodes'),
-                            icon: const Icon(Icons.add),
-                            label: Text(
-                              socialText(context, 'افزودن بخش', 'Add section'),
-                            ),
-                          ),
-                        for (final node in rows('nodes'))
-                          ListTile(
-                            title: Text(
-                              '${'—' * ((node['depth'] as int) - 1)} ${title(node)}',
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  node['published'] == true
-                                      ? socialText(
-                                          context,
-                                          'منتشرشده',
-                                          'Published',
-                                        )
-                                      : socialText(
-                                          context,
-                                          'پیش‌نویس',
-                                          'Draft',
-                                        ),
-                                ),
-                                if (caps['publish'] == true &&
-                                    node['canManage'] == true)
-                                  TextButton.icon(
-                                    onPressed: () => publish('node', node),
-                                    icon: Icon(
-                                      node['published'] == true
-                                          ? Icons.visibility_off_outlined
-                                          : Icons.publish_outlined,
-                                    ),
-                                    label: Text(
-                                      node['published'] == true
-                                          ? socialText(
-                                              context,
-                                              'توقف انتشار',
-                                              'Unpublish',
-                                            )
-                                          : socialText(
-                                              context,
-                                              'انتشار',
-                                              'Publish',
-                                            ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            trailing:
-                                caps['edit'] == true &&
-                                    node['canManage'] == true
-                                ? IconButton(
-                                    tooltip: socialText(
-                                      context,
-                                      'ویرایش',
-                                      'Edit',
-                                    ),
-                                    icon: const Icon(Icons.edit_outlined),
-                                    onPressed: () => edit('nodes', node),
-                                  )
-                                : null,
-                          ),
-                      ],
-                    ),
-                    ListView(
-                      padding: const EdgeInsets.all(12),
-                      children: [
-                        if (caps['create'] == true)
-                          FilledButton.icon(
-                            onPressed: () => edit('exams'),
-                            icon: const Icon(Icons.add),
-                            label: Text(
-                              socialText(context, 'افزودن آزمون', 'Add test'),
-                            ),
-                          ),
-                        for (final exam in rows('exams'))
-                          ListTile(
-                            title: Text(title(exam)),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${exam['stageCount']} ${socialText(context, 'مرحله', 'stages')} · ${exam['audience']}',
-                                ),
-                                if (caps['publish'] == true)
-                                  TextButton.icon(
-                                    onPressed: () => publish('exam', exam),
-                                    icon: Icon(
-                                      exam['published'] == true
-                                          ? Icons.visibility_off_outlined
-                                          : Icons.publish_outlined,
-                                    ),
-                                    label: Text(
-                                      exam['published'] == true
-                                          ? socialText(
-                                              context,
-                                              'توقف انتشار',
-                                              'Unpublish',
-                                            )
-                                          : socialText(
-                                              context,
-                                              'انتشار',
-                                              'Publish',
-                                            ),
-                                    ),
-                                  ),
-                                if (caps['approvePlans'] == true)
-                                  TextButton.icon(
-                                    onPressed: () => edit('shares', exam),
-                                    icon: const Icon(Icons.percent),
-                                    label: Text(
-                                      socialText(
-                                        context,
-                                        'سهم درآمد',
-                                        'Revenue share',
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            trailing: caps['edit'] == true
-                                ? IconButton(
-                                    tooltip: socialText(
-                                      context,
-                                      'ویرایش',
-                                      'Edit',
-                                    ),
-                                    icon: const Icon(Icons.edit_outlined),
-                                    onPressed: () => edit('exams', exam),
-                                  )
-                                : null,
-                          ),
-                      ],
-                    ),
-                    ListView(
-                      padding: const EdgeInsets.all(12),
-                      children: [
-                        if (caps['create'] == true)
-                          FilledButton.icon(
-                            onPressed: () => edit('plans/propose'),
-                            icon: const Icon(Icons.add),
-                            label: Text(
-                              socialText(
-                                context,
-                                'پیشنهاد اشتراک',
-                                'Propose subscription',
-                              ),
-                            ),
-                          ),
-                        for (final plan in rows('plans'))
-                          ListTile(
-                            title: Text(plan['title'].toString()),
-                            subtitle: Text(
-                              '${plan['amount']} ${socialText(context, 'تومان', 'toman')} · ${plan['days']} ${socialText(context, 'روز', 'days')} · ${plan['status']}',
-                            ),
-                            trailing: Wrap(
-                              children: [
-                                if (plan['teacher_id'].toString() ==
-                                    '${widget.repository.userId}')
-                                  IconButton(
-                                    tooltip: socialText(
-                                      context,
-                                      'ویرایش پیشنهاد',
-                                      'Edit proposal',
-                                    ),
-                                    icon: const Icon(Icons.edit_outlined),
-                                    onPressed: () =>
-                                        edit('plans/propose', plan),
-                                  ),
-                                if (caps['approvePlans'] == true)
-                                  IconButton(
-                                    tooltip: socialText(
-                                      context,
-                                      'تعیین سهم و تأیید',
-                                      'Set share and approve',
-                                    ),
-                                    icon: const Icon(Icons.verified_outlined),
-                                    onPressed: () =>
-                                        edit('plans/approve', plan),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        for (final row in (plans?['revenue'] as List? ?? []))
-                          ListTile(
-                            title: Text('${row['amount']} IRT'),
-                            subtitle: Text(
-                              '${socialText(context, 'سهم ثبت‌شده', 'Recorded share')} · ${row['beneficiary']} · #${row['order_id']}',
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+import 'practice_form_field.dart';
+import 'practice_tree.dart';
 
 class MusicPracticeEditPage extends StatefulWidget {
   const MusicPracticeEditPage({
@@ -341,9 +29,12 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
   final selectedNames = <int, String>{};
   final questions = <Map<String, TextEditingController>>[];
   late int parent;
+  late int subscriptionDays;
+  late int subscriptionNode;
   late String engine, audience, direction, status;
   late bool published, variableRoot;
   bool saving = false;
+  bool slugAutomatic = true;
   String? error;
   PracticeJson get old => widget.item ?? {};
   TextEditingController controller(String name, Object? initial) =>
@@ -366,6 +57,11 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
   @override
   void initState() {
     super.initState();
+    subscriptionNode =
+        int.tryParse('${old['node_id'] ?? old['_rootNodeId'] ?? 0}') ?? 0;
+    subscriptionDays = int.tryParse('${old['days']}') ?? 30;
+    if (subscriptionDays <= 0) subscriptionDays = 30;
+    slugAutomatic = old['id'] == null && (old['slug'] ?? '').toString().isEmpty;
     final config = Map<String, dynamic>.from(old['config'] as Map? ?? {}),
         nodes = widget.catalog['nodes'] as List;
     parent =
@@ -426,41 +122,64 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
     bool required = true,
   }) => Padding(
     padding: const EdgeInsets.only(bottom: 12),
-    child: TextFormField(
+    child: PracticeFormField(
+      name: name,
+      label: socialText(context, fa, en),
       controller: controller(name, initial),
+      lines: lines,
+      required: required,
       readOnly:
           name == 'teacherPercent' &&
           widget.kind == 'plans/approve' &&
           old['exam_id'] != null,
-      keyboardType: number
-          ? const TextInputType.numberWithOptions(decimal: true)
-          : TextInputType.multiline,
-      maxLines: lines,
-      style: Theme.of(context).textTheme.bodyMedium,
-      decoration: InputDecoration(labelText: socialText(context, fa, en)),
-      validator: (v) => required && (v == null || v.trim().isEmpty)
-          ? socialText(
-              context,
-              'این فیلد الزامی است.',
-              'This field is required.',
-            )
+      extraValidator: name == 'slug'
+          ? (value) {
+              final duplicate = (widget.catalog['nodes'] as List).any(
+                (n) =>
+                    n['slug'] == value.trim().toLowerCase() &&
+                    n['id'].toString() != (old['id'] ?? 0).toString(),
+              );
+              return duplicate
+                  ? socialText(
+                      context,
+                      'این نشانی قبلاً استفاده شده است؛ نشانی دیگری انتخاب کنید.',
+                      'This address is already used; choose another one.',
+                    )
+                  : null;
+            }
           : null,
+      onChanged: (value) {
+        if (widget.kind != 'nodes') return;
+        if (name == 'slug') slugAutomatic = value.trim().isEmpty;
+        if (name == 'titleEn' && slugAutomatic) {
+          controller('slug', old['slug']).text =
+              PracticeFieldValidation.suggestSlug(value);
+        }
+      },
     ),
   );
   Widget dropdown(
     String label,
     String value,
     List<(String, String)> options,
-    ValueChanged<String> change,
-  ) => Padding(
+    ValueChanged<String> change, {
+    Set<String> disabledValues = const {},
+  }) => Padding(
     padding: const EdgeInsets.only(bottom: 12),
     child: DropdownButtonFormField<String>(
+      style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 12),
       initialValue: value,
-      decoration: InputDecoration(labelText: label),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: Theme.of(
+          context,
+        ).textTheme.bodyMedium?.copyWith(fontSize: 12),
+      ),
       items: [
         for (final o in options)
           DropdownMenuItem(
             value: o.$1,
+            enabled: !disabledValues.contains(o.$1),
             child: Text(o.$2, overflow: TextOverflow.ellipsis),
           ),
       ],
@@ -514,6 +233,9 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
           }),
           fieldViewBuilder: (context, search, focus, submitted) =>
               TextFormField(
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontSize: 12),
                 controller: search,
                 focusNode: focus,
                 onFieldSubmitted: (_) => submitted(),
@@ -622,11 +344,22 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
         });
       } else if (widget.kind == 'plans/propose') {
         body.addAll({
-          'examId': parent,
+          'examId': 0,
+          'nodeId': subscriptionNode,
           'title': text('title'),
           'amount': integer('amount'),
-          'days': integer('days'),
+          'days': subscriptionDays,
         });
+        if (body['nodeId'] != 0 &&
+            widget.catalog['sectionSubscriptions'] != true) {
+          throw Exception(
+            socialText(
+              context,
+              'برای ثبت اشتراک این بخش، API و مایگریشن اشتراک بخش‌ها باید روی سرور به‌روز شوند.',
+              'Update the server API and section subscription migration before saving this offer.',
+            ),
+          );
+        }
       } else if (widget.kind == 'shares') {
         body.addAll({
           'shareVersion': old['shareVersion'],
@@ -652,9 +385,11 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
     final caps = Map<String, dynamic>.from(
           widget.catalog['capabilities'] as Map,
         ),
-        nodes = (widget.catalog['nodes'] as List)
-            .map((n) => Map<String, dynamic>.from(n as Map))
-            .toList(),
+        nodes = PracticeTree(
+          (widget.catalog['nodes'] as List).map(
+            (n) => Map<String, dynamic>.from(n as Map),
+          ),
+        ).ordered,
         config = Map<String, dynamic>.from(old['config'] as Map? ?? {}),
         en = Localizations.localeOf(context).languageCode == 'en';
     return Scaffold(
@@ -701,12 +436,17 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
                         (node['depth'] as int) < 3 && node['id'] != old['id'])
                       (
                         '${node['id']}',
-                        (en ? node['titleEn'] : node['titleFa']).toString(),
+                        '${'  ' * ((node['depth'] as int? ?? 1) - 1)}${(en ? node['titleEn'] : node['titleFa'])}',
                       ),
                 ],
                 (v) => parent = int.parse(v),
+                disabledValues: {
+                  for (final node in nodes)
+                    if (!PracticeTree(nodes).available(node['id'] as int))
+                      '${node['id']}',
+                },
               ),
-              SwitchListTile(
+              SettingsSwitchTile.widgets(
                 title: Text(socialText(context, 'انتشار', 'Published')),
                 value: published,
                 onChanged: caps['publish'] == true
@@ -793,7 +533,7 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
                     socialText(context, 'پایین‌رونده', 'Descending'),
                   ),
                 ], (v) => direction = v),
-                SwitchListTile(
+                SettingsSwitchTile.widgets(
                   title: Text(
                     socialText(
                       context,
@@ -820,46 +560,48 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
                           ])
                             Padding(
                               padding: const EdgeInsets.only(bottom: 8),
-                              child: TextFormField(
-                                controller: q[field],
-                                maxLines: field == 'choices' ? 4 : 1,
-                                style: Theme.of(context).textTheme.bodyMedium,
-                                decoration: InputDecoration(
-                                  labelText: switch (field) {
-                                    'promptFa' => socialText(
-                                      context,
-                                      'پرسش فارسی',
-                                      'Persian question',
-                                    ),
-                                    'promptEn' => socialText(
-                                      context,
-                                      'پرسش انگلیسی',
-                                      'English question',
-                                    ),
-                                    'choices' => socialText(
-                                      context,
-                                      'گزینه‌ها؛ هر گزینه در یک سطر',
-                                      'Choices, one per line',
-                                    ),
-                                    'correct' => socialText(
-                                      context,
-                                      'شماره گزینهٔ درست (از صفر)',
-                                      'Correct choice index (starting at zero)',
-                                    ),
-                                    'beats' => socialText(
-                                      context,
-                                      'کشش ضرب‌ها با ویرگول',
-                                      'Beat lengths, comma-separated',
-                                    ),
-                                    _ => socialText(
-                                      context,
-                                      'ضرب در دقیقه',
-                                      'Beats per minute',
-                                    ),
-                                  },
-                                ),
-                                validator: (v) => v == null || v.trim().isEmpty
-                                    ? socialText(context, 'الزامی', 'Required')
+                              child: PracticeFormField(
+                                name: field,
+                                controller: q[field]!,
+                                lines: field == 'choices' ? 4 : 1,
+                                choiceCount: q['choices']!.text
+                                    .split('\n')
+                                    .where((v) => v.trim().isNotEmpty)
+                                    .length,
+                                label: switch (field) {
+                                  'promptFa' => socialText(
+                                    context,
+                                    'پرسش فارسی',
+                                    'Persian question',
+                                  ),
+                                  'promptEn' => socialText(
+                                    context,
+                                    'پرسش انگلیسی',
+                                    'English question',
+                                  ),
+                                  'choices' => socialText(
+                                    context,
+                                    'گزینه‌ها؛ هر گزینه در یک سطر',
+                                    'Choices, one per line',
+                                  ),
+                                  'correct' => socialText(
+                                    context,
+                                    'شماره گزینهٔ درست (از صفر)',
+                                    'Correct choice index (starting at zero)',
+                                  ),
+                                  'beats' => socialText(
+                                    context,
+                                    'کشش ضرب‌ها با ویرگول',
+                                    'Beat lengths, comma-separated',
+                                  ),
+                                  _ => socialText(
+                                    context,
+                                    'ضرب در دقیقه',
+                                    'Beats per minute',
+                                  ),
+                                },
+                                onChanged: field == 'choices'
+                                    ? (_) => setState(() {})
                                     : null,
                               ),
                             ),
@@ -882,6 +624,11 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
                     ),
                   ),
                 OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    textStyle: Theme.of(
+                      context,
+                    ).textTheme.labelLarge?.copyWith(fontSize: 10),
+                  ),
                   onPressed: () => setState(() => addQuestion()),
                   icon: const Icon(Icons.add),
                   label: Text(
@@ -892,26 +639,28 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
             ],
             if (widget.kind == 'plans/propose') ...[
               dropdown(
-                socialText(context, 'نوع خرید', 'Purchase type'),
-                '$parent',
+                socialText(context, 'محدوده اشتراک', 'Subscription scope'),
+                '$subscriptionNode',
                 [
                   (
                     '0',
                     socialText(
                       context,
-                      'اشتراک ویژه؛ همه آزمون‌های مدرس',
-                      'VIP subscription; all teacher tests',
+                      'همه آزمون‌های مدرس',
+                      'All teacher tests',
                     ),
                   ),
-                  for (final exam in (widget.catalog['exams'] as List).map(
-                    (e) => Map<String, dynamic>.from(e as Map),
-                  ))
+                  for (final node in PracticeTree(
+                    (widget.catalog['nodes'] as List).map(
+                      (n) => Map<String, dynamic>.from(n as Map),
+                    ),
+                  ).ordered)
                     (
-                      '${exam['id']}',
-                      (en ? exam['titleEn'] : exam['titleFa']).toString(),
+                      '${node['id']}',
+                      (en ? node['titleEn'] : node['titleFa']).toString(),
                     ),
                 ],
-                (v) => parent = int.parse(v),
+                (v) => subscriptionNode = int.parse(v),
               ),
               input('title', 'عنوان پلن', 'Plan title', old['title']),
               input(
@@ -921,12 +670,29 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
                 old['amount'] ?? 1000,
                 number: true,
               ),
-              input(
-                'days',
-                'مدت اشتراک ویژه به روز؛ خرید تکی دائمی است',
-                'VIP duration in days; individual purchases are permanent',
-                old['days'] ?? 30,
-                number: true,
+              dropdown(
+                socialText(
+                  context,
+                  'مدت اشتراک ویژه',
+                  'VIP subscription duration',
+                ),
+                '$subscriptionDays',
+                [
+                  ('30', socialText(context, 'ماهانه', 'Monthly')),
+                  ('90', socialText(context, 'سه ماهه', 'Quarterly')),
+                  ('180', socialText(context, 'شش ماهه', 'Six months')),
+                  ('365', socialText(context, 'سالانه', 'Yearly')),
+                  if (![30, 90, 180, 365].contains(subscriptionDays))
+                    (
+                      '$subscriptionDays',
+                      socialText(
+                        context,
+                        'مدت ثبت‌شده: $subscriptionDays روز',
+                        'Saved duration: $subscriptionDays days',
+                      ),
+                    ),
+                ],
+                (value) => subscriptionDays = int.parse(value),
               ),
             ],
             if (widget.kind == 'shares')
@@ -967,6 +733,11 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
               ),
             ],
             FilledButton(
+              style: FilledButton.styleFrom(
+                textStyle: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(fontSize: 10),
+              ),
               onPressed: saving ? null : save,
               child: Text(socialText(context, 'ذخیره', 'Save')),
             ),

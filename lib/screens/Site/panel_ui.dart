@@ -1,5 +1,5 @@
-import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:flutter/material.dart';
+import 'package:sornaz/components/app_dialog.dart';
 import '../../components/scroll_aware_scaffold.dart';
 import '../Social/social_widgets.dart';
 import 'branch_style.dart';
@@ -46,38 +46,29 @@ Future<bool> showPanelConfirmation(
   String title, {
   String? message,
   bool delete = false,
-}) async =>
-    await showDialog<bool>(
-      context: context,
-      builder: (c) => Theme(
-        data: branchTheme(context),
-        child: AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
-          title: Text(title, style: const TextStyle(fontSize: 14)),
+}) async {
+  if (delete)
+    return showDeleteConfirmation(context, title: title, message: message);
+  return await showDialog<bool>(
+        context: context,
+        builder: (c) => AppDialog(
+          title: Text(title),
           content: message == null ? null : Text(message),
           actions: [
-            TextButton(
-              style: TextButton.styleFrom(foregroundColor: Colors.grey),
+            AppDialogAction(
+              role: AppDialogActionRole.cancel,
               onPressed: () => Navigator.pop(c, false),
               child: Text(socialText(c, 'انصراف', 'Cancel')),
             ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: delete ? Colors.red : branchAccent(context),
-                shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
-              ),
+            AppDialogAction(
               onPressed: () => Navigator.pop(c, true),
-              child: Text(
-                delete
-                    ? socialText(c, 'حذف', 'Delete')
-                    : socialText(c, 'تأیید', 'Confirm'),
-              ),
+              child: Text(socialText(c, 'تأیید', 'Confirm')),
             ),
           ],
         ),
-      ),
-    ) ??
-    false;
+      ) ??
+      false;
+}
 
 class PanelValueRow extends StatelessWidget {
   const PanelValueRow({

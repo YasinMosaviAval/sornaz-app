@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sornaz/components/app_dialog.dart';
 
 class PlayerDialog extends StatelessWidget {
   const PlayerDialog({super.key, this.title, this.content, this.actions});
@@ -6,22 +7,7 @@ class PlayerDialog extends StatelessWidget {
   final List<Widget>? actions;
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context), colors = Theme.of(context).colorScheme;
-    return AlertDialog(
-      backgroundColor: colors.surface,
-      title: title,
-      content: content,
-      actions: actions,
-      titleTextStyle: theme.textTheme.titleMedium?.copyWith(
-        fontSize: 16,
-        color: colors.onSurface,
-        fontWeight: FontWeight.w500,
-      ),
-      contentTextStyle: theme.textTheme.bodyMedium?.copyWith(
-        fontSize: 14,
-        color: colors.onSurface,
-      ),
-    );
+    return AppDialog(title: title, content: content, actions: actions);
   }
 }
 

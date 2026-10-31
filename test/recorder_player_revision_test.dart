@@ -186,6 +186,7 @@ void main() {
       await tester.tap(visible.first);
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextFormField), 'Intro');
+      await tester.pump();
       await tester.tap(find.text('ذخیره'));
       await tester.pumpAndSettle();
       expect(await files.bookmarks.name(file.uri, 0), 'Intro');
@@ -407,6 +408,7 @@ void main() {
     await tester.tap(find.byTooltip('دسته‌بندی جدید'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'Session');
+    await tester.pump();
     await tester.tap(find.text('ایجاد'));
     await tester.pumpAndSettle();
     expect(find.widgetWithText(Tab, 'Session'), findsOneWidget);

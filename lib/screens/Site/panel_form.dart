@@ -1,3 +1,4 @@
+import 'package:sornaz/components/settings_switch_tile.dart';
 import 'package:sornaz/components/jalali_date_picker.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
 import 'panel_ui.dart';
@@ -972,7 +973,7 @@ class _PanelFieldState extends State<PanelField> {
       );
     }
     if (type == 'bool') {
-      return SwitchListTile(
+      return SettingsSwitchTile.widgets(
         contentPadding: EdgeInsets.zero,
         title: Text(label),
         value: widget.value == true || widget.value == 1 || widget.value == '1',

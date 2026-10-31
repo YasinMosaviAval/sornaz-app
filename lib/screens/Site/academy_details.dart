@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:flutter/material.dart';
@@ -70,7 +71,7 @@ class _AcademyDetailsPageState extends State<AcademyDetailsPage> {
               onRetry: load,
             )
           : a == null
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppLoadingIndicator()
           : RefreshIndicator(
               onRefresh: load,
               child: ListView(

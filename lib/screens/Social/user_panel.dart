@@ -1,3 +1,5 @@
+import 'package:sornaz/components/app_async_state.dart';
+import 'package:sornaz/components/app_dialog.dart';
 import 'post_comments.dart';
 import '../../helpers/development_access.dart';
 import 'chat_tab_page.dart';
@@ -320,7 +322,7 @@ class _PanelState extends State<_Panel> {
       2 => AccountDashboardBody(api: api, key: ValueKey('profile-$tab')),
       _ =>
         loading
-            ? const Center(child: CircularProgressIndicator())
+            ? const AppLoadingIndicator()
             : error != null
             ? SocialEmpty(error!, onRetry: load)
             : RefreshIndicator(
@@ -520,23 +522,9 @@ class _PostCardState extends State<PostCard> {
                     onPressed: busy
                         ? null
                         : () async {
-                            final yes = await showDialog<bool>(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const AppText('این پست حذف شود؟'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, false),
-                                    child: const AppText('انصراف'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, true),
-                                    child: const AppText('حذف'),
-                                  ),
-                                ],
-                              ),
+                            final yes = await showDeleteConfirmation(
+                              context,
+                              title: 'این پست حذف شود؟'.translate(context),
                             );
                             if (yes != true) return;
                             try {

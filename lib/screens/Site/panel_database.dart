@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -206,7 +207,10 @@ class _PanelDatabasePageState extends State<PanelDatabasePage> {
   Widget tables() {
     final rows = objects(data['tables']);
     if (rows.isEmpty)
-      return Center(child: Text(text('جدولی یافت نشد.', 'No tables found.')));
+      return AppEmptyState(
+        message: text('جدولی یافت نشد.', 'No tables found.'),
+        icon: Icons.storage_outlined,
+      );
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
@@ -382,7 +386,7 @@ class _PanelDatabasePageState extends State<PanelDatabasePage> {
             ),
             Expanded(
               child: loading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const AppLoadingIndicator()
                   : error != null
                   ? Center(
                       child: Column(

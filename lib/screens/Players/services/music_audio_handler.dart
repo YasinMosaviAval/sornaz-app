@@ -5,6 +5,18 @@ MusicAudioHandler? musicAudioHandler;
 
 /// Bridges system media controls to the same player used by the application.
 class MusicAudioHandler extends BaseAudioHandler {
+  // Track changes briefly pause the player. Keep the foreground service and
+  // its wake lock across those pauses so Android permits background resumption.
+  // Explicit stop/clear still publishes idle and shuts the service down.
+  static const serviceConfig = AudioServiceConfig(
+    androidNotificationChannelId: 'com.example.sornaz.music',
+    androidNotificationChannelName: 'Sornaz music',
+    androidNotificationIcon: 'drawable/ic_music_notification',
+    androidStopForegroundOnPause: false,
+    rewindInterval: Duration(seconds: 10),
+    fastForwardInterval: Duration(seconds: 10),
+  );
+
   MusicAudioHandler({this.customUndo = false});
   final bool customUndo;
   bool _undoVisible = false;
@@ -81,9 +93,14 @@ class MusicAudioHandler extends BaseAudioHandler {
   @override
   Future<void> onTaskRemoved() async {
     await PlayerSettings.instance.load();
+    final state = playbackState.value;
+    final transitioning =
+        state.processingState == AudioProcessingState.loading ||
+        state.processingState == AudioProcessingState.buffering;
     if (PlayerSettings.instance.stopsFor(PlaybackInterruption.exitApp) ||
-        !playbackState.value.playing)
+        (!state.playing && !transitioning)) {
       await stop();
+    }
   }
 
   void clear() {

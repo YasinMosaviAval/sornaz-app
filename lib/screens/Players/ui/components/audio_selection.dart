@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_dialog.dart';
 import 'player_dialog.dart';
 import '../../services/media_file_operations.dart';
 import 'package:path/path.dart' as p;
@@ -115,21 +116,12 @@ Future<void> audioAction(
     if (action == 'playlist' && context.mounted)
       await chooseMusicPlaylist(context, files);
     if (action == 'delete' && context.mounted) {
-      final yes = await showDialog<bool>(
-        context: context,
-        builder: (c) => PlayerDialog(
-          title: Text('حذف ${files.length} فایل؟'),
-          actions: [
-            PlayerDialogButton(
-              primary: false,
-              onPressed: () => Navigator.pop(c, false),
-              child: const Text('انصراف'),
-            ),
-            PlayerDialogButton(
-              onPressed: () => Navigator.pop(c, true),
-              child: const Text('حذف'),
-            ),
-          ],
+      final yes = await showDeleteConfirmation(
+        context,
+        title: socialText(
+          context,
+          'حذف ${files.length} فایل؟',
+          'Delete ${files.length} files?',
         ),
       );
       if (yes == true) {

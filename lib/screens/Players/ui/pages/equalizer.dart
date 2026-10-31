@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -28,7 +29,7 @@ class _EqualizerTabState extends State<EqualizerTab> {
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: eq,
     builder: (context, _) {
-      if (!eq.ready) return const Center(child: CircularProgressIndicator());
+      if (!eq.ready) return const AppLoadingIndicator();
       final isDark = context.watch<AppData>().isDark;
       final color = eq.enabled
           ? Theme.of(context).colorScheme.primary

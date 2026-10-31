@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 export 'social_direct.dart';
 export 'story_page.dart';
 import 'package:sornaz/helpers/user_facing_error.dart';
@@ -99,7 +100,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
     body: error != null
         ? SocialEmpty(error!, onRetry: load)
         : items == null
-        ? const Center(child: CircularProgressIndicator())
+        ? const AppLoadingIndicator()
         : RefreshIndicator(
             onRefresh: load,
             child: ListView(

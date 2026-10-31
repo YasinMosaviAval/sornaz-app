@@ -1,6 +1,9 @@
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'bottom_nav.dart';
 import '../screens/MusicPractice/practice_page.dart';
+import '../screens/MusicPractice/practice_repository.dart';
+import '../screens/MusicPractice/practice_sync.dart';
+import '../screens/Authentication/providers/auth_session.dart';
 import '../helpers/development_access.dart';
 import '../screens/Social/chat_tab_page.dart';
 import 'package:sornaz/screens/Players/providers/audio_player_provider.dart';
@@ -57,9 +60,29 @@ class _MainTabsState extends State<MainTabs> {
   bool editorOpen = false;
   final Map<int, PreferredSizeWidget?> chrome = {};
   bool development = false;
+  MusicPracticeSync? practiceSync;
+  int? practiceAccount;
+  bool practiceInitialized = false;
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (widget.pages == null) {
+      final auth = context.watch<AuthSession?>();
+      final id = auth?.isAuthenticated == true ? auth!.user!.id : null;
+      if (!practiceInitialized || id != practiceAccount) {
+        practiceInitialized = true;
+        practiceAccount = id;
+        practiceSync?.dispose();
+        practiceSync = MusicPracticeSync(
+          MusicPracticeRepository(
+            userId: id,
+            token: () => auth?.isAuthenticated == true && auth!.user!.id == id
+                ? auth.token
+                : null,
+          ),
+        );
+      }
+    }
     final next = DevelopmentAccess.watch(context);
     if (next != development) {
       development = next;
@@ -70,17 +93,18 @@ class _MainTabsState extends State<MainTabs> {
 
   Widget page(int value) {
     if (widget.pages != null) return widget.pages![value];
-    if (value == widget.initialIndex && widget.initialChild != null)
+    if (value == widget.initialIndex && widget.initialChild != null) {
       return widget.initialChild!;
+    }
     return [
       const HomePage(),
       const SitePanelPage(),
       development ? const UserPanelPage() : const ChatTabPage(),
       const MusicToolsPage(),
+      const MusicPracticePage(),
       development
           ? const MyProfilePage()
-          : const UserPanelPage(initialTab: 2, mainTabIndex: 4),
-      const MusicPracticePage(),
+          : const UserPanelPage(initialTab: 2, mainTabIndex: 5),
     ][value];
   }
 
@@ -114,6 +138,7 @@ class _MainTabsState extends State<MainTabs> {
 
   @override
   void dispose() {
+    practiceSync?.dispose();
     controller.dispose();
     super.dispose();
   }
@@ -141,8 +166,9 @@ class _MainTabsState extends State<MainTabs> {
           await context.read<AudioPlayerProvider?>()?.interrupt(
             PlaybackInterruption.exitApp,
           );
-          if (PlayerSettings.instance.stopsFor(PlaybackInterruption.exitApp))
+          if (PlayerSettings.instance.stopsFor(PlaybackInterruption.exitApp)) {
             await musicAudioHandler?.stop();
+          }
           await SystemNavigator.pop();
         }
       },

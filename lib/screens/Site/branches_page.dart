@@ -1,3 +1,6 @@
+import 'package:sornaz/components/app_view_mode_selector.dart';
+import 'package:sornaz/components/app_async_state.dart';
+import 'package:sornaz/components/app_dialog.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -238,38 +241,15 @@ class _BranchesPageState extends State<BranchesPage> {
 
   Future<void> remove(Json row) async {
     if (busy || !canDelete(row)) return;
-    final yes = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
-        titleTextStyle: const TextStyle(fontSize: 14, color: Color(0xff111827)),
-        title: Text(
-          t(
-            typesOnly ? 'حذف نوع آموزشی' : 'حذف شعبه',
-            typesOnly ? 'Delete education type' : 'Delete branch',
-          ),
-        ),
-        content: Text(
-          t(
-            'آیا از حذف «${row['name'] ?? row['title']}» مطمئن هستید؟',
-            'Delete “${row['name'] ?? row['title']}”?',
-          ),
-        ),
-        actions: [
-          TextButton(
-            style: TextButton.styleFrom(foregroundColor: Colors.grey),
-            onPressed: () => Navigator.pop(c, false),
-            child: Text(t('انصراف', 'Cancel')),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.red.shade600,
-              shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
-            ),
-            onPressed: () => Navigator.pop(c, true),
-            child: Text(t('حذف', 'Delete')),
-          ),
-        ],
+    final yes = await showDeleteConfirmation(
+      context,
+      title: t(
+        typesOnly ? 'حذف نوع آموزشی' : 'حذف شعبه',
+        typesOnly ? 'Delete education type' : 'Delete branch',
+      ),
+      message: t(
+        'آیا از حذف «${row['name'] ?? row['title']}» مطمئن هستید؟',
+        'Delete “${row['name'] ?? row['title']}”?',
       ),
     );
     if (yes != true || !mounted) return;
@@ -928,7 +908,7 @@ class _BranchesPageState extends State<BranchesPage> {
         ),
         body: withTabs(
           loading
-              ? const Center(child: CircularProgressIndicator())
+              ? const AppLoadingIndicator()
               : error != null
               ? Center(
                   child: Column(
@@ -995,40 +975,20 @@ class _BranchesPageState extends State<BranchesPage> {
                           ),
                           const SizedBox(height: 12),
                         ],
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            for (final option in [
-                              (
-                                true,
-                                Icons.table_chart_outlined,
-                                t('نمایش جدولی', 'Table view'),
-                              ),
-                              (
-                                false,
-                                Icons.grid_view,
-                                t('نمایش کارتی', 'Card view'),
-                              ),
-                            ])
-                              OutlinedButton.icon(
-                                style: OutlinedButton.styleFrom(
-                                  minimumSize: const Size(0, 40),
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 8,
-                                  ),
-                                  backgroundColor: table == option.$1
-                                      ? const Color(0xffeef2ff)
-                                      : Colors.white,
-                                ),
-                                onPressed: () =>
-                                    setState(() => table = option.$1),
-                                icon: Icon(option.$2, size: 18),
-                                label: Text(option.$3),
-                              ),
+                        AppViewModeSelector<bool>(
+                          value: table,
+                          onChanged: (v) => setState(() => table = v),
+                          options: [
+                            AppViewMode(
+                              value: true,
+                              icon: Icons.table_chart_outlined,
+                              label: t('نمایش جدولی', 'Table view'),
+                            ),
+                            AppViewMode(
+                              value: false,
+                              icon: Icons.grid_view,
+                              label: t('نمایش کارتی', 'Card view'),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 20),

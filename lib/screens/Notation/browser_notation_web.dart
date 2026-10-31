@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_text_input_dialog.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'notation_top_bar.dart';
 import 'notation_settings.dart';
@@ -7,7 +8,6 @@ import 'package:sornaz/components/join_community.dart';
 import 'package:sornaz/components/home_top_bar.dart';
 import 'package:sornaz/screens/Home/ui/components/app_drawer.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
-import 'package:sornaz/screens/Players/ui/components/player_dialog.dart';
 // ignore_for_file: deprecated_member_use, avoid_web_libraries_in_flutter
 import 'dart:async';
 import 'dart:convert';
@@ -146,30 +146,12 @@ class _BrowserNotationHostState extends State<BrowserNotationHost> {
     return selected;
   }
 
-  Future<String?> renameSheet(String current) async {
-    final controller = TextEditingController(text: current);
-    final result = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => PlayerDialog(
-        title: Text(socialText(context, 'تغییر نام', 'Rename')),
-        content: TextField(controller: controller, autofocus: true),
-        actions: [
-          PlayerDialogButton(
-            primary: false,
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(socialText(context, 'انصراف', 'Cancel')),
-          ),
-          PlayerDialogButton(
-            onPressed: () =>
-                Navigator.pop(dialogContext, controller.text.trim()),
-            child: Text(socialText(context, 'ذخیره', 'Save')),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
-    return result?.isEmpty == true ? null : result;
-  }
+  Future<String?> renameSheet(String current) => showTextInputDialog(
+    context,
+    title: socialText(context, 'تغییر نام', 'Rename'),
+    initialValue: current,
+    maxLength: null,
+  );
 
   Future<void> setup(Object element) async {
     frame = element as html.IFrameElement;

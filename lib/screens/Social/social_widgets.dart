@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
 import 'story_seen.dart';
 import 'story_page.dart';
@@ -233,23 +234,11 @@ class SocialEmpty extends StatelessWidget {
   final VoidCallback? onRetry;
   final IconData icon;
   @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 46, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(height: 16),
-          AppText(text, textAlign: TextAlign.center),
-          if (onRetry != null)
-            TextButton(
-              onPressed: onRetry,
-              child: AppText(socialText(context, 'تلاش دوباره', 'Retry')),
-            ),
-        ],
-      ),
-    ),
+  Widget build(BuildContext context) => AppEmptyState(
+    message: text,
+    icon: icon,
+    onRetry: onRetry,
+    retryLabel: socialText(context, 'تلاش دوباره', 'Retry'),
   );
 }
 
@@ -595,10 +584,7 @@ class _SocialVideoState extends State<SocialVideo> with WidgetsBindingObserver {
         },
       );
     if (controller?.value.isInitialized != true)
-      return const SizedBox(
-        height: 180,
-        child: Center(child: CircularProgressIndicator()),
-      );
+      return const SizedBox(height: 180, child: const AppLoadingIndicator());
     return player(context);
   }
 }

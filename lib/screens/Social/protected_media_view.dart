@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -48,7 +49,7 @@ class _ProtectedMediaViewState extends State<ProtectedMediaView> {
       if (snapshot.hasError)
         return const SocialEmpty('فایل قابل باز شدن نیست؛ دوباره دانلود کنید.');
       if (!snapshot.hasData)
-        return const Center(child: CircularProgressIndicator());
+        return const AppLoadingIndicator();
       final file = snapshot.data!;
       if (widget.mime.startsWith('video/') || widget.mime.startsWith('audio/'))
         return SocialVideo(api: widget.api, path: '', localFile: file);
@@ -106,7 +107,7 @@ class _PdfPagesState extends State<_PdfPages> {
     builder: (_, snapshot) {
       if (snapshot.hasError) return const SocialEmpty('نمایش سند ممکن نشد.');
       if (!snapshot.hasData)
-        return const Center(child: CircularProgressIndicator());
+        return const AppLoadingIndicator();
       final data = snapshot.data!;
       return Column(
         children: [

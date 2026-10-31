@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import 'dart:async';
 import 'panel_navigation.dart';
 import 'package:sornaz/screens/Notation/music_sheets_page.dart';
@@ -322,7 +323,7 @@ class _NativePanelState extends State<NativePanel> {
         ],
       ),
       body: loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppLoadingIndicator()
           : error != null
           ? SocialEmpty(
               socialText(

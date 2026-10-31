@@ -1,4 +1,5 @@
-import '../components/player_dialog.dart';
+import 'package:sornaz/components/app_text_input_dialog.dart';
+import 'package:sornaz/components/app_dialog.dart';
 import '../components/audio_item.dart';
 import '../components/audio_selection.dart';
 
@@ -17,32 +18,12 @@ Future<String?> createMusicPlaylist(
   BuildContext context, {
   MusicPlaylists? collection,
 }) async {
-  var draft = '';
-  final name = await showDialog<String>(
-    context: context,
-    builder: (c) => PlayerDialog(
-      title: Text(socialText(c, 'لیست پخش جدید', 'New playlist')),
-      content: TextField(
-        style: Theme.of(c).textTheme.bodyMedium,
-        onChanged: (value) => draft = value,
-        autofocus: true,
-        maxLength: 80,
-        decoration: InputDecoration(
-          hintText: socialText(c, 'نام لیست پخش', 'Playlist name'),
-        ),
-      ),
-      actions: [
-        PlayerDialogButton(
-          primary: false,
-          onPressed: () => Navigator.pop(c),
-          child: Text(socialText(c, 'انصراف', 'Cancel')),
-        ),
-        PlayerDialogButton(
-          onPressed: () => Navigator.pop(c, draft.trim()),
-          child: Text(socialText(c, 'ایجاد', 'Create')),
-        ),
-      ],
-    ),
+  final name = await showTextInputDialog(
+    context,
+    title: socialText(context, 'لیست پخش جدید', 'New playlist'),
+    hint: socialText(context, 'نام لیست پخش', 'Playlist name'),
+    maxLength: 80,
+    confirmLabel: socialText(context, 'ایجاد', 'Create'),
   );
 
   return name == null
@@ -350,37 +331,30 @@ Future<String?> editAudioCollection(
   String key, {
   bool delete = false,
 }) async {
-  var name = key;
-  final accepted = await showDialog<bool>(
-    context: context,
-    builder: (c) => PlayerDialog(
-      title: Text(delete ? 'حذف «${playlistLabel(c, key)}»؟' : 'تغییر نام'),
-      content: delete
-          ? const Text('فایل‌های صوتی از دستگاه حذف نمی‌شوند.')
-          : TextFormField(
-              initialValue: key,
-              autofocus: true,
-              maxLength: 80,
-              onChanged: (value) => name = value.trim(),
-            ),
-      actions: [
-        PlayerDialogButton(
-          primary: false,
-          onPressed: () => Navigator.pop(c, false),
-          child: const Text('انصراف'),
-        ),
-        PlayerDialogButton(
-          onPressed: () => Navigator.pop(c, true),
-          child: Text(delete ? 'حذف' : 'ذخیره'),
-        ),
-      ],
-    ),
-  );
-  if (accepted != true) return null;
   if (delete) {
-    await store.delete(key);
+    final accepted = await showDeleteConfirmation(
+      context,
+      title: socialText(
+        context,
+        'حذف «${playlistLabel(context, key)}»؟',
+        'Delete “${playlistLabel(context, key)}”?',
+      ),
+      message: socialText(
+        context,
+        'فایل‌های صوتی از دستگاه حذف نمی‌شوند.',
+        'Audio files will remain on this device.',
+      ),
+    );
+    if (accepted) await store.delete(key);
     return null;
   }
+  final name = await showTextInputDialog(
+    context,
+    title: socialText(context, 'تغییر نام', 'Rename'),
+    initialValue: key,
+    maxLength: 80,
+  );
+  if (name == null) return null;
   if (await store.rename(key, name)) return name;
   if (context.mounted)
     ScaffoldMessenger.of(context).showSnackBar(

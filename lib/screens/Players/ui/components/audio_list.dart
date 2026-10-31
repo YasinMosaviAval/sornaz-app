@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/screens/Players/library/audio_library_manager.dart';
@@ -21,7 +22,7 @@ class AudioList extends StatelessWidget {
     >(
       builder: (context, audio, folder, library, _) {
         if (library.isScanning && library.allFiles.isEmpty)
-          return Center(child: CircularProgressIndicator());
+          return const AppLoadingIndicator();
         if (audio.folderMode) {
           return const FolderView();
         }

@@ -31,7 +31,8 @@ class BottomNavBarWidget extends StatelessWidget {
       development
           ? (Icons.dynamic_feed_outlined, Icons.dynamic_feed, 'صحنه', 'Stage')
           : (Icons.chat_bubble_outline, Icons.chat_bubble, 'گفتگو', 'Chat'),
-      (Icons.tune, Icons.tune, 'ابزار موسیقی', 'Music tools'),
+      (Icons.tune, Icons.tune, 'ابزار', 'Tools'),
+      (Icons.quiz_outlined, Icons.quiz, 'آزمون‌ها', 'Tests'),
       development
           ? (Icons.person_outline, Icons.person, 'پروفایل', 'Profile')
           : (
@@ -40,7 +41,6 @@ class BottomNavBarWidget extends StatelessWidget {
               'حساب کاربری',
               'Account',
             ),
-      (Icons.quiz_outlined, Icons.quiz, 'آزمون‌ها', 'Tests'),
     ];
     void select(int index) {
       if (index == current) return;
@@ -57,10 +57,10 @@ class BottomNavBarWidget extends StatelessWidget {
             const SitePanelPage(),
             development ? const UserPanelPage() : const ChatTabPage(),
             const MusicToolsPage(),
+            const MusicPracticePage(),
             development
                 ? const MyProfilePage()
-                : const UserPanelPage(initialTab: 2, mainTabIndex: 4),
-            const MusicPracticePage(),
+                : const UserPanelPage(initialTab: 2, mainTabIndex: 5),
           ][index],
         ),
       );

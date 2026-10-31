@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -41,7 +42,7 @@ class _LessonMediaState extends State<LessonMedia> {
     future: local,
     builder: (_, snapshot) {
       if (snapshot.connectionState != ConnectionState.done)
-        return const Center(child: CircularProgressIndicator());
+        return const AppLoadingIndicator();
       if (snapshot.data != null)
         return ProtectedMediaView(
           api: widget.api,

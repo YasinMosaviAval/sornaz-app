@@ -1,3 +1,5 @@
+import 'package:sornaz/components/app_text_input_dialog.dart';
+import 'package:sornaz/components/app_async_state.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/screens/Players/ui/components/music_playback_entry.dart';
 import 'package:sornaz/screens/Players/services/player_settings.dart';
@@ -29,7 +31,6 @@ import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 import 'package:sornaz/screens/Authentication/ui/pages/authentication.dart';
 import 'package:sornaz/screens/Social/social_api.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
-import 'package:sornaz/screens/Players/ui/components/player_dialog.dart';
 import 'notation_api.dart';
 import 'desktop_notation_host.dart';
 import 'omr_review_page.dart';
@@ -222,35 +223,12 @@ class _NotationHostState extends State<_NotationHost>
     );
   }
 
-  Future<String?> _renameSheet(String current) async {
-    final controller = TextEditingController(text: current);
-    final result = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => PlayerDialog(
-        title: Text(socialText(context, 'تغییر نام', 'Rename')),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLength: 180,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        actions: [
-          PlayerDialogButton(
-            primary: false,
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(socialText(context, 'انصراف', 'Cancel')),
-          ),
-          PlayerDialogButton(
-            onPressed: () =>
-                Navigator.pop(dialogContext, controller.text.trim()),
-            child: Text(socialText(context, 'ذخیره', 'Save')),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
-    return result?.isEmpty == true ? null : result;
-  }
+  Future<String?> _renameSheet(String current) => showTextInputDialog(
+    context,
+    title: socialText(context, 'تغییر نام', 'Rename'),
+    initialValue: current,
+    maxLength: 180,
+  );
 
   Future<void> _openSettings() async {
     await Navigator.push(
@@ -641,8 +619,7 @@ class _NotationHostState extends State<_NotationHost>
                                 child: const JoinCommunity(),
                               ),
                             ),
-                          if (!_ready)
-                            const Center(child: CircularProgressIndicator()),
+                          if (!_ready) const AppLoadingIndicator(),
                         ],
                       ),
               ),

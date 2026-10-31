@@ -1,3 +1,4 @@
+import 'package:sornaz/components/settings_switch_tile.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/helpers/app_platform.dart';
 import 'package:sornaz/helpers/desktop_library_folders.dart';
@@ -236,7 +237,7 @@ class PlayerSettingsPage extends StatelessWidget {
                   ),
                 ),
               ),
-            SwitchListTile(
+            SettingsSwitchTile.widgets(
               title: Text(
                 socialText(
                   c,
@@ -311,7 +312,7 @@ class PlayerSettingsPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                child: SwitchListTile(
+                child: SettingsSwitchTile.widgets(
                   contentPadding: const EdgeInsetsDirectional.only(
                     start: 16,
                     end: 16,

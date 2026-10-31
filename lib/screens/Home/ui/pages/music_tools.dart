@@ -22,7 +22,7 @@ class MusicToolsPage extends StatelessWidget {
       ? MainTabs(initialIndex: 3, initialChild: this)
       : SocialScaffold(
           tabIndex: 3,
-          title: socialText(context, 'ابزار موسیقی', 'Music tools'),
+          title: socialText(context, 'ابزار', 'Tools'),
           appBar: HomeTopBar(
             showLogo:
                 !(context.watch<AuthSession?>()?.isAuthenticated ?? false),

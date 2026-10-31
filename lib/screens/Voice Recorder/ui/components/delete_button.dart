@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_dialog.dart';
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:io';
@@ -14,7 +15,7 @@ class DeleteButtonWidget extends StatelessWidget {
     required this.onDelete,
     required this.file,
     required this.onUndoRestore,
-    required this.isDark
+    required this.isDark,
   });
 
   final Function() onDelete;
@@ -27,41 +28,30 @@ class DeleteButtonWidget extends StatelessWidget {
     final fileName = file.path.split('/').last;
     return Expanded(
       child: ElevatedButton.icon(
-        icon: Icon(Icons.delete_forever, color: AppColors.voice_recorder_delete_button_icon_color(isDark: isDark)),
-        style: ElevatedButton.styleFrom(backgroundColor: AppColors.voice_recorder_delete_button_icon_style_color(isDark: isDark)),
+        icon: Icon(
+          Icons.delete_forever,
+          color: AppColors.voice_recorder_delete_button_icon_color(
+            isDark: isDark,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor:
+              AppColors.voice_recorder_delete_button_icon_style_color(
+                isDark: isDark,
+              ),
+        ),
         label: Text(
           AppStrings.delete_button_widget_delete.translate(context),
           style: AppTypography.recordDetailsDeleteDialogueLabel(context),
         ),
         onPressed: () async {
-          final confirm = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text(
-                AppStrings.delete_button_widget_confirm_delete.translate(context),
-                style: AppTypography.recordDetailsDeleteDialogueTitle(context),
-              ),
-              content: Text("""${AppStrings.delete_button_widget_delete_question_before_filename_part.translate(context)}$fileName${AppStrings.delete_button_widget_delete_question_after_filename_part.translate(context)}""",
-                style: AppTypography.recordDetailsDeleteDialogueContent(context),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text(
-                    AppStrings.delete_button_widget_discard_button.translate(context),
-                    style: AppTypography.recordDetailsDeleteDialogueCancelButton(context)
-                  ),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.voice_recorder_delete_button_icon_style_color(isDark: isDark)),
-                  onPressed: () => Navigator.pop(context, true),
-                  child: Text(
-                    AppStrings.delete_button_widget_confirm_delete_button.translate(context),
-                    style: AppTypography.recordDetailsDeleteDialogueConfirmButton(context)
-                  ),
-                ),
-              ],
+          final confirm = await showDeleteConfirmation(
+            context,
+            title: AppStrings.delete_button_widget_confirm_delete.translate(
+              context,
             ),
+            message:
+                """${AppStrings.delete_button_widget_delete_question_before_filename_part.translate(context)}$fileName${AppStrings.delete_button_widget_delete_question_after_filename_part.translate(context)}""",
           );
 
           if (confirm == true) {
@@ -81,6 +71,3 @@ class DeleteButtonWidget extends StatelessWidget {
     );
   }
 }
-
-
-

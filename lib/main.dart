@@ -57,15 +57,7 @@ void main(List<String> arguments) async {
         : 0;
     musicAudioHandler = await AudioService.init<MusicAudioHandler>(
       builder: () => MusicAudioHandler(customUndo: sdk >= 33),
-      config: const AudioServiceConfig(
-        androidNotificationChannelId: 'com.example.sornaz.music',
-        androidNotificationChannelName: 'Sornaz music',
-        androidNotificationIcon: 'drawable/ic_music_notification',
-        androidNotificationOngoing: true,
-        androidStopForegroundOnPause: true,
-        rewindInterval: Duration(seconds: 10),
-        fastForwardInterval: Duration(seconds: 10),
-      ),
+      config: MusicAudioHandler.serviceConfig,
     );
   }
   final preferences = await SharedPreferences.getInstance();

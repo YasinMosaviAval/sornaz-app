@@ -162,11 +162,11 @@ void main() {
         await tester.tap(deletion);
         await tester.pumpAndSettle();
         final dialog = tester.widget<AlertDialog>(find.byType(AlertDialog));
-        expect((dialog.title! as Text).style!.fontSize, 14);
+        expect(dialog.titleTextStyle?.fontSize, 14);
         await tester.tap(
           find.descendant(
             of: find.byType(AlertDialog),
-            matching: find.byType(FilledButton),
+            matching: find.widgetWithText(TextButton, 'حذف'),
           ),
         );
         await tester.pumpAndSettle();

@@ -1,3 +1,4 @@
+import 'package:sornaz/components/settings_switch_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:sornaz/components/app_bar.dart';
 import '../../services/player_settings.dart';
@@ -95,7 +96,7 @@ class MusicLibrarySettings extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 children: [
                   for (var i = 0; i < names.length; i++)
-                    SwitchListTile(
+                    SettingsSwitchTile.widgets(
                       title: Text(socialText(c, fa[i], names[i])),
                       value: tabsHidden().contains('$i'),
                       onChanged: (v) {

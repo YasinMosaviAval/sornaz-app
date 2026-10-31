@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import 'package:sornaz/helpers/desktop_media_channel.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
@@ -324,7 +325,7 @@ class _ChatMediaState extends State<ChatMedia> {
           return const SizedBox(
             width: 136,
             height: 176,
-            child: Center(child: CircularProgressIndicator()),
+            child: const AppLoadingIndicator(),
           );
         final target = snapshot.data!;
         final image = video

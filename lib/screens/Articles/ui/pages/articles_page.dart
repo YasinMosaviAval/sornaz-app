@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import 'package:sornaz/components/home_top_bar.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/screens/Articles/ui/components/article_progress.dart';
@@ -45,7 +46,7 @@ class ArticlesPage extends StatelessWidget {
           child: Consumer<ArticlesProvider>(
             builder: (context, provider, _) {
               if (provider.isLoading && provider.allPosts.isEmpty) {
-                return const Center(child: CircularProgressIndicator());
+                return const AppLoadingIndicator();
               }
 
               if (provider.hasError && provider.allPosts.isEmpty) {

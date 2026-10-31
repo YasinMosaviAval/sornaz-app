@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import 'dart:io';
 import '../../helpers/development_access.dart';
 import 'package:sornaz/screens/Players/ui/components/music_playback_entry.dart';
@@ -307,7 +308,7 @@ class _MusicAnalysisTestPageState extends State<_AnalysisPage> {
           ),
           if (_busy) ...[
             const SizedBox(height: 12),
-            const Center(child: CircularProgressIndicator()),
+            const AppLoadingIndicator(),
             TextButton(
               onPressed: _cancellation?.cancel,
               child: Text(socialText(context, 'لغو', 'Cancel')),

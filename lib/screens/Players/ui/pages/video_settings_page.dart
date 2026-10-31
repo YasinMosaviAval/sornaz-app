@@ -1,3 +1,4 @@
+import 'package:sornaz/components/settings_switch_tile.dart';
 import '../components/player_sort_tile.dart';
 import 'package:sornaz/helpers/app_platform.dart';
 import 'package:sornaz/helpers/desktop_library_folders.dart';
@@ -157,7 +158,7 @@ class _VideoSettingsPageState extends State<VideoSettingsPage> {
                   ),
                 ),
               ),
-            SwitchListTile(
+            SettingsSwitchTile.widgets(
               title: Text(
                 t(
                   'ذخیره و بازیابی موقعیت پخش',

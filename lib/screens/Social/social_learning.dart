@@ -1,3 +1,5 @@
+import 'package:sornaz/components/settings_switch_tile.dart';
+import 'package:sornaz/components/app_async_state.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/screens/Authentication/providers/auth_session.dart';
 import '../Site/panel_api.dart';
@@ -72,7 +74,7 @@ class _AccountDashboardBodyState extends State<AccountDashboardBody> {
           ),
           onRetry: load,
         )
-      : const Center(child: CircularProgressIndicator());
+      : const AppLoadingIndicator();
 }
 
 class LearningProgressPage extends StatelessWidget {
@@ -103,7 +105,7 @@ class _LearningListState extends State<LearningList> {
           '${s.error}',
           onRetry: () => setState(() => future = widget.api.get('/dashboard')),
         );
-      if (!s.hasData) return const Center(child: CircularProgressIndicator());
+      if (!s.hasData) return const AppLoadingIndicator();
       final rows = objects(object(s.data)['courses']);
       return RefreshIndicator(
         onRefresh: () async {
@@ -200,7 +202,7 @@ class _SavedLibraryPageState extends State<SavedLibraryPage> {
             child: error != null
                 ? SocialEmpty(error!, onRetry: load)
                 : data == null
-                ? const Center(child: CircularProgressIndicator())
+                ? const AppLoadingIndicator()
                 : TabBarView(
                     children: [
                       for (final kind in ['courses', 'authors'])
@@ -351,7 +353,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
     body: error != null
         ? SocialEmpty(error!, onRetry: load)
         : settings == null
-        ? const Center(child: CircularProgressIndicator())
+        ? const AppLoadingIndicator()
         : ListTileTheme.merge(
             titleTextStyle: Theme.of(context).textTheme.bodyMedium,
             subtitleTextStyle: Theme.of(context).textTheme.bodySmall,
@@ -367,7 +369,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                 ),
                 Card(
                   elevation: 0,
-                  child: SwitchListTile(
+                  child: SettingsSwitchTile.widgets(
                     title: AppText(
                       socialText(context, 'پیام خصوصی', 'Direct messages'),
                     ),
@@ -391,7 +393,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                 ),
                 Card(
                   elevation: 0,
-                  child: SwitchListTile(
+                  child: SettingsSwitchTile.widgets(
                     title: AppText(
                       socialText(context, 'دنبال‌کننده جدید', 'New followers'),
                     ),
@@ -406,7 +408,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                 ),
-                SwitchListTile(
+                SettingsSwitchTile.widgets(
                   contentPadding: EdgeInsets.zero,
                   title: AppText(
                     socialText(context, 'پسندیدن پست‌ها', 'Post likes'),

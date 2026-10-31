@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sornaz/helpers/app_typography.dart';
+import 'app_async_state.dart';
 
 class NoFilesFoundWidget extends StatelessWidget {
   const NoFilesFoundWidget({super.key, required this.message});
@@ -8,8 +8,6 @@ class NoFilesFoundWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text(message, style: AppTypography.noFileFoundMessage(context)),
-    );
+    return AppEmptyState(message: message, icon: Icons.folder_open_outlined);
   }
 }

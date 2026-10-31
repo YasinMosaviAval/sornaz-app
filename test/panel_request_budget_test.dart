@@ -264,7 +264,8 @@ void main() {
               SitePanelPage(),
               ChatTabPage(),
               MusicToolsPage(),
-              UserPanelPage(initialTab: 2, mainTabIndex: 4),
+              SizedBox(),
+              UserPanelPage(initialTab: 2, mainTabIndex: 5),
             ],
           ),
           AppData(),
@@ -282,7 +283,7 @@ void main() {
             .map((e) => (e.widget as Text).data)
             .whereType<String>()
             .toList(),
-        ['خانه', 'پنل کاربری', 'گفتگو', 'ابزار موسیقی', 'حساب کاربری'],
+        ['خانه', 'پنل کاربری', 'گفتگو', 'ابزار', 'آزمون‌ها', 'حساب کاربری'],
       );
       expect(find.widgetWithText(ListTile, 'نت‌نویسی'), findsNothing);
       await tester.tap(

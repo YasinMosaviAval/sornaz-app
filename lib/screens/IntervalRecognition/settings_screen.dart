@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import 'dart:async';
 import '../../helpers/development_access.dart';
 import 'package:flutter/material.dart';
@@ -8,8 +9,13 @@ import 'settings.dart';
 import 'text.dart';
 
 class IntervalSettingsScreen extends StatelessWidget {
-  const IntervalSettingsScreen({super.key, required this.settings});
+  const IntervalSettingsScreen({
+    super.key,
+    required this.settings,
+    this.additionalSettings = const [],
+  });
   final IntervalAudioSettings settings;
+  final List<Widget> additionalSettings;
 
   Future<void> _chooseStartingNote(BuildContext context) async {
     final midi = await showDialog<int>(
@@ -90,6 +96,7 @@ class IntervalSettingsScreen extends StatelessWidget {
                 ? ListView(
                     padding: const EdgeInsets.all(12),
                     children: [
+                      ...additionalSettings,
                       LabeledSlider(
                         leadingIcon: const Icon(Icons.timer_outlined, size: 20),
                         label: '${t('interval.duration')}: $duration',
@@ -152,7 +159,7 @@ class IntervalSettingsScreen extends StatelessWidget {
                       ],
                     ],
                   )
-                : const Center(child: CircularProgressIndicator()),
+                : const AppLoadingIndicator(),
           ),
         ),
       );

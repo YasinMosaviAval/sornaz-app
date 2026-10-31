@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_async_state.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/app_top_bar_direction.dart';
@@ -287,7 +288,7 @@ class _AcademyResultsPageState extends State<AcademyResultsPage> {
               ),
             ),
           if (loading)
-            const Center(child: CircularProgressIndicator())
+            const AppLoadingIndicator()
           else if (failed)
             SocialEmpty(
               socialText(

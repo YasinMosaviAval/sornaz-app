@@ -103,6 +103,7 @@ void main() {
     await tester.tap(find.byIcon(Icons.playlist_add));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'New Mix');
+    await tester.pump();
     await tester.tap(find.text('ایجاد'));
     await tester.pumpAndSettle();
     expect(find.byIcon(Icons.add), findsNothing);

@@ -65,6 +65,9 @@ void main() {
       expect(find.text('page 3'), findsOneWidget);
       await tester.tap(find.byIcon(Icons.quiz_outlined).first);
       await tester.pumpAndSettle();
+      expect(find.text('page 4'), findsOneWidget);
+      await tester.tap(find.byIcon(Icons.manage_accounts_outlined).first);
+      await tester.pumpAndSettle();
       expect(find.text('page 5'), findsOneWidget);
       expect(tester.getRect(find.byType(BottomNavBarWidget)), barRect);
       await tester.binding.handlePopRoute();
