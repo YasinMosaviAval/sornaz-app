@@ -30,7 +30,7 @@ class PlayerSortTile extends StatelessWidget {
       builder: (context, _) => ListTile(
         title: Text(
           socialText(context, 'مرتب‌سازی', 'Sort'),
-          style: Theme.of(context).textTheme.bodyMedium,
+          style: Theme.of(context).textTheme.bodySmall,
         ),
         trailing: ConstrainedBox(
           constraints: BoxConstraints(
@@ -53,7 +53,7 @@ class PlayerSortTile extends StatelessWidget {
               shape: RoundedRectangleBorder(borderRadius: appRadius(dialog)),
               title: Text(
                 socialText(dialog, 'مرتب‌سازی', 'Sort'),
-                style: Theme.of(dialog).textTheme.bodyMedium,
+                style: Theme.of(dialog).textTheme.bodySmall,
               ),
               children: [
                 for (final option in playerSortOptions)
@@ -63,7 +63,7 @@ class PlayerSortTile extends StatelessWidget {
                           Navigator.pop(dialog, (option.$1, ascending)),
                       child: Text(
                         playerSortLabel(dialog, option.$1, ascending),
-                        style: Theme.of(dialog).textTheme.bodyMedium,
+                        style: Theme.of(dialog).textTheme.bodySmall,
                       ),
                     ),
               ],

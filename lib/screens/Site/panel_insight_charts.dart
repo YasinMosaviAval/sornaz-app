@@ -1,10 +1,9 @@
-import 'dart:io';
+import '../../helpers/chart_export.dart';
 import 'dart:math' as math;
-import 'dart:ui' as ui;
-import 'package:file_picker/file_picker.dart';
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
+
 import '../../helpers/app_appearance.dart';
 import '../Social/social_api.dart';
 import '../Social/social_widgets.dart';
@@ -49,28 +48,12 @@ class _PanelInsightChartsState extends State<PanelInsightCharts> {
   Future<void> export() async {
     if (exporting) return;
     setState(() => exporting = true);
-    ui.Image? image;
+
     try {
-      await WidgetsBinding.instance.endOfFrame;
-      if (!mounted) return;
-      final render = boundary.currentContext?.findRenderObject();
-      if (render is! RenderRepaintBoundary) return;
-      image = await render.toImage(pixelRatio: 2);
-      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      if (bytes == null) return;
-      final png = bytes.buffer.asUint8List();
-      final path = await FilePicker.platform.saveFile(
-        fileName: '${widget.section}-chart.png',
-        bytes: png,
-      );
-      if (path != null &&
-          (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-        await File(path).writeAsBytes(png);
-      }
+      await saveChartPng(boundary, '${widget.section}-chart.png');
     } catch (error) {
       if (mounted) socialError(context, error);
     } finally {
-      image?.dispose();
       if (mounted) setState(() => exporting = false);
     }
   }

@@ -1,0 +1,22 @@
+<!doctype html><html><meta charset="utf-8"><body data-result="pending"><div id="score" style="width:390px"></div>
+<script src="../assets/notation/vendor/vexflow.js"></script><script src="../assets/notation/model.js"></script><script src="../assets/notation/score_renderer.js"></script>
+<script>
+try {
+ const M=NotationModel,target=document.getElementById('score');let count=0;
+ for(const [mode] of M.iranianScales)for(const [tonic] of M.iranianTonics){
+  const sheet=M.fresh();Object.assign(sheet.metadata,{scale_type:mode,key:tonic,staves:[{clef:'treble'},{clef:'bass'}]});
+  NotationRenderer.draw(target,sheet);const expected=M.iranianSignature(mode,tonic);
+  for(const signature of target.querySelectorAll('.vf-keysignature')){
+   if(!expected.accidentals.length)continue;
+   const clef=signature.previousElementSibling,signatureBox=signature.getBBox(),time=signature.nextElementSibling;
+   if(signature.querySelectorAll('path').length<expected.accidentals.length)throw Error('Missing signature glyphs: '+mode+' '+tonic);
+   if(clef?.classList.contains('vf-clef')&&clef.getBBox().x+clef.getBBox().width>signatureBox.x+1)throw Error('Signature overlaps clef');
+   if(time?.classList.contains('vf-timesignature')&&signatureBox.x+signatureBox.width>time.getBBox().x+1)throw Error('Signature overlaps time');
+  }
+  if(target.querySelectorAll('.vf-keysignature').length!==2)throw Error('Signature missing on a staff');count++;
+ }
+ for(const clef of ['alto','tenor','soprano','mezzo-soprano','baritone-f']){const sheet=M.fresh();Object.assign(sheet.metadata,{scale_type:'iran_shur',key:'B:o',clef});NotationRenderer.draw(target,sheet);if(!target.querySelector('.vf-keysignature path'))throw Error('Missing signature for '+clef);}
+ const changed=M.fresh();Object.assign(changed.metadata,{scale_type:'iran_shur',key:'G',staves:[{clef:'treble'},{clef:'bass'}]});changed.score.measures=[{notes:[]},{key:'G',notes:[]}];NotationRenderer.draw(target,changed);const signs=[...target.querySelectorAll('.vf-keysignature')];if(signs.length!==4||Math.abs(signs[1].getBBox().y-signs[3].getBBox().y)>.01)throw Error('Mid-row bass key signature used treble positions');
+ if(count!==288)throw Error('Not all signatures rendered');document.body.dataset.result='PASS';
+}catch(e){document.body.dataset.result='FAIL '+e.message;}
+</script></body></html>

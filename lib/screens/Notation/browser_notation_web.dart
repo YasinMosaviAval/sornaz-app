@@ -1,3 +1,4 @@
+import 'notation_piano_keyboard.dart';
 import 'package:sornaz/components/app_text_input_dialog.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'notation_top_bar.dart';
@@ -27,15 +28,20 @@ class BrowserNotationHost extends StatefulWidget {
     super.key,
     required this.token,
     required this.userId,
+    this.initialDraft,
+    this.onDraftSaved,
   });
   final String token;
   final int userId;
+  final Map<String, dynamic>? initialDraft;
+  final ValueChanged<Map<String, dynamic>?>? onDraftSaved;
   @override
   State<BrowserNotationHost> createState() => _BrowserNotationHostState();
 }
 
 class _BrowserNotationHostState extends State<BrowserNotationHost> {
   html.IFrameElement? frame;
+  bool draftFinished = false;
   bool guestTab = false;
   double guestTop = 88;
   ValueChanged<bool>? setEditorOpen;
@@ -43,9 +49,12 @@ class _BrowserNotationHostState extends State<BrowserNotationHost> {
   StreamSubscription<html.MessageEvent>? subscription;
   final channel = DateTime.now().microsecondsSinceEpoch.toString();
   String route = 'list';
+  Map<String, dynamic> piano = {};
   Map<String, dynamic> toolbar = {};
   int durationMode = 1;
   int pianoLabelMode = 1;
+  bool showHelp = true;
+  bool showQuarterTones = false;
   @override
   void initState() {
     super.initState();
@@ -64,6 +73,14 @@ class _BrowserNotationHostState extends State<BrowserNotationHost> {
           'notation.pianoLabelMode',
         ) ??
         1;
+    showHelp =
+        (await SharedPreferences.getInstance()).getBool('notation.showHelp') ??
+        true;
+    showQuarterTones =
+        (await SharedPreferences.getInstance()).getBool(
+          'notation.showQuarterTones',
+        ) ??
+        false;
     if (!mounted) return;
     setState(() {});
     frame?.contentWindow?.postMessage({
@@ -77,8 +94,11 @@ class _BrowserNotationHostState extends State<BrowserNotationHost> {
     'locale': context.read<LocaleProvider>().locale.languageCode,
     'dark': context.read<AppData>().isDark,
     'userId': widget.userId,
+    'practiceDraft': widget.onDraftSaved != null,
+    'initialDraft': widget.initialDraft,
     'embedded': true,
     'nativeToolbar': true,
+    'nativePiano': true,
     'browser': true,
     'accent':
         '#${context.read<AppData>().accent.toARGB32().toRadixString(16).substring(2)}',
@@ -89,6 +109,8 @@ class _BrowserNotationHostState extends State<BrowserNotationHost> {
         .clamp(100, 900),
     'durationMode': durationMode,
     'pianoLabelMode': pianoLabelMode,
+    'showHelp': showHelp,
+    'showQuarterTones': showQuarterTones,
   };
 
   Future<void> createList() async {
@@ -163,7 +185,7 @@ class _BrowserNotationHostState extends State<BrowserNotationHost> {
     final bridge =
         '''<base href="${Uri.base.resolve('assets/assets/notation/')}">
 <script>
-window.NOTATION_BOOT=${jsonEncode(configuration)};
+window.NOTATION_BOOT=${jsonEncode(configuration).replaceAll('<', r'\u003c')};
 window.NOTATION_BROWSER_HOST=true;
 window.SornazNotation={postMessage:(data)=>parent.postMessage({channel:'$channel',data},${jsonEncode(Uri.base.origin)})};
 window.addEventListener('message',(event)=>{
@@ -172,6 +194,7 @@ window.addEventListener('message',(event)=>{
  if(value.action==='reply')window.Notation.receive(value.id,value.data,value.error);
  if(value.action==='configure')window.Notation.configure(value.data);
  if(value.action==='command')window.Notation.command(value.data);
+ if(value.action==='piano')window.Notation.pianoPointer(value.data);
  if(value.action==='back')window.Notation.back();
  if(value.action==='search')window.Notation.search(value.data);
 });
@@ -198,18 +221,45 @@ window.addEventListener('message',(event)=>{
       final data = Map<String, dynamic>.from(jsonDecode(raw) as Map);
       id = data['id'] as int?;
       final action = data['action'];
+      if (action == 'practice-save' || action == 'practice-cancel') {
+        if (widget.onDraftSaved == null || draftFinished) return;
+        final value = action == 'practice-save'
+            ? Map<String, dynamic>.from(data['payload'] as Map)
+            : null;
+        if (value != null &&
+            (value['sheet'] is! Map ||
+                value['preview'] is! String ||
+                (value['preview'] as String).length > 120000))
+          throw const FormatException('Invalid question score');
+        draftFinished = true;
+        frame?.contentWindow?.postMessage({
+          'channel': channel,
+          'action': 'reply',
+          'id': id,
+          'data': true,
+        }, Uri.base.origin);
+        if (!mounted) return;
+        setState(() => route = 'list');
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) widget.onDraftSaved!(value);
+        });
+        return;
+      }
       if (action == 'route') {
+        if (draftFinished) return;
         final nextTop = (data['guestTop'] as num?)?.toDouble() ?? 88;
         final nextToolbar = Map<String, dynamic>.from(
           data['toolbar'] as Map? ?? {},
         );
-        if (jsonEncode(toolbar) == jsonEncode(nextToolbar) &&
+        if (jsonEncode(piano) == jsonEncode(data['piano'] ?? {}) &&
+            jsonEncode(toolbar) == jsonEncode(nextToolbar) &&
             route == data['route'] &&
             guestTab == (data['guest'] == true) &&
             guestTop == nextTop)
           return;
         setState(() {
           route = data['route'] as String;
+          piano = Map<String, dynamic>.from(data['piano'] as Map? ?? {});
           toolbar = nextToolbar;
           setEditorOpen?.call(route != 'list');
           guestTop = (data['guestTop'] as num?)?.toDouble() ?? 88;
@@ -300,6 +350,7 @@ window.addEventListener('message',(event)=>{
       child: ScrollAwareScaffold(
         appBar: route != 'list'
             ? NotationTopBar(
+                showHelp: showHelp,
                 editor: route == 'editor',
                 signedIn: widget.userId > 0,
                 data: toolbar,
@@ -368,6 +419,15 @@ window.addEventListener('message',(event)=>{
                 ],
               ),
             ),
+            if (route == 'editor')
+              NotationPianoKeyboard(
+                data: piano,
+                send: (event) => frame?.contentWindow?.postMessage({
+                  'channel': channel,
+                  'action': 'piano',
+                  'data': event,
+                }, Uri.base.origin),
+              ),
           ],
         ),
       ),

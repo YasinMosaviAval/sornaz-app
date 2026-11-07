@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_checkbox.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -479,7 +480,7 @@ class _PanelAccountState extends State<PanelAccount> {
     ];
     return card('حریم خصوصی و نمایش عمومی', 'Privacy and public visibility', [
       for (final option in options)
-        CheckboxListTile(
+        AppCheckboxTile(
           contentPadding: EdgeInsets.zero,
           title: Text(
             t(option.$2, option.$3),

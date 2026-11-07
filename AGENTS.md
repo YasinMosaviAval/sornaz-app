@@ -27,10 +27,14 @@
 | Dialog surface and actions; deletion confirmation | `AppDialog`, `AppDialogAction`, `DeleteConfirmationDialog`, `showDeleteConfirmation` | `lib/components/app_dialog.dart` |
 | Rename / create a named item | `AppTextInputDialog`, `showTextInputDialog` (initial value, hint, limit, validator and confirmation label) | `lib/components/app_text_input_dialog.dart` |
 | Settings / form boolean switch row | `SettingsSwitchTile`, `SettingsSwitchTile.widgets` | `lib/components/settings_switch_tile.dart` |
+| Compact checkbox control and selectable row | `AppCheckbox`, `AppCheckboxTile`, `appCheckboxTheme` | `lib/components/app_checkbox.dart` |
+| Bravura quarter-tone symbol | `MusicAccidentalGlyph` | `lib/components/music_accidental_glyph.dart` |
+| Shared tuner/notation piano, gestures and geometry | `AppPianoKeyboard`, `PianoKeyboardSpec` | `lib/components/app_piano_keyboard.dart`, `lib/components/piano_keyboard_spec.dart` |
 | Table/card or table/week view selector | `AppViewModeSelector<T>`, `AppViewMode<T>` | `lib/components/app_view_mode_selector.dart` |
 | Page top bar with Back | `SornazAppBar` | `lib/components/app_bar.dart` |
 | Main-tab top bar | `HomeTopBar` | `lib/components/home_top_bar.dart` |
 | Animated top-bar search | `ExpandingSearchBar` | `lib/components/expanding_search_bar.dart` |
+| Folder-style hierarchy row with depth shading and expansion | `AppHierarchyRow` | `lib/components/app_hierarchy_row.dart` |
 | Scroll-aware page frame | `ScrollAwareScaffold` | `lib/components/scroll_aware_scaffold.dart` |
 | Main-tab navigation and retained page state | `MainTabs`, `MainTabsScope`, `MainTabScaffold`, `BottomNavBarWidget` | `lib/components/main_tabs.dart`, `main_tab_scaffold.dart`, `bottom_nav.dart` |
 | Drawer item | `AppDrawerItem` | `lib/components/app_drawer_item.dart` |
@@ -45,6 +49,8 @@
 | Music / recorder playback buttons and timeline | `PlaybackControls`, `PlaybackSpeedButton`, `PlaybackProgress` | `lib/screens/Players/ui/components/audio_controls.dart`, `audio_slider.dart` |
 | A–B repeat and sleep-timer controls | `AbRepeatButton`, `AbTrack`, `SleepTimerChrome` | `lib/components/ab_repeat.dart`, `sleep_timer_chrome.dart` |
 | Reusable line chart | `AppLineChart` | `lib/components/charts/app_line_chart.dart` |
+| Interactive sample-chart families | `AppSampleChart` | `lib/components/charts/app_sample_chart.dart` |
+| Shared chart PNG export | `saveChartPng` | `lib/helpers/chart_export.dart` |
 
 See `docs/shared-ui-components.fa.md` for the migrated consumers and verification guidance. Domain-specific forms, media permissions and OMR controls must retain their existing behavior; visual reuse does not authorize removing their fields or features.
 

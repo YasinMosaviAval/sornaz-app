@@ -31,7 +31,7 @@ class PanelApi {
     'Accept': 'application/json',
     'Accept-Language': SocialApi.locale,
     'X-Sornaz-Panel-Forms': '2',
-    'X-Sornaz-Panel-Features': '4',
+    'X-Sornaz-Panel-Features': '5',
     'Cookie': ?_sessionCookie,
   };
   // Session-only cache: no background revalidation or automatic retry.
@@ -68,6 +68,7 @@ class PanelApi {
   Future<Json?> saved(String path, [Map<String, String>? query]) async {
     checkAccount();
     if (path.startsWith('/database-management/') ||
+        path.startsWith('/guide-documents/') ||
         path == '/schedules/session-files')
       return null;
     final value = await ChatCache.read(token, _key(path, query));
@@ -86,6 +87,7 @@ class PanelApi {
 
   Future<Json> get(String path, [Map<String, String>? query]) async {
     if (path.startsWith('/database-management/') ||
+        path.startsWith('/guide-documents/') ||
         path == '/schedules/session-files') {
       return sensitiveGet(path, query);
     }

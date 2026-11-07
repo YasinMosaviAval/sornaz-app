@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_checkbox.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'package:sornaz/components/account_avatar.dart';
@@ -243,7 +244,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         SizedBox(
                           width: 24,
                           height: 24,
-                          child: Checkbox(
+                          child: AppCheckbox(
                             value: remember,
                             onChanged: (v) =>
                                 setState(() => remember = v ?? false),
@@ -543,7 +544,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             SizedBox(
               width: 24,
               height: 24,
-              child: Checkbox(
+              child: AppCheckbox(
                 value: terms,
                 onChanged: (v) => setState(() => terms = v ?? false),
               ),

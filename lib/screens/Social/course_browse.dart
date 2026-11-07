@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_checkbox.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/components/app_text.dart';
 import 'package:flutter/material.dart';
@@ -246,7 +247,7 @@ class CourseBrowseState extends State<CourseBrowse> {
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     for (int i = 0; i < 4; i++)
-                      CheckboxListTile(
+                      AppCheckboxTile(
                         contentPadding: EdgeInsets.zero,
                         visualDensity: VisualDensity.compact,
                         value: selectedDurations.contains(i),
@@ -264,7 +265,7 @@ class CourseBrowseState extends State<CourseBrowse> {
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     for (final category in options)
-                      CheckboxListTile(
+                      AppCheckboxTile(
                         contentPadding: EdgeInsets.zero,
                         visualDensity: VisualDensity.compact,
                         value: selectedCategories.contains(category),
@@ -347,10 +348,7 @@ class CourseBrowseState extends State<CourseBrowse> {
                       SizedBox(
                         width: 18,
                         height: 24,
-                        child: Checkbox(
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                          visualDensity: VisualDensity.compact,
+                        child: AppCheckbox(
                           value: filter.$1,
                           onChanged: (v) => setState(() {
                             if (filter.$4)

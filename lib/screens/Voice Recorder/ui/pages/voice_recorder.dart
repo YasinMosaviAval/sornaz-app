@@ -136,10 +136,10 @@ class _VoiceRecorderPageState extends State<VoiceRecorderPage> {
                       },
                     ),
                 ],
-                backgroundColor:
-                    AppColors.voice_recorder_app_bar_background_color(
-                      isDark: isDark,
-                    ),
+                backgroundColor: Colors.transparent,
+                surfaceTintColor: Colors.transparent,
+                elevation: 0,
+                scrolledUnderElevation: 0,
               ),
             ),
             backgroundColor: AppColors.voice_recorder_body_background_color(

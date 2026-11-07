@@ -91,7 +91,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       final api = ParityApi({
-        'defaults': {'language': 'fa', 'fontWeight': 2, 'fonts': []},
+        'defaults': {'language': 'fa', 'fontScale': 2, 'fonts': []},
         'personal': {'language': 'en'},
         'canEditSite': false,
       });
@@ -118,7 +118,11 @@ void main() {
                       'type': 'select',
                       'options': {'fa': 'فارسی', 'en': 'English'},
                     },
-                    {'key': 'fontWeight', 'label': 'وزن قلم', 'type': 'number'},
+                    {
+                      'key': 'fontScale',
+                      'label': 'اندازه قلم',
+                      'type': 'number',
+                    },
                   ],
                 },
               },
@@ -141,7 +145,7 @@ void main() {
       await tester.ensureVisible(submit);
       await tester.tap(submit);
       await tester.pumpAndSettle();
-      expect(api.written, {'language': 'en', 'fontWeight': 2});
+      expect(api.written, {'language': 'en', 'fontScale': 2});
       api.dispose();
     },
   );

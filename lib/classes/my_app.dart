@@ -2,6 +2,7 @@ import 'package:sornaz/screens/Social/social_api.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'package:sornaz/screens/Social/user_panel.dart';
 import 'package:flutter/material.dart';
+import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/components/app_scroll_behavior.dart';
 import 'package:provider/provider.dart';
 import 'package:sornaz/helpers/app_data.dart';
@@ -115,6 +116,7 @@ class MyApp extends StatelessWidget {
       textTheme: textTheme,
       primaryTextTheme: textTheme,
       colorScheme: scheme,
+      checkboxTheme: appCheckboxTheme,
       scaffoldBackgroundColor: background,
       cardTheme: CardThemeData(
         color: surface,

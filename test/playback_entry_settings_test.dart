@@ -141,6 +141,7 @@ void main() {
         ),
       );
       expect(find.byType(SwitchListTile), findsOneWidget);
+      expect(tester.widget<Text>(find.text('Sort')).style!.fontSize, 12);
       await tester.tap(find.text('Sort'));
       await tester.pumpAndSettle();
       expect(find.byType(SimpleDialogOption), findsNWidgets(8));

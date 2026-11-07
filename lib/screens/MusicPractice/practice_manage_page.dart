@@ -1,3 +1,5 @@
+import '../Notation/music_sheets_page.dart';
+import 'practice_notation_question.dart';
 import 'package:sornaz/components/settings_switch_tile.dart';
 import 'package:flutter/material.dart';
 import '../../components/app_bar.dart';
@@ -6,6 +8,7 @@ import '../Social/social_widgets.dart';
 import 'practice_repository.dart';
 import 'practice_form_field.dart';
 import 'practice_tree.dart';
+import 'practice_icons.dart';
 
 class MusicPracticeEditPage extends StatefulWidget {
   const MusicPracticeEditPage({
@@ -32,6 +35,9 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
   late int subscriptionDays;
   late int subscriptionNode;
   late String engine, audience, direction, status;
+  late String iconKey;
+  String assessment = 'pitch_rhythm';
+  final notationQuestions = <PracticeJson>[];
   late bool published, variableRoot;
   bool saving = false;
   bool slugAutomatic = true;
@@ -80,7 +86,15 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
     variableRoot = config['variableRoot'] == true;
     published = old['published'] == true;
     status = 'approved';
+    iconKey = PracticeIcons.choices.containsKey(old['iconKey'])
+        ? old['iconKey'] as String
+        : '';
+    assessment = config['assessment']?.toString() ?? 'pitch_rhythm';
     for (final q in config['questions'] as List? ?? []) {
+      if (engine == 'notation') {
+        notationQuestions.add(Map<String, dynamic>.from(q as Map));
+        continue;
+      }
       addQuestion(Map<String, dynamic>.from(q as Map));
     }
   }
@@ -96,6 +110,30 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
         'bpm': q['bpm'] ?? 80,
       }.entries)
         entry.key: TextEditingController(text: entry.value?.toString() ?? ''),
+    });
+  }
+
+  Future<void> composeQuestion([int? index]) async {
+    final result = await Navigator.push<PracticeJson>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MusicSheetsPage(
+          questionEditor: true,
+          initialDraft: index == null
+              ? null
+              : Map<String, dynamic>.from(
+                  notationQuestions[index]['sheet'] as Map,
+                ),
+        ),
+      ),
+    );
+    if (!mounted || result == null) return;
+    setState(() {
+      if (index == null) {
+        notationQuestions.add(result);
+      } else {
+        notationQuestions[index] = result;
+      }
     });
   }
 
@@ -167,6 +205,7 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
   }) => Padding(
     padding: const EdgeInsets.only(bottom: 12),
     child: DropdownButtonFormField<String>(
+      isExpanded: true,
       style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 12),
       initialValue: value,
       decoration: InputDecoration(
@@ -276,6 +315,23 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
   String text(String name) => fields[name]!.text.trim();
   Future<void> save() async {
     if (saving || !key.currentState!.validate()) return;
+    if (widget.kind == 'exams' &&
+        engine == 'notation' &&
+        (notationQuestions.isEmpty ||
+            widget.catalog['notationQuestions'] != true)) {
+      setState(
+        () => error = socialText(
+          context,
+          notationQuestions.isEmpty
+              ? 'حداقل یک صورت سؤال با نت‌نویسی اضافه کنید.'
+              : 'برای سطح نوشتاری، سرور باید به‌روزرسانی شود.',
+          notationQuestions.isEmpty
+              ? 'Add at least one notation question.'
+              : 'Update the server to use written levels.',
+        ),
+      );
+      return;
+    }
     setState(() => saving = true);
     try {
       final body = <String, dynamic>{
@@ -291,10 +347,21 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
           'titleEn': text('titleEn'),
           'position': integer('position'),
           'published': published,
+          if (widget.catalog['nodeIcons'] == true)
+            'iconKey': iconKey.isEmpty ? null : iconKey,
         });
       } else if (widget.kind == 'exams') {
         PracticeJson config;
-        if (engine == 'interval') {
+        if (engine == 'notation') {
+          config = {
+            'kind': 'notation',
+            'assessment': assessment,
+            'questions': [
+              for (final q in notationQuestions)
+                {'sheet': q['sheet'], 'preview': q['preview']},
+            ],
+          };
+        } else if (engine == 'interval') {
           config = {
             'kind': engine,
             'quarterSteps': text(
@@ -394,7 +461,7 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
         en = Localizations.localeOf(context).languageCode == 'en';
     return Scaffold(
       appBar: SornazAppBar(
-        title: socialText(context, 'ویرایش آزمون‌ها', 'Edit tests'),
+        title: pageTitle(context),
         actions: [
           IconButton(
             tooltip: socialText(context, 'ذخیره', 'Save'),
@@ -454,6 +521,47 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
                     : null,
               ),
             ],
+            if (widget.kind == 'nodes' && widget.catalog['nodeIcons'] == true)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: DropdownButtonFormField<String>(
+                  key: const ValueKey('practice-icon-picker'),
+                  initialValue: iconKey,
+                  isExpanded: true,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  decoration: InputDecoration(
+                    labelText: socialText(context, 'آیکن سطح', 'Section icon'),
+                  ),
+                  items: [
+                    DropdownMenuItem(
+                      value: '',
+                      child: Text(socialText(context, 'پیش‌فرض', 'Default')),
+                    ),
+                    for (final entry in PracticeIcons.choices.entries)
+                      DropdownMenuItem(
+                        value: entry.key,
+                        child: Row(
+                          children: [
+                            Icon(
+                              entry.value.$1,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                en ? entry.value.$3 : entry.value.$2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                  onChanged: saving
+                      ? null
+                      : (v) => setState(() => iconKey = v ?? ''),
+                ),
+              ),
             if (widget.kind == 'nodes')
               input(
                 'slug',
@@ -501,25 +609,143 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
               ], (v) => audience = v),
               userPicker(),
               dropdown(
+                socialText(context, 'حالت سطح آزمون', 'Level mode'),
+                ['choice', 'notation'].contains(engine) ? 'written' : 'audio',
+                [
+                  ('audio', socialText(context, 'صوتی', 'Audio')),
+                  ('written', socialText(context, 'نوشتاری', 'Written')),
+                ],
+                (v) => engine = v == 'written' ? 'notation' : 'interval',
+                disabledValues: widget.catalog['notationQuestions'] == true
+                    ? {}
+                    : {'written'},
+              ),
+              dropdown(
                 socialText(context, 'نوع تمرین', 'Practice type'),
                 engine,
                 [
-                  (
-                    'interval',
-                    socialText(context, 'تشخیص فاصله', 'Interval recognition'),
-                  ),
-                  (
-                    'choice',
-                    socialText(context, 'چندگزینه‌ای', 'Multiple choice'),
-                  ),
-                  (
-                    'rhythm',
-                    socialText(context, 'تشخیص ریتم', 'Rhythm recognition'),
-                  ),
+                  if (!['choice', 'notation'].contains(engine)) ...[
+                    (
+                      'interval',
+                      socialText(
+                        context,
+                        'تشخیص فاصله',
+                        'Interval recognition',
+                      ),
+                    ),
+                    (
+                      'rhythm',
+                      socialText(context, 'تشخیص ریتم', 'Rhythm recognition'),
+                    ),
+                  ] else ...[
+                    (
+                      'notation',
+                      socialText(
+                        context,
+                        'نت‌نویسی با پاسخ ضبط‌شده',
+                        'Notation with recorded response',
+                      ),
+                    ),
+                    (
+                      'choice',
+                      socialText(
+                        context,
+                        'چندگزینه‌ای متنی',
+                        'Text multiple choice',
+                      ),
+                    ),
+                  ],
                 ],
                 (v) => engine = v,
               ),
-              if (engine == 'interval') ...[
+              if (engine == 'notation') ...[
+                dropdown(
+                  socialText(
+                    context,
+                    'ارزیابی پاسخ صوتی',
+                    'Recorded response assessment',
+                  ),
+                  assessment,
+                  [
+                    (
+                      'pitch_rhythm',
+                      socialText(
+                        context,
+                        'نت و ریتم؛ نت‌خوانی / سولفژ',
+                        'Pitch and rhythm; solfege',
+                      ),
+                    ),
+                    (
+                      'rhythm',
+                      socialText(context, 'فقط ریتم؛ وزن‌خوانی', 'Rhythm only'),
+                    ),
+                  ],
+                  (v) => assessment = v,
+                ),
+                Text(
+                  socialText(
+                    context,
+                    'صورت سؤال را با نت‌نویسی بسازید. هنرجو پاسخ را ضبط می‌کند و نت و زمان‌بندی خودکار بررسی می‌شوند. ملودی تک‌صدایی، حداکثر ۸ میزان و ۳۰ ثانیه؛ کشش هر نت حداقل ۰٫۱۵ ثانیه.',
+                    'Compose the question. The student records a response for automatic pitch and timing assessment. Single melody, up to 8 measures and 30 seconds; each note at least 0.15 seconds.',
+                  ),
+                ),
+                for (final (index, q) in notationQuestions.indexed)
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        children: [
+                          PracticeNotationPreview(svg: q['preview'] as String),
+                          Row(
+                            children: [
+                              Text(
+                                socialText(
+                                  context,
+                                  'پرسش ${index + 1}',
+                                  'Question ${index + 1}',
+                                ),
+                              ),
+                              const Spacer(),
+                              IconButton(
+                                tooltip: socialText(
+                                  context,
+                                  'ویرایش صورت سؤال',
+                                  'Edit question',
+                                ),
+                                onPressed: () => composeQuestion(index),
+                                icon: const Icon(Icons.edit_outlined),
+                              ),
+                              IconButton(
+                                tooltip: socialText(
+                                  context,
+                                  'حذف پرسش',
+                                  'Remove question',
+                                ),
+                                onPressed: () => setState(
+                                  () => notationQuestions.removeAt(index),
+                                ),
+                                icon: const Icon(Icons.delete_outline),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                OutlinedButton.icon(
+                  onPressed: notationQuestions.length < 20
+                      ? composeQuestion
+                      : null,
+                  icon: const Icon(Icons.add),
+                  label: Text(
+                    socialText(
+                      context,
+                      'افزودن صورت سؤال با نت‌نویسی',
+                      'Compose a question',
+                    ),
+                  ),
+                ),
+              ] else if (engine == 'interval') ...[
                 input(
                   'quarterSteps',
                   'فاصله‌ها با واحد ربع‌پرده و ویرگول',
@@ -745,5 +971,28 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
         ),
       ),
     );
+  }
+
+  String pageTitle(BuildContext context) {
+    final editing = (int.tryParse('${old['id']}') ?? 0) > 0;
+    final (fa, en) = switch (widget.kind) {
+      'nodes' =>
+        editing
+            ? ('ویرایش سطح', 'Edit section')
+            : ('افزودن سطح', 'Add section'),
+      'exams' =>
+        editing ? ('ویرایش آزمون', 'Edit test') : ('افزودن آزمون', 'Add test'),
+      'plans/propose' =>
+        editing
+            ? ('ویرایش پیشنهاد اشتراک', 'Edit subscription proposal')
+            : ('پیشنهاد اشتراک', 'Propose subscription'),
+      'plans/approve' => (
+        'بررسی پیشنهاد اشتراک',
+        'Review subscription proposal',
+      ),
+      'shares' => ('سهم درآمد', 'Revenue share'),
+      _ => ('آزمون‌ها', 'Tests'),
+    };
+    return socialText(context, fa, en);
   }
 }

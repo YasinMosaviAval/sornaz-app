@@ -1,0 +1,19 @@
+<!doctype html><html><meta charset="utf-8"><link rel="stylesheet" href="../assets/notation/notation.css"><link rel="stylesheet" href="../assets/notation/ui_controls.css"><body data-result="pending"><main id="app"></main><div id="toast"></div>
+<script>
+window.NOTATION_BOOT={locale:new URL(location.href).searchParams.get('locale')||'fa',embedded:true,nativeToolbar:true,nativePiano:true,userId:1,durationMode:2,showHelp:false};
+window.pianoState=null;window.SornazNotation={postMessage(raw){const d=JSON.parse(raw);if(d.action==='route')window.pianoState=d.piano;if(!d.id)return;let value=true;if(d.action==='list')value={items:[],has_more:false};if(d.action==='export')window.exported=JSON.parse(d.content);queueMicrotask(()=>Notation.receive(d.id,value,null));}};
+</script>
+<script src="../assets/notation/vendor/vexflow.js"></script><script src="../assets/notation/piano_style.js"></script><script src="../assets/notation/model.js"></script><script src="../assets/notation/ui_symbols.js"></script><script src="../assets/notation/ui_glyphs.js"></script><script src="../assets/notation/score_renderer.js"></script><script src="../assets/notation/importer.js"></script><script src="../assets/notation/ui_controls.js"></script><script src="../assets/notation/notation.js"></script>
+<script>
+(async()=>{const pause=()=>new Promise(r=>setTimeout(r,40)),q=s=>document.querySelector(s),expect=(v,m)=>{if(!v)throw Error(m);};try{
+ for(let i=0;i<50&&!window.Notation?.ready;i++)await pause();
+ const sheet=NotationModel.fresh();sheet.metadata.title='Duration dialog';const importing=Notation.importContent(JSON.stringify({format:'sornaz-notation',version:1,metadata:sheet.metadata,score:sheet.score}),'duration.json');await pause();q('[data-action=confirm-import]').click();await importing;await pause();
+ const key=q('.white[data-pitch=C4]');key.click();expect(q('.note-duration-picker')?.open,'Missing note picker');expect(key.classList.contains('is-pressed'),'Pending key not highlighted');expect(!q('.duration-picker h2,.duration-picker .rest-duration-cancel'),'Unrequested title or cancel');expect(pianoState.selectedKeyId==='C4:'&&!pianoState.enabled,'Native pending state missing');
+ await Notation.back();expect(!q('.duration-picker')&&!key.classList.contains('is-pressed'),'Back retained highlight');
+ key.click();q('[data-duration=q][data-dots="2"]').click();await pause();Notation.command('export');await pause();let notes=exported.score.measures.flatMap(b=>b.notes);expect(notes.some(n=>n.pitch==='C4'&&n.duration==='q'&&n.dots===2),'Dotted selected note not committed');
+ q('.rest-key').click();expect(q('.rest-key.is-pressed'),'Rest not highlighted');expect(!q('[data-rest-duration=h][data-rest-dots="1"]'),'Invalid half rest');q('[data-rest-duration="8"][data-rest-dots="1"]').click();await pause();Notation.command('export');await pause();notes=exported.score.measures.flatMap(b=>b.notes);expect(notes.some(n=>n.rest&&n.duration==='8'&&n.dots===1),'Rest duration not committed');
+ q('[data-tool-sheet=palette]').click();expect(!q('.notation-tool-sheet [data-action=measure-tools-open]'),'Measure link retained');expect(![...document.querySelectorAll('.palette-group h3')].some(n=>/Measures and repeats|میزان و تکرار/.test(n.textContent)),'Measure category retained');
+ for(const label of document.querySelectorAll('.palette-group label')){const title=label.querySelector('.notation-control-label'),button=label.querySelector('.notation-symbol-picker');if(!button)continue;expect(title&&title.getBoundingClientRect().bottom<=button.getBoundingClientRect().top+1,'Label is not above picker');}
+ q('[data-action=close-tool-sheet]').click();document.body.dataset.result='PASS';
+}catch(e){document.body.dataset.result='FAIL '+e.message;}})();
+</script></body></html>

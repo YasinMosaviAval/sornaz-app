@@ -1355,7 +1355,7 @@
                 "rowPath": "type",
                 "options": {
                     "فاکتور ترم": "فاکتور ترم",
-                    "اشتراک سامانه": "اشتراک سامانه"
+                    "اشتراک سامانه": ""
                 },
                 "optionSource": null,
                 "distinct": false
@@ -3646,7 +3646,7 @@
                 "label": "نویسنده"
             },
             {
-                "key": "categories",
+                "key": "category_names",
                 "label": "دسته‌ها"
             },
             {
@@ -3655,7 +3655,8 @@
             },
             {
                 "key": "status",
-                "label": "وضعیت"
+                "label": "وضعیت",
+                "action": "status"
             },
             {
                 "key": "views_count",
@@ -3667,10 +3668,10 @@
             }
         ],
         "rowActions": [
+            "preview",
             "details",
-            "update",
+            "metadata",
             "delete",
-            "trash",
             "restore"
         ],
         "detailFields": [
@@ -3744,6 +3745,22 @@
                 "queryKey": "visibility"
             },
             {
+                "key": "postCategoryFilter",
+                "webId": "postCategoryFilter",
+                "label": "همه دسته‌ها",
+                "type": "select",
+                "rowPath": "categories",
+                "options": [],
+                "optionSource": {
+                    "source": "categories",
+                    "label": "title_fa",
+                    "labelEn": "title_en"
+                },
+                "distinct": false,
+                "queryKey": "category",
+                "en": "All categories"
+            },
+            {
                 "key": "status",
                 "label": "وضعیت",
                 "type": "select",
@@ -3760,7 +3777,8 @@
             }
         ],
         "organizationMode": "branch",
-        "organizationFilter": false
+        "organizationFilter": false,
+        "titleAction": "update"
     },
     "post-categories": {
         "version": 2,

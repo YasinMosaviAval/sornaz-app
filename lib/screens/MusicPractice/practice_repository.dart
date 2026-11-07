@@ -1,5 +1,7 @@
+import 'practice_notation_grade.dart';
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
@@ -13,6 +15,10 @@ import '../IntervalRecognition/sync.dart';
 typedef PracticeJson = Map<String, dynamic>;
 
 class MusicPracticeRepository {
+  static bool connectionFailure(Object error) =>
+      error is SocketException ||
+      error is http.ClientException ||
+      error is TimeoutException;
   MusicPracticeRepository({
     required this.userId,
     required this.token,
@@ -81,7 +87,9 @@ class MusicPracticeRepository {
   }) async {
     final prefs = await SharedPreferences.getInstance();
     try {
-      final data = await request('catalog${manage ? '?manage=1' : ''}');
+      final data = await request(
+        'catalog?notation=1${manage ? '&manage=1' : ''}',
+      );
       if (data['viewerId'] != (userId ?? 0)) {
         throw const SocialException('حساب کاربری تغییر کرده است.', 401);
       }
@@ -106,6 +114,7 @@ class MusicPracticeRepository {
       return manage ? data : (await cachedCatalog())!;
     } catch (e) {
       lastSyncError = e;
+      offline = connectionFailure(e);
       if (!allowCached ||
           manage ||
           e is SocialException && [401, 403].contains(e.status)) {
@@ -311,7 +320,19 @@ class MusicPracticeRepository {
   void _apply(PracticeJson run, PracticeJson answer) {
     final exam = Map<String, dynamic>.from(run['exam'] as Map),
         config = Map<String, dynamic>.from(exam['config'] as Map);
-    final expected = config['kind'] == 'interval'
+    if (config['kind'] == 'notation') {
+      final question =
+          (config['questions'] as List)[answer['question'] as int] as Map;
+      final grade = PracticeNotationGrade.evaluate(
+        question['reference'] as Map,
+        answer['recording'] as Map,
+        config['assessment'] as String,
+      );
+      answer = {...answer, 'selected': grade['passed'] == true ? 1 : 0};
+    }
+    final expected = config['kind'] == 'notation'
+        ? 1
+        : config['kind'] == 'interval'
         ? answer['expected']
         : (config['questions'] as List)[answer['question'] as int]['correct'];
     run['answerCount'] = answer['sequence'];
@@ -384,7 +405,12 @@ class MusicPracticeRepository {
               answers = <dynamic>[];
           for (
             var i = (run['ack'] as int) + 1;
-            i <= (run['answerCount'] as int) && answers.length < 100;
+            i <= (run['answerCount'] as int) &&
+                answers.length <
+                    (((run['exam'] as Map)['config'] as Map)['kind'] ==
+                            'notation'
+                        ? 5
+                        : 100);
             i++
           ) {
             answers.add(jsonDecode(b.get('$scope.run.$id.answer.$i')!));

@@ -51,6 +51,7 @@ import 'panel_section_card.dart';
 import 'panel_account.dart';
 import 'panel_insight_charts.dart';
 import 'panel_classroom_heatmap.dart';
+import 'panel_guides.dart';
 import 'panel_term_status.dart';
 import 'panel_database.dart';
 import 'site_api.dart';
@@ -143,6 +144,8 @@ class _PanelTabsState extends State<PanelResourcePage>
     );
     final index = controller.index;
     final section = tabs.isEmpty ? widget.section : tabs[index];
+    if (section['key'] == 'guides')
+      return PanelGuidesPage(api: widget.api, section: section);
     return _PanelResourceContent(
       key: ValueKey(gallery ? widget.section['key'] : section['key']),
       api: widget.api,
@@ -1786,7 +1789,7 @@ class _PanelResourcePageState extends State<_PanelResourceContent>
                           ),
                         for (final key in rowActions)
                           if (key == 'details' || available('$key', row))
-                            if (section == 'users' && key != 'details')
+                            if (section == 'users')
                               Padding(
                                 padding: const EdgeInsetsDirectional.only(
                                   end: 8,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+export '../components/app_checkbox.dart' show appCheckboxTheme;
+
 /// Shared corner radius from the application's appearance settings.
 BorderRadius appRadius(BuildContext context) {
   final shape = Theme.of(context).cardTheme.shape;

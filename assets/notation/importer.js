@@ -8,7 +8,7 @@ const clefs=new Set(['treble','bass','alto','tenor','soprano','mezzo-soprano','b
 // Keep these limits aligned with NotationService::validate in sornaz-web.
 const validPitch=M.validPitch;
 const maxChordTones=M.maxChordTones;
-const accidentalValues=new Set(['','#','b','n','##','bb','+','d']);
+const accidentalValues=new Set(['','#','b','n','##','bb','+','d','k','o','bk','#o']);
 const markingValues={dynamic:new Set(['','ppp','pp','p','mp','mf','f','ff','fff','sf','sff','sfff','sfz','sffz','sfffz','fz','ffz','fffz','fp']),articulation:new Set(['','staccato','accent','tenuto','marcato','staccatissimo','fermata','breath','caesura']),ornament:new Set(['','trill','mordent','invertedMordent','turn','invertedTurn'])};
 const knownBar=new Set(['notes','preserve','time','timeSymbol','length','barline','repeat','clefs','clefChanges','key','tempo','rehearsal','text','displayNumber','multiRest','beamPattern']);
 const knownMeta=new Set(['title','subtitle','composer','arranger','lyricist','tempo_text','instrument','key','tempo_note','clef','time','staves','bpm','scale_type','tempo_dots']);
@@ -18,7 +18,7 @@ const hasUnknown=(value,allowed)=>Object.keys(value).some(key=>!allowed.has(key)
 function validate(raw){
  if(!object(raw)||raw.format!=='sornaz-notation'||raw.version!==1||!object(raw.metadata)||!object(raw.score)||!Array.isArray(raw.score.measures))fail('Unsupported score format.');
  const sheet=M.fresh(),meta=raw.metadata,bars=raw.score.measures;
- if(!bars.length||bars.length>64||hasUnknown(meta,knownMeta)||typeof meta.title!=='string'||!meta.title.trim()||meta.title.length>180||typeof meta.instrument!=='string'||!meta.instrument||!M.keys.includes(meta.key)||!Number.isInteger(Number(meta.bpm))||Number(meta.bpm)<20||Number(meta.bpm)>300)fail('Invalid score metadata.');
+ if(!bars.length||bars.length>64||hasUnknown(meta,knownMeta)||typeof meta.title!=='string'||!meta.title.trim()||meta.title.length>180||typeof meta.instrument!=='string'||!meta.instrument||!(M.iranianIntervals?.[meta.scale_type]?(M.iranianTonics||[]).some(([value])=>value===meta.key):M.keys.includes(meta.key))||!Number.isInteger(Number(meta.bpm))||Number(meta.bpm)<20||Number(meta.bpm)>300)fail('Invalid score metadata.');
  if(meta.staves!==undefined&&(!Array.isArray(meta.staves)||![1,2].includes(meta.staves.length)||meta.staves.some(s=>!object(s)||!clefs.has(s.clef))))fail('Invalid staff layout.');
  if(meta.clef!==undefined&&!clefs.has(meta.clef))fail('Invalid clef.');
  sheet.metadata=M.clone(meta);sheet.metadata.staves??=meta.instrument.toLowerCase()==='piano'?[{clef:'treble'},{clef:'bass'}]:[{clef:meta.clef||'treble'}];
@@ -62,19 +62,24 @@ function fromMusicXml(content,name){
  const first=one(measures[0],'attributes'),divisions=Number(value(first,'divisions'));if(!Number.isInteger(divisions)||divisions<1||divisions>10000000)fail('Invalid MusicXML divisions.');
  const time=one(first,'time'),key=one(first,'key'),fifths=Number(value(key,'fifths')||0),major=['Cb','Gb','Db','Ab','Eb','Bb','F','C','G','D','A','E','B','F#','C#'],minor=['Abm','Ebm','Bbm','Fm','Cm','Gm','Dm','Am','Em','Bm','F#m','C#m','G#m','D#m','A#m'];
  if(!Number.isInteger(fifths)||fifths<-7||fifths>7)fail('Unsupported MusicXML key.');
- const keyName=(value(key,'mode')==='minor'?minor:major)[fifths+7],staffCount=Number(value(first,'staves')||children(first,'clef').length||1);
+ const extra=name=>doc.querySelector('miscellaneous-field[name="'+name+'"]')?.textContent?.trim()||'';
+ const iranianMode=extra('sornaz-iranian-mode'),iranianTonic=extra('sornaz-iranian-tonic');let iranianKeys=[];
+ if(iranianMode||iranianTonic){if(!M.iranianIntervals?.[iranianMode]||!(M.iranianTonics||[]).some(([v])=>v===iranianTonic))fail('Unsupported MusicXML key.');try{iranianKeys=JSON.parse(extra('sornaz-iranian-keys')||'[]');}catch(_){fail('Unsupported MusicXML key.');}if(!Array.isArray(iranianKeys)||iranianKeys.length>64||iranianKeys.some(k=>!(M.iranianTonics||[]).some(([v])=>v===k)))fail('Unsupported MusicXML key.');}
+ const checkIranianKey=(node,tonic)=>{const expected=M.iranianSignature(iranianMode,tonic).accidentals,steps=children(node,'key-step'),alters=children(node,'key-alter');if(steps.length!==expected.length||alters.length!==expected.length||new Set(steps.map(s=>s.textContent.trim())).size!==steps.length||steps.some((step,i)=>!expected.some(a=>a.letter===step.textContent.trim()&&a.alter===Number(alters[i].textContent))))fail('Unsupported MusicXML key.');};
+ if(!iranianMode&&children(key,'key-step').length)fail('Unsupported MusicXML key.');
+ const keyName=iranianTonic||(value(key,'mode')==='minor'?minor:major)[fifths+7],staffCount=Number(value(first,'staves')||children(first,'clef').length||1);
  if(![1,2].includes(staffCount))fail('Unsupported MusicXML staff layout.');
  const clefName=node=>{const sign=value(node,'sign'),line=value(node,'line');if(sign==='G'&&line==='2')return 'treble';if(sign==='F'&&line==='4')return 'bass';if(sign==='C'&&line==='3')return 'alto';if(sign==='C'&&line==='4')return 'tenor';fail('Unsupported MusicXML clef.');};
  const staffClefs=children(first,'clef').map(clefName);while(staffClefs.length<staffCount)staffClefs.push(staffCount===2&&staffClefs.length===1?'bass':'treble');
- const sheet=M.fresh();Object.assign(sheet.metadata,{title:value(one(doc.documentElement,'work'),'work-title')||value(doc.documentElement,'movement-title')||name.replace(/\.[^.]+$/,'')||'Imported score',instrument:staffCount===2?'Piano':'Voice',staves:staffClefs.map(clef=>({clef})),clef:staffClefs[0],key:keyName,time:`${value(time,'beats')||4}/${value(time,'beat-type')||4}`,bpm:100});
- const types={whole:'w',half:'h',quarter:'q',eighth:'8','16th':'16','32nd':'32','64th':'64','128th':'128','256th':'256'};sheet.score.measures=[];let currentFifths=fifths;
- for(const measure of measures){
+ const sheet=M.fresh();Object.assign(sheet.metadata,{title:value(one(doc.documentElement,'work'),'work-title')||value(doc.documentElement,'movement-title')||name.replace(/\.[^.]+$/,'')||'Imported score',instrument:staffCount===2?'Piano':'Voice',staves:staffClefs.map(clef=>({clef})),clef:staffClefs[0],key:keyName,scale_type:iranianMode||(keyName.endsWith('m')?'minor':'major'),time:`${value(time,'beats')||4}/${value(time,'beat-type')||4}`,bpm:100});
+ const types={whole:'w',half:'h',quarter:'q',eighth:'8','16th':'16','32nd':'32','64th':'64','128th':'128','256th':'256'};sheet.score.measures=[];let currentFifths=fifths,currentIranianTonic=iranianTonic;
+ for(const [measureIndex,measure] of measures.entries()){
   const bar={notes:[],preserve:true};sheet.score.measures.push(bar);let cursor=0,last=null;
   for(const item of measure.children){
    if(item.localName==='attributes'){
     if(children(item,'measure-style').length||children(item,'transpose').length)fail('Unsupported MusicXML notation.');
     if((bar.notes.length||cursor)&&children(item,'clef').length)fail('Unsupported MusicXML clef change.');
-    const t=one(item,'time'),k=one(item,'key');if(t)bar.time=`${value(t,'beats')}/${value(t,'beat-type')}`;if(k){const n=Number(value(k,'fifths'));if(!Number.isInteger(n)||n<-7||n>7)fail('Unsupported MusicXML key.');bar.key=(value(k,'mode')==='minor'?minor:major)[n+7];currentFifths=n;}
+    const t=one(item,'time'),k=one(item,'key');if(t)bar.time=`${value(t,'beats')}/${value(t,'beat-type')}`;if(k){if(iranianMode){currentIranianTonic=iranianKeys[measureIndex]||iranianTonic;checkIranianKey(k,currentIranianTonic);bar.key=currentIranianTonic;}else{if(children(k,'key-step').length)fail('Unsupported MusicXML key.');const n=Number(value(k,'fifths'));if(!Number.isInteger(n)||n<-7||n>7)fail('Unsupported MusicXML key.');bar.key=(value(k,'mode')==='minor'?minor:major)[n+7];currentFifths=n;}}
     const cs=children(item,'clef');if(cs.length)bar.clefs=Object.fromEntries(cs.map(c=>[Number(c.getAttribute('number')||1),clefName(c)]));continue;
    }
    if(item.localName==='backup'||item.localName==='forward'){const d=Number(value(item,'duration'));if(!Number.isInteger(d)||d<0)fail('Invalid MusicXML timing.');cursor+=(item.localName==='backup'?-1:1)*d;continue;}
@@ -95,10 +100,10 @@ function fromMusicXml(content,name){
    if(!duration||!Number.isInteger(d)||d!==expected||dots>2)fail('Unsupported MusicXML duration.');
    const staff=Number(value(item,'staff')||1),rawVoice=Number(value(item,'voice')||1),voice=staff===2&&rawVoice>=5&&rawVoice<=8?rawVoice-4:rawVoice,chord=!!one(item,'chord'),at=chord?last?.at:cursor;
    if(!Number.isInteger(at)||at<0||!Number.isInteger(at*M.wholeUnits/(divisions*4)))fail('Invalid MusicXML timing.');
-   const pitch=one(item,'pitch'),step=value(pitch,'step'),alter=Number(value(pitch,'alter')||0),octave=value(pitch,'octave');if(!one(item,'rest')&&(!/^[A-G]$/.test(step||'')||!['-1','0','1'].includes(String(alter))||!validPitch((step||'')+(octave||''))))fail('Unsupported MusicXML pitch.');
-   if(one(item,'accidental')&&!['sharp','flat','natural'].includes(value(item,'accidental')))fail('Unsupported MusicXML accidental.');
-   const keyOrder=currentFifths>=0?'FCGDAEB':'BEADGCF',implicit=keyOrder.slice(0,Math.abs(currentFifths)).includes(step)?Math.sign(currentFifths):0;
-   const symbol=value(item,'accidental'),accidental=symbol==='natural'?'n':symbol==='sharp'?'#':symbol==='flat'?'b':alter===1?'#':alter===-1?'b':one(pitch,'alter')&&implicit?'n':'';
+   const pitch=one(item,'pitch'),step=value(pitch,'step'),alter=Number(value(pitch,'alter')||0),octave=value(pitch,'octave');if(!one(item,'rest')&&(!/^[A-G]$/.test(step||'')||![-2,-1.5,-1,-.5,0,.5,1,1.5,2].includes(alter)||!validPitch((step||'')+(octave||''))))fail('Unsupported MusicXML pitch.');
+   if(one(item,'accidental')&&!['sharp','flat','natural','double-sharp','flat-flat','quarter-sharp','quarter-flat','three-quarters-flat','three-quarters-sharp','other'].includes(value(item,'accidental')))fail('Unsupported MusicXML accidental.');
+   const keyOrder=currentFifths>=0?'FCGDAEB':'BEADGCF',implicit=iranianMode?(M.iranianSignature(iranianMode,currentIranianTonic).alterations[step]||0):keyOrder.slice(0,Math.abs(currentFifths)).includes(step)?Math.sign(currentFifths):0;
+   const symbol=value(item,'accidental'),micro=({'quarter-sharp':'+','quarter-flat':'d','three-quarters-flat':'bk','three-quarters-sharp':'#o','double-sharp':'##','flat-flat':'bb'})[symbol]||(symbol==='other'?(alter===.5?'o':alter===-.5?'k':''):''),accidental=micro?micro:!symbol&&alter===implicit?'':symbol==='natural'?'n':symbol==='sharp'?'#':symbol==='flat'?'b':alter===1?'#':alter===-1?'b':alter===.5?'o':alter===-.5?'k':alter===1.5?'#o':alter===-1.5?'bk':alter===2?'##':alter===-2?'bb':one(pitch,'alter')&&implicit?'n':'';
    const tone={pitch:step+octave,accidental};
    if(ties.includes('start'))tone.tieNext=true;if(ties.includes('stop'))tone.tiePrevious=true;
    if(chord){if(!last||last.staff!==staff||last.voice!==voice||last.at!==at||last.duration!==duration||last.dots!==dots)fail('Invalid MusicXML chord.');last.note.pitches??=[];last.note.pitches.push(tone);continue;}

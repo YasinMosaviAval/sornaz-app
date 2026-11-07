@@ -1,0 +1,6 @@
+<!doctype html><html><meta charset="utf-8"><link rel="stylesheet" href="../assets/notation/notation.css"><link rel="stylesheet" href="../assets/notation/ui_controls.css"><body><main id="app"></main><div id="toast"></div>
+<script>
+window.NOTATION_BOOT={locale:new URL(location.href).searchParams.get('locale')||'fa',embedded:true,nativeToolbar:false,nativePiano:false,userId:1,durationMode:2,showHelp:false};
+window.SornazNotation={postMessage(raw){const d=JSON.parse(raw);if(d.action==='route')window.pianoState=d.piano;if(!d.id)return;let value=true;if(d.action==='list')value={items:[],has_more:false};if(d.action==='instruments')value=[{id:'Tar',en:'Tar',fa:'تار'}];if(d.action==='export')window.exported=JSON.parse(d.content);queueMicrotask(()=>Notation.receive(d.id,value,null));}};
+</script>
+<script src="../assets/notation/vendor/vexflow.js"></script><script src="../assets/notation/piano_style.js"></script><script src="../assets/notation/model.js"></script><script src="../assets/notation/ui_symbols.js"></script><script src="../assets/notation/ui_glyphs.js"></script><script src="../assets/notation/score_renderer.js"></script><script src="../assets/notation/importer.js"></script><script src="../assets/notation/ui_controls.js"></script><script src="../assets/notation/notation.js"></script></body></html>

@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_checkbox.dart';
 import 'package:sornaz/components/app_async_state.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
@@ -571,7 +572,7 @@ class _AcademyRegistrationPageState extends State<AcademyRegistrationPage> {
                         ),
                         Row(
                           children: [
-                            Checkbox(
+                            AppCheckbox(
                               value: accepted,
                               onChanged: busy
                                   ? null

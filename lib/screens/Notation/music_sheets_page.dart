@@ -1,3 +1,4 @@
+import 'notation_piano_keyboard.dart';
 import 'package:sornaz/components/app_text_input_dialog.dart';
 import 'package:sornaz/components/app_async_state.dart';
 import 'package:sornaz/components/scroll_aware_scaffold.dart';
@@ -37,14 +38,25 @@ import 'omr_review_page.dart';
 import '../../helpers/development_access.dart';
 
 class MusicSheetsPage extends StatelessWidget {
-  const MusicSheetsPage({super.key});
+  const MusicSheetsPage({
+    super.key,
+    this.questionEditor = false,
+    this.initialDraft,
+  });
+  final bool questionEditor;
+  final Map<String, dynamic>? initialDraft;
   @override
-  Widget build(BuildContext context) => DevelopmentGate(
-    builder: (context) => MusicPlaybackEntry(
-      reason: PlaybackInterruption.notation,
-      child: _content(context),
-    ),
-  );
+  Widget build(BuildContext context) => questionEditor
+      ? MusicPlaybackEntry(
+          reason: PlaybackInterruption.notation,
+          child: _content(context),
+        )
+      : DevelopmentGate(
+          builder: (context) => MusicPlaybackEntry(
+            reason: PlaybackInterruption.notation,
+            child: _content(context),
+          ),
+        );
   Widget _content(BuildContext context) {
     final session = context.watch<AuthSession>();
     if (kIsWeb)
@@ -52,12 +64,20 @@ class MusicSheetsPage extends StatelessWidget {
         key: ValueKey(session.token),
         token: session.token ?? '',
         userId: session.user?.id ?? 0,
+        initialDraft: initialDraft,
+        onDraftSaved: questionEditor
+            ? (result) => Navigator.of(context).pop(result)
+            : null,
       );
     if (AppPlatform.isWindows) {
       return DesktopNotationHost(
         key: ValueKey(session.token),
         token: session.token ?? "",
         userId: session.user?.id ?? 0,
+        initialDraft: initialDraft,
+        onDraftSaved: questionEditor
+            ? (result) => Navigator.of(context).pop(result)
+            : null,
       );
     }
     // A fresh host on account changes keeps private data out of the next account.
@@ -65,14 +85,26 @@ class MusicSheetsPage extends StatelessWidget {
       key: ValueKey(session.token),
       token: session.token ?? '',
       userId: session.user?.id ?? 0,
+      initialDraft: initialDraft,
+      onDraftSaved: questionEditor
+          ? (result) => Navigator.of(context).pop(result)
+          : null,
     );
   }
 }
 
 class _NotationHost extends StatefulWidget {
-  const _NotationHost({super.key, required this.token, required this.userId});
+  const _NotationHost({
+    super.key,
+    required this.token,
+    required this.userId,
+    this.initialDraft,
+    this.onDraftSaved,
+  });
   final String token;
   final int userId;
+  final Map<String, dynamic>? initialDraft;
+  final ValueChanged<Map<String, dynamic>?>? onDraftSaved;
   @override
   State<_NotationHost> createState() => _NotationHostState();
 }
@@ -81,6 +113,7 @@ class _NotationHostState extends State<_NotationHost>
     with WidgetsBindingObserver {
   late final WebViewController _controller;
   late final NotationApi _api;
+  bool _draftFinished = false;
   bool _ready = false;
   bool _failed = false;
   String _route = 'list';
@@ -89,8 +122,11 @@ class _NotationHostState extends State<_NotationHost>
   double _guestTop = 88;
   ValueChanged<bool>? _setEditorOpen;
   String _configuration = '';
+  Map<String, dynamic> _piano = {};
   int _durationMode = 1;
   int _pianoLabelMode = 1;
+  bool _showHelp = true;
+  bool _showQuarterTones = false;
   static const _asset = 'assets/notation/index.html';
 
   @override
@@ -139,8 +175,11 @@ class _NotationHostState extends State<_NotationHost>
       'locale': locale,
       'dark': app.isDark,
       'userId': widget.userId,
+      'practiceDraft': widget.onDraftSaved != null,
+      'initialDraft': widget.initialDraft,
       'embedded': true,
       'nativeToolbar': true,
+      'nativePiano': true,
       'accent': '#${app.accent.toARGB32().toRadixString(16).substring(2)}',
       'fontScale': ((16 + app.fontSize) / 16).clamp(.8, 1.5),
       'fontFamily': app.fontFamily,
@@ -148,6 +187,8 @@ class _NotationHostState extends State<_NotationHost>
       'cornerRadius': app.cornerRadius,
       'durationMode': _durationMode,
       'pianoLabelMode': _pianoLabelMode,
+      'showHelp': _showHelp,
+      'showQuarterTones': _showQuarterTones,
     });
     if (next != _configuration) {
       _configuration = next;
@@ -170,7 +211,15 @@ class _NotationHostState extends State<_NotationHost>
       'notation.pianoLabelMode',
     );
     if (!mounted) return;
+    _showHelp =
+        (await SharedPreferences.getInstance()).getBool('notation.showHelp') ??
+        true;
     _durationMode = value ?? 1;
+    _showQuarterTones =
+        (await SharedPreferences.getInstance()).getBool(
+          'notation.showQuarterTones',
+        ) ??
+        false;
     _pianoLabelMode = pianoValue ?? 1;
     if (_configuration.isNotEmpty) {
       final configuration = Map<String, dynamic>.from(
@@ -178,6 +227,8 @@ class _NotationHostState extends State<_NotationHost>
       );
       configuration['durationMode'] = _durationMode;
       configuration['pianoLabelMode'] = _pianoLabelMode;
+      configuration['showHelp'] = _showHelp;
+      configuration['showQuarterTones'] = _showQuarterTones;
       _configuration = jsonEncode(configuration);
     }
     if (_ready) await _configure();
@@ -366,11 +417,34 @@ class _NotationHostState extends State<_NotationHost>
       final data = jsonDecode(message.message) as Map<String, dynamic>;
       requestId = data['id'] as int?;
       final action = data['action'] as String;
+      if (action == 'practice-save' || action == 'practice-cancel') {
+        if (widget.onDraftSaved == null || _draftFinished) return;
+        final value = action == 'practice-save'
+            ? Map<String, dynamic>.from(data['payload'] as Map)
+            : null;
+        if (value != null &&
+            (value['sheet'] is! Map ||
+                value['preview'] is! String ||
+                (value['preview'] as String).length > 120000))
+          throw const FormatException('Invalid question score');
+        _draftFinished = true;
+        await _controller.runJavaScript(
+          'window.Notation.receive($requestId,true,null);',
+        );
+        if (!mounted) return;
+        setState(() => _route = 'list');
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) widget.onDraftSaved!(value);
+        });
+        return;
+      }
       if (action == 'route') {
+        if (_draftFinished) return;
         final route = data['route'];
         if (mounted && ['list', 'form', 'editor'].contains(route)) {
           setState(() {
             _route = route as String;
+            _piano = Map<String, dynamic>.from(data['piano'] as Map? ?? {});
             _toolbar = Map<String, dynamic>.from(data['toolbar'] as Map? ?? {});
             _setEditorOpen?.call(_route != 'list');
             _guestTop = (data['guestTop'] as num?)?.toDouble() ?? 88;
@@ -532,12 +606,10 @@ class _NotationHostState extends State<_NotationHost>
       child: ScrollAwareScaffold(
         appBar: _route != 'list'
             ? NotationTopBar(
+                showHelp: _showHelp,
                 editor: _route == 'editor',
                 signedIn: widget.userId > 0,
                 data: _toolbar,
-                onOmr: _route == 'editor' && DevelopmentAccess.watch(context)
-                    ? _openOmr
-                    : null,
                 command: (action) => _controller.runJavaScript(
                   'window.Notation.command(${jsonEncode(action)});',
                 ),
@@ -591,6 +663,7 @@ class _NotationHostState extends State<_NotationHost>
             ? Colors.white
             : Colors.black,
         body: SafeArea(
+          bottom: _route != 'editor',
           child: Column(
             children: [
               Expanded(
@@ -623,6 +696,18 @@ class _NotationHostState extends State<_NotationHost>
                         ],
                       ),
               ),
+              if (_route == 'editor' && _ready && !_failed)
+                NotationPianoKeyboard(
+                  data: _piano,
+                  send: (event) {
+                    if (mounted && _ready)
+                      _controller.runJavaScript(
+                        'window.Notation.pianoPointer(' +
+                            jsonEncode(event) +
+                            ');',
+                      );
+                  },
+                ),
             ],
           ),
         ),

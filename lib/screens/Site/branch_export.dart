@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_checkbox.dart';
 import 'branch_color_picker.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
@@ -213,7 +214,7 @@ Future<void> exportBranchesPdf(
                   ),
                   Text(t('ستون‌های خروجی PDF', 'PDF columns')),
                   for (final e in labels.entries)
-                    CheckboxListTile(
+                    AppCheckboxTile(
                       contentPadding: EdgeInsets.zero,
                       title: Text(e.value),
                       value: options.columns.contains(e.key),
@@ -241,7 +242,7 @@ Future<void> exportBranchesPdf(
                     value: options.oddColor,
                     onChanged: (v) => options.oddColor = v,
                   ),
-                  CheckboxListTile(
+                  AppCheckboxTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(
                       t(

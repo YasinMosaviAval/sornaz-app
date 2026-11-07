@@ -85,12 +85,12 @@ const actions={
 };
 actions.yes=['عملیات نوشته‌شده در این پنجره را تأیید و اجرا می‌کند. پیش از تأیید، متن پنجره را بخوانید.','Confirms and performs the operation described in this dialog. Read the dialog before confirming.'];
 actions.no=['این عملیات را لغو می‌کند و به صفحه قبلی برمی‌گردد.','Cancels this operation and returns to the previous view.'];
-const pickSelector='select[data-measure-choice],select[data-note-size],select[data-note-hairpin],select[data-note-slide],select[data-note-octave-shift],select[data-grace-kind],select[data-note-tremolo],select[data-note-pedal],select[data-tone-finger],select[data-clef-change],select[data-harmonic],select[data-arpeggio-direction],select[data-ornament-accidental]';
+const pickSelector='select[data-choice],select[data-tuplet],select[data-measure-choice],select[data-note-size],select[data-note-hairpin],select[data-note-slide],select[data-note-octave-shift],select[data-grace-kind],select[data-note-tremolo],select[data-note-pedal],select[data-tone-finger],select[data-clef-change],select[data-harmonic],select[data-arpeggio-direction],select[data-ornament-accidental]';
 const keyAttributes=['note-size','note-hairpin','note-slide','note-octave-shift','grace-kind','note-tremolo','note-chord-symbol','note-lyric','note-pedal','tone-finger','clef-change','harmonic','arpeggio-direction','ornament-accidental'];
 const tr=(fa,en)=>locale==='fa'?fa:en;
-function keyOf(node){return node.dataset.measureChoice||node.dataset.measureNumber||node.dataset.measureText||node.dataset.ornamentAccidental||keyAttributes.find(key=>node.hasAttribute('data-'+key))||node.dataset.choice||(node.hasAttribute('data-tuplet')?'tuplet':'');}
+function keyOf(node){return node.name||node.dataset.measureChoice||node.dataset.measureNumber||node.dataset.measureText||node.dataset.ornamentAccidental||keyAttributes.find(key=>node.hasAttribute('data-'+key))||node.dataset.choice||(node.hasAttribute('data-tuplet')?'tuplet':'');}
 function fieldInfo(key){const ornament=/^ornament(Upper|Lower)Accidental$/.test(key),info=fields[key]||fields[key.replace(/^clef[12]$/,'clef1')]||(ornament?fields['ornament-accidental']:null);if(!info)return null;let name=locale==='fa'?info[0]:info[1];if(ornament)name=key.includes('Upper')?tr('علامت تغییر بالای زینت','Upper ornament accidental'):tr('علامت تغییر پایین زینت','Lower ornament accidental');return {name,text:locale==='fa'?info[2]:info[3]};}
-function labelOf(node){return node.getAttribute('aria-label')||node.getAttribute('title')||node.closest('label')?.textContent.trim().replace(/\s+/g,' ').slice(0,120)||node.textContent.trim().replace(/\s+/g,' ').slice(0,120)||tr('ابزار نت‌نویسی','Notation tool');}
+function labelOf(node){return node.getAttribute('aria-label')||node.getAttribute('title')||(node.matches('select')?node.closest('label')?.querySelector(':scope>span')?.textContent:null)||node.closest('label')?.textContent.trim().replace(/\s+/g,' ').slice(0,120)||node.textContent.trim().replace(/\s+/g,' ').slice(0,120)||tr('ابزار نت‌نویسی','Notation tool');}
 function controlInfo(node){
  const key=keyOf(node),field=fieldInfo(key);if(field)return field;
  const name=labelOf(node),action=node.dataset.action;
@@ -135,15 +135,16 @@ function enhanceSelect(select){
  if(select.hasAttribute('data-notation-enhanced'))return;
  const key=keyOf(select),info=controlInfo(select),label=select.closest('label'),wrapper=label||document.createElement('span');
  if(!label)select.before(wrapper);
- if(!label)wrapper.append(select);else hideLabelText(label);
+ if(!label)wrapper.append(select);else if(!select.closest('#metadata'))hideLabelText(label);
+ if(select.closest('#metadata'))wrapper.classList.add('notation-text-field');
  wrapper.classList.add('notation-symbol-field');wrapper.dataset.controlKey=key;
  select.dataset.notationEnhanced='';select.classList.add('notation-original-select');select.tabIndex=-1;select.setAttribute('aria-hidden','true');
  annotate(select,info);annotate(wrapper,info);
  const button=document.createElement('button');button.type='button';button.className='notation-symbol-picker';button.dataset.controlKey=key;button.setAttribute('aria-haspopup','listbox');button.setAttribute('aria-expanded','false');button.disabled=select.disabled;
- const selected=select.selectedOptions[0];button.innerHTML=glyph(key,select.value,selected?.textContent||'');button.setAttribute('aria-label',info.name+(selected?.textContent?' · '+selected.textContent:''));annotate(button,{...info,name:button.getAttribute('aria-label')});
+ const selected=select.selectedOptions[0];if(select.closest('#metadata')||key==='beamPattern')button.textContent=selected?.textContent||'';else button.innerHTML=glyph(key,select.value,selected?.textContent||'');button.setAttribute('aria-label',info.name+(selected?.textContent?' · '+selected.textContent:''));annotate(button,{...info,name:button.getAttribute('aria-label')});
  if(select.disabled){wrapper.classList.add('is-disabled');wrapper.tabIndex=0;wrapper.setAttribute('aria-disabled','true');const reason=select.dataset.disabledReason;if(reason){wrapper.dataset.notationHelp+=' '+reason;button.dataset.notationHelp+=' '+reason;}}
  select.after(button);button.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();openPicker(button,select);});
- select.addEventListener('change',()=>{if(button.isConnected){const selected=select.selectedOptions[0];button.innerHTML=glyph(key,select.value,selected?.textContent||'');button.setAttribute('aria-label',info.name+' · '+(selected?.textContent||''));}});
+ const refresh=()=>{button.disabled=select.disabled;wrapper.classList.toggle('is-disabled',select.disabled);if(button.isConnected){const selected=select.selectedOptions[0];if(select.closest('#metadata')||key==='beamPattern')button.textContent=selected?.textContent||'';else button.innerHTML=glyph(key,select.value,selected?.textContent||'');button.setAttribute('aria-label',info.name+' · '+(selected?.textContent||''));}};select.addEventListener('change',refresh);select.addEventListener('notation-options-change',refresh);
 }
 function enhanceInput(input){
  if(input.hasAttribute('data-notation-enhanced'))return;input.dataset.notationEnhanced='';
@@ -168,11 +169,12 @@ function visibleAnchor(node){
  return right>left&&bottom>top;
 }
 function underPointer(node,point){return !!point&&node.contains(document.elementFromPoint(point.x,point.y));}
-function topLayer(box){document.body.append(box);if(box.showPopover){box.setAttribute('popover','manual');try{box.showPopover();}catch(_){box.removeAttribute('popover');}}}
+function topLayer(box){(document.querySelector('.notation-tool-sheet[open]')||document.body).append(box);if(box.showPopover){box.setAttribute('popover','manual');try{box.showPopover();}catch(_){box.removeAttribute('popover');}}}
 function removeTopLayer(box){if(!box)return;try{if(box.matches(':popover-open'))box.hidePopover();}catch(_){}box.remove();}
+let helpEnabled=true;
 function hideHelp(){clearTimeout(hoverTimer);if(help){const {node,box,described}=help;removeTopLayer(box);if(node.isConnected){if(described===null)node.removeAttribute('aria-describedby');else node.setAttribute('aria-describedby',described);}help=null;}}
 function showHelp(node,source='focus',point=null){
- if(!node?.isConnected||!node.dataset.notationHelp)return;
+ if(!helpEnabled||source!=='touch'||!node?.isConnected||!node.dataset.notationHelp)return;
  if(source==='hover'&&(!visibleAnchor(node)||!underPointer(node,point)))return;
  hideHelp();const box=document.createElement('div');box.className='notation-control-help';box.id='notation-help-'+(++serial);box.setAttribute('role','tooltip');box.dir=locale==='fa'?'rtl':'ltr';
  const title=document.createElement('strong');title.textContent=node.dataset.notationHelpTitle||labelOf(node);const body=document.createElement('div');body.textContent=node.dataset.notationHelp;box.append(title,body);
@@ -181,8 +183,8 @@ function showHelp(node,source='focus',point=null){
 function closePicker(focus=false){if(!popup)return;const {box,button}=popup;if(help&&box.contains(help.node))hideHelp();popup=null;removeTopLayer(box);button.setAttribute('aria-expanded','false');button.removeAttribute('aria-controls');if(focus&&button.isConnected)button.focus({preventScroll:true});}
 function openPicker(button,select){
  if(select.disabled)return;if(popup?.button===button){closePicker(true);return;}closePicker();hideHelp();
- const key=keyOf(select),info=controlInfo(select),box=document.createElement('div');box.className='notation-symbol-popup';box.id='notation-choices-'+(++serial);box.setAttribute('role','listbox');box.setAttribute('aria-label',info.name);box.dir=locale==='fa'?'rtl':'ltr';
- for(const option of select.options){const choice=document.createElement('button');choice.type='button';choice.className='notation-symbol-option';choice.dataset.notationOption=option.value;choice.setAttribute('role','option');choice.setAttribute('aria-label',option.textContent||tr('بدون علامت','No marking'));choice.setAttribute('aria-selected',String(option.selected));choice.disabled=option.disabled;choice.innerHTML=glyph(key,option.value,option.textContent);annotate(choice,{name:choice.getAttribute('aria-label'),text:info.text+(option.dataset.disabledReason?' '+option.dataset.disabledReason:'')});choice.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();if(choice.disabled)return;const value=option.value;closePicker(true);select.value=value;select.dispatchEvent(new Event('change',{bubbles:true}));});box.append(choice);}
+ const key=keyOf(select),info=controlInfo(select),textChoices=key==='beamPattern'||select.closest('#metadata')||select.matches('[data-choice],[data-tuplet]'),box=document.createElement('div');box.className='notation-symbol-popup'+(textChoices?' notation-text-options':'')+(select.matches('[data-measure-choice]')?' notation-measure-options':'');box.id='notation-choices-'+(++serial);box.setAttribute('role','listbox');box.setAttribute('aria-label',info.name);box.dir=locale==='fa'?'rtl':'ltr';
+ for(const option of select.options){const choice=document.createElement('button');choice.type='button';choice.className='notation-symbol-option';choice.dataset.notationOption=option.value;choice.setAttribute('role','option');choice.setAttribute('aria-label',option.textContent||tr('بدون علامت','No marking'));choice.setAttribute('aria-selected',String(option.selected));choice.disabled=option.disabled;if(textChoices){const check=document.createElement('span');check.className='notation-option-check';check.setAttribute('aria-hidden','true');check.textContent=option.selected?'\u2611':'\u2610';const label=document.createElement('span');label.textContent=option.textContent;choice.append(check,label);}else choice.innerHTML=glyph(key,option.value,option.textContent);annotate(choice,{name:choice.getAttribute('aria-label'),text:info.text+(option.dataset.disabledReason?' '+option.dataset.disabledReason:'')});choice.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();if(choice.disabled)return;const value=option.value;closePicker(true);select.value=value;select.dispatchEvent(new Event('change',{bubbles:true}));});box.append(choice);}
  popup={box,button,select};button.setAttribute('aria-expanded','true');button.setAttribute('aria-controls',box.id);topLayer(box);position(box,button);const selected=box.querySelector('[aria-selected=true]:not(:disabled)')||box.querySelector('button:not(:disabled)');selected?.focus({preventScroll:true});
 }
 function helpTarget(event){const node=event.target instanceof Element?event.target.closest('[data-notation-help],button,input,select,textarea,summary,[data-pitch],#score [data-note]'):null;if(node&&!node.dataset.notationHelp)annotate(node,controlInfo(node));return node;}
@@ -197,7 +199,7 @@ function refind(node){
 }
 function pointerDown(event){
  if(popup&&!popup.box.contains(event.target)&&!popup.button.contains(event.target))closePicker();
- const node=helpTarget(event);if(!inScope(node)){hideHelp();return;}if(event.pointerType==='mouse'||event.button>0)return;
+ const node=helpTarget(event);if(!inScope(node)){hideHelp();return;}if(!helpEnabled||event.button>0)return;
  hideHelp();clearTimeout(touchTimer);touch={id:event.pointerId,x:event.clientX,y:event.clientY,node};
  touchTimer=setTimeout(()=>{const current=touch;if(!current)return;touch=null;const original=current.node,live=refind(original)||scope;live?.dispatchEvent(new PointerEvent('pointercancel',{bubbles:true,pointerId:current.id,pointerType:event.pointerType||'touch'}));const target=refind(original);suppressedUntil=performance.now()+1000;suppressedTarget=target||original;if(target){if(!target.dataset.notationHelp)annotate(target,controlInfo(target));showHelp(target,'touch');}},550);
 }
@@ -205,8 +207,7 @@ function pointerMove(event){if(touch&&event.pointerId===touch.id&&Math.hypot(eve
 function pointerEnd(){clearTimeout(touchTimer);touch=null;}
 function clickCapture(event){if(performance.now()<suppressedUntil&&(suppressedTarget?.contains(event.target)||event.target.closest?.('[data-notation-help]')===suppressedTarget)){event.preventDefault();event.stopImmediatePropagation();suppressedUntil=0;}}
 function keys(event){
- if(event.key==='Escape'){if(popup){event.preventDefault();event.stopPropagation();closePicker(true);}hideHelp();return;}
- if(event.key==='F1'&&inScope(document.activeElement)){event.preventDefault();showHelp(document.activeElement);return;}
+ if(event.key==='Escape'){if(popup||help){event.preventDefault();event.stopPropagation();}if(popup)closePicker(true);hideHelp();return;}
  if(!popup||!popup.box.contains(event.target))return;
  const choices=[...popup.box.querySelectorAll('button:not(:disabled)')],index=choices.indexOf(document.activeElement);let next;
  if(['ArrowRight','ArrowDown'].includes(event.key))next=(index+1)%choices.length;
@@ -215,9 +216,9 @@ function keys(event){
  if(next!==undefined){event.preventDefault();event.stopPropagation();hideHelp();choices[next]?.focus({preventScroll:true});}
 }
 function decorate(root,options={}){
- scope=root;locale=options.locale||document.documentElement.lang||'en';
+ scope=root;locale=options.locale||document.documentElement.lang||'en';helpEnabled=options.showHelp!==false;
  if(touch){const live=refind(touch.node);if(live)touch.node=live;else{clearTimeout(touchTimer);touch=null;}}
- for(const select of root.querySelectorAll(pickSelector))enhanceSelect(select);
+ for(const select of root.querySelectorAll(pickSelector+',#metadata select:not([name=tempo_unit])'))enhanceSelect(select);
  for(const input of root.querySelectorAll('.measure-tools input,.notation-selected-tools input'))enhanceInput(input);
  for(const button of root.querySelectorAll('.notation-selected-tools>button,.notation-selected-tools .chord-controls>button,.measure-tools [data-action=remove-clef-change]')){
   const info=controlInfo(button);annotate(button,info);button.classList.add('notation-symbol-action');
@@ -234,9 +235,9 @@ function decorate(root,options={}){
  }
 }
 function dispose(){closePicker();hideHelp();if(!touch?.node.matches('[data-note],[data-pitch]')){clearTimeout(touchTimer);touch=null;}}
-document.addEventListener('pointerover',pointerOver,true);document.addEventListener('pointerout',pointerOut,true);document.addEventListener('pointerdown',pointerDown,true);document.addEventListener('pointermove',pointerMove,true);document.addEventListener('pointerup',pointerEnd,true);document.addEventListener('pointercancel',pointerEnd,true);document.addEventListener('click',clickCapture,true);document.addEventListener('keydown',keys,true);
+document.addEventListener('pointerout',pointerOut,true);document.addEventListener('pointerdown',pointerDown,true);document.addEventListener('pointermove',pointerMove,true);document.addEventListener('pointerup',pointerEnd,true);document.addEventListener('pointercancel',pointerEnd,true);document.addEventListener('click',clickCapture,true);document.addEventListener('keydown',keys,true);
 document.addEventListener('contextmenu',event=>{if(performance.now()<suppressedUntil&&inScope(helpTarget(event)))event.preventDefault();},true);
-document.addEventListener('focusin',event=>{const node=helpTarget(event);if(inScope(node)&&!popup?.box.contains(node))showHelp(node);},true);document.addEventListener('focusout',event=>{if(help?.node===helpTarget(event))hideHelp();},true);
+document.addEventListener('focusout',event=>{if(help?.node===helpTarget(event))hideHelp();},true);
 function viewportChanged(){closePicker();if(help){if(!visibleAnchor(help.node)||(help.source==='hover'&&!underPointer(help.node,help.point)))hideHelp();else position(help.box,help.node);}}
 global.addEventListener('resize',viewportChanged);global.addEventListener('scroll',event=>{if(popup?.box.contains(event.target)||help?.box.contains(event.target))return;viewportChanged();},{capture:true,passive:true});
 global.NotationControls={decorate,dispose,close:()=>{closePicker();hideHelp();}};

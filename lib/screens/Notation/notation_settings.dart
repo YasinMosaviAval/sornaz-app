@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../components/settings_switch_tile.dart';
 import 'package:sornaz/helpers/desktop_media_channel.dart';
 import 'package:sornaz/screens/Social/social_widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,6 +15,7 @@ class _NotationSettingsPageState extends State<NotationSettingsPage> {
   static const channel = DesktopMediaChannel('sornaz/notation_storage');
   String location = 'Sornaz/Music Sheets';
   bool busy = false;
+  bool showHelp = true;
   int durationMode = 1;
   int pianoLabelMode = 1;
   @override
@@ -26,6 +28,7 @@ class _NotationSettingsPageState extends State<NotationSettingsPage> {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
       setState(() {
+        showHelp = prefs.getBool('notation.showHelp') ?? true;
         durationMode = prefs.getInt('notation.durationMode') ?? 1;
         pianoLabelMode = prefs.getInt('notation.pianoLabelMode') ?? 1;
       });
@@ -77,14 +80,14 @@ class _NotationSettingsPageState extends State<NotationSettingsPage> {
         context: context,
         builder: (dialog) => SimpleDialog(
           shape: RoundedRectangleBorder(borderRadius: appRadius(dialog)),
-          title: Text(title, style: Theme.of(dialog).textTheme.bodyMedium),
+          title: Text(title, style: Theme.of(dialog).textTheme.bodySmall),
           children: [
             for (final option in options)
               SimpleDialogOption(
                 onPressed: () => Navigator.pop(dialog, option.$1),
                 child: Text(
                   option.$2,
-                  style: Theme.of(dialog).textTheme.bodyMedium,
+                  style: Theme.of(dialog).textTheme.bodySmall,
                 ),
               ),
           ],
@@ -97,10 +100,36 @@ class _NotationSettingsPageState extends State<NotationSettingsPage> {
     body: ListView(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
       children: [
+        SettingsSwitchTile.widgets(
+          title: Text(
+            socialText(context, 'نمایش راهنمای عملکرد', 'Show control help'),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          subtitle: Text(
+            socialText(
+              context,
+              'نگه داشتن انگشت روی دکمه',
+              'Hold your finger on the button',
+            ),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey.shade400
+                  : Colors.grey.shade600,
+            ),
+          ),
+          value: showHelp,
+          onChanged: (value) async {
+            setState(() => showHelp = value);
+            await (await SharedPreferences.getInstance()).setBool(
+              'notation.showHelp',
+              value,
+            );
+          },
+        ),
         ListTile(
           title: Text(
             socialText(context, 'حالت انتخاب کشش نت', 'Note duration mode'),
-            style: Theme.of(context).textTheme.bodyMedium,
+            style: Theme.of(context).textTheme.bodySmall,
           ),
           trailing: Text(
             socialText(
@@ -136,7 +165,7 @@ class _NotationSettingsPageState extends State<NotationSettingsPage> {
               'نمایش نت‌ها روی کلیدهای پیانو',
               'Piano key note labels',
             ),
-            style: Theme.of(context).textTheme.bodyMedium,
+            style: Theme.of(context).textTheme.bodySmall,
           ),
           trailing: Text(
             pianoLabelMode == 2
@@ -161,7 +190,7 @@ class _NotationSettingsPageState extends State<NotationSettingsPage> {
         ListTile(
           title: Text(
             socialText(context, 'محل ذخیره‌سازی', 'Storage location'),
-            style: Theme.of(context).textTheme.bodyMedium,
+            style: Theme.of(context).textTheme.bodySmall,
           ),
           subtitle: Text(
             Uri.decodeFull(location),

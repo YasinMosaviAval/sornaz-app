@@ -27,9 +27,13 @@ class DesktopNotationHost extends StatefulWidget {
     super.key,
     required this.token,
     required this.userId,
+    this.initialDraft,
+    this.onDraftSaved,
   });
   final String token;
   final int userId;
+  final Map<String, dynamic>? initialDraft;
+  final ValueChanged<Map<String, dynamic>?>? onDraftSaved;
   @override
   State<DesktopNotationHost> createState() => _DesktopNotationHostState();
 }
@@ -44,6 +48,7 @@ class _DesktopNotationHostState extends State<DesktopNotationHost> {
     32,
     (_) => Random.secure().nextInt(256).toRadixString(16).padLeft(2, '0'),
   ).join();
+  bool _draftFinished = false;
   bool _opening = false;
   String _locale = 'fa';
   bool _dark = false;
@@ -181,6 +186,45 @@ class _DesktopNotationHostState extends State<DesktopNotationHost> {
         return;
       }
       final path = request.uri.path.substring(_secret.length + 2);
+      if (request.method == 'POST' &&
+          ['api/practice-save', 'api/practice-cancel'].contains(path)) {
+        if (widget.onDraftSaved == null ||
+            _draftFinished ||
+            request.headers.value('X-CSRF-Token') != _secret) {
+          response.statusCode = 403;
+          return;
+        }
+        final bytes = <int>[];
+        await for (final chunk in request) {
+          if (bytes.length + chunk.length > 250000) {
+            response.statusCode = 413;
+            return;
+          }
+          bytes.addAll(chunk);
+        }
+        final data = bytes.isEmpty
+            ? <String, dynamic>{}
+            : jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+        final value = path.endsWith('practice-save')
+            ? Map<String, dynamic>.from(data['payload'] as Map)
+            : null;
+        if (value != null &&
+            (value['sheet'] is! Map ||
+                value['preview'] is! String ||
+                (value['preview'] as String).length > 120000)) {
+          response.statusCode = 422;
+          return;
+        }
+        _draftFinished = true;
+        response.headers.contentType = ContentType.json;
+        response.write('{"success":true,"data":true}');
+        unawaited(
+          Future<void>.delayed(const Duration(milliseconds: 150), () {
+            if (mounted) widget.onDraftSaved!(value);
+          }),
+        );
+        return;
+      }
       if (request.method == 'POST' && path == 'desktop-login') {
         if (!mounted || request.headers.value('X-CSRF-Token') != _secret) {
           response.statusCode = HttpStatus.forbidden;
@@ -242,6 +286,9 @@ class _DesktopNotationHostState extends State<DesktopNotationHost> {
               ..._appearance,
               'durationMode': prefs.getInt('notation.durationMode') ?? 1,
               'pianoLabelMode': prefs.getInt('notation.pianoLabelMode') ?? 1,
+              'showHelp': prefs.getBool('notation.showHelp') ?? true,
+              'showQuarterTones':
+                  prefs.getBool('notation.showQuarterTones') ?? false,
             },
             'score': score,
           }),
@@ -254,11 +301,13 @@ class _DesktopNotationHostState extends State<DesktopNotationHost> {
           'locale': _locale,
           'dark': _dark,
           'userId': widget.userId,
+          'practiceDraft': widget.onDraftSaved != null,
+          'initialDraft': widget.initialDraft,
           'embedded': false,
           'api': '/$_secret/api',
           'csrf': _secret,
           ..._appearance,
-        });
+        }).replaceAll('<', r'\u003c');
         html = html.replaceFirst(
           '<head>',
           '<head><base href="/$_secret/assets/">',
@@ -301,6 +350,7 @@ setInterval(async()=>{
         'index.html': 'text/html',
         'notation.js': 'text/javascript',
         'ui_symbols.js': 'text/javascript',
+        'piano_style.js': 'text/javascript',
         'ui_glyphs.js': 'text/javascript',
         'ui_controls.js': 'text/javascript',
         'ui_controls.css': 'text/css',
@@ -310,6 +360,8 @@ setInterval(async()=>{
         'notation.css': 'text/css',
         'vendor/vexflow.js': 'text/javascript',
         'vendor/VEXFLOW-LICENSE': 'text/plain',
+        'fonts/Bravura.otf': 'font/otf',
+        'fonts/LICENSE.txt': 'text/plain',
       };
       if (request.method == 'GET' &&
           path.startsWith('assets/') &&

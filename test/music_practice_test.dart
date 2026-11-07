@@ -146,6 +146,7 @@ class TreePracticeRepository extends WidgetPracticeRepository {
     'sectionSubscriptions': true,
     'levelDeletion': true,
     'nodeDeletion': true,
+    'nodeIcons': true,
     'nodes': tree,
     'exams': [
       {
@@ -462,10 +463,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         find.byType(SwitchListTile),
-        actor == 1 ? findsOneWidget : findsNothing,
+        actor == 1 ? findsNWidgets(2) : findsNothing,
       );
       if (actor == 1) {
-        await tester.tap(find.byType(SwitchListTile));
+        await tester.tap(find.text('نمایش فهرست سطح‌های آزمون'));
         await tester.pumpAndSettle();
         expect(await MusicPracticeSettingsPage.listMode(1), true);
       }
@@ -523,12 +524,13 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('practice-menu-exam-10')));
+      await tester.pumpAndSettle();
       expect(
-        tester.widget<Icon>(find.byIcon(Icons.delete_outline).last).color,
+        tester.widget<Text>(find.text('حذف سطح')).style?.color,
         Colors.red,
       );
-      await tester.ensureVisible(find.byIcon(Icons.delete_outline).last);
-      await tester.tap(find.byIcon(Icons.delete_outline).last);
+      await tester.tap(find.text('حذف سطح'));
       await tester.pumpAndSettle();
       expect(repo.writes, isEmpty);
       final confirmation = find.byType(AlertDialog);
@@ -599,7 +601,7 @@ void main() {
       },
     );
   }
-  testWidgets('management controls live in section cards and top bar', (
+  testWidgets('management controls live in section menus and top bar', (
     tester,
   ) async {
     final repo = TreePracticeRepository();
@@ -611,19 +613,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(TabBar), findsNothing);
     expect(find.byIcon(Icons.edit_note), findsNothing);
-    expect(
-      find.byIcon(Icons.edit_outlined).evaluate().length,
-      greaterThanOrEqualTo(2),
-    );
-    expect(
-      find.byIcon(Icons.card_membership).evaluate().length,
-      greaterThanOrEqualTo(2),
-    );
-    expect(
-      find.byIcon(Icons.playlist_add).evaluate().length,
-      greaterThanOrEqualTo(2),
-    );
-    await tester.tap(find.byIcon(Icons.playlist_add).first);
+    expect(find.byIcon(Icons.edit_outlined), findsNothing);
+    expect(find.byIcon(Icons.card_membership), findsNothing);
+    expect(find.byIcon(Icons.playlist_add), findsNothing);
+    expect(find.byType(Card), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('practice-menu-node-3')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('افزودن آزمون'));
     await tester.pumpAndSettle();
     expect(
       tester
@@ -877,7 +873,12 @@ void main() {
           return response({
             'viewerId': 3,
             'nodes': [
-              {'id': 1, 'parentId': null, 'titleFa': 'تمرین سولفژ'},
+              {
+                'id': 1,
+                'parentId': null,
+                'titleFa': 'تمرین سولفژ',
+                'iconKey': 'piano',
+              },
             ],
             'exams': [],
           });
@@ -890,7 +891,9 @@ void main() {
         token: () => 'token-3',
         client: MockClient((_) async => throw const SocketException('offline')),
       );
-      expect((await offline.catalog())['nodes'], hasLength(1));
+      final savedNodes = (await offline.catalog())['nodes'] as List;
+      expect(savedNodes, hasLength(1));
+      expect(savedNodes.single['iconKey'], 'piano');
       expect(offline.offline, isTrue);
       offline.dispose();
       final other = MusicPracticeRepository(

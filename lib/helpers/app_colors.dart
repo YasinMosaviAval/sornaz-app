@@ -1,6 +1,7 @@
 // ignore_for_file: constant_identifier_names, non_constant_identifier_names
 
 import 'package:flutter/material.dart';
+import 'package:sornaz/components/piano_keyboard_spec.dart';
 import 'color_palette.dart';
 
 class AppColors {
@@ -417,13 +418,13 @@ class AppColors {
   static Color tuner_piano_keyboard_top_border_color({required bool isDark}) => Colors.white;
   static Color tuner_piano_keyboard_a4_key_color({required bool isDark}) => Colors.lightBlueAccent;
   static Color tuner_piano_keyboard_active_white_key_color({required bool isDark}) => Colors.yellow;
-  static Color tuner_piano_keyboard_inactive_white_key_color({required bool isDark}) => Colors.white;
+  static Color tuner_piano_keyboard_inactive_white_key_color({required bool isDark}) => const Color(PianoKeyboardSpec.whiteColor);
   static Color tuner_piano_keyboard_border_key_color({required bool isDark}) => Colors.black;
   static Color tuner_piano_keyboard_active_not_white_key_color({required bool isDark}) => Colors.orange;
   // static Color tuner_piano_keyboard_active_not_white_key_lable_color({required bool isDark}) => Colors.white70;
-  static Color tuner_piano_keyboard_inactive_koron_key_color({required bool isDark}) => AppColors.unselected_item_light;
-  static Color tuner_piano_keyboard_inactive_sori_key_color({required bool isDark}) => AppColors.text_secondary_light;
-  static Color tuner_piano_keyboard_inactive_black_key_color({required bool isDark}) => Colors.black;
+  static Color tuner_piano_keyboard_inactive_koron_key_color({required bool isDark}) => const Color(PianoKeyboardSpec.koronColor);
+  static Color tuner_piano_keyboard_inactive_sori_key_color({required bool isDark}) => const Color(PianoKeyboardSpec.soriColor);
+  static Color tuner_piano_keyboard_inactive_black_key_color({required bool isDark}) => const Color(PianoKeyboardSpec.blackColor);
 
   // ===================================================================================================================================================================
   // ===================================================================================================================================================================

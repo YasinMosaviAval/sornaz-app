@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../components/app_bar.dart';
+import '../../components/app_hierarchy_row.dart';
 import '../../components/home_top_bar.dart';
 import '../../helpers/app_appearance.dart';
 import '../IntervalRecognition/stars.dart';
@@ -20,6 +21,7 @@ import 'practice_journey_page.dart';
 import 'practice_settings_page.dart';
 import 'practice_manage_page.dart';
 import 'practice_tree.dart';
+import 'practice_icons.dart';
 import '../Players/ui/components/music_playback_entry.dart';
 import '../Players/services/player_settings.dart';
 
@@ -44,6 +46,8 @@ class _MusicPracticePageState extends State<MusicPracticePage>
   MusicPracticeRepository? repository;
   int? account;
   bool listMode = false;
+  bool hierarchyMode = true;
+  final expandedNodes = <int>{};
   bool initialized = false, loading = true, uploading = false, opening = false;
   PracticeJson? catalog;
   PracticeJson? managementCatalog;
@@ -89,6 +93,8 @@ class _MusicPracticePageState extends State<MusicPracticePage>
       managementCatalog = null;
       proposals = [];
       listMode = false;
+      hierarchyMode = true;
+      expandedNodes.clear();
       repository?.dispose();
       repository =
           widget.repository ??
@@ -146,9 +152,7 @@ class _MusicPracticePageState extends State<MusicPracticePage>
         proposals = offers;
         catalog = data;
         loading = false;
-        error = repo.offline
-            ? repo.lastSyncError?.toString()
-            : data['offlineMessage'] as String?;
+        error = repo.offline ? null : data['offlineMessage'] as String?;
       });
       if (legacy && !repo.offline && repo.userId != null) {
         unawaited(
@@ -162,21 +166,21 @@ class _MusicPracticePageState extends State<MusicPracticePage>
       }
       final p = await repo.progress(refresh: !cached);
       final showList = await MusicPracticeSettingsPage.listMode(account);
+      final hierarchy = await MusicPracticeSettingsPage.hierarchyMode(account);
       if (!mounted || current != generation || repository != repo) return;
       setState(() {
         catalog = data;
         progress = p;
         listMode = showList;
+        hierarchyMode = hierarchy;
         loading = false;
-        error = repo.offline
-            ? repo.lastSyncError?.toString()
-            : data['offlineMessage'] as String?;
+        error = repo.offline ? null : data['offlineMessage'] as String?;
       });
     } catch (e) {
       if (mounted && current == generation) {
         setState(() {
           loading = false;
-          error = e.toString();
+          recordError(e);
           if (e is SocialException && [401, 403].contains(e.status)) {
             catalog = null;
             managementCatalog = null;
@@ -186,6 +190,16 @@ class _MusicPracticePageState extends State<MusicPracticePage>
         });
       }
     }
+  }
+
+  void recordError(Object e) {
+    if (e is SocialException && [401, 403].contains(e.status)) {
+      repository?.offline = false;
+    }
+    if (MusicPracticeRepository.connectionFailure(e)) {
+      repository?.offline = true;
+    }
+    error = repository?.offline == true ? null : e.toString();
   }
 
   Future<void> upload() async {
@@ -210,7 +224,7 @@ class _MusicPracticePageState extends State<MusicPracticePage>
         );
       }
     } catch (e) {
-      if (mounted) setState(() => error = e.toString());
+      if (mounted) setState(() => recordError(e));
     } finally {
       if (mounted) setState(() => uploading = false);
     }
@@ -274,7 +288,13 @@ class _MusicPracticePageState extends State<MusicPracticePage>
   Future<void> openSettings() async {
     await socialPush(context, const MusicPracticeSettingsPage());
     final value = await MusicPracticeSettingsPage.listMode(account);
-    if (mounted) setState(() => listMode = value);
+    final hierarchy = await MusicPracticeSettingsPage.hierarchyMode(account);
+    if (mounted) {
+      setState(() {
+        listMode = value;
+        hierarchyMode = hierarchy;
+      });
+    }
   }
 
   Future<void> editItem(String kind, [PracticeJson? item]) async {
@@ -291,6 +311,189 @@ class _MusicPracticePageState extends State<MusicPracticePage>
     if (mounted) await load();
   }
 
+  List<Widget> hierarchyRows(PracticeJson? data) {
+    final tree = PracticeTree(
+      (data?['nodes'] as List? ?? []).map(
+        (n) => Map<String, dynamic>.from(n as Map),
+      ),
+    );
+    final exams = <int, List<PracticeJson>>{};
+    for (final row in data?['exams'] as List? ?? []) {
+      final exam = Map<String, dynamic>.from(row as Map);
+      exams.putIfAbsent(exam['nodeId'] as int, () => []).add(exam);
+    }
+    final rows = <Widget>[], visited = <int>{};
+    void add(int? parent, int depth) {
+      for (final node in tree.children(parent)) {
+        final id = node['id'] as int;
+        if (!visited.add(id)) continue;
+        final levels = PracticeJourney(exams[id] ?? [], progress).exams;
+        final expandable = tree.children(id).isNotEmpty || levels.isNotEmpty;
+        final expanded = expandedNodes.contains(id);
+        rows.add(
+          AppHierarchyRow(
+            key: ValueKey('practice-tree-node-$id'),
+            depth: depth,
+            icon: PracticeIcons.forNode(node, expanded: expanded),
+            title: groupHeading(title(node), levels),
+            expanded: expanded,
+            expandable: expandable,
+            enabled: tree.available(node['parentId'] as int?),
+            actions: cardActions(node),
+            subtitle: levels.isEmpty
+                ? null
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      IntervalStars(
+                        count: PracticeJourney(levels, progress).stars,
+                      ),
+                      TextButton.icon(
+                        key: ValueKey('practice-start-$id'),
+                        icon: const Icon(Icons.play_circle_outline),
+                        label: Text(
+                          socialText(
+                            context,
+                            'شروع / ادامهٔ آزمون',
+                            'Start / continue test',
+                          ),
+                        ),
+                        onPressed: opening || !tree.available(id)
+                            ? null
+                            : () => openJourney(levels, groupTitle(id)),
+                      ),
+                    ],
+                  ),
+            onTap: opening || !expandable
+                ? null
+                : () => setState(() {
+                    if (!expandedNodes.remove(id)) expandedNodes.add(id);
+                  }),
+          ),
+        );
+        if (!expanded) continue;
+        add(id, depth + 1);
+        for (final exam in levels) {
+          rows.add(
+            Material(
+              key: ValueKey('practice-tree-exam-${exam['id']}'),
+              color: AppHierarchyRow.background(context, depth + 1),
+              child: Padding(
+                padding: EdgeInsetsDirectional.only(start: (depth + 1) * 12.0),
+                child: examTile(exam),
+              ),
+            ),
+          );
+        }
+        rows.add(proposalControls(id));
+      }
+    }
+
+    add(null, 0);
+    return rows;
+  }
+
+  Widget examTile(PracticeJson exam) {
+    final p = progress.where(
+          (p) => p['examId'] == exam['id'] && p['version'] == exam['version'],
+        ),
+        stars = p.isEmpty ? 0 : p.first['stars'] as int? ?? 0,
+        done = p.isEmpty ? 0 : (p.first['completedStages'] as List).length;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: ListTile(
+        contentPadding: const EdgeInsetsDirectional.only(start: 12),
+        shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
+        leading: Icon(
+          exam['access'] == true
+              ? done >= (exam['stageCount'] as int)
+                    ? Icons.check_circle
+                    : Icons.play_circle_outline
+              : Icons.lock_outline,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+        title: Text(
+          title(exam),
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: 14),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (exam['audience'] == 'public' &&
+                (exam['config'] as Map?)?['kind'] != 'interval')
+              Text(
+                exam['ownerId'] == 1
+                    ? socialText(
+                        context,
+                        'رایگان · مدیر سایت',
+                        'Free · Site administrator',
+                      )
+                    : socialText(context, 'رایگان', 'Free'),
+              ),
+            IntervalStars(count: stars),
+            if ((exam['config'] as Map?)?['kind'] == 'interval')
+              Text(
+                '${IntervalText(context)('interval.${(exam['config'] as Map)['direction']}')} - ${IntervalText(context)((exam['config'] as Map)['variableRoot'] == true ? 'interval.variableRoot' : 'interval.fixedRoot')} - ${IntervalText(context)('interval.count', {'count': IntervalText(context).number(((exam['config'] as Map)['quarterSteps'] as List).length)})} - ${IntervalText(context)(done >= (exam['stageCount'] as int)
+                    ? 'interval.completed'
+                    : exam['access'] == true
+                    ? 'interval.available'
+                    : 'interval.locked')}',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontSize: 12),
+              ),
+            if ((exam['config'] as Map?)?['kind'] != 'interval')
+              Text(
+                '$done/${exam['stageCount']} ${socialText(context, 'مرحله', 'stages')}',
+              ),
+          ],
+        ),
+        trailing: cardActions(exam, exam: true),
+        onTap: opening ? null : () => openExam(exam),
+      ),
+    );
+  }
+
+  Widget nodeActions(int? id) {
+    final matches = (managementCatalog?['nodes'] as List? ?? []).where(
+      (n) => n['id'] == id,
+    );
+    return matches.isEmpty
+        ? const SizedBox.shrink()
+        : cardActions(Map<String, dynamic>.from(matches.first as Map));
+  }
+
+  Widget actionMenu(String id, List<PopupMenuEntry<VoidCallback>> items) {
+    if (items.isEmpty || repository?.offline == true) {
+      return const SizedBox.shrink();
+    }
+    return PopupMenuButton<VoidCallback>(
+      key: ValueKey('practice-menu-$id'),
+      padding: EdgeInsets.zero,
+      tooltip: socialText(context, 'گزینه‌ها', 'Options'),
+      icon: const Icon(Icons.more_vert),
+      onSelected: (action) => action(),
+      itemBuilder: (_) => items,
+    );
+  }
+
+  PopupMenuItem<VoidCallback> menuAction(
+    String fa,
+    String en,
+    VoidCallback action, {
+    bool enabled = true,
+    bool destructive = false,
+  }) => PopupMenuItem<VoidCallback>(
+    value: action,
+    enabled: enabled,
+    child: Text(
+      socialText(context, fa, en),
+      style: destructive
+          ? Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.red)
+          : null,
+    ),
+  );
+
   Widget cardActions(PracticeJson item, {bool exam = false}) {
     if (managementCatalog == null) return const SizedBox.shrink();
     final caps = catalog?['capabilities'] as Map? ?? {};
@@ -302,142 +505,98 @@ class _MusicPracticePageState extends State<MusicPracticePage>
     final enabled = tree.available(
       exam ? item['nodeId'] as int? : item['parentId'] as int?,
     );
-    return Wrap(
-      children: [
-        if (caps['edit'] == true && (exam || item['canManage'] == true))
-          IconButton(
-            tooltip: socialText(context, 'ویرایش', 'Edit'),
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: enabled
-                ? () => editItem(exam ? 'exams' : 'nodes', item)
-                : null,
-          ),
-        if (caps['publish'] == true && (exam || item['canManage'] == true))
-          IconButton(
-            tooltip: socialText(context, 'تغییر انتشار', 'Change visibility'),
-            icon: Icon(
-              item['published'] != true
-                  ? Icons.visibility_off_outlined
-                  : (item['audience'] ?? 'public') == 'public'
-                  ? Icons.lock_open_outlined
-                  : Icons.lock_outline,
-            ),
-            onPressed: enabled
-                ? () async {
-                    try {
-                      await repository!.request('publish', {
-                        'kind': exam ? 'exam' : 'node',
-                        'id': item['id'],
-                        'version': item['version'],
-                        'published': item['published'] != true,
-                      });
-                      if (mounted) await load();
-                    } catch (e) {
-                      if (mounted) setState(() => error = e.toString());
-                    }
-                  }
-                : null,
-          ),
-        if (!exam && caps['create'] == true) ...[
-          IconButton(
-            tooltip: socialText(context, 'افزودن آزمون', 'Add test'),
-            icon: const Icon(Icons.playlist_add),
-            onPressed: enabled && item['published'] == true
-                ? () => editItem('exams', {'nodeId': item['id']})
-                : null,
-          ),
-          IconButton(
-            tooltip: socialText(
-              context,
-              'پیشنهاد اشتراک',
-              'Propose subscription',
-            ),
-            icon: const Icon(Icons.card_membership),
-            onPressed: () => editItem('plans/propose', {
-              '_rootNodeId': item['id'],
-              'title': title(item),
-              'days': 30,
-            }),
-          ),
-        ],
-        if (!exam &&
-            caps['edit'] == true &&
-            groupExams(item['id'] as int).isNotEmpty)
-          IconButton(
-            tooltip: socialText(context, 'سطح‌های آزمون', 'Test levels'),
-            icon: const Icon(Icons.format_list_numbered),
-            onPressed: enabled
-                ? () async {
-                    await socialPush(
-                      context,
-                      MusicPracticePage(
-                        nodeId: item['id'] as int,
-                        nodeTitle: title(item),
-                        showLevels: true,
-                      ),
-                    );
-                    if (mounted) await load();
-                  }
-                : null,
-          ),
-        if (exam && caps['create'] == true)
-          IconButton(
-            tooltip: socialText(context, 'افزودن آزمون', 'Add test'),
-            icon: const Icon(Icons.playlist_add),
-            onPressed: enabled
-                ? () => editItem('exams', {'nodeId': item['nodeId']})
-                : null,
-          ),
-        if (exam && caps['create'] == true)
-          IconButton(
-            tooltip: socialText(
-              context,
-              'پیشنهاد اشتراک کل آزمون',
-              'Propose full test subscription',
-            ),
-            icon: const Icon(Icons.card_membership),
-            onPressed: () => editItem('plans/propose', {
-              '_rootNodeId': item['nodeId'],
-              'title': groupTitle(item['nodeId'] as int?),
-              'days': 30,
-            }),
-          ),
-        if (exam && caps['approvePlans'] == true)
-          IconButton(
-            tooltip: socialText(context, 'سهم درآمد', 'Revenue share'),
-            icon: const Icon(Icons.percent),
-            onPressed: () => editItem('shares', item),
-          ),
-        if (caps['delete'] == true &&
-            (exam || item['canManage'] == true) &&
-            catalog?[exam ? 'levelDeletion' : 'nodeDeletion'] == true)
-          IconButton(
-            tooltip: socialText(context, 'حذف سطح', 'Delete level'),
-            icon: const Icon(Icons.delete_outline, color: Colors.red),
-            onPressed: () async {
-              final confirmed = await showDeleteConfirmation(
-                context,
-                title: socialText(context, 'حذف سطح؟', 'Delete level?'),
-                message: socialText(
-                  context,
-                  'نتایج و خریدهای قبلی حفظ می‌شوند.',
-                  'Existing results and purchases will be preserved.',
-                ),
-              );
-              if (confirmed != true) return;
-              try {
-                await repository!.request(
-                  exam ? 'exams/delete' : 'nodes/delete',
-                  {'id': item['id'], 'version': item['version']},
-                );
-                if (mounted) await load();
-              } catch (e) {
-                if (mounted) setState(() => error = e.toString());
-              }
-            },
-          ),
+    return actionMenu('${exam ? 'exam' : 'node'}-${item['id']}', [
+      if (!exam && caps['create'] == true && (item['depth'] as int? ?? 3) < 3)
+        menuAction(
+          'افزودن زیرسطح',
+          'Add subsection',
+          () => editItem('nodes', {'parentId': item['id']}),
+          enabled: tree.available(item['id'] as int),
+        ),
+      if (caps['edit'] == true && (exam || item['canManage'] == true))
+        menuAction(
+          'ویرایش',
+          'Edit',
+          () => editItem(exam ? 'exams' : 'nodes', item),
+          enabled: enabled,
+        ),
+      if (caps['publish'] == true && (exam || item['canManage'] == true))
+        menuAction('تغییر انتشار', 'Change visibility', () async {
+          try {
+            await repository!.request('publish', {
+              'kind': exam ? 'exam' : 'node',
+              'id': item['id'],
+              'version': item['version'],
+              'published': item['published'] != true,
+            });
+            if (mounted) await load();
+          } catch (e) {
+            if (mounted) setState(() => recordError(e));
+          }
+        }, enabled: enabled),
+      if (caps['create'] == true) ...[
+        menuAction(
+          'افزودن آزمون',
+          'Add test',
+          () =>
+              editItem('exams', {'nodeId': exam ? item['nodeId'] : item['id']}),
+          enabled: enabled && (exam || item['published'] == true),
+        ),
+        menuAction(
+          'پیشنهاد اشتراک',
+          'Propose subscription',
+          () => editItem('plans/propose', {
+            '_rootNodeId': exam ? item['nodeId'] : item['id'],
+            'title': exam ? groupTitle(item['nodeId'] as int?) : title(item),
+            'days': 30,
+          }),
+        ),
       ],
-    );
+      if (!exam &&
+          caps['edit'] == true &&
+          groupExams(item['id'] as int).isNotEmpty)
+        menuAction('سطح‌های آزمون', 'Test levels', () async {
+          await socialPush(
+            context,
+            MusicPracticePage(
+              nodeId: item['id'] as int,
+              nodeTitle: title(item),
+              showLevels: true,
+            ),
+          );
+          if (mounted) await load();
+        }, enabled: enabled),
+      if (exam && caps['approvePlans'] == true)
+        menuAction(
+          'سهم درآمد',
+          'Revenue share',
+          () => editItem('shares', item),
+        ),
+      if (caps['delete'] == true &&
+          (exam || item['canManage'] == true) &&
+          catalog?[exam ? 'levelDeletion' : 'nodeDeletion'] == true)
+        menuAction('حذف سطح', 'Delete level', () async {
+          final confirmed = await showDeleteConfirmation(
+            context,
+            title: socialText(context, 'حذف سطح؟', 'Delete level?'),
+            message: socialText(
+              context,
+              'نتایج و خریدهای قبلی حفظ می‌شوند.',
+              'Existing results and purchases will be preserved.',
+            ),
+          );
+          if (confirmed != true) return;
+          try {
+            await repository!.request(exam ? 'exams/delete' : 'nodes/delete', {
+              'id': item['id'],
+              'version': item['version'],
+            });
+            if (mounted) await load();
+          } catch (e) {
+            if (mounted) setState(() => recordError(e));
+          }
+        }, destructive: true),
+    ]);
   }
 
   Widget proposalControls(int id) => Column(
@@ -460,30 +619,20 @@ class _MusicPracticePageState extends State<MusicPracticePage>
               context,
             ).textTheme.bodySmall?.copyWith(fontSize: 12),
           ),
-          trailing: Wrap(
-            children: [
-              if ('${plan['teacher_id']}' == '${account ?? 0}')
-                IconButton(
-                  tooltip: socialText(
-                    context,
-                    'ویرایش پیشنهاد',
-                    'Edit proposal',
-                  ),
-                  icon: const Icon(Icons.edit_outlined),
-                  onPressed: () => editItem('plans/propose', plan),
-                ),
-              if (catalog?['capabilities']?['approvePlans'] == true)
-                IconButton(
-                  tooltip: socialText(
-                    context,
-                    'تأیید پیشنهاد',
-                    'Review proposal',
-                  ),
-                  icon: const Icon(Icons.verified_outlined),
-                  onPressed: () => editItem('plans/approve', plan),
-                ),
-            ],
-          ),
+          trailing: actionMenu('plan-${plan['id']}', [
+            if ('${plan['teacher_id']}' == '${account ?? 0}')
+              menuAction(
+                'ویرایش پیشنهاد',
+                'Edit proposal',
+                () => editItem('plans/propose', plan),
+              ),
+            if (catalog?['capabilities']?['approvePlans'] == true)
+              menuAction(
+                'تأیید پیشنهاد',
+                'Review proposal',
+                () => editItem('plans/approve', plan),
+              ),
+          ]),
         ),
     ],
   );
@@ -686,7 +835,7 @@ class _MusicPracticePageState extends State<MusicPracticePage>
       );
       if (mounted) await load();
     } catch (e) {
-      if (mounted) setState(() => error = e.toString());
+      if (mounted) setState(() => recordError(e));
     }
   }
 
@@ -769,167 +918,93 @@ class _MusicPracticePageState extends State<MusicPracticePage>
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
           if (loading) const LinearProgressIndicator(),
-          if (repository?.offline == true)
-            Text(
-              socialText(
-                context,
-                'نسخهٔ ذخیره‌شده؛ حالت آفلاین',
-                'Saved catalog; offline mode',
-              ),
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          if (error != null)
+          if (error != null && repository?.offline != true)
             Text(error!, style: Theme.of(context).textTheme.bodyMedium),
-          for (final node in nodes)
-            Card(
-              margin: const EdgeInsets.only(bottom: 12),
-              child: ListTile(
-                enabled: PracticeTree(
-                  (displayCatalog?['nodes'] as List? ?? []).map(
-                    (n) => Map<String, dynamic>.from(n as Map),
-                  ),
-                ).available(node['parentId'] as int?),
-                shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
-                minVerticalPadding: 20,
-                leading: Icon(
-                  node['slug'].toString().contains('iranian')
-                      ? Icons.music_note
-                      : node['slug'].toString().contains('western')
-                      ? Icons.piano
-                      : node['depth'] == 1
-                      ? Icons.library_music
-                      : Icons.folder_outlined,
-                ),
-                iconColor: Theme.of(context).colorScheme.primary,
-                title: groupHeading(title(node), groupExams(node['id'] as int)),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    groupExams(node['id'] as int).isEmpty
-                        ? const SizedBox.shrink()
-                        : IntervalStars(
-                            count: PracticeJourney(
-                              groupExams(node['id'] as int),
-                              progress,
-                            ).stars,
-                          ),
-                    cardActions(node),
-                    proposalControls(node['id'] as int),
-                  ],
-                ),
-                onTap:
-                    opening ||
-                        !PracticeTree(
-                          (displayCatalog?['nodes'] as List? ?? []).map(
-                            (n) => Map<String, dynamic>.from(n as Map),
-                          ),
-                        ).available(node['parentId'] as int?)
-                    ? null
-                    : () => openNode(node),
-              ),
-            ),
-          if (exams.isNotEmpty && (!listMode || managementCatalog != null))
-            Card(
-              child: ListTile(
-                title: groupHeading(name, exams),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    IntervalStars(
-                      count: PracticeJourney(exams, progress).stars,
+          if (widget.nodeId == null && hierarchyMode)
+            ...hierarchyRows(displayCatalog)
+          else ...[
+            for (final node in nodes)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: ListTile(
+                  enabled: PracticeTree(
+                    (displayCatalog?['nodes'] as List? ?? []).map(
+                      (n) => Map<String, dynamic>.from(n as Map),
                     ),
-                    for (final node
-                        in (displayCatalog?['nodes'] as List? ?? []).where(
-                          (n) => n['id'] == widget.nodeId,
-                        ))
-                      cardActions(Map<String, dynamic>.from(node as Map)),
-                    proposalControls(widget.nodeId ?? 0),
-                  ],
+                  ).available(node['parentId'] as int?),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: appRadius(context),
+                  ),
+                  contentPadding: const EdgeInsetsDirectional.only(start: 12),
+                  leading: Icon(PracticeIcons.forNode(node)),
+                  iconColor: Theme.of(context).colorScheme.primary,
+                  title: groupHeading(
+                    title(node),
+                    groupExams(node['id'] as int),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      groupExams(node['id'] as int).isEmpty
+                          ? const SizedBox.shrink()
+                          : IntervalStars(
+                              count: PracticeJourney(
+                                groupExams(node['id'] as int),
+                                progress,
+                              ).stars,
+                            ),
+                      proposalControls(node['id'] as int),
+                    ],
+                  ),
+                  trailing: cardActions(node),
+                  onTap:
+                      opening ||
+                          !PracticeTree(
+                            (displayCatalog?['nodes'] as List? ?? []).map(
+                              (n) => Map<String, dynamic>.from(n as Map),
+                            ),
+                          ).available(node['parentId'] as int?)
+                      ? null
+                      : () => openNode(node),
                 ),
-                leading: const Icon(Icons.play_circle_outline),
-                onTap: opening || exams.isEmpty
-                    ? null
-                    : () => openJourney(
-                        exams.toList(),
-                        groupTitle(widget.nodeId),
+              ),
+            if (exams.isNotEmpty && (!listMode || managementCatalog != null))
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: ListTile(
+                  contentPadding: const EdgeInsetsDirectional.only(start: 12),
+                  title: groupHeading(name, exams),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      IntervalStars(
+                        count: PracticeJourney(exams, progress).stars,
                       ),
-              ),
-            ),
-          for (final exam
-              in listMode || (widget.showLevels && managementCatalog != null)
-                  ? exams
-                  : <PracticeJson>[])
-            Builder(
-              builder: (context) {
-                final p = progress.where(
-                      (p) =>
-                          p['examId'] == exam['id'] &&
-                          p['version'] == exam['version'],
-                    ),
-                    stars = p.isEmpty ? 0 : p.first['stars'] as int? ?? 0,
-                    done = p.isEmpty
-                        ? 0
-                        : (p.first['completedStages'] as List).length;
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: ListTile(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: appRadius(context),
-                    ),
-                    leading: Icon(
-                      exam['access'] == true
-                          ? done >= (exam['stageCount'] as int)
-                                ? Icons.check_circle
-                                : Icons.play_circle_outline
-                          : Icons.lock_outline,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    title: Text(
-                      title(exam),
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyLarge?.copyWith(fontSize: 14),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (exam['audience'] == 'public' &&
-                            (exam['config'] as Map?)?['kind'] != 'interval')
-                          Text(
-                            exam['ownerId'] == 1
-                                ? socialText(
-                                    context,
-                                    'رایگان · مدیر سایت',
-                                    'Free · Site administrator',
-                                  )
-                                : socialText(context, 'رایگان', 'Free'),
-                          ),
-                        IntervalStars(count: stars),
-                        cardActions(exam, exam: true),
-                        if ((exam['config'] as Map?)?['kind'] == 'interval')
-                          Text(
-                            '${IntervalText(context)('interval.${(exam['config'] as Map)['direction']}')} - ${IntervalText(context)((exam['config'] as Map)['variableRoot'] == true ? 'interval.variableRoot' : 'interval.fixedRoot')} - ${IntervalText(context)('interval.count', {'count': IntervalText(context).number(((exam['config'] as Map)['quarterSteps'] as List).length)})} - ${IntervalText(context)(done >= (exam['stageCount'] as int)
-                                ? 'interval.completed'
-                                : exam['access'] == true
-                                ? 'interval.available'
-                                : 'interval.locked')}',
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodyMedium?.copyWith(fontSize: 12),
-                          ),
-                        if ((exam['config'] as Map?)?['kind'] != 'interval')
-                          Text(
-                            '$done/${exam['stageCount']} ${socialText(context, 'مرحله', 'stages')}',
-                          ),
-                      ],
-                    ),
-                    onTap: opening ? null : () => openExam(exam),
+                      proposalControls(widget.nodeId ?? 0),
+                    ],
                   ),
-                );
-              },
-            ),
+                  trailing: nodeActions(widget.nodeId),
+                  leading: const Icon(Icons.play_circle_outline),
+                  onTap: opening || exams.isEmpty
+                      ? null
+                      : () => openJourney(
+                          exams.toList(),
+                          groupTitle(widget.nodeId),
+                        ),
+                ),
+              ),
+            for (final exam
+                in listMode || (widget.showLevels && managementCatalog != null)
+                    ? exams
+                    : <PracticeJson>[])
+              examTile(exam),
+          ],
           if (widget.nodeId == null) proposalControls(0),
-          if (!loading && error == null && nodes.isEmpty && exams.isEmpty)
+          if (!loading &&
+              error == null &&
+              repository?.offline != true &&
+              nodes.isEmpty &&
+              exams.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
               child: Text(

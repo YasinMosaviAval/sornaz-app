@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_checkbox.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../Social/social_api.dart';
@@ -187,7 +188,7 @@ class _BranchFormState extends State<BranchForm> {
       {'id': e.key, 'name': e.value},
   ];
   Widget primary(List<Json> rows, Json row, {bool address = false}) =>
-      CheckboxListTile(
+      AppCheckboxTile(
         contentPadding: EdgeInsets.zero,
         controlAffinity: ListTileControlAffinity.leading,
         title: Text(

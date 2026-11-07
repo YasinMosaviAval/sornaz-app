@@ -282,6 +282,9 @@ void main() {
             ),
           ),
         );
+        final bar = tester.widget<AppBar>(find.byType(AppBar).first);
+        expect(bar.backgroundColor, Colors.transparent);
+        expect(bar.surfaceTintColor, Colors.transparent);
         await vm.startRecording();
         await tester.pump();
         await tester.tap(find.byTooltip('پایان ضبط'));

@@ -43,7 +43,7 @@ try {
  delete compound.score.measures[0].beamPattern;
  if(M.beamPattern(compound,0)?.parts.join('+')!=='3+3')throw Error('Default compound beat grouping was not applied');
  NotationRenderer.draw(document.getElementById('score'),compound,{accent:'#0065ff',activeBar:0,activeNote:-1,selectedNotes:new Set()});
- if(document.querySelectorAll('#score .vf-beam').length!==2)throw Error('Default compound beaming drew the wrong groups');
+ if(document.querySelectorAll('#score .vf-beam').length!==3)throw Error('Quarter beat-unit beaming drew the wrong groups');
  compound.score.measures[0].beamPattern='2+3';try{M.beamPattern(compound,0);throw Error('Invalid beam grouping was accepted');}catch(error){if(error.message==='Invalid beam grouping was accepted')throw error;}
  const cueWithGrace=M.fresh();cueWithGrace.score.measures=[{notes:[note('C4',0,1,1,{noteSize:'cue',graces:[{pitch:'B3',accidental:'',kind:'acciaccatura',duration:'8'}]})]}];
  if(M.timeline(cueWithGrace).events.some(event=>event.hz))throw Error('Cue note grace sounded during playback');
@@ -59,7 +59,7 @@ try {
  const spaced=M.fresh();M.add(spaced,0,note('C4',0));M.add(spaced,0,note('D4',u/2));
  M.insert(spaced,0,note('D4',u/2,1,1,{duration:'8'}),1);
  if(spaced.score.measures[0].notes[1].at!==u/2)throw Error('Editing a note removed its intentional gap');
- const clip=M.copySelection(s,new Set(['0:1','0:3'])),target=M.fresh();target.metadata.staves=[{clef:'treble'},{clef:'bass'}];
+ const clip=M.copySelection(s,new Set(s.score.measures[0].notes.flatMap((n,i)=>M.staffOf(n)===2||M.voiceOf(n)===1?['0:'+i]:[]))),target=M.fresh();target.metadata.staves=[{clef:'treble'},{clef:'bass'}];
  const pasted=M.pasteSelection(target,clip,0,1,0);
  if(pasted.size!==2||target.score.measures[0].notes.length!==2||target.score.measures[0].notes[1].staff!==2)throw Error('Grouped cross-staff paste lost a note');
  const unchanged=JSON.stringify(target.score);

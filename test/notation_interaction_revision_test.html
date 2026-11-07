@@ -1,0 +1,27 @@
+<!doctype html><html><meta charset="utf-8"><link rel="stylesheet" href="../assets/notation/notation.css"><link rel="stylesheet" href="../assets/notation/ui_controls.css"><body data-result="pending"><main id="app"></main><div id="toast"></div>
+<script>
+window.NOTATION_BOOT={locale:new URL(location.href).searchParams.get('locale')||'fa',userId:1,embedded:true,nativeToolbar:true,durationMode:1};
+window.SornazNotation={postMessage(raw){const d=JSON.parse(raw);if(!d.id)return;let value=true;if(d.action==='list')value={items:[],has_more:false};if(d.action==='instruments')value=[{id:'Tar',en:'Tar',fa:'تار'}];if(d.action==='export')window.exported=JSON.parse(d.content);queueMicrotask(()=>Notation.receive(d.id,value,null));}};
+</script>
+<script src="../assets/notation/vendor/vexflow.js"></script><script src="../assets/notation/piano_style.js"></script><script src="../assets/notation/model.js"></script><script src="../assets/notation/ui_symbols.js"></script><script src="../assets/notation/ui_glyphs.js"></script><script src="../assets/notation/score_renderer.js"></script><script src="../assets/notation/importer.js"></script><script src="../assets/notation/ui_controls.js"></script><script src="../assets/notation/notation.js"></script>
+<script>
+(async()=>{const pause=(ms=40)=>new Promise(r=>setTimeout(r,ms)),find=s=>document.querySelector(s),expect=(v,m)=>{if(!v)throw Error(m);},click=s=>{const e=find(s);expect(e,'Missing '+s);e.dispatchEvent(new MouseEvent('click',{bubbles:true}));if(e.matches('[data-pitch]'))find('.note-duration-picker .active')?.click();},capture=async()=>{Notation.command('export');await pause();return exported;},pointer=(node,type,id=9)=>node.dispatchEvent(new PointerEvent(type,{bubbles:true,pointerType:'touch',pointerId:id,button:0,clientX:30,clientY:120}));
+try{
+ await pause();const M=NotationModel,s=M.fresh();s.metadata.title='Interaction regression';s.score.measures[0].notes=['C4','D4','E4'].map((pitch,i)=>({pitch,duration:'q',dots:0,staff:1,voice:1,at:i*M.wholeUnits/4}));
+ const pending=Notation.importContent(JSON.stringify({format:'sornaz-notation',version:1,metadata:s.metadata,score:s.score}),'revision.json');await pause();click('[data-action=confirm-import]');await pending;
+ Notation.command('metadata');await pause();
+ const clefs=[...find('[name=clef]').options].map(o=>o.value);expect(!clefs.includes('bass_8va')&&!clefs.includes('bass_8vb')&&clefs.includes('bass'),'Metadata clef options');
+ const input=find('[name=title]');input.focus();pointer(input,'pointerdown');pointer(input,'pointerup');await pause(650);expect(!find('.notation-control-help'),'Short touch/focus showed help');
+ input.dispatchEvent(new PointerEvent('pointerover',{bubbles:true,pointerType:'mouse'}));await pause(400);expect(!find('.notation-control-help'),'Hover showed help');
+ pointer(input,'pointerdown');await pause(610);expect(find('.notation-control-help'),'Long touch did not show help');pointer(input,'pointerup');
+ Notation.configure({showHelp:false});await pause();const disabled=find('[name=title]');pointer(disabled,'pointerdown');await pause(610);expect(!find('.notation-control-help'),'Disabled help was shown');pointer(disabled,'pointerup');
+ Notation.configure({showHelp:true});await Notation.back();await pause();
+ click('.rest-key');await pause();const choices=[...document.querySelectorAll('[data-rest-duration]')].map(n=>n.dataset.restDuration+':'+n.dataset.restDots);expect(choices.indexOf('h:0')<choices.indexOf('q:2')&&choices.indexOf('q:2')<choices.indexOf('q:1')&&choices.indexOf('q:1')<choices.indexOf('q:0'),'Duration order differs from beat unit');find('.rest-duration-picker').dispatchEvent(new Event('cancel',{cancelable:true}));
+ click('.note-hit[data-bar="0"][data-note="1"]');Notation.command('delete-note-compact');await pause();let score=await capture();expect(score.score.measures[0].notes.length===2&&!score.score.measures[0].notes.some(n=>n.rest),'Compact delete created replacement rests');expect(score.score.measures[0].notes[1].pitch==='E4'&&score.score.measures[0].notes[1].at===M.wholeUnits/4,'Compact delete did not close gap');
+ click('.piano [data-pitch="F4"]');await pause();score=await capture();expect(score.score.measures[0].notes.find(n=>n.pitch==='F4')?.at===M.wholeUnits/2,'Insertion cursor did not move back');
+ Notation.command('undo');await pause();Notation.command('undo');await pause();score=await capture();expect(score.score.measures[0].notes.length===3,'Undo lost deleted note');
+ click('.note-hit[data-bar="0"][data-note="1"]');Notation.command('delete-note-rest');await pause();score=await capture();expect(score.score.measures[0].notes.length===3&&score.score.measures[0].notes[1].rest&&score.score.measures[0].notes[2].at===M.wholeUnits/2,'Rest delete changed timing');
+ const poly=M.fresh();poly.metadata.staves=[{clef:'treble'},{clef:'bass'}];poly.score.measures[0].notes=[{pitch:'C4',duration:'q',staff:1,voice:1,at:0},{pitch:'D4',duration:'q',staff:1,voice:1,at:M.wholeUnits/4},{pitch:'G3',duration:'h',staff:1,voice:2,at:0},{pitch:'C3',duration:'h',staff:2,voice:1,at:0}];M.compactDelete(poly,new Set(['0:0','0:1']));expect(poly.score.measures[0].notes.length===2&&poly.score.measures[0].notes.every(n=>n.at===0&&!n.rest),'Multi delete changed other voice/staff');
+ document.body.dataset.result='PASS';
+}catch(e){document.body.dataset.result='FAIL '+e.message;}})();
+</script></body></html>

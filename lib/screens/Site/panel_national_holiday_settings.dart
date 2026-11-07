@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_checkbox.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../../helpers/app_appearance.dart';
@@ -192,7 +193,7 @@ class _PanelNationalHolidaySettingsState
                             ),
                           ),
                           clipBehavior: Clip.antiAlias,
-                          child: CheckboxListTile(
+                          child: AppCheckboxTile(
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 12,
                             ),

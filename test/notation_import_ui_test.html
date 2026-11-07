@@ -4,7 +4,7 @@ window.onerror=(_,__,___,____,error)=>document.body.dataset.result='FAIL '+(erro
 window.fetch=async url=>({ok:true,json:async()=>({success:true,data:String(url).endsWith('/instruments')?[{id:'Piano',staves:[{clef:'treble'},{clef:'bass'}]}]:{items:[],has_more:false}})});
 window.NOTATION_BOOT={locale:'en',embedded:false,api:'/music-sheets/api',userId:1};
 </script>
-<script src="../assets/notation/vendor/vexflow.js"></script><script src="../assets/notation/model.js"></script><script src="../assets/notation/ui_symbols.js"></script><script src="../assets/notation/score_renderer.js"></script><script src="../assets/notation/importer.js"></script><script src="../assets/notation/notation.js"></script>
+<script src="../assets/notation/vendor/vexflow.js"></script><script src="../assets/notation/piano_style.js"></script><script src="../assets/notation/model.js"></script><script src="../assets/notation/ui_symbols.js"></script><script src="../assets/notation/score_renderer.js"></script><script src="../assets/notation/importer.js"></script><script src="../assets/notation/notation.js"></script>
 <script>
 (async()=>{try{
  await new Promise(resolve=>setTimeout(resolve,100));

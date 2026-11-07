@@ -83,8 +83,10 @@ flutter_launcher_icons:
 flutter:
   uses-material-design: true
   assets:
+    - assets/panel/chart-gallery.json
     - assets/notation/
     - assets/notation/vendor/
+    - assets/notation/fonts/
     - assets/images/
     - assets/icons/
     - assets/icons/notes/notes/
@@ -105,6 +107,9 @@ flutter:
     - assets/audio/interval_cello_quarter/
     - assets/audio/INTERVAL_INSTRUMENTS_NOTICE.md
   fonts:
+    - family: Bravura
+      fonts:
+        - asset: assets/notation/fonts/Bravura.otf
     - family: iran_sansx_fa
       fonts:
         - asset: assets/fonts/iran_sansx_fa/ultra_light.ttf

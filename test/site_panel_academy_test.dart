@@ -273,7 +273,7 @@ void main() {
         findsOneWidget,
       );
       expect(find.byType(BottomNavBarWidget), findsOneWidget);
-      await tester.tap(find.text('پروفایل'));
+      await tester.tap(find.text('حساب کاربری'));
       await tester.pumpAndSettle();
       expect(find.text('profile body'), findsOneWidget);
       expect(tester.takeException(), isNull);

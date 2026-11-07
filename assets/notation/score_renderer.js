@@ -2,13 +2,61 @@
 (function(root){
 'use strict';
 const VF=Vex.Flow,M=NotationModel;
+VF.setMusicFont('Bravura','Gonville','Custom');
+function accidentalParts(value){return value==='bk'?['b','k']:value==='#o'?['#','o']:[value];}
+class IranianKeySignature extends VF.KeySignature {
+ constructor(signature,clef){super('C');this.signature=signature;this.clefOverride=clef;}
+ format(){
+  const stave=this.checkStave(),clef=this.clefOverride||stave.getClef();this.width=0;this.glyphs=[];this.xPositions=[0];this.accList=[];
+  const lower=[2,.5,2.5,1,3,1.5,3.5].map(line=>({line})),upper=[0,1.5,-.5,1,2.5,.5,2].map(line=>({line}));
+  this.convertAccLines(clef,'b',lower);this.convertAccLines(clef,'#',upper);
+  for(const item of this.signature.accidentals){const line=(item.alter<0?lower:upper)[(item.alter<0?'BEADGCF':'FCGDAEB').indexOf(item.letter)].line;for(const type of accidentalParts(item.accidental))this.accList.push({type,line});}
+  for(let i=0;i<this.accList.length;i++)this.convertToGlyph(this.accList[i],this.accList[i+1]);this.formatted=true;
+ }
+}
+function signatureReserve(sheet){return Math.max(0,...sheet.score.measures.map((_,i)=>(M.iranianSignature?.(sheet.metadata.scale_type,M.effectiveKey(sheet,i))?.accidentals||[]).reduce((sum,a)=>sum+(a.accidental==='bk'||a.accidental==='#o'?28:16),0)-35));}
 class SmallStaveNote extends VF.StaveNote {getStaveNoteScale(){return .7;}}
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const gapDurations=Object.keys(M.durations).flatMap(duration=>[0,1,2].map(dots=>({duration,dots,value:M.units({duration,dots})}))).sort((a,b)=>b.value-a.value);
 function spacingNotes(length){const notes=[];while(length>0){const part=gapDurations.find(item=>item.value<=length);if(!part)break;notes.push(new VF.GhostNote({duration:part.duration,dots:part.dots}));length-=part.value;}return notes;}
+// Render-only rests never enter the score, undo history, export or playback.
+function completedVoice(source,sheet,index,staff,voice){
+ const end=M.barUnits(sheet,index),pattern=M.beamPattern(sheet,index),boundaries=[];let boundary=0;
+ if(pattern)for(const part of pattern.parts){boundary+=part*M.wholeUnits/pattern.denominator;boundaries.push(boundary);}
+ const ratios=[...new Map(source.filter(n=>n.tuplet).map(n=>[n.tuplet.actual+':'+n.tuplet.normal,n.tuplet])).values()];
+ const choices=gapDurations.filter(n=>!(n.duration==='h'&&n.dots)).flatMap(n=>[n,...ratios.map(tuplet=>({...n,tuplet,value:n.value*tuplet.normal/tuplet.actual})).filter(item=>Number.isInteger(item.value))]).sort((a,b)=>b.value-a.value||Number(!!a.tuplet)-Number(!!b.tuplet));
+ const result=[];let cursor=0;
+ const memo=new Map([[0,true]]),values=[...new Set(choices.map(n=>n.value))],minimum=Math.min(...values),gcd=(a,b)=>b?gcd(b,a%b):a,quantum=values.reduce(gcd);
+ const reachable=length=>{if(length<0||length%quantum||length>0&&length<minimum)return false;if(memo.has(length))return memo.get(length);const valid=values.some(value=>value<=length&&reachable(length-value));memo.set(length,valid);return valid;};
+ const fill=until=>{while(cursor<until){const limit=Math.min(until,boundaries.find(b=>b>cursor)||until),remaining=reachable(limit-cursor)?limit-cursor:until-cursor,valid=choices.filter(n=>n.value<=remaining&&reachable(remaining-n.value));const choice=valid.find(n=>cursor%n.value===0||pattern&&n.value===remaining)||valid[0];if(!choice)break;const note={pitch:'B4',duration:choice.duration,dots:choice.dots,rest:true,index:-1,synthetic:true,staff,voice,at:cursor};if(choice.tuplet)note.tuplet=choice.tuplet;result.push(note);cursor+=choice.value;}};
+ for(const note of source){fill(Math.min(note.at,end));result.push(note);cursor=Math.max(cursor,note.at+M.units(note));}fill(end);return result;
+}
+function renderingBeamPattern(sheet,index){
+ if(sheet.score.measures[index]?.beamPattern)return M.beamPattern(sheet,index);
+ const m=sheet.metadata;if(!M.durations[m.tempo_note])return M.beamPattern(sheet,index);
+ const beat=M.units({duration:m.tempo_note,dots:Number(m.tempo_dots)||0}),length=M.barUnits(sheet,index),parts=[];for(let at=0;at<length;at+=beat)parts.push(Math.min(beat,length-at));return {parts,denominator:M.wholeUnits};
+}
+function rhythmicBeams(notes,positions,sheet,index){
+ const pattern=renderingBeamPattern(sheet,index);if(!pattern)return VF.Beam.generateBeams(notes,{maintain_stem_directions:true});
+ const bounds=[];let end=0;for(const part of pattern.parts){end+=part*M.wholeUnits/pattern.denominator;bounds.push(end);}
+ const beams=[];let run=[],previousEnd=-1,previousGroup=-1;const flush=()=>{if(run.length>1)beams.push(...VF.Beam.generateBeams(run,{maintain_stem_directions:true,groups:[new VF.Fraction(M.barUnits(sheet,index),M.wholeUnits)]}));run=[];};
+ for(const note of notes){const entry=positions.get(note),group=bounds.findIndex(boundary=>entry.at<boundary);if(!entry.flagged||group<0||entry.at+entry.units>bounds[group]){flush();previousGroup=-1;continue;}if(group!==previousGroup||entry.at!==previousEnd)flush();run.push(note);previousEnd=entry.at+entry.units;previousGroup=group;}flush();return beams;
+}
+function measureRepeatAt(bars,index){if(bars[index]?.repeat?.measure)return {start:index,count:bars[index].repeat.measure};if(bars[index-1]?.repeat?.measure===2)return {start:index-1,count:2};return null;}
+const repeatGlyphSize=38,repeatPadding=26,repeatWidths={1:new VF.Glyph('repeat1Bar',repeatGlyphSize).getMetrics().width+repeatPadding*2,2:new VF.Glyph('repeat2Bars',repeatGlyphSize).getMetrics().width+repeatPadding*2};
+function centeredGlyph(ctx,svg,code,x,y,className,attributes={},hang=false){
+ ctx.save();ctx.setFillStyle('#111');ctx.setStrokeStyle('#111');ctx.openGroup(className);new VF.Glyph(code,repeatGlyphSize).render(ctx,0,0);ctx.closeGroup();ctx.restore();
+ const group=[...svg.querySelectorAll('[class*="'+className+'"]')].at(-1),box=group.getBBox();group.classList.add(className);group.setAttribute('transform','translate('+(x-box.x-box.width/2)+' '+(y-box.y-(hang?0:box.height/2))+')');for(const[k,v]of Object.entries(attributes))group.setAttribute(k,String(v));return group;
+}
+function previewNote(ctx,stave,n,x){
+ const pitch=ottava(n.pitch).pitch,v=new VF.StaveNote({clef:stave.getClef(),keys:[pitch[0].toLowerCase()+'/'+pitch.slice(1)],duration:n.duration,dots:n.dots||0,auto_stem:true});
+ for(let d=0;d<(n.dots||0);d++)VF.Dot.buildAndAttach([v],{all:true});if(n.accidental)for(const part of accidentalParts(n.accidental))v.addModifier(new VF.Accidental(part),0);
+ v.setStyle({fillStyle:'#d5d5d5',strokeStyle:'#d5d5d5'});v.setStave(stave);const voice=new VF.Voice({num_beats:4,beat_value:4}).setStrict(false).addTickables([v]);new VF.Formatter().joinVoices([voice]).format([voice],40);const tick=v.getTickContext();tick.setX(tick.getX()+x-v.getAbsoluteX());ctx.openGroup('notation-preview-note');v.setContext(ctx).draw();ctx.closeGroup();v.getSVGElement?.()?.closest('[class*="notation-preview-note"]')?.classList.add('notation-preview-note');
+}
 // Reserve horizontal space for modifiers before grouping measures into rows.
-const estimate=bar=>{
- const lanes=[1,2].map(staff=>M.lane(bar,staff).reduce((width,n)=>width+38+(n.accidental?18:0)+(n.cautionary?10:0)+(n.pitches||[]).filter(tone=>tone.accidental).length*12+(n.graces?.length||0)*13+(n.chordSymbol?30:0),0));
+const estimate=(bar,repeatCount=bar.repeat?.measure||0,sheet=null,index=0)=>{
+ if(repeatCount)return repeatWidths[repeatCount]/repeatCount;
+ const lanes=[1,2].map(staff=>{const saved=bar.notes.map((n,i)=>({...n,at:M.positionOf(bar,i)})).filter(n=>M.staffOf(n)===staff),extra=sheet?[...new Set(saved.map(M.voiceOf))].reduce((sum,voice)=>sum+completedVoice(saved.filter(n=>M.voiceOf(n)===voice).sort((a,b)=>a.at-b.at),sheet,index,staff,voice).filter(n=>n.synthetic).length*24,0):0;return saved.reduce((width,n)=>width+38+(n.accidental?18:0)+(n.cautionary?10:0)+(n.pitches||[]).filter(tone=>tone.accidental).length*12+(n.graces?.length||0)*13+(n.chordSymbol?30:0),extra);});
  const prefix=(bar.time||bar.timeSymbol?32:0)+(bar.key?35:0)+(bar.clefs?38:0)+(bar.repeat?.start?18:0);
  return Math.max(150,Math.max(...lanes)+100+prefix+(bar.clefChanges?.length||0)*24);
 };
@@ -19,31 +67,30 @@ function ottava(pitch,rest=false){
  const shift=low?(octave<2?2:1):octave>=7?(octave===8?-2:-1):0;
  return {pitch:letter+(octave+shift),label:shift?(Math.abs(shift)===2?'16':'8')+(shift>0?'vb':'va'):'',below:shift>0};
 }
-function groups(measures,width,printing){
- const result=[];
- if(printing){
-  const density=Math.max(0,...measures.flatMap(b=>[1,2].map(staff=>M.lane(b,staff).length)));
-  const count=density>12?5:density>6?6:8;
-  for(let i=0;i<measures.length;i+=count)result.push(measures.slice(i,i+count));
- }else{
-  let row=[],used=70;
-  for(const bar of measures){if(row.length&&(used+estimate(bar)>width||row.length===4)){result.push(row);row=[];used=70;}row.push(bar);used+=estimate(bar);}
-  if(row.length)result.push(row);
- }
- return result;
+function groups(measures,width,printing,reserve=0,sheet=null){
+ const result=[],density=Math.max(0,...measures.flatMap(b=>[1,2].map(staff=>M.lane(b,staff).length))),count=printing?(density>12?5:density>6?6:8):4;
+ let row=[],used=70+reserve;
+ for(let index=0;index<measures.length;){const countBars=measures[index].repeat?.measure===2&&index+1<measures.length?2:1,unit=measures.slice(index,index+countBars),cost=unit.reduce((sum,bar,offset)=>sum+estimate(bar,measureRepeatAt(measures,index+offset)?.count||0,sheet,index+offset),0);
+  if(row.length&&(printing?row.length+countBars>count:row.length+countBars>16||row.filter((b,offset)=>!measureRepeatAt(measures,index-row.length+offset)).length+unit.filter((b,offset)=>!measureRepeatAt(measures,index+offset)).length>4||used+cost>width)){result.push(row);row=[];used=70+reserve;}
+  if(!row.length)used=measureRepeatAt(measures,index)?2*(70+reserve):70+reserve;
+  row.push(...unit);used+=cost;index+=countBars;
+ }if(row.length)result.push(row);return result;
 }
 function renderRow(target,bars,start,options){
- const m=options.metadata,layout=M.staves(m),grand=layout.length===2,width=Math.max(options.width,bars.reduce((v,b)=>v+estimate(b),70)),height=grand?300:120;
+ const m=options.metadata,layout=M.staves(m),grand=layout.length===2,width=Math.max(options.width,bars.reduce((v,b,i)=>v+estimate(b,measureRepeatAt(options.sheet.score.measures,start+i)?.count||0,options.sheet,start+i),(70+signatureReserve(options.sheet))*(measureRepeatAt(options.sheet.score.measures,start)?2:1))),staffStep=options.printing?150:(options.staffStep||95),height=grand?staffStep+150:120;
  const renderer=new VF.Renderer(target,VF.Renderer.Backends.SVG);renderer.resize(width,height);
  const ctx=renderer.getContext(),engraved=[],octaveNotes=[];
  const svg=target.querySelector('svg');svg.setAttribute('viewBox',`0 0 ${width} ${height}`);svg.setAttribute('width','100%');svg.setAttribute('height',String(options.printing?(grand?215:86):height*options.pixels/width));
- svg.style.display='block';svg.style.maxWidth='100%';
- const leftInset=grand?30:4,barWidth=(width-leftInset-4)/bars.length;
+ svg.style.display='block';svg.style.maxWidth='100%';if(!options.printing)svg.style.width='100%';svg.dataset.baseHeight=String(height);svg.dataset.legacyHeight=String(grand?300:120);svg.dataset.screenScale=String(options.pixels/width);svg.dataset.staffStep=String(staffStep);
+ const leftInset=grand?30:4,repeatInfo=bars.map((_,i)=>measureRepeatAt(options.sheet.score.measures,start+i)),widths=repeatInfo.map(info=>info?repeatWidths[info.count]/info.count:0);
+ const firstRepeat=repeatInfo[0];if(firstRepeat){const prefix=2*(70+signatureReserve(options.sheet));for(let i=0;i<Math.min(firstRepeat.count,widths.length);i++)widths[i]+=prefix/firstRepeat.count;}
+ const flexible=widths.filter(w=>!w).length,remaining=width-leftInset-4-widths.reduce((a,b)=>a+b,0);for(let i=0;i<widths.length;i++)if(!widths[i])widths[i]=remaining/flexible;
+ let barX=leftInset;
  bars.forEach((bar,col)=>{
-  const index=start+col,x=leftInset+col*barWidth,barTime=M.effectiveTime(options.sheet,index),barKey=M.effectiveKey(options.sheet,index),clefs=layout.map((_,lane)=>M.effectiveClef(options.sheet,index,lane+1)),staves=layout.map((entry,lane)=>new VF.Stave(x,6+lane*150,barWidth)),multiRest=M.multiRestAt(options.sheet.score.measures,index);
-  if(!options.printing&&index===options.activeBar){ctx.save();ctx.setFillStyle(options.accent+'14');staves.forEach(stave=>ctx.fillRect(x,stave.getY()+15,barWidth,94));ctx.restore();}
+  const index=start+col,x=barX,barWidth=widths[col],repeatRegion=repeatInfo[col],barTime=M.effectiveTime(options.sheet,index),barKey=M.effectiveKey(options.sheet,index),clefs=layout.map((_,lane)=>M.effectiveClef(options.sheet,index,lane+1)),staves=layout.map((entry,lane)=>new VF.Stave(x,6+lane*staffStep,barWidth)),multiRest=M.multiRestAt(options.sheet.score.measures,index);
+  if(!options.printing&&index===options.activeBar){ctx.save();ctx.setFillStyle(options.accent+'14');ctx.openGroup('notation-active-background');staves.forEach(stave=>ctx.fillRect(x,stave.getY()+15,barWidth,94));ctx.closeGroup();ctx.restore();}
   staves.forEach((stave,lane)=>{
-   if(col===0||bar.clefs?.[lane+1]||bar.time||bar.timeSymbol||bar.key){if(col===0||bar.clefs?.[lane+1])stave.addClef(clefs[lane].split('_')[0],undefined,clefs[lane].split('_')[1]);if(col===0||bar.key)stave.addKeySignature(barKey);if(index===0||bar.time||bar.timeSymbol)stave.addTimeSignature(bar.timeSymbol==='common'?'C':bar.timeSymbol==='cut'?'C|':barTime);
+   if(col===0||bar.clefs?.[lane+1]||bar.time||bar.timeSymbol||bar.key){if(col===0||bar.clefs?.[lane+1])stave.addClef(clefs[lane].split('_')[0],undefined,clefs[lane].split('_')[1]);if(col===0||bar.key){const signature=M.iranianSignature?.(m.scale_type,barKey);if(signature)stave.addModifier(new IranianKeySignature(signature,clefs[lane].split('_')[0]));else stave.addKeySignature(barKey);}if(index===0||bar.time||bar.timeSymbol)stave.addTimeSignature(bar.timeSymbol==='common'?'C':bar.timeSymbol==='cut'?'C|':barTime);
    }
    if(lane===0&&(bar.displayNumber||index>0)){ctx.save();ctx.setFillStyle('#666');ctx.setFont('Arial',5.5);ctx.fillText(String(bar.displayNumber||index+1),x+9,35);ctx.restore();}
    if(bar.repeat?.start)stave.setBegBarType(VF.Barline.type.REPEAT_BEGIN);
@@ -52,8 +99,9 @@ function renderRow(target,bars,start,options){
    else if(bar.barline==='double')stave.setEndBarType(VF.Barline.type.DOUBLE);
    else if(bar.barline==='final'||index===options.lastWritten)stave.setEndBarType(VF.Barline.type.END);
    else if(bar.barline==='hidden')stave.setEndBarType(VF.Barline.type.NONE);
-   stave.setContext(ctx).draw();
+   ctx.openGroup('notation-staff-'+(lane+1));stave.setContext(ctx).draw();ctx.closeGroup();
   });
+  barX+=barWidth;
   const noteStart=Math.max(...staves.map(stave=>stave.getNoteStartX()))+12;
   staves.forEach(stave=>stave.setNoteStartX(noteStart));
   if(grand){
@@ -71,31 +119,38 @@ function renderRow(target,bars,start,options){
   }
   if(repeat.marker)addLabel(({segno:'Segno',coda:'Coda',toCoda:'To Coda',fine:'Fine'})[repeat.marker],staves[0].getY()-18,10);
   if(repeat.jump)addLabel(({dc:'D.C.',ds:'D.S.',dcAlFine:'D.C. al Fine',dsAlFine:'D.S. al Fine',dcAlCoda:'D.C. al Coda',dsAlCoda:'D.S. al Coda'})[repeat.jump],staves[0].getY()-30,10);
-  if(repeat.measure)addLabel(repeat.measure===1?'%':'% %',staves[0].getY()+58,24);
+  if(repeatRegion&&repeatRegion.start===index){
+   const center=repeatRegion.count===1?x+barWidth/2:x+barWidth;
+   staves.forEach((stave,lane)=>centeredGlyph(ctx,svg,repeatRegion.count===1?'repeat1Bar':'repeat2Bars',center,stave.getYForLine(2),'notation-measure-repeat',{'data-bar':index,'data-staff':lane+1,'data-repeat-count':repeatRegion.count,'data-center-x':center,'data-center-y':stave.getYForLine(2)}));
+   if(repeatRegion.count===2){const label=document.createElementNS('http://www.w3.org/2000/svg','text');for(const[k,v]of Object.entries({x:center,y:staves[0].getYForLine(0)-9,'text-anchor':'middle','font-family':'NotationTheme, Arial','font-size':12,fill:'#111','class':'notation-repeat-count'}))label.setAttribute(k,String(v));label.textContent='2';svg.append(label);}
+  }
   if(bar.rehearsal)addLabel(bar.rehearsal,staves[0].getY()-53,12);
   if(bar.text)addLabel(bar.text,staves[0].getY()-66,10);
   if(bar.tempo)addLabel(({instant:'♩ = ',ritardando:'rit. → ',accelerando:'accel. → ',aTempo:'a tempo'})[bar.tempo.mode]+(bar.tempo.mode==='aTempo'?'':bar.tempo.bpm),staves[0].getY()-42,10);
-  const engravedNotes=Array(bar.notes.length),voices=[],beams=[],tuplets=[],crossGroups=new Map(),crossCounts=new Map(),manualGroups=new Map(),manualCounts=new Map();
+  const previewTargets=[],generatedRests=[],engravedNotes=Array(bar.notes.length),voices=[],beams=[],tuplets=[],crossGroups=new Map(),crossCounts=new Map(),manualGroups=new Map(),manualCounts=new Map();
   bar.notes.forEach(note=>{if(note.crossBeam&&!note.rest&&M.staffOf(note)<=layout.length)crossCounts.set(note.crossBeam,(crossCounts.get(note.crossBeam)||0)+1);});
   bar.notes.forEach(note=>{if(note.beamGroup&&!note.rest&&M.staffOf(note)<=layout.length)manualCounts.set(note.beamGroup,(manualCounts.get(note.beamGroup)||0)+1);});
   staves.forEach((stave,lane)=>{
+   if(multiRest||repeatRegion)return;
    const staff=lane+1,all=bar.notes.map((n,i)=>({...n,index:i,at:M.positionOf(bar,i)})).filter(n=>M.staffOf(n)===staff),voiceIds=[...new Set(all.map(M.voiceOf))];
-   if(!voiceIds.length&&options.ghost&&M.staffOf(options.ghost)===staff)voiceIds.push(M.voiceOf(options.ghost));
+   if(!all.length)centeredGlyph(ctx,svg,'restWhole',(stave.getNoteStartX()+stave.getNoteEndX())/2,stave.getYForLine(1),'notation-measure-rest',{'data-bar':index,'data-staff':staff,'data-units':M.barUnits(options.sheet,index)},true);
+   const ghost=!options.printing&&index===options.ghostBar&&options.ghost&&M.staffOf(options.ghost)===staff?options.ghost:null;
+   if(ghost&&!voiceIds.length)previewTargets.push({stave,n:ghost,x:stave.getNoteStartX()+12});
    for(const voiceId of voiceIds){
-   const source=all.filter(n=>M.voiceOf(n)===voiceId).sort((a,b)=>a.at-b.at||a.index-b.index);
-   if(!options.printing&&index===options.ghostBar&&options.ghost&&M.staffOf(options.ghost)===staff&&M.voiceOf(options.ghost)===voiceId)source.push({...options.ghost,index:-1,at:source.length?source.at(-1).at+M.units(source.at(-1)):0,ghost:true,rest:false});
-   const notes=[],actual=[];let cursor=0,tupletGroup=[],tupletRatio='';
+   const stored=all.filter(n=>M.voiceOf(n)===voiceId).sort((a,b)=>a.at-b.at||a.index-b.index),source=completedVoice(stored,options.sheet,index,staff,voiceId);
+   const notes=[],actual=[],noteTimes=new Map();let cursor=0,tupletGroup=[],tupletRatio='';
    const finishTuplet=()=>{if(tupletGroup.length){const[actualCount,normalCount]=tupletRatio.split(':').map(Number);tuplets.push(new VF.Tuplet(tupletGroup,{num_notes:actualCount,notes_occupied:normalCount}));tupletGroup=[];tupletRatio='';}};
    source.forEach(n=>{
     if(n.at>cursor)notes.push(...spacingNotes(n.at-cursor));
     const tones=[{pitch:n.pitch,accidental:n.accidental},...(n.pitches||[])],display=ottava(n.pitch,n.rest);
-    const keys=n.rest?['b/4']:tones.map(tone=>{const shifted=ottava(tone.pitch);return shifted.pitch[0].toLowerCase()+'/'+shifted.pitch.slice(1);});
-    const noteClef=M.clefAt(options.sheet,index,staff,n.at),NoteClass=n.noteSize&&!n.rest?SmallStaveNote:VF.StaveNote;
+    const noteClef=M.clefAt(options.sheet,index,staff,n.at),restKey=({treble:'b/4',bass:'d/3',alto:'c/4',tenor:'a/3',soprano:'g/4','mezzo-soprano':'e/4','baritone-f':'f/3'})[noteClef.split('_')[0]]||'b/4';
+    const keys=n.rest?[restKey]:tones.map(tone=>{const shifted=ottava(tone.pitch);return shifted.pitch[0].toLowerCase()+'/'+shifted.pitch.slice(1);});
+    const NoteClass=n.noteSize&&!n.rest?SmallStaveNote:VF.StaveNote;
     const v=new NoteClass({clef:noteClef.split('_')[0],keys,duration:n.duration+(n.rest?'r':''),dots:n.dots||0,auto_stem:true});
-    if(n.graces?.length){const graceNotes=n.graces.map(grace=>{const p=ottava(grace.pitch).pitch,small=new VF.GraceNote({clef:noteClef.split('_')[0],keys:[p[0].toLowerCase()+'/'+p.slice(1)],duration:grace.duration||'8',slash:grace.kind==='acciaccatura'});if(grace.accidental)small.addModifier(new VF.Accidental(grace.accidental),0);return small;});v.addModifier(new VF.GraceNoteGroup(graceNotes,true).beamNotes(),0);}
-    octaveNotes.push({note:v,...display});
+    if(n.graces?.length){const graceNotes=n.graces.map(grace=>{const p=ottava(grace.pitch).pitch,small=new VF.GraceNote({clef:noteClef.split('_')[0],keys:[p[0].toLowerCase()+'/'+p.slice(1)],duration:grace.duration||'8',slash:grace.kind==='acciaccatura'});if(grace.accidental)for(const value of accidentalParts(grace.accidental))small.addModifier(new VF.Accidental(value),0);return small;});v.addModifier(new VF.GraceNoteGroup(graceNotes,true).beamNotes(),0);}
+    octaveNotes.push({note:v,staff,...display});
     if(!n.rest)v.setStemDirection(v.getKeyProps()[0].line<=3?VF.Stem.UP:VF.Stem.DOWN);
-    if(!n.rest)tones.forEach((tone,i)=>{if(tone.accidental){const accidental=new VF.Accidental(tone.accidental);if((i===0?n.cautionary:tone.cautionary)&&accidental.setAsCautionary)accidental.setAsCautionary();v.addModifier(accidental,i);}});
+    if(!n.rest)tones.forEach((tone,i)=>{if(tone.accidental)for(const value of accidentalParts(tone.accidental)){const accidental=new VF.Accidental(value);if((i===0?n.cautionary:tone.cautionary)&&accidental.setAsCautionary)accidental.setAsCautionary();v.addModifier(accidental,i);}});
     for(let d=0;d<(n.dots||0);d++)VF.Dot.buildAndAttach([v],{all:true});
     const art={staccato:'a.',tenuto:'a-',accent:'a>',marcato:'a^',staccatissimo:'av'};
     if(art[n.articulation])v.addModifier(new VF.Articulation(art[n.articulation]).setPosition(VF.Modifier.Position.ABOVE),0);
@@ -111,6 +166,9 @@ function renderRow(target,bars,start,options){
     if(n.lyric)v.addModifier(new VF.Annotation(n.lyric).setFont('NotationTheme',11).setVerticalJustification(VF.Annotation.VerticalJustify.BOTTOM),0);
     if(n.chordSymbol)v.addModifier(new VF.Annotation(n.chordSymbol).setFont('NotationTheme',11).setVerticalJustification(VF.Annotation.VerticalJustify.TOP),0);
     if(n.pedal){const label={sustainDown:'Ped.',sustainUp:'✱',sostenutoDown:'Sost.',sostenutoUp:'✱',unaCorda:'una corda',treCorde:'tre corde'}[n.pedal];if(label)v.addModifier(new VF.Annotation(label).setFont('Times',11,'italic').setVerticalJustification(VF.Annotation.VerticalJustify.BOTTOM),0);}
+    noteTimes.set(v,{at:n.at,units:M.units(n),flagged:!n.rest&&M.durations[n.duration]<=8});
+    if(n.synthetic)generatedRests.push({note:v,n});
+    if(ghost&&M.voiceOf(ghost)===voiceId&&n.synthetic&&!previewTargets.some(item=>item.stave===stave))previewTargets.push({stave,n:ghost,anchor:v});
     const color=options.printing?'#111':n.ghost?'#d5d5d5':options.selectedNotes?.has(index+':'+n.index)||index===options.activeBar&&n.index===options.activeNote?options.accent:'#111';
     v.setStyle({fillStyle:color,strokeStyle:color});if(n.index>=0)engravedNotes[n.index]=v;notes.push(v);if(!n.ghost){if(n.crossBeam&&crossCounts.get(n.crossBeam)>1){const group=crossGroups.get(n.crossBeam)||[];group.push({note:v,at:n.at});crossGroups.set(n.crossBeam,group);}else if(n.beamGroup&&manualCounts.get(n.beamGroup)>1){const group=manualGroups.get(n.beamGroup)||[];group.push({note:v,at:n.at});manualGroups.set(n.beamGroup,group);}else actual.push(v);}cursor=n.at+M.units(n);
     const ratio=n.tuplet?`${n.tuplet.actual}:${n.tuplet.normal}`:'';
@@ -118,15 +176,17 @@ function renderRow(target,bars,start,options){
     if(ratio){tupletRatio=ratio;tupletGroup.push(v);if(tupletGroup.length===n.tuplet.actual)finishTuplet();}
    });
    finishTuplet();
-   if(notes.length){const[beats,beatValue]=barTime.split('/').map(Number),voice=new VF.Voice({num_beats:beats,beat_value:beatValue}).setStrict(false);voice.addTickables(notes);voices.push({voice,stave});const pattern=M.beamPattern(options.sheet,index);beams.push(...VF.Beam.generateBeams(actual,{maintain_stem_directions:true,...(pattern?{groups:pattern.parts.map(part=>new VF.Fraction(part,pattern.denominator))}:{})}));}
+   if(notes.length){const[beats,beatValue]=barTime.split('/').map(Number),voice=new VF.Voice({num_beats:beats,beat_value:beatValue}).setStrict(false);voice.addTickables(notes);voices.push({voice,stave});beams.push(...rhythmicBeams(actual,noteTimes,options.sheet,index));}
    }
   });
-  if(voices.length){const formatter=new VF.Formatter();staves.forEach(stave=>{const same=voices.filter(v=>v.stave===stave).map(v=>v.voice);if(same.length)formatter.joinVoices(same);});formatter.format(voices.map(v=>v.voice),Math.max(20,staves[0].getNoteEndX()-noteStart-12));voices.forEach(({voice,stave})=>voice.draw(ctx,stave));for(const group of [...crossGroups.values(),...manualGroups.values()])if(group.length>1)beams.push(new VF.Beam(group.sort((a,b)=>a.at-b.at).map(item=>item.note)));beams.forEach(beam=>beam.setContext(ctx).draw());tuplets.forEach(tuplet=>tuplet.setContext(ctx).draw());}
+  if(voices.length){const formatter=new VF.Formatter();staves.forEach(stave=>{const same=voices.filter(v=>v.stave===stave).map(v=>v.voice);if(same.length)formatter.joinVoices(same);});formatter.format(voices.map(v=>v.voice),Math.max(20,staves[0].getNoteEndX()-noteStart-12));voices.forEach(({voice,stave})=>{ctx.openGroup('notation-staff-'+(staves.indexOf(stave)+1));voice.draw(ctx,stave);ctx.closeGroup();});for(const group of [...crossGroups.values(),...manualGroups.values()])if(group.length>1)beams.push(new VF.Beam(group.sort((a,b)=>a.at-b.at).map(item=>item.note)));beams.forEach(beam=>beam.setContext(ctx).draw());tuplets.forEach(tuplet=>tuplet.setContext(ctx).draw());}
+  for(const {note,n} of generatedRests){const group=note.getSVGElement?.()||svg.querySelector('#vf-'+note.getAttribute('id'));if(group){group.classList.add('notation-auto-rest');for(const[k,value]of Object.entries({'data-bar':index,'data-staff':n.staff,'data-voice':n.voice,'data-at':n.at,'data-units':M.units(n),'data-duration':n.duration,'data-dots':n.dots||0}))group.setAttribute(k,String(value));}}
+  for(const item of previewTargets)previewNote(ctx,item.stave,item.n,item.x||item.anchor.getAbsoluteX()+14);
   for(const event of bar.clefChanges||[]){const stave=staves[event.staff-1];if(!stave)continue;const anchors=bar.notes.map((note,i)=>({note,at:M.positionOf(bar,i),box:engravedNotes[i]?.getBoundingBox()})).filter(item=>M.staffOf(item.note)===event.staff&&item.box).sort((a,b)=>a.at-b.at),after=anchors.find(item=>item.at>=event.at),before=[...anchors].reverse().find(item=>item.at<event.at),position=after?after.box.getX()-22:before?before.box.getX()+before.box.getW()+18:stave.getNoteStartX()+20,markerX=Math.max(stave.getNoteStartX()+2,Math.min(x+barWidth-24,position)),marker=new VF.ClefNote(event.clef.split('_')[0],'small',event.clef.split('_')[1]);marker.setStave(stave).setContext(ctx);marker.getAbsoluteX=()=>markerX;ctx.openGroup('notation-timed-clef');marker.draw();ctx.closeGroup();}
   engraved.push({notes:engravedNotes,ctx,row:target,svg});
   if(!options.printing){
    const hit=(attributes)=>{const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');for(const[k,v]of Object.entries({fill:'transparent',stroke:'none','class':'note-hit',...attributes}))rect.setAttribute(k,String(v));svg.append(rect);};
-   staves.forEach((stave,lane)=>hit({x,y:stave.getY()+10,width:barWidth,height:100,'data-bar':index,'data-staff':lane+1}));
+   staves.forEach((stave,lane)=>hit({x,y:stave.getY()+10,width:barWidth,height:grand?Math.min(100,staffStep-12):100,'data-bar':index,'data-staff':lane+1}));
    engravedNotes.forEach((note,i)=>{const box=note?.getBoundingBox();if(box)hit({x:box.getX()-4,y:box.getY()-6,width:Math.max(22,box.getW()+8),height:Math.max(38,box.getH()+12),'data-bar':index,'data-staff':M.staffOf(bar.notes[i]),'data-note':i});});
   }
  });
@@ -135,12 +195,17 @@ function renderRow(target,bars,start,options){
  let run=[];
  const bracket=()=>{if(!run.length)return;const first=run[0],boxes=run.map(n=>n.note.getBoundingBox()).filter(Boolean);if(!boxes.length){run=[];return;}
   const x=boxes[0].getX(),end=Math.min(width-4,boxes.at(-1).getX()+boxes.at(-1).getW()+10),y=first.below?Math.max(...boxes.map(b=>b.getY()+b.getH()))+14:Math.min(...boxes.map(b=>b.getY()))-14;
-  add('text',{x,y,'font-size':10,'font-family':'Arial',fill:'#111','class':'ottava-label'},first.label);
-  const lineStart=Math.min(x+28,end-2);add('path',{d:'M'+lineStart+' '+(y-3)+'H'+end+'v'+(first.below?-5:5),fill:'none',stroke:'#111','stroke-width':.8,'stroke-dasharray':'3 2','class':'ottava-line'});run=[];
+  add('text',{x,y,'font-size':10,'font-family':'Arial',fill:'#111','class':'ottava-label','data-spacing-staff':first.staff},first.label);
+  const lineStart=Math.min(x+28,end-2);add('path',{d:'M'+lineStart+' '+(y-3)+'H'+end+'v'+(first.below?-5:5),fill:'none',stroke:'#111','stroke-width':.8,'stroke-dasharray':'3 2','class':'ottava-line','data-spacing-staff':first.staff});run=[];
  };
- for(const entry of octaveNotes){if(!entry.label||run.length&&run[0].label!==entry.label)bracket();if(entry.label)run.push(entry);}bracket();
+ for(const entry of octaveNotes){if(!entry.label||run.length&&(run[0].label!==entry.label||run[0].staff!==entry.staff))bracket();if(entry.label)run.push(entry);}bracket();
  const bounds=svg.getBBox(),top=Math.min(0,bounds.y-5),bottom=Math.max(height,bounds.y+bounds.height+5),total=bottom-top;
  svg.setAttribute('viewBox',`0 ${top} ${width} ${total}`);if(!options.printing)svg.setAttribute('height',String(total*options.pixels/width));
+ if(grand&&!options.printing&&!options.spacingResolved){
+  const ink=staff=>[...svg.querySelectorAll('[class*="notation-staff-'+staff+'"],[data-spacing-staff="'+staff+'"]')].map(node=>node.getBBox()).filter(b=>b.width&&b.height);
+  const upper=ink(1),lower=ink(2),extra=bars.some(bar=>bar.notes.some(n=>M.staffOf(n)===1&&(n.pedal||n.octaveShift)))?24:0;
+  if(upper.length&&lower.length){const overlap=Math.max(...upper.map(b=>b.y+b.height))+extra+10-Math.min(...lower.map(b=>b.y));if(overlap>0){target.replaceChildren();return renderRow(target,bars,start,{...options,staffStep:staffStep+Math.ceil(overlap),spacingResolved:true});}}
+ }
  return engraved;
 }
 function ties(sheet,engraved){
@@ -202,16 +267,27 @@ function slides(sheet,engraved){
  const segment=(view,x1,y1,x2,y2,kind)=>{if(x2<=x1)return;const svg=view.svg,path=document.createElementNS('http://www.w3.org/2000/svg','path'),steps=kind==='glissando'?Math.max(6,Math.round((x2-x1)/8)):1;let d=`M${x1} ${y1}`;for(let n=1;n<=steps;n++){const ratio=n/steps;d+=`L${x1+(x2-x1)*ratio} ${y1+(y2-y1)*ratio+(n===steps?0:kind==='glissando'?(n%2?3:-3):0)}`;}path.setAttribute('d',d);path.setAttribute('fill','none');path.setAttribute('stroke','#111');path.setAttribute('stroke-width','1');path.setAttribute('class','notation-slide');svg.append(path);};
  for(let n=0;n<entries.length;n++){const first=entries[n];if(!first.note.slide)continue;const last=entries.slice(n+1).find(item=>M.staffOf(item.note)===M.staffOf(first.note)&&M.voiceOf(item.note)===M.voiceOf(first.note)&&!item.note.rest);if(!last)continue;const a=engraved[first.b],z=engraved[last.b],from=a?.notes[first.i]?.getBoundingBox(),to=z?.notes[last.i]?.getBoundingBox();if(!from||!to)continue;const x1=from.getX()+from.getW(),y1=from.getY()+from.getH()/2,x2=to.getX(),y2=to.getY()+to.getH()/2;if(a.svg===z.svg)segment(a,x1,y1,x2,y2,first.note.slide);else{const start=engraved.indexOf(a),end=engraved.indexOf(z);for(let b=start;b<=end;b++){const view=engraved[b],width=Number(view.svg.viewBox.baseVal.width);segment(view,b===start?x1:8,b===start?y1:y2,b===end?x2:width-8,b===end?y2:y1,first.note.slide);}}}
 }
-function fitDecorations(engraved,printing){for(const svg of new Set(engraved.map(item=>item.svg))){if(!svg)continue;const previous=svg.viewBox.baseVal,bounds=svg.getBBox(),top=Math.min(previous.y,bounds.y-5),bottom=Math.max(previous.y+previous.height,bounds.y+bounds.height+5),height=bottom-top;if(height<=previous.height+.1)continue;const scale=Number(svg.getAttribute('height'))/previous.height;svg.setAttribute('viewBox',`0 ${top} ${previous.width} ${height}`);if(!printing)svg.setAttribute('height',String(height*scale));}}
+function fitDecorations(engraved,printing){for(const svg of new Set(engraved.map(item=>item.svg))){
+ if(!svg)continue;const previous=svg.viewBox.baseVal;
+ if(printing){const bounds=svg.getBBox(),top=Math.min(previous.y,bounds.y-5),bottom=Math.max(previous.y+previous.height,bounds.y+bounds.height+5),height=bottom-top;if(height>previous.height+.1)svg.setAttribute('viewBox',`0 ${top} ${previous.width} ${height}`);continue;}
+ // Selection backgrounds and generous hit targets must not reserve blank space.
+ const targets=[...svg.querySelectorAll('.note-hit,[class*="notation-active-background"]')],display=targets.map(n=>n.style.display);let bounds;
+ try{targets.forEach(n=>n.style.display='none');bounds=svg.getBBox();}finally{targets.forEach((n,i)=>n.style.display=display[i]);}
+ const base=Number(svg.dataset.baseHeight),scale=Number(svg.dataset.screenScale),letterbox=Number(svg.dataset.legacyHeight)*(1/scale-1),frameTop=-letterbox/2,frameBottom=base+letterbox/2,inkBottom=bounds.y+bounds.height,topBlank=Math.max(0,bounds.y-frameTop),bottomBlank=Math.max(0,frameBottom-inkBottom);
+ const top=Math.min(bounds.y-5,frameTop+topBlank/2),bottom=Math.max(inkBottom+5,frameBottom-bottomBlank/2),height=bottom-top;
+ svg.dataset.originalBlank=String(topBlank+bottomBlank);svg.dataset.compactBlank=String(bounds.y-top+bottom-inkBottom);
+ svg.setAttribute('viewBox',`0 ${top} ${previous.width} ${height}`);svg.setAttribute('height',String(height*scale));svg.style.height=height*scale+'px';
+}}
+
 function draw(element,sheet,options={}){
  element.replaceChildren();const pixels=Math.max(280,element.clientWidth),width=pixels/.68,measures=sheet.score.measures,engraved=[];
- let index=0;for(const bars of groups(measures,width,false)){
+ let index=0;for(const bars of groups(measures,width,false,signatureReserve(sheet),sheet)){
   const row=document.createElement('div');row.className='staff-row';element.append(row);
   engraved.push(...renderRow(row,bars,index,{...options,sheet,metadata:sheet.metadata,width,pixels}));index+=bars.length;
  }ties(sheet,engraved);slurs(sheet,engraved);pedalLines(sheet,engraved);hairpins(sheet,engraved);octaveLines(sheet,engraved);slides(sheet,engraved);fitDecorations(engraved,false);
 }
 function printDocument(sheet,locale='en',symbols={}){
- const measures=M.trimmedMeasures(sheet),rows=groups(measures,1000,true),pages=[],engraved=[];let index=0;
+ const measures=M.trimmedMeasures(sheet),rows=groups(measures,1000,true,signatureReserve(sheet),sheet),pages=[],engraved=[];let index=0;
  const host=document.createElement('div');host.style.cssText='position:absolute;left:-10000px;top:0;visibility:hidden';document.body.append(host);
  try{
  for(let cursor=0;cursor<rows.length;){
@@ -227,5 +303,5 @@ function printDocument(sheet,locale='en',symbols={}){
  return `<!doctype html><html lang="${locale}"><head><meta charset="utf-8"><style>@font-face{font-family:Sornaz;src:url('../fonts/iran_sansx_fa/regular.ttf')}@page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;background:white;color:black;font:12px Sornaz,Arial,sans-serif}.print-page{width:210mm;height:297mm;padding:8mm;break-after:page;overflow:hidden}.print-page:last-child{break-after:auto}.print-page header{height:40mm}h1{text-align:center;font-size:20px;margin:0 0 4px}.subtitle{text-align:center;margin:0}.score-meta{display:flex;direction:rtl;justify-content:space-between;align-items:center;gap:12px}.credits{text-align:right;direction:${locale==='fa'?'rtl':'ltr'}}.credits p{margin:2px 0}.tempo{display:flex;gap:12px;direction:ltr;align-items:center}.print-staff{height:${M.staves(sheet.metadata).length===2?53:23}mm}.print-page:not(:first-child){padding-top:9mm}svg{width:100%;height:100%}</style></head><body>${pages.map(p=>p.outerHTML).join('')}</body></html>`;
  }finally{host.remove();}
 }
-root.NotationRenderer={draw,printDocument,groups,ottava};
+root.NotationRenderer={draw,printDocument,groups,ottava,beamPattern:renderingBeamPattern};
 })(globalThis);

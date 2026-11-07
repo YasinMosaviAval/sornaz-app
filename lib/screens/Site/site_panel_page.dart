@@ -2,8 +2,7 @@ import 'package:sornaz/components/app_async_state.dart';
 import 'dart:async';
 import 'panel_navigation.dart';
 import 'package:sornaz/screens/Notation/music_sheets_page.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:sornaz/components/app_bar.dart';
+
 import 'branch_style.dart';
 import 'panel_list_item.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +17,7 @@ import '../Social/social_api.dart';
 import '../Social/social_widgets.dart';
 import 'panel_api.dart';
 import 'panel_resource_page.dart';
+import 'panel_chart_gallery.dart';
 
 class SitePanelPage extends StatelessWidget {
   const SitePanelPage({super.key, this.api, this.initialSection = ''});
@@ -264,8 +264,8 @@ class _NativePanelState extends State<NativePanel> {
           MaterialPageRoute(
             builder: (_) => section['destination'] == 'notation'
                 ? const MusicSheetsPage()
-                : section['destination'] == 'website-example'
-                ? _WebsitePanelExample(section: section)
+                : section['key'] == 'chart-gallery'
+                ? const PanelChartGalleryPage()
                 : PanelResourcePage(
                     api: api,
                     section: section,
@@ -349,58 +349,6 @@ class _NativePanelState extends State<NativePanel> {
                 ),
               ),
             ),
-    ),
-  );
-}
-
-class _WebsitePanelExample extends StatelessWidget {
-  const _WebsitePanelExample({required this.section});
-  final Json section;
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: SornazAppBar(title: panelLabel(context, section)),
-    body: Padding(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            socialText(
-              context,
-              'این بخش در وب یک گالری نمایشی نمودارهاست و API دادهٔ عملیاتی ندارد. نسخهٔ بومی آن در اپلیکیشن پیاده‌سازی نشده است.',
-              'This website section is a chart demonstration without a live data API. Its native application view is not implemented.',
-            ),
-          ),
-          TextButton(
-            onPressed: () async {
-              final base = Uri.parse(SocialApi.base);
-              final url = base.replace(
-                path: '/analytics/admin-panel',
-                query: null,
-                fragment: 'chart-gallery',
-              );
-              if (!await launchUrl(url, mode: LaunchMode.externalApplication) &&
-                  context.mounted) {
-                socialError(
-                  context,
-                  socialText(
-                    context,
-                    'باز کردن وب‌سایت ممکن نشد.',
-                    'Could not open the website.',
-                  ),
-                );
-              }
-            },
-            child: Text(
-              socialText(
-                context,
-                'مشاهده در وب‌سایت (نیازمند ورود)',
-                'Open website (sign-in required)',
-              ),
-            ),
-          ),
-        ],
-      ),
     ),
   );
 }

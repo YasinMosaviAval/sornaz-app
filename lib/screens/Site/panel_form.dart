@@ -1,3 +1,4 @@
+import 'package:sornaz/components/app_checkbox.dart';
 import 'package:sornaz/components/settings_switch_tile.dart';
 import 'package:sornaz/components/jalali_date_picker.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
@@ -964,7 +965,7 @@ class _PanelFieldState extends State<PanelField> {
       );
     }
     if (type == 'settingsCheckbox') {
-      return CheckboxListTile(
+      return AppCheckboxTile(
         contentPadding: const EdgeInsetsDirectional.only(start: 24, end: 16),
         visualDensity: VisualDensity.compact,
         title: Text(label, style: AppTypography.settingsItemTitle(context)),
@@ -1128,7 +1129,7 @@ class _PanelFieldState extends State<PanelField> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               for (final entry in options.entries)
-                CheckboxListTile(
+                AppCheckboxTile(
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                   title: Text(entry.value),

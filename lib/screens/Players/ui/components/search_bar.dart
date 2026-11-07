@@ -173,7 +173,7 @@ class PlayerSettingsPage extends StatelessWidget {
               ListTile(
                 title: Text(
                   socialText(c, 'افزودن فایل صوتی', 'Import audio files'),
-                  style: Theme.of(c).textTheme.bodyMedium,
+                  style: Theme.of(c).textTheme.bodySmall,
                 ),
                 onTap: () async {
                   try {
@@ -211,7 +211,7 @@ class PlayerSettingsPage extends StatelessWidget {
               ListTile(
                 title: Text(
                   socialText(c, 'پوشه‌های کتابخانه', 'Library folders'),
-                  style: Theme.of(c).textTheme.bodyMedium,
+                  style: Theme.of(c).textTheme.bodySmall,
                 ),
                 onTap: () => Navigator.push(
                   c,
@@ -228,7 +228,7 @@ class PlayerSettingsPage extends StatelessWidget {
               ListTile(
                 title: Text(
                   socialText(c, entry.$2, entry.$3),
-                  style: Theme.of(c).textTheme.bodyMedium,
+                  style: Theme.of(c).textTheme.bodySmall,
                 ),
                 onTap: () => Navigator.push(
                   c,
@@ -244,7 +244,7 @@ class PlayerSettingsPage extends StatelessWidget {
                   'ذخیره و بازیابی موقعیت پخش',
                   'Save/Restore Playback Position',
                 ),
-                style: Theme.of(c).textTheme.bodyMedium,
+                style: Theme.of(c).textTheme.bodySmall,
               ),
               value: settings.savePlaybackPosition,
               onChanged: (v) => settings.setOption('savePlaybackPosition', v),
@@ -319,7 +319,7 @@ class PlayerSettingsPage extends StatelessWidget {
                   ),
                   title: Text(
                     entry.value,
-                    style: Theme.of(c).textTheme.bodyMedium,
+                    style: Theme.of(c).textTheme.bodySmall,
                   ),
                   value: settings.stopsFor(entry.key),
                   onChanged: (v) => settings.setStop(entry.key, v),

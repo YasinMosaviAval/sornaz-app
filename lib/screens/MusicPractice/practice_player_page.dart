@@ -1,3 +1,5 @@
+import 'practice_notation_question.dart';
+import 'practice_notation_grade.dart';
 import 'package:sornaz/components/app_async_state.dart';
 import 'dart:async';
 import 'dart:math';
@@ -146,7 +148,7 @@ class _MusicPracticePlayerPageState extends State<MusicPracticePlayerPage> {
     }
   }
 
-  Future<void> answer(int selected) async {
+  Future<void> answer(int selected, {PracticeJson? recording}) async {
     if (busy || playing || passed) return;
     if (!validAccount || !validPermit) {
       setState(
@@ -160,7 +162,9 @@ class _MusicPracticePlayerPageState extends State<MusicPracticePlayerPage> {
     }
     setState(() => busy = true);
     final c = config,
-        expected = c['kind'] == 'interval'
+        expected = c['kind'] == 'notation'
+            ? 1
+            : c['kind'] == 'interval'
             ? question['expected']
             : (c['questions'] as List)[question['question'] as int]['correct'];
     try {
@@ -170,6 +174,7 @@ class _MusicPracticePlayerPageState extends State<MusicPracticePlayerPage> {
         stage: widget.stage,
         answer: {
           ...question,
+          'recording': ?recording,
           'sequence': sequence + 1,
           'selected': selected,
           'elapsedMs': watch.elapsedMilliseconds.clamp(0, 86400000),
@@ -251,6 +256,70 @@ class _MusicPracticePlayerPageState extends State<MusicPracticePlayerPage> {
     }
   }
 
+  Widget notationPractice(BuildContext context) {
+    final q = (config['questions'] as List)[question['question'] as int] as Map;
+    return PopScope(
+      canPop: leaving,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) unawaited(close());
+      },
+      child: Scaffold(
+        appBar: SornazAppBar(
+          title:
+              (Localizations.localeOf(context).languageCode == 'en'
+                      ? widget.exam['titleEn']
+                      : widget.exam['titleFa'])
+                  .toString(),
+          onBack: close,
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (passed) ...[
+                  Text(
+                    socialText(context, 'مرحله کامل شد.', 'Stage completed.'),
+                  ),
+                  FilledButton(
+                    onPressed: close,
+                    child: Text(socialText(context, 'بازگشت', 'Back')),
+                  ),
+                ] else ...[
+                  PracticeNotationQuestion(
+                    key: ValueKey(sequence),
+                    question: q,
+                    assessment: config['assessment'] as String,
+                    enabled: !busy && !playing && validPermit,
+                    onAnswer: (recording) async {
+                      final grade = PracticeNotationGrade.evaluate(
+                        q['reference'] as Map,
+                        recording,
+                        config['assessment'] as String,
+                      );
+                      await answer(
+                        grade['passed'] == true ? 1 : 0,
+                        recording: recording,
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  LinearProgressIndicator(
+                    value: streak / (widget.exam['requiredWins'] as int),
+                  ),
+                  Text('$streak / ${widget.exam['requiredWins']}'),
+                  if (busy) const LinearProgressIndicator(),
+                ],
+                if (message != null) Text(message!),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     generation++;
@@ -312,6 +381,7 @@ class _MusicPracticePlayerPageState extends State<MusicPracticePlayerPage> {
         ),
       );
     }
+    if (config['kind'] == 'notation') return notationPractice(context);
     final en = Localizations.localeOf(context).languageCode == 'en', c = config;
     final t = IntervalText(context), theme = Theme.of(context);
     final choices = c['kind'] == 'interval'

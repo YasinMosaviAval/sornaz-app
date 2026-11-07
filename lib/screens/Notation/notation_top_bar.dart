@@ -10,8 +10,10 @@ class NotationTopBar extends StatelessWidget implements PreferredSizeWidget {
     required this.data,
     required this.command,
     this.onOmr,
+    this.showHelp = true,
   });
   final bool editor, signedIn;
+  final bool showHelp;
   final Map<String, dynamic> data;
   final ValueChanged<String> command;
   final VoidCallback? onOmr;
@@ -21,73 +23,32 @@ class NotationTopBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final editable = data['editable'] == true;
-    final selected = (data['selectedNotes'] as num?)?.toInt() ?? 0;
-    final disabledColor = Theme.of(context).disabledColor;
     final actions = <Widget>[
-      if (editor && onOmr != null)
-        SizedBox(
-          width: 32,
-          child: IconButton(
-            constraints: const BoxConstraints.tightFor(width: 32, height: 40),
-            padding: EdgeInsets.zero,
-            tooltip: socialText(
-              context,
-              'تشخیص نت از تصویر',
-              'Recognize notes from image',
-            ),
-            onPressed: onOmr,
-            icon: const Icon(Icons.camera_alt_outlined, size: 22),
-          ),
-        ),
       if (editor && editable) ...[
         _action(
-          Icons.undo,
-          'undo',
-          socialText(context, 'واگرد', 'Undo'),
-          data['undo'] == true,
+          Icons.multitrack_audio,
+          'tool-voices',
+          socialText(context, 'صداها', 'Voices'),
+          true,
         ),
         _action(
-          Icons.redo,
-          'redo',
-          socialText(context, 'ازنو', 'Redo'),
-          data['redo'] == true,
+          Icons.view_week_outlined,
+          'tool-measure',
+          socialText(context, 'ابزار میزان', 'Measure tools'),
+          true,
         ),
-        SizedBox(
-          width: 32,
-          child: IconButton(
-            constraints: const BoxConstraints.tightFor(width: 32, height: 40),
-            padding: EdgeInsets.zero,
-            tooltip: socialText(context, 'حذف با سکوت', 'Delete with rest'),
-            onPressed: selected > 0 ? () => command('delete-note-rest') : null,
-            icon: _TrashIcon(
-              twoLines: false,
-              color: selected > 0 ? Colors.red : disabledColor,
-            ),
-          ),
-        ),
-        SizedBox(
-          width: 32,
-          child: IconButton(
-            constraints: const BoxConstraints.tightFor(width: 32, height: 40),
-            padding: EdgeInsets.zero,
-            tooltip: socialText(
-              context,
-              'حذف بدون سکوت',
-              'Delete without rest',
-            ),
-            onPressed: selected > 0
-                ? () => command('delete-note-compact')
-                : null,
-            icon: _TrashIcon(
-              twoLines: true,
-              color: selected > 0 ? Colors.red : disabledColor,
-            ),
-          ),
+        _action(
+          Icons.music_note_outlined,
+          'tool-palette',
+          socialText(context, 'ابزار نت', 'Notation tools'),
+          true,
         ),
         _action(
           Icons.save_outlined,
           'save',
-          socialText(context, 'ذخیره', 'Save'),
+          data['practiceDraft'] == true
+              ? socialText(context, 'ثبت در سؤال', 'Use in question')
+              : socialText(context, 'ذخیره', 'Save'),
           true,
         ),
       ],
@@ -106,34 +67,37 @@ class NotationTopBar extends StatelessWidget implements PreferredSizeWidget {
           true,
         ),
     ];
-    return AppTopBarDirection(
-      child: AppBar(
-        automaticallyImplyLeading: false,
-        titleSpacing: 0,
-        title: editor
-            ? Padding(
-                padding: const EdgeInsetsDirectional.only(end: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      width: 40,
-                      child: BackButton(onPressed: () => command('back')),
-                    ),
-                    Flexible(
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: actions,
+    return TooltipVisibility(
+      visible: showHelp,
+      child: AppTopBarDirection(
+        child: AppBar(
+          automaticallyImplyLeading: false,
+          titleSpacing: 0,
+          title: editor
+              ? Padding(
+                  padding: const EdgeInsetsDirectional.only(end: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SizedBox(
+                        width: 40,
+                        child: BackButton(onPressed: () => command('back')),
+                      ),
+                      Flexible(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: actions,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              )
-            : Text(socialText(context, 'نت نویسی', 'Notation')),
-        leading: editor ? null : BackButton(onPressed: () => command('back')),
+                    ],
+                  ),
+                )
+              : Text(socialText(context, 'نت نویسی', 'Notation')),
+          leading: editor ? null : BackButton(onPressed: () => command('back')),
+        ),
       ),
     );
   }
@@ -149,56 +113,4 @@ class NotationTopBar extends StatelessWidget implements PreferredSizeWidget {
           icon: Icon(icon, size: 22),
         ),
       );
-}
-
-class _TrashIcon extends StatelessWidget {
-  const _TrashIcon({required this.twoLines, required this.color});
-  final bool twoLines;
-  final Color color;
-  @override
-  Widget build(BuildContext context) => CustomPaint(
-    size: const Size(22, 22),
-    painter: _TrashPainter(twoLines, color),
-  );
-}
-
-class _TrashPainter extends CustomPainter {
-  const _TrashPainter(this.twoLines, this.color);
-  final bool twoLines;
-  final Color color;
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.7
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-    final scale = size.width / 24;
-    canvas.save();
-    canvas.scale(scale);
-    canvas.drawPath(
-      Path()
-        ..moveTo(3, 6)
-        ..lineTo(21, 6)
-        ..moveTo(9, 6)
-        ..lineTo(9, 3)
-        ..lineTo(15, 3)
-        ..lineTo(15, 6)
-        ..moveTo(5, 6)
-        ..lineTo(6, 21)
-        ..lineTo(18, 21)
-        ..lineTo(19, 6),
-      paint,
-    );
-    if (twoLines) {
-      canvas.drawLine(const Offset(10, 10), const Offset(10, 17), paint);
-      canvas.drawLine(const Offset(14, 10), const Offset(14, 17), paint);
-    }
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(_TrashPainter old) =>
-      old.twoLines != twoLines || old.color != color;
 }

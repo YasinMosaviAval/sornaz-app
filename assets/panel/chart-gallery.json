@@ -1,0 +1,2821 @@
+{
+  "version": 1,
+  "sourceSha256": "de280552300d5f79167aafd589bed7ef31ce77fac0da13c36d2d916d17663ad8",
+  "families": [
+    {
+      "id": "comparison",
+      "fa": "مقایسه و روند",
+      "en": "Comparison and trends"
+    },
+    {
+      "id": "part",
+      "fa": "سهم و ترکیب",
+      "en": "Parts and composition"
+    },
+    {
+      "id": "relation",
+      "fa": "ارتباط و سلسله‌مراتب",
+      "en": "Relationships and hierarchy"
+    },
+    {
+      "id": "distribution",
+      "fa": "توزیع و آماری",
+      "en": "Distribution and statistics"
+    },
+    {
+      "id": "special",
+      "fa": "تخصصی و پیشرفته",
+      "en": "Specialized charts"
+    }
+  ],
+  "labels": {
+    "شنبه": "Saturday",
+    "یکشنبه": "Sunday",
+    "دوشنبه": "Monday",
+    "سه‌شنبه": "Tuesday",
+    "چهارشنبه": "Wednesday",
+    "پنجشنبه": "Thursday",
+    "جمعه": "Friday",
+    "ثبت‌نام": "Enrollment",
+    "فروش": "Sales",
+    "پیانو": "Piano",
+    "گیتار": "Guitar",
+    "ویولن": "Violin",
+    "آواز": "Voice",
+    "دف": "Daf",
+    "سایر": "Other",
+    "حضوری": "In person",
+    "آنلاین": "Online",
+    "شعبه مرکزی": "Central branch",
+    "شعبه غرب": "West branch",
+    "جلسه": "Session",
+    "امتیاز": "Score",
+    "تکنیک": "Technique",
+    "ریتم": "Rhythm",
+    "تئوری": "Theory",
+    "خلاقیت": "Creativity",
+    "تمرین": "Practice",
+    "هنرجو الف": "Student A",
+    "هنرجو ب": "Student B",
+    "بازدید": "Visits",
+    "خرید": "Purchases",
+    "تمدید": "Renewals",
+    "فروردین": "Farvardin",
+    "اردیبهشت": "Ordibehesht",
+    "خرداد": "Khordad",
+    "تیر": "Tir",
+    "مرداد": "Mordad",
+    "کلاس الف": "Class A",
+    "کلاس ب": "Class B",
+    "کلاس ج": "Class C",
+    "آموزشگاه": "Academy",
+    "موسیقی کلاسیک": "Classical music",
+    "موسیقی ایرانی": "Iranian music",
+    "تار": "Tar",
+    "سنتور": "Santur",
+    "مرکز": "Center",
+    "اعضا": "Members",
+    "عضویت": "Membership",
+    "ثبت‌نام دوره": "Course enrollment",
+    "ریزش": "Attrition",
+    "حضور": "Attendance",
+    "اجرا": "Performance",
+    "کل": "Total",
+    "پیشرفت": "Progress",
+    "نرخ حضور": "Attendance rate",
+    "مدیر": "Manager",
+    "شعبه ۱": "Branch 1",
+    "شعبه ۲": "Branch 2",
+    "مدرس ۱": "Teacher 1",
+    "مدرس ۲": "Teacher 2",
+    "هنرجویان": "Students"
+  },
+  "types": [
+    {
+      "id": "line",
+      "title": "خطی",
+      "family": "comparison",
+      "description": "روند زمانی و مقایسه چند سری",
+      "en": "Line",
+      "descriptionEn": "Time trends and comparison of multiple series",
+      "basic": {
+        "tooltip": {
+          "trigger": "axis"
+        },
+        "grid": {
+          "top": 35,
+          "right": 20,
+          "bottom": 40,
+          "left": 45
+        },
+        "xAxis": {
+          "type": "category",
+          "data": [
+            "شنبه",
+            "یکشنبه",
+            "دوشنبه",
+            "سه‌شنبه",
+            "چهارشنبه",
+            "پنجشنبه"
+          ],
+          "axisLabel": {
+            "interval": 0
+          }
+        },
+        "yAxis": {
+          "type": "value"
+        },
+        "color": [
+          "#4f46e5",
+          "#06b6d4",
+          "#10b981",
+          "#f59e0b",
+          "#f43f5e",
+          "#8b5cf6"
+        ],
+        "series": [
+          {
+            "type": "line",
+            "data": [
+              12,
+              18,
+              15,
+              24,
+              31,
+              28
+            ]
+          }
+        ]
+      },
+      "advanced": {
+        "tooltip": {
+          "trigger": "axis"
+        },
+        "grid": {
+          "top": 35,
+          "right": 20,
+          "bottom": 40,
+          "left": 45
+        },
+        "xAxis": {
+          "type": "category",
+          "data": [
+            "شنبه",
+            "یکشنبه",
+            "دوشنبه",
+            "سه‌شنبه",
+            "چهارشنبه",
+            "پنجشنبه"
+          ],
+          "axisLabel": {
+            "interval": 0
+          }
+        },
+        "yAxis": {
+          "type": "value"
+        },
+        "color": [
+          "#4f46e5",
+          "#06b6d4",
+          "#10b981",
+          "#f59e0b",
+          "#f43f5e",
+          "#8b5cf6"
+        ],
+        "legend": {
+          "data": [
+            "ثبت‌نام",
+            "فروش"
+          ]
+        },
+        "series": [
+          {
+            "name": "ثبت‌نام",
+            "type": "line",
+            "smooth": true,
+            "data": [
+              12,
+              18,
+              15,
+              24,
+              31,
+              28
+            ]
+          },
+          {
+            "name": "فروش",
+            "type": "line",
+            "step": "middle",
+            "data": [
+              8,
+              11,
+              17,
+              15,
+              25,
+              33
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "bar",
+      "title": "میله‌ای و ستونی",
+      "family": "comparison",
+      "description": "مقایسه دسته‌ها و رتبه‌بندی",
+      "en": "Bar and column",
+      "descriptionEn": "Category comparisons and rankings",
+      "basic": {
+        "tooltip": {
+          "trigger": "axis"
+        },
+        "grid": {
+          "top": 35,
+          "right": 20,
+          "bottom": 40,
+          "left": 45
+        },
+        "xAxis": {
+          "type": "category",
+          "data": [
+            "پیانو",
+            "گیتار",
+            "ویولن",
+            "آواز",
+            "دف"
+          ],
+          "axisLabel": {
+            "interval": 0
+          }
+        },
+        "yAxis": {
+          "type": "value"
+        },
+        "color": [
+          "#4f46e5",
+          "#06b6d4",
+          "#10b981",
+          "#f59e0b",
+          "#f43f5e",
+          "#8b5cf6"
+        ],
+        "series": [
+          {
+            "type": "bar",
+            "data": [
+              60,
+              57,
+              40,
+              45,
+              33
+            ],
+            "itemStyle": {
+              "borderRadius": [
+                8,
+                8,
+                0,
+                0
+              ]
+            }
+          }
+        ]
+      },
+      "advanced": {
+        "tooltip": {
+          "trigger": "axis"
+        },
+        "grid": {
+          "top": 35,
+          "right": 20,
+          "bottom": 40,
+          "left": 45
+        },
+        "xAxis": {
+          "type": "category",
+          "data": [
+            "پیانو",
+            "گیتار",
+            "ویولن",
+            "آواز",
+            "دف"
+          ],
+          "axisLabel": {
+            "interval": 0
+          }
+        },
+        "yAxis": {
+          "type": "value"
+        },
+        "color": [
+          "#4f46e5",
+          "#06b6d4",
+          "#10b981",
+          "#f59e0b",
+          "#f43f5e",
+          "#8b5cf6"
+        ],
+        "series": [
+          {
+            "type": "bar",
+            "stack": "کل",
+            "name": "حضوری",
+            "data": [
+              42,
+              35,
+              28,
+              31,
+              24
+            ]
+          },
+          {
+            "type": "bar",
+            "stack": "کل",
+            "name": "آنلاین",
+            "data": [
+              18,
+              22,
+              12,
+              14,
+              9
+            ]
+          }
+        ],
+        "legend": {}
+      }
+    },
+    {
+      "id": "area",
+      "title": "ناحیه‌ای",
+      "family": "comparison",
+      "description": "حجم و روند تجمعی",
+      "en": "Area",
+      "descriptionEn": "Volume and cumulative trends",
+      "basic": {
+        "tooltip": {
+          "trigger": "axis"
+        },
+        "grid": {
+          "top": 35,
+          "right": 20,
+          "bottom": 40,
+          "left": 45
+        },
+        "xAxis": {
+          "type": "category",
+          "data": [
+            "شنبه",
+            "یکشنبه",
+            "دوشنبه",
+            "سه‌شنبه",
+            "چهارشنبه",
+            "پنجشنبه"
+          ],
+          "axisLabel": {
+            "interval": 0
+          }
+        },
+        "yAxis": {
+          "type": "value"
+        },
+        "color": [
+          "#4f46e5",
+          "#06b6d4",
+          "#10b981",
+          "#f59e0b",
+          "#f43f5e",
+          "#8b5cf6"
+        ],
+        "series": [
+          {
+            "type": "line",
+            "smooth": true,
+            "areaStyle": {
+              "opacity": 0.35
+            },
+            "data": [
+              20,
+              32,
+              28,
+              40,
+              46,
+              51
+            ]
+          }
+        ]
+      },
+      "advanced": {
+        "tooltip": {
+          "trigger": "axis"
+        },
+        "grid": {
+          "top": 35,
+          "right": 20,
+          "bottom": 40,
+          "left": 45
+        },
+        "xAxis": {
+          "type": "category",
+          "data": [
+            "شنبه",
+            "یکشنبه",
+            "دوشنبه",
+            "سه‌شنبه",
+            "چهارشنبه",
+            "پنجشنبه"
+          ],
+          "axisLabel": {
+            "interval": 0
+          }
+        },
+        "yAxis": {
+          "type": "value"
+        },
+        "color": [
+          "#4f46e5",
+          "#06b6d4",
+          "#10b981",
+          "#f59e0b",
+          "#f43f5e",
+          "#8b5cf6"
+        ],
+        "series": [
+          {
+            "type": "line",
+            "stack": "کل",
+            "areaStyle": {},
+            "name": "شعبه مرکزی",
+            "data": [
+              20,
+              32,
+              28,
+              40,
+              46,
+              51
+            ]
+          },
+          {
+            "type": "line",
+            "stack": "کل",
+            "areaStyle": {},
+            "name": "شعبه غرب",
+            "data": [
+              12,
+              18,
+              22,
+              25,
+              31,
+              34
+            ]
+          }
+        ],
+        "legend": {}
+      }
+    },
+    {
+      "id": "pie",
+      "title": "دایره‌ای و دونات",
+      "family": "part",
+      "description": "سهم اجزای یک کل",
+      "en": "Pie and doughnut",
+      "descriptionEn": "Parts of a whole",
+      "basic": {
+        "tooltip": {
+          "trigger": "item"
+        },
+        "legend": {
+          "bottom": 0
+        },
+        "color": [
+          "#4f46e5",
+          "#06b6d4",
+          "#10b981",
+          "#f59e0b",
+          "#f43f5e",
+          "#8b5cf6"
+        ],
+        "series": [
+          {
+            "type": "pie",
+            "radius": "70%",
+            "roseType": false,
+            "label": {
+              "formatter": "{b}\n{d}٪"
+            },
+            "data": [
+              {
+                "name": "پیانو",
+                "value": 36
+              },
+              {
+                "name": "گیتار",
+                "value": 28
+              },
+              {
+                "name": "آواز",
+                "value": 18
+              },
+              {
+                "name": "سایر",
+                "value": 18
+              }
+            ]
+          }
+        ]
+      },
+      "advanced": {
+        "tooltip": {
+          "trigger": "item"
+        },
+        "legend": {
+          "bottom": 0
+        },
+        "color": [
+          "#4f46e5",
+          "#06b6d4",
+          "#10b981",
+          "#f59e0b",
+          "#f43f5e",
+          "#8b5cf6"
+        ],
+        "series": [
+          {
+            "type": "pie",
+            "radius": [
+              "42%",
+              "72%"
+            ],
+            "roseType": "radius",
+            "label": {
+              "formatter": "{b}\n{d}٪"
+            },
+            "data": [
+              {
+                "name": "پیانو",
+                "value": 36
+              },
+              {
+                "name": "گیتار",
+                "value": 28
+              },
+              {
+                "name": "آواز",
+                "value": 18
+              },
+              {
+                "name": "سایر",
+                "value": 18
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "scatter",
+      "title": "پراکندگی و حبابی",
+      "family": "distribution",
+      "description": "همبستگی و توزیع نقاط",
+      "en": "Scatter and bubble",
+      "descriptionEn": "Correlation and point distribution",
+      "basic": {
+        "tooltip": {},
+        "xAxis": {
+          "name": "جلسه"
+        },
+        "yAxis": {
+          "name": "امتیاز"
+        },
+        "color": [
+          "#4f46e5",
+          "#06b6d4",
+          "#10b981",
+          "#f59e0b",
+          "#f43f5e",
+          "#8b5cf6"
+        ],
+        "series": [
+          {
+            "type": "scatter",
+            "symbolSize": 12,
+            "data": [
+              [
+                2,
+                55,
+                12
+              ],
+              [
+                4,
+                68,
+                18
+              ],
+              [
+                6,
+                74,
+                25
+              ],
+              [
+                8,
+                81,
+                32
+              ],
+              [
+                10,
+                92,
+                38
+              ],
+              [
+                12,
+                88,
+                28
+              ]
+            ]
+          }
+        ]
+      },
+      "advanced": {
+        "tooltip": {},
+        "xAxis": {
+          "name": "جلسه"
+        },
+        "yAxis": {
+          "name": "امتیاز"
+        },
+        "color": [
+          "#4f46e5",
+          "#06b6d4",
+          "#10b981",
+          "#f59e0b",
+          "#f43f5e",
+          "#8b5cf6"
+        ],
+        "series": [
+          {
+            "type": "scatter",
+            "symbolSize": {
+              "bubbleSize": true
+            },
+            "data": [
+              [
+                2,
+                55,
+                12
+              ],
+              [
+                4,
+                68,
+                18
+              ],
+              [
+                6,
+                74,
+                25
+              ],
+              [
+                8,
+                81,
+                32
+              ],
+              [
+                10,
+                92,
+                38
+              ],
+              [
+                12,
+                88,
+                28
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "radar",
+      "title": "رادار",
+      "family": "comparison",
+      "description": "مقایسه چند شاخص",
+      "en": "Radar",
+      "descriptionEn": "Comparison across multiple indicators",
+      "basic": {
+        "tooltip": {},
+        "color": [
+          "#4f46e5",
+          "#06b6d4",
+          "#10b981",
+          "#f59e0b",
+          "#f43f5e",
+          "#8b5cf6"
+        ],
+        "radar": {
+          "indicator": [
+            {
+              "name": "تکنیک",
+              "max": 100
+            },
+            {
+              "name": "ریتم",
+              "max": 100
+            },
+            {
+              "name": "تئوری",
+              "max": 100
+            },
+            {
+              "name": "خلاقیت",
+              "max": 100
+            },
+            {
+              "name": "تمرین",
+              "max": 100
+            }
+          ]
+        },
+        "series": [
+          {
+            "type": "radar",
+            "data": [
+              {
+                "value": [
+                  86,
+                  72,
+                  91,
+                  68,
+                  80
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "advanced": {
+        "tooltip": {},
+        "legend": {
+          "bottom": 0
+        },
+        "color": [
+          "#4f46e5",
+          "#06b6d4",
+          "#10b981",
+          "#f59e0b",
+          "#f43f5e",
+          "#8b5cf6"
+        ],
+        "radar": {
+          "indicator": [
+            {
+              "name": "تکنیک",
+              "max": 100
+            },
+            {
+              "name": "ریتم",
+              "max": 100
+            },
+            {
+              "name": "تئوری",
+              "max": 100
+            },
+            {
+              "name": "خلاقیت",
+              "max": 100
+            },
+            {
+              "name": "تمرین",
+              "max": 100
+            }
+          ]
+        },
+        "series": [
+          {
+            "type": "radar",
+            "areaStyle": {
+              "opacity": 0.15
+            },
+            "data": [
+              {
+                "name": "هنرجو الف",
+                "value": [
+                  86,
+                  72,
+                  91,
+                  68,
+                  80
+                ]
+              },
+              {
+                "name": "هنرجو ب",
+                "value": [
+                  65,
+                  89,
+                  74,
+                  92,
+                  70
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "gauge",
+      "title": "گیج",
+      "family": "special",
+      "description": "نمایش پیشرفت و شاخص کلیدی",
+      "en": "Gauge",
+      "descriptionEn": "Progress and key performance indicators",
+      "basic": {
+        "series": [
+          {
+            "type": "gauge",
+            "startAngle": 225,
+            "endAngle": -45,
+            "progress": {
+              "show": true,
+              "width": 12
+            },
+            "axisLine": {
+              "lineStyle": {
+                "width": 12
+              }
+            },
+            "detail": {
+              "valueAnimation": true,
+              "formatter": "{value}٪"
+            },
+            "data": [
+              {
+                "value": 76,
+                "name": "پیشرفت"
+              }
+            ]
+          }
+        ]
+      },
+      "advanced": {
+        "series": [
+          {
+            "type": "gauge",
+            "startAngle": 210,
+            "endAngle": -30,
+            "progress": {
+              "show": true,
+              "width": 18
+            },
+            "axisLine": {
+              "lineStyle": {
+                "width": 18
+              }
+            },
+            "detail": {
+              "valueAnimation": true,
+              "formatter": "{value}٪"
+            },
+            "data": [
+              {
+                "value": 92,
+                "name": "نرخ حضور"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "funnel",
+      "title": "قیفی",
+      "family": "part",
+      "description": "مراحل تبدیل و ریزش",
+      "en": "Funnel",
+      "descriptionEn": "Conversion and attrition stages",
+      "basic": {
+        "tooltip": {
+          "trigger": "item"
+        },
+        "color": [
+          "#4f46e5",
+          "#06b6d4",
+          "#10b981",
+          "#f59e0b",
+          "#f43f5e",
+          "#8b5cf6"
+        ],
+        "series": [
+          {
+            "type": "funnel",
+            "sort": "descending",
+            "left": "10%",
+            "width": "80%",
+            "gap": 2,
+            "label": {
+              "position": "outside"
+            },
+            "data": [
+              {
+                "name": "بازدید",
+                "value": 100
+              },
+              {
+                "name": "ثبت‌نام",
+                "value": 65
+              },
+              {
+                "name": "خرید",
+                "value": 38
+              },
+              {
+                "name": "تمدید",
+                "value": 22
+              }
+            ]
+          }
+        ]
+      },
+      "advanced": {
+        "tooltip": {
+          "trigger": "item"
+        },
+        "color": [
+          "#4f46e5",
+          "#06b6d4",
+          "#10b981",
+          "#f59e0b",
+          "#f43f5e",
+          "#8b5cf6"
+        ],
+        "series": [
+          {
+            "type": "funnel",
+            "sort": "ascending",
+            "left": "10%",
+            "width": "80%",
+            "gap": 4,
+            "label": {
+              "position": "inside"
+            },
+            "data": [
+              {
+                "name": "بازدید",
+                "value": 100
+              },
+              {
+                "name": "ثبت‌نام",
+                "value": 65
+              },
+              {
+                "name": "خرید",
+                "value": 38
+              },
+              {
+                "name": "تمدید",
+                "value": 22
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "heatmap",
+      "title": "نقشه حرارتی",
+      "family": "distribution",
+      "description": "شدت داده در دو بُعد",
+      "en": "Heatmap",
+      "descriptionEn": "Intensity across two dimensions",
+      "basic": {
+        "tooltip": {},
+        "grid": {
+          "top": 30,
+          "right": 45,
+          "bottom": 55,
+          "left": 65
+        },
+        "xAxis": {
+          "type": "category",
+          "data": [
+            "شنبه",
+            "یکشنبه",
+            "دوشنبه",
+            "سه‌شنبه",
+            "چهارشنبه",
+            "پنجشنبه",
+            "جمعه"
+          ]
+        },
+        "yAxis": {
+          "type": "category",
+          "data": [
+            "۸",
+            "۱۰",
+            "۱۲",
+            "۱۴",
+            "۱۶",
+            "۱۸"
+          ]
+        },
+        "visualMap": {
+          "min": 0,
+          "max": 18,
+          "calculable": false,
+          "orient": "horizontal",
+          "left": "center",
+          "bottom": 0
+        },
+        "series": [
+          {
+            "type": "heatmap",
+            "data": [
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                1,
+                3
+              ],
+              [
+                0,
+                2,
+                6
+              ],
+              [
+                0,
+                3,
+                9
+              ],
+              [
+                0,
+                4,
+                12
+              ],
+              [
+                0,
+                5,
+                15
+              ],
+              [
+                1,
+                0,
+                7
+              ],
+              [
+                1,
+                1,
+                10
+              ],
+              [
+                1,
+                2,
+                13
+              ],
+              [
+                1,
+                3,
+                16
+              ],
+              [
+                1,
+                4,
+                1
+              ],
+              [
+                1,
+                5,
+                4
+              ],
+              [
+                2,
+                0,
+                14
+              ],
+              [
+                2,
+                1,
+                17
+              ],
+              [
+                2,
+                2,
+                2
+              ],
+              [
+                2,
+                3,
+                5
+              ],
+              [
+                2,
+                4,
+                8
+              ],
+              [
+                2,
+                5,
+                11
+              ],
+              [
+                3,
+                0,
+                3
+              ],
+              [
+                3,
+                1,
+                6
+              ],
+              [
+                3,
+                2,
+                9
+              ],
+              [
+                3,
+                3,
+                12
+              ],
+              [
+                3,
+                4,
+                15
+              ],
+              [
+                3,
+                5,
+                0
+              ],
+              [
+                4,
+                0,
+                10
+              ],
+              [
+                4,
+                1,
+                13
+              ],
+              [
+                4,
+                2,
+                16
+              ],
+              [
+                4,
+                3,
+                1
+              ],
+              [
+                4,
+                4,
+                4
+              ],
+              [
+                4,
+                5,
+                7
+              ],
+              [
+                5,
+                0,
+                17
+              ],
+              [
+                5,
+                1,
+                2
+              ],
+              [
+                5,
+                2,
+                5
+              ],
+              [
+                5,
+                3,
+                8
+              ],
+              [
+                5,
+                4,
+                11
+              ],
+              [
+                5,
+                5,
+                14
+              ],
+              [
+                6,
+                0,
+                6
+              ],
+              [
+                6,
+                1,
+                9
+              ],
+              [
+                6,
+                2,
+                12
+              ],
+              [
+                6,
+                3,
+                15
+              ],
+              [
+                6,
+                4,
+                0
+              ],
+              [
+                6,
+                5,
+                3
+              ]
+            ],
+            "label": {
+              "show": false
+            }
+          }
+        ]
+      },
+      "advanced": {
+        "tooltip": {},
+        "grid": {
+          "top": 30,
+          "right": 45,
+          "bottom": 55,
+          "left": 65
+        },
+        "xAxis": {
+          "type": "category",
+          "data": [
+            "شنبه",
+            "یکشنبه",
+            "دوشنبه",
+            "سه‌شنبه",
+            "چهارشنبه",
+            "پنجشنبه",
+            "جمعه"
+          ]
+        },
+        "yAxis": {
+          "type": "category",
+          "data": [
+            "۸",
+            "۱۰",
+            "۱۲",
+            "۱۴",
+            "۱۶",
+            "۱۸"
+          ]
+        },
+        "visualMap": {
+          "min": 0,
+          "max": 18,
+          "calculable": true,
+          "orient": "horizontal",
+          "left": "center",
+          "bottom": 0
+        },
+        "series": [
+          {
+            "type": "heatmap",
+            "data": [
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                1,
+                3
+              ],
+              [
+                0,
+                2,
+                6
+              ],
+              [
+                0,
+                3,
+                9
+              ],
+              [
+                0,
+                4,
+                12
+              ],
+              [
+                0,
+                5,
+                15
+              ],
+              [
+                1,
+                0,
+                7
+              ],
+              [
+                1,
+                1,
+                10
+              ],
+              [
+                1,
+                2,
+                13
+              ],
+              [
+                1,
+                3,
+                16
+              ],
+              [
+                1,
+                4,
+                1
+              ],
+              [
+                1,
+                5,
+                4
+              ],
+              [
+                2,
+                0,
+                14
+              ],
+              [
+                2,
+                1,
+                17
+              ],
+              [
+                2,
+                2,
+                2
+              ],
+              [
+                2,
+                3,
+                5
+              ],
+              [
+                2,
+                4,
+                8
+              ],
+              [
+                2,
+                5,
+                11
+              ],
+              [
+                3,
+                0,
+                3
+              ],
+              [
+                3,
+                1,
+                6
+              ],
+              [
+                3,
+                2,
+                9
+              ],
+              [
+                3,
+                3,
+                12
+              ],
+              [
+                3,
+                4,
+                15
+              ],
+              [
+                3,
+                5,
+                0
+              ],
+              [
+                4,
+                0,
+                10
+              ],
+              [
+                4,
+                1,
+                13
+              ],
+              [
+                4,
+                2,
+                16
+              ],
+              [
+                4,
+                3,
+                1
+              ],
+              [
+                4,
+                4,
+                4
+              ],
+              [
+                4,
+                5,
+                7
+              ],
+              [
+                5,
+                0,
+                17
+              ],
+              [
+                5,
+                1,
+                2
+              ],
+              [
+                5,
+                2,
+                5
+              ],
+              [
+                5,
+                3,
+                8
+              ],
+              [
+                5,
+                4,
+                11
+              ],
+              [
+                5,
+                5,
+                14
+              ],
+              [
+                6,
+                0,
+                6
+              ],
+              [
+                6,
+                1,
+                9
+              ],
+              [
+                6,
+                2,
+                12
+              ],
+              [
+                6,
+                3,
+                15
+              ],
+              [
+                6,
+                4,
+                0
+              ],
+              [
+                6,
+                5,
+                3
+              ]
+            ],
+            "label": {
+              "show": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "candlestick",
+      "title": "شمعی",
+      "family": "special",
+      "description": "داده‌های مالی و بازه قیمت",
+      "en": "Candlestick",
+      "descriptionEn": "Financial samples and price ranges",
+      "basic": {
+        "tooltip": {
+          "trigger": "axis"
+        },
+        "grid": {
+          "top": 25,
+          "right": 20,
+          "bottom": 45,
+          "left": 55
+        },
+        "xAxis": {
+          "type": "category",
+          "data": [
+            "فروردین",
+            "اردیبهشت",
+            "خرداد",
+            "تیر",
+            "مرداد"
+          ]
+        },
+        "yAxis": {
+          "scale": true
+        },
+        "series": [
+          {
+            "type": "candlestick",
+            "data": [
+              [
+                20,
+                34,
+                10,
+                38
+              ],
+              [
+                40,
+                35,
+                30,
+                50
+              ],
+              [
+                31,
+                38,
+                27,
+                44
+              ],
+              [
+                38,
+                50,
+                32,
+                55
+              ],
+              [
+                52,
+                48,
+                40,
+                60
+              ]
+            ]
+          }
+        ]
+      },
+      "advanced": {
+        "tooltip": {
+          "trigger": "axis"
+        },
+        "grid": {
+          "top": 25,
+          "right": 20,
+          "bottom": 45,
+          "left": 55
+        },
+        "xAxis": {
+          "type": "category",
+          "data": [
+            "فروردین",
+            "اردیبهشت",
+            "خرداد",
+            "تیر",
+            "مرداد"
+          ]
+        },
+        "yAxis": {
+          "scale": true
+        },
+        "dataZoom": [
+          {
+            "type": "inside"
+          },
+          {
+            "type": "slider",
+            "height": 18,
+            "bottom": 5
+          }
+        ],
+        "series": [
+          {
+            "type": "candlestick",
+            "data": [
+              [
+                20,
+                34,
+                10,
+                38
+              ],
+              [
+                40,
+                35,
+                30,
+                50
+              ],
+              [
+                31,
+                38,
+                27,
+                44
+              ],
+              [
+                38,
+                50,
+                32,
+                55
+              ],
+              [
+                52,
+                48,
+                40,
+                60
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "boxplot",
+      "title": "جعبه‌ای",
+      "family": "distribution",
+      "description": "میانه، چارک‌ها و دامنه",
+      "en": "Box plot",
+      "descriptionEn": "Median, quartiles and spread",
+      "basic": {
+        "tooltip": {
+          "trigger": "item"
+        },
+        "xAxis": {
+          "type": "category",
+          "data": [
+            "کلاس الف",
+            "کلاس ب",
+            "کلاس ج"
+          ]
+        },
+        "yAxis": {
+          "type": "value"
+        },
+        "series": [
+          {
+            "type": "boxplot",
+            "data": [
+              [
+                40,
+                55,
+                70,
+                82,
+                95
+              ],
+              [
+                35,
+                60,
+                75,
+                88,
+                98
+              ],
+              [
+                45,
+                58,
+                68,
+                78,
+                90
+              ]
+            ]
+          },
+          {
+            "type": "scatter",
+            "data": [],
+            "symbolSize": 8
+          }
+        ]
+      },
+      "advanced": {
+        "tooltip": {
+          "trigger": "item"
+        },
+        "xAxis": {
+          "type": "category",
+          "data": [
+            "کلاس الف",
+            "کلاس ب",
+            "کلاس ج"
+          ]
+        },
+        "yAxis": {
+          "type": "value"
+        },
+        "series": [
+          {
+            "type": "boxplot",
+            "data": [
+              [
+                40,
+                55,
+                70,
+                82,
+                95
+              ],
+              [
+                35,
+                60,
+                75,
+                88,
+                98
+              ],
+              [
+                45,
+                58,
+                68,
+                78,
+                90
+              ]
+            ],
+            "itemStyle": {
+              "color": "#c7d2fe",
+              "borderWidth": 2
+            }
+          },
+          {
+            "type": "scatter",
+            "data": [
+              [
+                0,
+                20
+              ],
+              [
+                1,
+                100
+              ],
+              [
+                2,
+                30
+              ]
+            ],
+            "symbolSize": 8
+          }
+        ]
+      }
+    },
+    {
+      "id": "tree",
+      "title": "درختی",
+      "family": "relation",
+      "description": "ساختار سلسله‌مراتبی",
+      "en": "Tree",
+      "descriptionEn": "Hierarchical structure",
+      "basic": {
+        "tooltip": {
+          "trigger": "item"
+        },
+        "series": [
+          {
+            "type": "tree",
+            "data": [
+              {
+                "name": "آموزشگاه",
+                "children": [
+                  {
+                    "name": "موسیقی کلاسیک",
+                    "children": [
+                      {
+                        "name": "پیانو",
+                        "value": 42
+                      },
+                      {
+                        "name": "ویولن",
+                        "value": 28
+                      }
+                    ]
+                  },
+                  {
+                    "name": "موسیقی ایرانی",
+                    "children": [
+                      {
+                        "name": "تار",
+                        "value": 31
+                      },
+                      {
+                        "name": "سنتور",
+                        "value": 24
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "layout": "orthogonal",
+            "orient": "LR",
+            "symbolSize": 10,
+            "initialTreeDepth": 3,
+            "label": {
+              "position": "left"
+            },
+            "emphasis": {
+              "focus": "descendant"
+            }
+          }
+        ]
+      },
+      "advanced": {
+        "tooltip": {
+          "trigger": "item"
+        },
+        "series": [
+          {
+            "type": "tree",
+            "data": [
+              {
+                "name": "آموزشگاه",
+                "children": [
+                  {
+                    "name": "موسیقی کلاسیک",
+                    "children": [
+                      {
+                        "name": "پیانو",
+                        "value": 42
+                      },
+                      {
+                        "name": "ویولن",
+                        "value": 28
+                      }
+                    ]
+                  },
+                  {
+                    "name": "موسیقی ایرانی",
+                    "children": [
+                      {
+                        "name": "تار",
+                        "value": 31
+                      },
+                      {
+                        "name": "سنتور",
+                        "value": 24
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "layout": "radial",
+            "orient": "LR",
+            "symbolSize": 10,
+            "initialTreeDepth": 3,
+            "label": {
+              "position": "inside"
+            },
+            "emphasis": {
+              "focus": "descendant"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "treemap",
+      "title": "نقشه درختی",
+      "family": "relation",
+      "description": "سهم سلسله‌مراتبی از فضا",
+      "en": "Treemap",
+      "descriptionEn": "Hierarchical shares of space",
+      "basic": {
+        "tooltip": {},
+        "series": [
+          {
+            "type": "treemap",
+            "roam": false,
+            "nodeClick": false,
+            "breadcrumb": {
+              "show": false
+            },
+            "data": [
+              {
+                "name": "موسیقی کلاسیک",
+                "children": [
+                  {
+                    "name": "پیانو",
+                    "value": 42
+                  },
+                  {
+                    "name": "ویولن",
+                    "value": 28
+                  }
+                ]
+              },
+              {
+                "name": "موسیقی ایرانی",
+                "children": [
+                  {
+                    "name": "تار",
+                    "value": 31
+                  },
+                  {
+                    "name": "سنتور",
+                    "value": 24
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "advanced": {
+        "tooltip": {},
+        "series": [
+          {
+            "type": "treemap",
+            "roam": true,
+            "nodeClick": "zoomToNode",
+            "breadcrumb": {
+              "show": true
+            },
+            "data": [
+              {
+                "name": "موسیقی کلاسیک",
+                "children": [
+                  {
+                    "name": "پیانو",
+                    "value": 42
+                  },
+                  {
+                    "name": "ویولن",
+                    "value": 28
+                  }
+                ]
+              },
+              {
+                "name": "موسیقی ایرانی",
+                "children": [
+                  {
+                    "name": "تار",
+                    "value": 31
+                  },
+                  {
+                    "name": "سنتور",
+                    "value": 24
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "sunburst",
+      "title": "سان‌برست",
+      "family": "relation",
+      "description": "سلسله‌مراتب شعاعی",
+      "en": "Sunburst",
+      "descriptionEn": "Radial hierarchy",
+      "basic": {
+        "tooltip": {},
+        "series": [
+          {
+            "type": "sunburst",
+            "radius": [
+              "0%",
+              "85%"
+            ],
+            "sort": null,
+            "emphasis": {
+              "focus": "ancestor"
+            },
+            "label": {
+              "rotate": 0
+            },
+            "data": [
+              {
+                "name": "موسیقی کلاسیک",
+                "children": [
+                  {
+                    "name": "پیانو",
+                    "value": 42
+                  },
+                  {
+                    "name": "ویولن",
+                    "value": 28
+                  }
+                ]
+              },
+              {
+                "name": "موسیقی ایرانی",
+                "children": [
+                  {
+                    "name": "تار",
+                    "value": 31
+                  },
+                  {
+                    "name": "سنتور",
+                    "value": 24
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "advanced": {
+        "tooltip": {},
+        "series": [
+          {
+            "type": "sunburst",
+            "radius": [
+              "15%",
+              "88%"
+            ],
+            "sort": null,
+            "emphasis": {
+              "focus": "ancestor"
+            },
+            "label": {
+              "rotate": "radial"
+            },
+            "data": [
+              {
+                "name": "موسیقی کلاسیک",
+                "children": [
+                  {
+                    "name": "پیانو",
+                    "value": 42
+                  },
+                  {
+                    "name": "ویولن",
+                    "value": 28
+                  }
+                ]
+              },
+              {
+                "name": "موسیقی ایرانی",
+                "children": [
+                  {
+                    "name": "تار",
+                    "value": 31
+                  },
+                  {
+                    "name": "سنتور",
+                    "value": 24
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "graph",
+      "title": "شبکه ارتباطی",
+      "family": "relation",
+      "description": "گره‌ها و ارتباطات",
+      "en": "Network",
+      "descriptionEn": "Nodes and connections",
+      "basic": {
+        "tooltip": {},
+        "series": [
+          {
+            "type": "graph",
+            "layout": "circular",
+            "roam": true,
+            "categories": [
+              {
+                "name": "مرکز"
+              },
+              {
+                "name": "اعضا"
+              }
+            ],
+            "label": {
+              "show": true
+            },
+            "force": {
+              "repulsion": 180
+            },
+            "data": [
+              {
+                "name": "مدیر",
+                "value": 30,
+                "symbolSize": 38,
+                "category": 0
+              },
+              {
+                "name": "شعبه ۱",
+                "value": 27,
+                "symbolSize": 35,
+                "category": 1
+              },
+              {
+                "name": "شعبه ۲",
+                "value": 24,
+                "symbolSize": 32,
+                "category": 1
+              },
+              {
+                "name": "مدرس ۱",
+                "value": 21,
+                "symbolSize": 29,
+                "category": 1
+              },
+              {
+                "name": "مدرس ۲",
+                "value": 18,
+                "symbolSize": 26,
+                "category": 1
+              },
+              {
+                "name": "هنرجویان",
+                "value": 15,
+                "symbolSize": 23,
+                "category": 1
+              }
+            ],
+            "links": [
+              {
+                "source": 0,
+                "target": 1
+              },
+              {
+                "source": 0,
+                "target": 2
+              },
+              {
+                "source": 1,
+                "target": 3
+              },
+              {
+                "source": 2,
+                "target": 4
+              },
+              {
+                "source": 3,
+                "target": 5
+              },
+              {
+                "source": 4,
+                "target": 5
+              }
+            ]
+          }
+        ]
+      },
+      "advanced": {
+        "tooltip": {},
+        "legend": [
+          {
+            "data": [
+              "مرکز",
+              "اعضا"
+            ]
+          }
+        ],
+        "series": [
+          {
+            "type": "graph",
+            "layout": "force",
+            "roam": true,
+            "categories": [
+              {
+                "name": "مرکز"
+              },
+              {
+                "name": "اعضا"
+              }
+            ],
+            "label": {
+              "show": true
+            },
+            "force": {
+              "repulsion": 180
+            },
+            "data": [
+              {
+                "name": "مدیر",
+                "value": 30,
+                "symbolSize": 38,
+                "category": 0
+              },
+              {
+                "name": "شعبه ۱",
+                "value": 27,
+                "symbolSize": 35,
+                "category": 1
+              },
+              {
+                "name": "شعبه ۲",
+                "value": 24,
+                "symbolSize": 32,
+                "category": 1
+              },
+              {
+                "name": "مدرس ۱",
+                "value": 21,
+                "symbolSize": 29,
+                "category": 1
+              },
+              {
+                "name": "مدرس ۲",
+                "value": 18,
+                "symbolSize": 26,
+                "category": 1
+              },
+              {
+                "name": "هنرجویان",
+                "value": 15,
+                "symbolSize": 23,
+                "category": 1
+              }
+            ],
+            "links": [
+              {
+                "source": 0,
+                "target": 1
+              },
+              {
+                "source": 0,
+                "target": 2
+              },
+              {
+                "source": 1,
+                "target": 3
+              },
+              {
+                "source": 2,
+                "target": 4
+              },
+              {
+                "source": 3,
+                "target": 5
+              },
+              {
+                "source": 4,
+                "target": 5
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "sankey",
+      "title": "سنکی",
+      "family": "relation",
+      "description": "جریان بین مراحل",
+      "en": "Sankey",
+      "descriptionEn": "Flows between stages",
+      "basic": {
+        "tooltip": {
+          "trigger": "item"
+        },
+        "series": [
+          {
+            "type": "sankey",
+            "layoutIterations": 0,
+            "emphasis": {
+              "focus": "adjacency"
+            },
+            "lineStyle": {
+              "color": "source",
+              "curveness": 0.5
+            },
+            "data": [
+              {
+                "name": "بازدید"
+              },
+              {
+                "name": "عضویت"
+              },
+              {
+                "name": "ثبت‌نام دوره"
+              },
+              {
+                "name": "خرید"
+              },
+              {
+                "name": "ریزش"
+              }
+            ],
+            "links": [
+              {
+                "source": "بازدید",
+                "target": "عضویت",
+                "value": 80
+              },
+              {
+                "source": "بازدید",
+                "target": "ریزش",
+                "value": 20
+              },
+              {
+                "source": "عضویت",
+                "target": "ثبت‌نام دوره",
+                "value": 55
+              },
+              {
+                "source": "عضویت",
+                "target": "ریزش",
+                "value": 25
+              },
+              {
+                "source": "ثبت‌نام دوره",
+                "target": "خرید",
+                "value": 42
+              },
+              {
+                "source": "ثبت‌نام دوره",
+                "target": "ریزش",
+                "value": 13
+              }
+            ]
+          }
+        ]
+      },
+      "advanced": {
+        "tooltip": {
+          "trigger": "item"
+        },
+        "series": [
+          {
+            "type": "sankey",
+            "layoutIterations": 32,
+            "emphasis": {
+              "focus": "adjacency"
+            },
+            "lineStyle": {
+              "color": "gradient",
+              "curveness": 0.5
+            },
+            "data": [
+              {
+                "name": "بازدید"
+              },
+              {
+                "name": "عضویت"
+              },
+              {
+                "name": "ثبت‌نام دوره"
+              },
+              {
+                "name": "خرید"
+              },
+              {
+                "name": "ریزش"
+              }
+            ],
+            "links": [
+              {
+                "source": "بازدید",
+                "target": "عضویت",
+                "value": 80
+              },
+              {
+                "source": "بازدید",
+                "target": "ریزش",
+                "value": 20
+              },
+              {
+                "source": "عضویت",
+                "target": "ثبت‌نام دوره",
+                "value": 55
+              },
+              {
+                "source": "عضویت",
+                "target": "ریزش",
+                "value": 25
+              },
+              {
+                "source": "ثبت‌نام دوره",
+                "target": "خرید",
+                "value": 42
+              },
+              {
+                "source": "ثبت‌نام دوره",
+                "target": "ریزش",
+                "value": 13
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "pictorialBar",
+      "title": "میله‌ای تصویری",
+      "family": "special",
+      "description": "مقادیر با نمادهای تکرارشونده",
+      "en": "Pictorial bar",
+      "descriptionEn": "Values shown with repeating symbols",
+      "basic": {
+        "tooltip": {
+          "trigger": "axis"
+        },
+        "grid": {
+          "top": 35,
+          "right": 20,
+          "bottom": 40,
+          "left": 45
+        },
+        "xAxis": {
+          "type": "category",
+          "data": [
+            "پیانو",
+            "گیتار",
+            "آواز",
+            "دف"
+          ],
+          "axisLabel": {
+            "interval": 0
+          }
+        },
+        "yAxis": {
+          "type": "value"
+        },
+        "color": [
+          "#4f46e5",
+          "#06b6d4",
+          "#10b981",
+          "#f59e0b",
+          "#f43f5e",
+          "#8b5cf6"
+        ],
+        "series": [
+          {
+            "type": "pictorialBar",
+            "symbol": "roundRect",
+            "symbolRepeat": false,
+            "symbolSize": [
+              38,
+              18
+            ],
+            "symbolMargin": 0,
+            "data": [
+              12,
+              9,
+              7,
+              5
+            ]
+          }
+        ]
+      },
+      "advanced": {
+        "tooltip": {
+          "trigger": "axis"
+        },
+        "grid": {
+          "top": 35,
+          "right": 20,
+          "bottom": 40,
+          "left": 45
+        },
+        "xAxis": {
+          "type": "category",
+          "data": [
+            "پیانو",
+            "گیتار",
+            "آواز",
+            "دف"
+          ],
+          "axisLabel": {
+            "interval": 0
+          }
+        },
+        "yAxis": {
+          "type": "value"
+        },
+        "color": [
+          "#4f46e5",
+          "#06b6d4",
+          "#10b981",
+          "#f59e0b",
+          "#f43f5e",
+          "#8b5cf6"
+        ],
+        "series": [
+          {
+            "type": "pictorialBar",
+            "symbol": "path://M512 64L640 320H896L688 480L768 736L512 576L256 736L336 480L128 320H384Z",
+            "symbolRepeat": true,
+            "symbolSize": [
+              18,
+              18
+            ],
+            "symbolMargin": 3,
+            "data": [
+              12,
+              9,
+              7,
+              5
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "parallel",
+      "title": "مختصات موازی",
+      "family": "distribution",
+      "description": "مقایسه رکوردهای چندمتغیره",
+      "en": "Parallel coordinates",
+      "descriptionEn": "Multivariate record comparison",
+      "basic": {
+        "parallelAxis": [
+          {
+            "dim": 0,
+            "name": "تمرین",
+            "max": 100
+          },
+          {
+            "dim": 1,
+            "name": "حضور",
+            "max": 100
+          },
+          {
+            "dim": 2,
+            "name": "تئوری",
+            "max": 100
+          },
+          {
+            "dim": 3,
+            "name": "اجرا",
+            "max": 100
+          }
+        ],
+        "parallel": {
+          "left": 55,
+          "right": 35,
+          "bottom": 35,
+          "top": 35,
+          "parallelAxisDefault": {
+            "type": "value"
+          }
+        },
+        "color": [
+          "#4f46e5",
+          "#06b6d4",
+          "#10b981",
+          "#f59e0b",
+          "#f43f5e",
+          "#8b5cf6"
+        ],
+        "series": [
+          {
+            "type": "parallel",
+            "lineStyle": {
+              "width": 1,
+              "opacity": 0.4
+            },
+            "data": [
+              [
+                80,
+                92,
+                75,
+                88
+              ],
+              [
+                65,
+                78,
+                90,
+                72
+              ],
+              [
+                92,
+                85,
+                68,
+                95
+              ],
+              [
+                70,
+                96,
+                82,
+                79
+              ]
+            ]
+          }
+        ]
+      },
+      "advanced": {
+        "parallelAxis": [
+          {
+            "dim": 0,
+            "name": "تمرین",
+            "max": 100
+          },
+          {
+            "dim": 1,
+            "name": "حضور",
+            "max": 100
+          },
+          {
+            "dim": 2,
+            "name": "تئوری",
+            "max": 100
+          },
+          {
+            "dim": 3,
+            "name": "اجرا",
+            "max": 100
+          }
+        ],
+        "parallel": {
+          "left": 55,
+          "right": 35,
+          "bottom": 35,
+          "top": 35,
+          "parallelAxisDefault": {
+            "type": "value"
+          }
+        },
+        "color": [
+          "#4f46e5",
+          "#06b6d4",
+          "#10b981",
+          "#f59e0b",
+          "#f43f5e",
+          "#8b5cf6"
+        ],
+        "series": [
+          {
+            "type": "parallel",
+            "lineStyle": {
+              "width": 3,
+              "opacity": 0.7
+            },
+            "data": [
+              [
+                80,
+                92,
+                75,
+                88
+              ],
+              [
+                65,
+                78,
+                90,
+                72
+              ],
+              [
+                92,
+                85,
+                68,
+                95
+              ],
+              [
+                70,
+                96,
+                82,
+                79
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "themeRiver",
+      "title": "رودخانه موضوعی",
+      "family": "special",
+      "description": "تغییر سهم موضوع‌ها در زمان",
+      "en": "Theme river",
+      "descriptionEn": "Changing topic shares over time",
+      "basic": {
+        "tooltip": {
+          "trigger": "axis"
+        },
+        "singleAxis": {
+          "type": "time",
+          "bottom": 45
+        },
+        "series": [
+          {
+            "type": "themeRiver",
+            "emphasis": {
+              "focus": "series"
+            },
+            "data": [
+              [
+                "2026/01/01",
+                12,
+                "پیانو"
+              ],
+              [
+                "2026/02/01",
+                18,
+                "پیانو"
+              ],
+              [
+                "2026/03/01",
+                25,
+                "پیانو"
+              ],
+              [
+                "2026/01/01",
+                8,
+                "گیتار"
+              ],
+              [
+                "2026/02/01",
+                15,
+                "گیتار"
+              ],
+              [
+                "2026/03/01",
+                13,
+                "گیتار"
+              ],
+              [
+                "2026/01/01",
+                5,
+                "آواز"
+              ],
+              [
+                "2026/02/01",
+                9,
+                "آواز"
+              ],
+              [
+                "2026/03/01",
+                17,
+                "آواز"
+              ]
+            ]
+          }
+        ]
+      },
+      "advanced": {
+        "tooltip": {
+          "trigger": "axis"
+        },
+        "singleAxis": {
+          "type": "time",
+          "bottom": 45
+        },
+        "legend": {
+          "top": 0
+        },
+        "series": [
+          {
+            "type": "themeRiver",
+            "emphasis": {
+              "focus": "series"
+            },
+            "data": [
+              [
+                "2026/01/01",
+                12,
+                "پیانو"
+              ],
+              [
+                "2026/02/01",
+                18,
+                "پیانو"
+              ],
+              [
+                "2026/03/01",
+                25,
+                "پیانو"
+              ],
+              [
+                "2026/01/01",
+                8,
+                "گیتار"
+              ],
+              [
+                "2026/02/01",
+                15,
+                "گیتار"
+              ],
+              [
+                "2026/03/01",
+                13,
+                "گیتار"
+              ],
+              [
+                "2026/01/01",
+                5,
+                "آواز"
+              ],
+              [
+                "2026/02/01",
+                9,
+                "آواز"
+              ],
+              [
+                "2026/03/01",
+                17,
+                "آواز"
+              ]
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

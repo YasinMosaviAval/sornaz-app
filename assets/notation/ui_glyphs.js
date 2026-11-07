@@ -31,7 +31,8 @@ function repeat(value){
  return content;
 }
 function accidental(value){
- const names={'#':'accidentalSharp',b:'accidentalFlat',n:'accidentalNatural','##':'accidentalDoubleSharp',bb:'accidentalDoubleFlat'};
+ const names={'#':'accidentalSharp',b:'accidentalFlat',n:'accidentalNatural','##':'accidentalDoubleSharp',bb:'accidentalDoubleFlat',k:'accidentalKoron',o:'accidentalSori'};
+ if(value==='bk'||value==='#o')return glyph(value==='bk'?'accidentalFlat':'accidentalSharp',10,23,26)+glyph(value==='bk'?'accidentalKoron':'accidentalSori',26,23,26);
  return names[value]?glyph(names[value],18,23,34)||text(value):text(({d:'¼♭','+':'¼♯'})[value]||value);
 }
 function keySignature(value){
@@ -45,6 +46,8 @@ function keySignature(value){
 function hairpin(value){return value==='stop'?'<path d="M9 10v20M39 10v20"/><path d="m14 12 20 8-20 8"/>':value==='diminuendo'?'<path d="m8 10 31 10L8 30"/>':'<path d="m39 10-31 10 31 10"/>';}
 function octave(value){return text(value==='stop'?'8':value||'8va',21,18,15,'font-style="italic"')+'<path d="M5 25h36v7" stroke-dasharray="3 3"/>'+(value==='stop'?'<path d="m33 9 9 9m0-9-9 9"/>':'');}
 function symbol(key,value){
+ if(key==='timeTop'||key==='timeBottom')return svg(text(value,24,29,24));
+ if(key==='time'&&value==='manual')return svg(text('N',24,17,16)+text('D',24,37,16)+'<path d="M14 21h20"/>');
  if(/^clef[12]$/.test(key)||key==='clef-change'||key==='clef')return clef(value);
  if(key==='displayNumber')return svg(staff+text(value||'12',24,8,10)+'<path d="M10 13v20M38 13v20"/>');
  if(key==='rehearsal')return svg('<rect x="12" y="5" width="24" height="29" rx="1"/>'+text(value||'A',24,27,22));

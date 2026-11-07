@@ -41,14 +41,14 @@ class _VideoSettingsPageState extends State<VideoSettingsPage> {
           context: context,
           builder: (dialog) => SimpleDialog(
             shape: RoundedRectangleBorder(borderRadius: appRadius(dialog)),
-            title: Text(title, style: Theme.of(dialog).textTheme.bodyMedium),
+            title: Text(title, style: Theme.of(dialog).textTheme.bodySmall),
             children: [
               for (final option in options)
                 SimpleDialogOption(
                   onPressed: () => Navigator.pop(dialog, option.$1),
                   child: Text(
                     option.$2,
-                    style: Theme.of(dialog).textTheme.bodyMedium,
+                    style: Theme.of(dialog).textTheme.bodySmall,
                   ),
                 ),
             ],
@@ -57,7 +57,7 @@ class _VideoSettingsPageState extends State<VideoSettingsPage> {
 
     Widget choiceRow(String title, String value, VoidCallback action) =>
         ListTile(
-          title: Text(title, style: Theme.of(context).textTheme.bodyMedium),
+          title: Text(title, style: Theme.of(context).textTheme.bodySmall),
           trailing: Text(value, style: Theme.of(context).textTheme.bodySmall),
           onTap: action,
         );
@@ -81,7 +81,7 @@ class _VideoSettingsPageState extends State<VideoSettingsPage> {
               ListTile(
                 title: Text(
                   t('افزودن ویدیو از فایل‌ها', 'Import videos from Files'),
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
                 trailing: importing
                     ? const SizedBox(
@@ -128,7 +128,7 @@ class _VideoSettingsPageState extends State<VideoSettingsPage> {
               ListTile(
                 title: Text(
                   t('پوشه‌های کتابخانه', 'Library folders'),
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
                 onTap: () => Navigator.push(
                   context,
@@ -145,7 +145,7 @@ class _VideoSettingsPageState extends State<VideoSettingsPage> {
               ListTile(
                 title: Text(
                   t(entry.$2, entry.$3),
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
                 onTap: () => Navigator.push(
                   context,
@@ -164,7 +164,7 @@ class _VideoSettingsPageState extends State<VideoSettingsPage> {
                   'ذخیره و بازیابی موقعیت پخش',
                   'Save/Restore Playback Position',
                 ),
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: Theme.of(context).textTheme.bodySmall,
               ),
               value: settings.videoSavePlaybackPosition,
               onChanged: (value) =>

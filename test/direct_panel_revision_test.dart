@@ -17,20 +17,22 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
   testWidgets('double tapping message content likes it once', (tester) async {
     final actions = <String>[];
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: ChatMessageBubble(
-          message: const {
-            'id': 7,
-            'body': 'Hello',
-            'mine': true,
-            'liked': false,
-          },
-          actions: const {'like': {}},
-          onAction: actions.add,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ChatMessageBubble(
+            message: const {
+              'id': 7,
+              'body': 'Hello',
+              'mine': true,
+              'liked': false,
+            },
+            actions: const {'like': {}},
+            onAction: actions.add,
+          ),
         ),
       ),
-    ));
+    );
     final body = find.byKey(const ValueKey('message-body-7'));
     await tester.tap(body);
     await tester.pump(const Duration(milliseconds: 100));
@@ -284,7 +286,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Destination'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.save_outlined));
+      await tester.tap(find.text('ذخیره تغییرات'));
       await tester.pumpAndSettle();
       expect(posts.last, endsWith('/chat/forward'));
       expect(payloads.last['conversationIds'], [9]);
