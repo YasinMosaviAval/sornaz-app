@@ -15,8 +15,10 @@ const knownMeta=new Set(['title','subtitle','composer','arranger','lyricist','te
 const knownNote=new Set(['pitch','duration','dots','rest','accidental','staff','voice','at','tuplet','pitches','cautionary','tieNext','tiePrevious','slurStart','slurEnd','pedal','crossBeam','beamGroup','dynamic','articulation','bow','ornament','finger','ornamentUpperAccidental','ornamentLowerAccidental','slide','lyric','hairpin','chordSymbol','tremolo','graces','octaveShift','noteSize','harmonic','arpeggio']);
 const knownTone=new Set(['pitch','accidental','tieNext','tiePrevious','cautionary','finger']);
 const hasUnknown=(value,allowed)=>Object.keys(value).some(key=>!allowed.has(key));
-function validate(raw){
- if(!object(raw)||raw.format!=='sornaz-notation'||raw.version!==1||!object(raw.metadata)||!object(raw.score)||!Array.isArray(raw.score.measures))fail('Unsupported score format.');
+function validate(raw,embeddedPart=false){
+ if(!object(raw)||raw.format!=='sornaz-notation'||![1,2].includes(raw.version)||!object(raw.metadata)||!object(raw.score)||!Array.isArray(raw.score.measures))fail('Unsupported score format.');
+ if(raw.score.parts!==undefined&&(embeddedPart||!Array.isArray(raw.score.parts)||raw.score.parts.length>7))fail('Invalid score parts.');
+ if(raw.score.sections!==undefined&&(!Array.isArray(raw.score.sections)||raw.score.sections.length>15))fail('Invalid score sections.');
  const sheet=M.fresh(),meta=raw.metadata,bars=raw.score.measures;
  if(!bars.length||bars.length>64||hasUnknown(meta,knownMeta)||typeof meta.title!=='string'||!meta.title.trim()||meta.title.length>180||typeof meta.instrument!=='string'||!meta.instrument||!(M.iranianIntervals?.[meta.scale_type]?(M.iranianTonics||[]).some(([value])=>value===meta.key):M.keys.includes(meta.key))||!Number.isInteger(Number(meta.bpm))||Number(meta.bpm)<20||Number(meta.bpm)>300)fail('Invalid score metadata.');
  if(meta.staves!==undefined&&(!Array.isArray(meta.staves)||![1,2].includes(meta.staves.length)||meta.staves.some(s=>!object(s)||!clefs.has(s.clef))))fail('Invalid staff layout.');
@@ -43,7 +45,9 @@ function validate(raw){
   }
  }
  try{M.performanceOrder(sheet);M.timeline(sheet);}catch(error){fail(error.message||'Invalid score structure.');}
- return {sheet,summary:{measures:bars.length,notes:count,rests,chords,staves:sheet.metadata.staves.length}};
+ if(raw.score.sections?.length){sheet.score.sections=raw.score.sections.map(section=>{if(!object(section)||hasUnknown(section,new Set(['measures'])))fail('Invalid score sections.');const imported=validate({format:'sornaz-notation',version:1,metadata:raw.metadata,score:section},true);count+=imported.summary.notes;rests+=imported.summary.rests;chords+=imported.summary.chords;return imported.sheet.score;});}
+ if(raw.score.parts?.length){sheet.score.parts=raw.score.parts.map(part=>{if(!object(part)||hasUnknown(part,new Set(['metadata','score'])))fail('Invalid score parts.');const imported=validate({format:'sornaz-notation',version:1,...part},true);count+=imported.summary.notes;rests+=imported.summary.rests;chords+=imported.summary.chords;return {metadata:imported.sheet.metadata,score:imported.sheet.score};});}
+ return {sheet,summary:{measures:bars.length,notes:count,rests,chords,staves:sheet.metadata.staves.length,parts:1+(sheet.score.parts?.length||0)}};
 }
 function parse(content,name=''){
  if(typeof content!=='string'||new TextEncoder().encode(content).length>1000000)fail('Score file is too large.');

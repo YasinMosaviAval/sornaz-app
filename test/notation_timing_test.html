@@ -44,6 +44,15 @@ try {
  if(M.beamPattern(compound,0)?.parts.join('+')!=='3+3')throw Error('Default compound beat grouping was not applied');
  NotationRenderer.draw(document.getElementById('score'),compound,{accent:'#0065ff',activeBar:0,activeNote:-1,selectedNotes:new Set()});
  if(document.querySelectorAll('#score .vf-beam').length!==3)throw Error('Quarter beat-unit beaming drew the wrong groups');
+// Crossing the middle staff line must not split a rhythmic beam group.
+ for(const pitches of [['A4','C5'],['B4','D5'],['C5','A4'],['D5','B4']]){
+  const crossing=M.fresh();crossing.score.measures=[{notes:pitches.map((pitch,i)=>({pitch,duration:'8',at:i*u/8,staff:1,voice:1}))}];
+  const original=JSON.stringify(crossing);NotationRenderer.draw(document.getElementById('score'),crossing);
+  if(document.querySelectorAll('#score .vf-beam').length!==1)throw Error('Middle-line pitches lost their beam: '+pitches.join('/'));
+  const print=new DOMParser().parseFromString(NotationRenderer.printDocument(crossing),'text/html');if(print.querySelectorAll('.vf-beam').length!==1)throw Error('Printed middle-line pitches lost their beam');
+  if(JSON.stringify(crossing)!==original)throw Error('Beaming changed stored notes');
+ }
+ const beatBoundary=M.fresh();beatBoundary.score.measures=[{notes:['A4','C5','B4','D5'].map((pitch,i)=>({pitch,duration:'8',at:i*u/8,staff:1,voice:1}))}];NotationRenderer.draw(document.getElementById('score'),beatBoundary);if(document.querySelectorAll('#score .vf-beam').length!==2)throw Error('Middle-line beaming crossed the beat boundary');
  compound.score.measures[0].beamPattern='2+3';try{M.beamPattern(compound,0);throw Error('Invalid beam grouping was accepted');}catch(error){if(error.message==='Invalid beam grouping was accepted')throw error;}
  const cueWithGrace=M.fresh();cueWithGrace.score.measures=[{notes:[note('C4',0,1,1,{noteSize:'cue',graces:[{pitch:'B3',accidental:'',kind:'acciaccatura',duration:'8'}]})]}];
  if(M.timeline(cueWithGrace).events.some(event=>event.hz))throw Error('Cue note grace sounded during playback');
@@ -112,6 +121,10 @@ try {
  const grouped=M.fresh();grouped.metadata.time='6/8';M.add(grouped,0,note('C4',0,1,1,{duration:'8',beamGroup:1}));M.add(grouped,0,note('D4',u/8,1,1,{duration:'8',beamGroup:1}));
  NotationRenderer.draw(document.getElementById('score'),grouped,{accent:'#0065ff',activeBar:0,activeNote:-1,selectedNotes:new Set()});
  if(document.querySelectorAll('#score .vf-beam').length!==1)throw Error('Manual rhythm beam group was not engraved');
+ // A beam must own its notes before their individual flags are drawn.
+ const flagCount=(score,printing=false)=>{let flags=0;const original=Vex.Flow.StaveNote.prototype.drawFlag;Vex.Flow.StaveNote.prototype.drawFlag=function(){if(this.shouldDrawFlag())flags++;return original.call(this);};try{if(printing)NotationRenderer.printDocument(score);else NotationRenderer.draw(document.getElementById('score'),score);return flags;}finally{Vex.Flow.StaveNote.prototype.drawFlag=original;}};
+ for(const score of [grouped,crossed]){const original=JSON.stringify(score);if(flagCount(score)!==0||flagCount(score,true)!==0)throw Error('Manually beamed notes retained individual flags');if(JSON.stringify(score)!==original)throw Error('Removing rendered flags changed stored notes');}
+ const singleFlag=M.fresh();M.add(singleFlag,0,note('C4',0,1,1,{duration:'8'}));if(flagCount(singleFlag)!==1||flagCount(singleFlag,true)!==1)throw Error('A standalone note lost its flag');
  slurred.metadata.staves=[{clef:'treble'},{clef:'bass'}];slurred.score.measures.push({notes:[],clefs:{2:'alto'}});
  if(M.effectiveClef(slurred,1,2)!=='alto'||M.effectiveClef(slurred,1,1)!=='treble')throw Error('Independent staff clef change was lost');
  NotationRenderer.draw(document.getElementById('score'),slurred,{accent:'#0065ff',activeBar:0,activeNote:-1,selectedNotes:new Set()});

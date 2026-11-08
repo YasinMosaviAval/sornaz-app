@@ -259,6 +259,19 @@ function frequency(pitch,accidental='',key='C',carry={}){
  if(accidental){delta={'#':1,b:-1,n:0,'##':2,bb:-2,'+':.5,d:-.5,k:-.5,o:.5,bk:-1.5,'#o':1.5}[accidental];carry[pitch]=delta;}
  return 440*Math.pow(2,((octave+1)*12+base[letter]+delta-69)/12);
 }
-const api={iranianScales,iranianTonics,iranianIntervals,iranianSignature,durations,keys,wholeUnits,maxChordTones,validPitch,units,measureUnits,effectiveTime,effectiveKey,tempoSegment,effectiveClef,clefAt,barUnits,beamPattern,positionOf,voiceOf,normalizeBar,clone,ticks,capacity,staves,staffOf,lane,used,fresh,add,insert,copySelection,pasteSelection,moveSelectionToStaff,trimmedMeasures,validMultiRest,multiRestAt,asRest,compactDelete,prepare,measureSource,performanceOrder,timeline,frequency};if(typeof module==='object')module.exports=api;
+// A document has one main score and optional embedded instrument parts.
+function joinSections(sheet){
+ const {sections=[],...score}=sheet.score;if(!sections.length)return {...sheet,score};
+ const measures=[];
+ for(const[index,section]of [score,...sections].entries()){
+  const bars=trimmedMeasures({metadata:sheet.metadata,score:section});
+  if(!bars.length)bars.push(clone(section.measures[0]||{notes:[],preserve:true}));
+  bars.forEach((bar,i)=>{if(index&&i===0){bar.time??=sheet.metadata.time;bar.key??=sheet.metadata.key;bar.tempo??={mode:'instant',bpm:sheet.metadata.bpm};bar.clefs??=Object.fromEntries(staves(sheet.metadata).map((staff,n)=>[n+1,staff.clef]));}measures.push(bar);});
+ }
+ return {...sheet,score:{...score,measures}};
+}
+function parts(sheet){const {parts:extra=[],...score}=sheet.score;return [{...sheet,score},...extra.map(part=>({...sheet,metadata:part.metadata,score:part.score}))].map(joinSections);}
+function ensembleTimeline(sheet){const timelines=parts(sheet).map(part=>timeline(part));return {events:timelines.flatMap((line,part)=>line.events.map(event=>({...event,part}))).sort((a,b)=>a.start-b.start||a.part-b.part),duration:Math.max(0,...timelines.map(line=>line.duration))};}
+const api={joinSections,parts,ensembleTimeline,iranianScales,iranianTonics,iranianIntervals,iranianSignature,durations,keys,wholeUnits,maxChordTones,validPitch,units,measureUnits,effectiveTime,effectiveKey,tempoSegment,effectiveClef,clefAt,barUnits,beamPattern,positionOf,voiceOf,normalizeBar,clone,ticks,capacity,staves,staffOf,lane,used,fresh,add,insert,copySelection,pasteSelection,moveSelectionToStaff,trimmedMeasures,validMultiRest,multiRestAt,asRest,compactDelete,prepare,measureSource,performanceOrder,timeline,frequency};if(typeof module==='object')module.exports=api;
 root.NotationModel=api;
 })(globalThis);

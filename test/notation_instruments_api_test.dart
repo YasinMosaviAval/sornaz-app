@@ -187,6 +187,59 @@ void main() {
     },
   );
 
+  test(
+    'parts and sections persist offline as one document across hosts',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final api = NotationApi('', userId: 72);
+      final payload = {
+        'metadata': {'title': 'Counterpoint', 'instrument': 'Tar'},
+        'score': {
+          'measures': [
+            {'notes': []},
+          ],
+          'parts': [
+            {
+              'metadata': {'title': 'Counterpoint', 'instrument': 'Violin'},
+              'score': {
+                'sections': [
+                  {
+                    'measures': [
+                      {
+                        'notes': [
+                          {'pitch': 'F4', 'duration': 'q', 'rest': false},
+                        ],
+                      },
+                    ],
+                  },
+                ],
+                'measures': [
+                  {
+                    'notes': [
+                      {'pitch': 'E4', 'duration': 'q', 'rest': false},
+                    ],
+                  },
+                ],
+              },
+            },
+          ],
+        },
+        'visibility': 'private',
+      };
+      final saved = await api.request('save', {'payload': payload});
+      api.close();
+      final reopened = NotationApi('', userId: 72);
+      final sheet = await reopened.request('get', {'sheetId': saved['id']});
+      expect(sheet['score'], payload['score']);
+      final listing = await reopened.request('list', {
+        'mode': 'mine',
+        'page': 1,
+      });
+      expect(listing['items'], hasLength(1));
+      reopened.close();
+    },
+  );
+
   test('damaged score storage without backup reports an error', () async {
     SharedPreferences.setMockInitialValues({'notation_local_v3_72': '{broken'});
     final api = NotationApi('', userId: 72);

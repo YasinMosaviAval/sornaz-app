@@ -18,7 +18,8 @@ window.NOTATION_BOOT = {locale:'en',embedded:false,api:'/music-sheets/api',userI
 <script src="../assets/notation/notation.js"></script>
 <script>
 const pause = () => new Promise(resolve => setTimeout(resolve, 40));
-const click = selector => {const item=document.querySelector(selector);if(!item)throw Error('Missing '+selector);item.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true}));if(item.matches('[data-pitch]'))document.querySelector('.note-duration-picker .active')?.click();};
+// Selection editing now requires opening the note tools sheet.
+const click = selector => {if(selector.startsWith('#score')||selector.startsWith('[data-pitch'))document.querySelector('[data-action=close-tool-sheet]')?.click();if(!document.querySelector(selector)&&/chord|grace-mode|paste-notes|copy-notes|cut-notes|duplicate-notes/.test(selector))Notation.command('tool-palette');const item=document.querySelector(selector);if(!item)throw Error('Missing '+selector);item.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true}));if(item.matches('[data-pitch]'))document.querySelector('.note-duration-picker .active')?.click();if(item.matches('[data-pitch],#score [data-note]'))Notation.command('tool-palette');};
 setTimeout(async()=>{
  try {
   if(typeof window.Notation.search!=='function')throw Error('List search API is missing');
@@ -32,14 +33,14 @@ setTimeout(async()=>{
   pianoForm.elements.scale_type.value='major';pianoForm.elements.scale_type.dispatchEvent(new Event('change',{bubbles:true}));
   const ready=document.getElementById('metadata');ready.elements.key.value='C';ready.elements.tempo_unit.value='q:0';ready.elements.bpm.value='100';
   ready.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));await pause();
-  click('[data-tool-sheet="palette"]');
+  Notation.command('tool-palette');
   if(document.querySelectorAll('.palette-group').length<5)throw Error('Notation tools are not grouped');
-  click('[data-action=close-tool-sheet]');click('[data-tool-sheet=measure]');
+  click('[data-action=close-tool-sheet]');Notation.command('tool-measure');
   if(!document.querySelector('.notation-tool-sheet')?.open)throw Error('Measure tools did not open from their own trigger');
-  click('[data-action=close-tool-sheet]');click('[data-tool-sheet=voices]');
+  click('[data-action=close-tool-sheet]');Notation.command('tool-voices');
   if(document.querySelectorAll('.notation-tool-sheet [data-action=staff]').length!==2)throw Error('Piano staff selector is missing');
   click('[data-action=close-tool-sheet]');click('[data-staff="1"][data-bar="0"]');click('[data-pitch="C4"]');await pause();
-  click('[data-tool-sheet=voices]');click('[data-action=staff][data-staff="2"]');click('[data-action=close-tool-sheet]');click('[data-pitch="C3"]');await pause();
+  Notation.command('tool-voices');click('[data-action=staff][data-staff="2"]');click('[data-action=close-tool-sheet]');click('[data-pitch="C3"]');await pause();
   const hits=[...document.querySelectorAll('#score [data-note]')];
   if(hits.length!==2||!hits.some(hit=>hit.dataset.staff==='1')||!hits.some(hit=>hit.dataset.staff==='2'))
    throw Error('Keyboard notes were not added to both staves');
@@ -62,7 +63,7 @@ setTimeout(async()=>{
   click('#score [data-note][data-staff="2"]');
   const bassHit=document.querySelector('#score [data-note][data-staff="2"]'),bounds=bassHit.getBoundingClientRect();
   const x=bounds.left+bounds.width/2,y=bounds.top+bounds.height/2;
-  bassHit.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:7,pointerType:'touch',clientX:x,clientY:y}));
+  bassHit.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:7,pointerType:'touch',clientX:x,clientY:y}));await new Promise(resolve=>setTimeout(resolve,350));
   window.dispatchEvent(new PointerEvent('pointermove',{bubbles:true,pointerId:7,pointerType:'touch',clientX:x,clientY:y-24}));
   window.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:7,pointerType:'touch',clientX:x,clientY:y-24}));await pause();
   if(!document.querySelector('[data-action="chord-tone"]')?.textContent.includes('A3'))throw Error('Pitch drag did not move the bass chord');
@@ -107,7 +108,7 @@ setTimeout(async()=>{
   if(!document.querySelector('[data-action="chord-tone"]'))throw Error('Undo did not restore the bass chord');
   window.Notation.command('redo');await pause();
   if(document.querySelector('#score [data-note][data-staff="2"]')||document.querySelector('[data-action="chord-tone"]'))throw Error('Redo did not remove the bass chord without a rest');
-  click('[data-tool-sheet=measure]');
+  Notation.command('tool-measure');
   const setMeasure=(key,value)=>{const control=document.querySelector(`[data-measure-choice="${key}"]`);if(!control)throw Error('Missing measure control '+key);control.value=value;control.dispatchEvent(new Event('change',{bubbles:true}));};
   setMeasure('time','7/8');await pause();
   if(document.querySelector('[data-measure-choice="time"]')?.value!=='7/8')throw Error('Time signature change was not retained');
@@ -115,13 +116,13 @@ setTimeout(async()=>{
   if(document.querySelector('[data-measure-choice="repeatLine"]')?.value!=='start')throw Error('Repeat start could not be edited');
   click('[data-action="add-bar"]');await pause();
   if(!document.querySelector('.note-hit[data-bar="1"]')||document.querySelector('[data-tool-sheet=measure] .notation-control-badge'))throw Error('Measure insertion was not exposed');
-  click('[data-action=close-tool-sheet]');click('[data-tool-sheet=voices]');click('[data-action=staff][data-staff="1"]');click('[data-action="voice"][data-voice="2"]');click('[data-action=close-tool-sheet]');click('[data-tool-sheet=palette]');
+  click('[data-action=close-tool-sheet]');Notation.command('tool-voices');click('[data-action=staff][data-staff="1"]');click('[data-action="voice"][data-voice="2"]');click('[data-action=close-tool-sheet]');Notation.command('tool-palette');
   click('[data-action="duration"][data-value="8"]');
   const tuplet=document.querySelector('[data-tuplet]');if(!tuplet)throw Error('Tuplet control is missing');tuplet.value='3:2';tuplet.dispatchEvent(new Event('change',{bubbles:true}));await pause();
   click('[data-action=close-tool-sheet]');for(let i=0;i<3;i++)click('[data-pitch="C5"]');await pause();
   if(document.querySelectorAll('#score [data-bar="1"][data-note]').length!==3)throw Error('Triplet notes in the second voice could not be written');
   click('#score [data-bar="1"][data-note]');click('[data-action="copy-notes"]');await pause();
-  click('[data-tool-sheet=measure]');click('[data-action="add-bar"]');await pause();click('[data-action=close-tool-sheet]');
+  Notation.command('tool-measure');click('[data-action="add-bar"]');await pause();click('[data-action=close-tool-sheet]');
   click('[data-action="paste-notes"]');await pause();
   if(document.querySelectorAll('#score [data-bar="2"][data-note]').length!==1)throw Error('Copied note was not pasted into a new measure');
   window.Notation.command('undo');await pause();
@@ -133,7 +134,7 @@ setTimeout(async()=>{
   if(document.querySelector('[data-note-lyric]')?.value!=='Hello')throw Error('Lyric edit was not retained');
   const chord=document.querySelector('[data-note-chord-symbol]');chord.value='Cm7';chord.dispatchEvent(new Event('change',{bubbles:true}));await pause();
   if(document.querySelector('[data-note-chord-symbol]')?.value!=='Cm7')throw Error('Chord symbol edit was not retained');
-  click('[data-tool-sheet=measure]');const rehearsal=document.querySelector('[data-measure-text="rehearsal"]');rehearsal.value='B';rehearsal.dispatchEvent(new Event('change',{bubbles:true}));await pause();
+  Notation.command('tool-measure');const rehearsal=document.querySelector('[data-measure-text="rehearsal"]');rehearsal.value='B';rehearsal.dispatchEvent(new Event('change',{bubbles:true}));await pause();
   if(document.querySelector('[data-measure-text="rehearsal"]')?.value!=='B')throw Error('Rehearsal mark edit was not retained');
   const displayNumber=document.querySelector('[data-measure-number="displayNumber"]');displayNumber.value='42';displayNumber.dispatchEvent(new Event('change',{bubbles:true}));await pause();
   if(document.querySelector('[data-measure-number="displayNumber"]')?.value!=='42')throw Error('Measure number edit was not retained');
@@ -147,10 +148,10 @@ setTimeout(async()=>{
   if(document.querySelector('[data-note-size]')?.value!=='cue')throw Error('Cue note edit was not retained');
   document.querySelector('[data-note-size]').value='small';document.querySelector('[data-note-size]').dispatchEvent(new Event('change',{bubbles:true}));await pause();
   if(document.querySelector('[data-note-size]')?.value!=='small')throw Error('Small note edit was not retained');
-  click('[data-tool-sheet=palette]');const ornament=document.querySelector('[data-choice="ornament"]');ornament.value='trill';ornament.dispatchEvent(new Event('change',{bubbles:true}));await pause();click('[data-action=close-tool-sheet]');
+  Notation.command('tool-palette');const ornament=document.querySelector('[data-choice="ornament"]');ornament.value='trill';ornament.dispatchEvent(new Event('change',{bubbles:true}));await pause();click('[data-action=close-tool-sheet]');Notation.command('tool-palette');
   const upperAccidental=document.querySelector('[data-ornament-accidental="ornamentUpperAccidental"]');if(!upperAccidental)throw Error('Ornament accidental control is missing');upperAccidental.value='#';upperAccidental.dispatchEvent(new Event('change',{bubbles:true}));await pause();
   if(document.querySelector('[data-ornament-accidental="ornamentUpperAccidental"]')?.value!=='#')throw Error('Ornament accidental was not retained');
-  click('[data-tool-sheet=measure]');const beamPattern=document.querySelector('[data-measure-choice="beamPattern"]');const grouping=[...beamPattern.options].find(o=>o.value==='2+2+3')?.value||'2+2';beamPattern.value=grouping;beamPattern.dispatchEvent(new Event('change',{bubbles:true}));await pause();
+  Notation.command('tool-measure');const beamPattern=document.querySelector('[data-measure-choice="beamPattern"]');const grouping=[...beamPattern.options].find(o=>o.value==='2+2+3')?.value||'2+2';beamPattern.value=grouping;beamPattern.dispatchEvent(new Event('change',{bubbles:true}));await pause();
   if(document.querySelector('[data-measure-choice="beamPattern"]')?.value!==grouping)throw Error('Beam grouping was not retained');
   window.Notation.command('undo');await pause();
   if(document.querySelector('[data-measure-choice="beamPattern"]')?.value===grouping)throw Error('Beam grouping did not undo');
@@ -159,15 +160,15 @@ setTimeout(async()=>{
   if(document.querySelector('[data-measure-choice="multiRest"]')?.value!=='2'||!document.querySelector('#score .notation-multi-rest'))throw Error('Multi-measure rest could not be edited');
   window.Notation.command('undo');await pause();
   if(document.querySelector('[data-measure-choice="multiRest"]')?.value==='2')throw Error('Multi-measure rest did not undo');
-  click('[data-action=close-tool-sheet]');click('[data-tool-sheet=voices]');click('[data-action=staff][data-staff="1"]');click('[data-action=close-tool-sheet]');click('[data-pitch="C4"]');await pause();click('[data-pitch="D4"]');await pause();
+  click('[data-action=close-tool-sheet]');Notation.command('tool-voices');click('[data-action=staff][data-staff="1"]');click('[data-action=close-tool-sheet]');click('[data-pitch="C4"]');await pause();click('[data-pitch="D4"]');await pause();
   const lastTreble=[...document.querySelectorAll('#score [data-note][data-staff="1"]')].at(-1);lastTreble?.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true}));await pause();
-  const timedClef=document.querySelector('[data-clef-change]');if(!timedClef)throw Error('Timed clef editor was not available on a later note');timedClef.value='bass';timedClef.dispatchEvent(new Event('change',{bubbles:true}));await pause();
-  click('[data-tool-sheet=measure]');if(document.querySelector('[data-clef-change]')?.value!=='bass'||!document.querySelector('[data-action="remove-clef-change"]'))throw Error('Timed clef was not retained as an independent event');
+  Notation.command('tool-measure');const timedClef=document.querySelector('[data-clef-change]');if(!timedClef)throw Error('Timed clef editor was not available on a later note');timedClef.value='bass';timedClef.dispatchEvent(new Event('change',{bubbles:true}));await pause();
+  Notation.command('tool-measure');if(document.querySelector('[data-clef-change]')?.value!=='bass'||!document.querySelector('[data-action="remove-clef-change"]'))throw Error('Timed clef was not retained as an independent event');
   window.Notation.command('undo');await pause();if(document.querySelector('[data-clef-change]')?.value==='bass')throw Error('Timed clef did not undo');
   window.Notation.command('redo');await pause();click('[data-action="remove-clef-change"]');await pause();
   if(document.querySelector('[data-action="remove-clef-change"]'))throw Error('Timed clef could not be removed');
   document.body.dataset.result='passed';
- } catch(error) {document.body.dataset.result='failed: '+error.message;}
+ } catch(error) {document.body.dataset.result='failed: '+error.message+' '+error.stack;}
 },100);
 </script>
 </body>

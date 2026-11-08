@@ -24,6 +24,22 @@ class NotationTopBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final editable = data['editable'] == true;
     final actions = <Widget>[
+      if (editor &&
+          (data['canWrite'] == true || editable) &&
+          data['practiceDraft'] != true) ...[
+        _action(
+          Icons.post_add,
+          'add-section',
+          socialText(context, 'افزودن بخش', 'Add section'),
+          true,
+        ),
+        _action(
+          Icons.add,
+          'add-part',
+          socialText(context, 'افزودن پارت', 'Add part'),
+          true,
+        ),
+      ],
       if (editor && editable) ...[
         _action(
           Icons.multitrack_audio,
@@ -52,6 +68,20 @@ class NotationTopBar extends StatelessWidget implements PreferredSizeWidget {
           true,
         ),
       ],
+      if (editor && data['overview'] == true && data['canWrite'] == true)
+        _action(
+          Icons.save_outlined,
+          'save',
+          socialText(context, 'ذخیره', 'Save'),
+          true,
+        ),
+      if (editor)
+        _action(
+          Icons.print_outlined,
+          'print-preview',
+          socialText(context, 'پیش‌نمایش چاپ / PDF', 'Print preview / PDF'),
+          true,
+        ),
       if (editor)
         _action(
           data['playing'] == true ? Icons.pause : Icons.play_arrow,
@@ -88,6 +118,7 @@ class NotationTopBar extends StatelessWidget implements PreferredSizeWidget {
                           scrollDirection: Axis.horizontal,
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
+                            spacing: 4,
                             children: actions,
                           ),
                         ),

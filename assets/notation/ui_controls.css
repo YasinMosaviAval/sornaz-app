@@ -86,7 +86,7 @@ dialog.notation-tool-sheet{position:fixed;inset:auto 0 0;width:100%;max-width:no
 .notation-tool-sheet .palette-group .palette-link,.notation-tool-sheet .chord-controls{grid-column:1/-1}
 .notation-tool-sheet .notation-tool-button{display:flex;align-items:center;justify-content:center;gap:6px}
 .notation-tool-sheet .notation-tool-button svg{width:24px;height:24px;flex-shrink:0}
-.score-title h2{font-size:calc(16px * var(--font-scale,1))!important;text-align:center!important;justify-content:center!important;padding-inline:0!important}
+.score-title h2{font-size:calc(14px * var(--font-scale,1))!important;text-align:center!important;justify-content:center!important;padding-inline:0!important}
 .score-title h2>.state{position:static!important;text-align:center;align-self:center}
 /* Match the tuner's equal-width upper keys, with shorter microtone keys. */
 .piano.quarter-piano .black{left:calc(100% - 100% / 6);right:auto;width:calc(100% / 3)}
@@ -156,7 +156,7 @@ svg[data-music-font=Bravura],svg[data-music-font=Bravura] text{direction:ltr!imp
 .notation-sheet-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .notation-tool-sheet .palette-group>div{grid-template-columns:repeat(4,minmax(0,1fr))!important;align-items:end}
 .notation-tool-sheet .palette-group .notation-tool-button{padding:4px;gap:3px;min-width:0}
-.notation-tool-sheet .palette-group .notation-tool-button>span{min-width:0;overflow-wrap:anywhere;line-height:1.3}
+.notation-tool-sheet .palette-group .notation-tool-button>span{font-size:calc(8px * var(--font-scale,1));min-width:0;overflow-wrap:anywhere;line-height:1.3}
 .notation-tool-sheet .notation-symbol-input{height:auto;border:0;background:transparent;overflow:visible;border-radius:0}
 .notation-tool-sheet .notation-symbol-input>.notation-field-icon{display:none}
 .notation-tool-sheet .notation-symbol-input input{width:100%!important;min-width:0!important;max-width:none!important;height:44px!important;min-height:44px!important;border:1px solid var(--line)!important;border-radius:var(--app-corner-radius,4px)!important;background:var(--panel)!important;padding:4px 6px!important}
@@ -178,3 +178,37 @@ svg[data-music-font=Bravura],svg[data-music-font=Bravura] text{direction:ltr!imp
 .score-edit-overlay svg{width:22px;height:22px}
 .shell:has(.score-edit-overlay) .score-title h2{padding-inline:76px!important}
 @media print{.score-edit-overlay{display:none!important}}
+
+/* Compact score heading and credits, scaled by the selected appearance. */
+.score-title>p,.score-title .credits p,.score-title .tempo,.score-title .tempo span{font-size:calc(10px * var(--font-scale,1))!important}
+
+/* Four extra pixels between score toolbar icons and compact measure actions. */
+.editor-header .editor-actions{gap:6px!important}
+.editor-header .notation-top-tools{gap:4px!important;flex-wrap:nowrap}
+.notation-tool-sheet [data-action=add-bar],.notation-tool-sheet [data-action=remove-bar]{font-size:calc(8px * var(--font-scale,1))!important}
+.notation-print-preview{width:calc(100vw - 24px);max-width:1000px;height:calc(100dvh - 24px);max-height:calc(100dvh - 24px);padding:8px;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:var(--app-corner-radius,4px)}
+.notation-print-preview[open]{display:flex;flex-direction:column;gap:8px}
+.notation-print-preview::backdrop{background:#0006}
+.notation-print-preview header{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.notation-print-preview h2{font-size:calc(14px * var(--font-scale,1));margin:0;flex:1}
+.notation-print-preview header button{font-size:calc(12px * var(--font-scale,1))}
+.notation-print-preview iframe{flex:1;min-height:0;width:100%;border:0;background:white}
+
+.website-panel .editor-header .editor-actions{gap:12px!important}
+
+/* Keep metadata selectors aligned with adjacent inputs and the beat picker. */
+#metadata .field:not(.field-wide){display:grid!important;grid-template-rows:minmax(18px,1fr) 46px;align-content:stretch;align-self:stretch;row-gap:2px!important}
+#metadata .field:not(.field-wide)>span{min-height:18px!important;margin:0!important}
+.piano .black.split-black,.piano .black-flat{border-radius:0 0 4px 4px!important}
+.notation-symbol-popup[data-control-key=beamPattern] .notation-symbol-option{font-size:inherit;min-height:28px}
+
+.notation-part-tabs{position:sticky;top:0;z-index:6;background:var(--bg);display:flex;gap:4px;overflow-x:auto;padding:4px 12px;flex:0 0 auto;scrollbar-width:thin}
+.notation-part-tabs button{flex:0 0 auto;min-height:32px;padding:4px 10px;font:inherit;font-size:calc(12px * var(--font-scale,1));border-radius:var(--app-corner-radius,4px);background:var(--panel);color:var(--ink)}
+.notation-part-tabs [aria-selected=true]{color:var(--accent);border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--panel))}
+.score-title .tempo:has(.notation-part-instrument){display:flex;flex-wrap:wrap}
+.score-title .tempo .notation-part-instrument{flex-basis:100%;text-align:center;font-size:calc(10px * var(--font-scale,1))!important}
+
+.score-overview .shell{padding-bottom:12px!important}
+
+.website-panel .editor-actions .web-editor-action{flex:0 0 auto}
+.editor-header .notation-top-tools{flex-shrink:0}
