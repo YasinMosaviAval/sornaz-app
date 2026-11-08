@@ -150,7 +150,8 @@ function prepare(sheet){
  const measures=trimmedMeasures(sheet);
  for(let index=0;index<measures.length;index++)if(measures[index].multiRest&&!validMultiRest(measures,index,measures[index].multiRest))delete measures[index].multiRest;
  const full=measures.length&&staves(sheet.metadata).some((_,i)=>used(measures.at(-1),i+1)>=barUnits({...sheet,score:{measures}},measures.length-1)/unitPerLegacyTick);
- if(sheet.editable&&(!measures.length||full)&&measures.length<64)measures.push({notes:[]});
+ const last=measures.at(-1),repeated=last?.repeat?.measure===1||measures.at(-2)?.repeat?.measure===2;
+ if(sheet.editable&&(!measures.length||(full||repeated)&&last?.barline!=='final')&&measures.length<64)measures.push({notes:[]});
  sheet.score.measures=measures;return sheet;
 }
 function measureSource(sheet,position){const bars=sheet.score.measures;let source=position;for(let guard=0;guard<bars.length;guard++){if(source<0)throw Error('Measure repeat has no source.');if(bars[source]?.repeat?.measure===1){source--;continue;}if(bars[source]?.repeat?.measure===2||bars[source-1]?.repeat?.measure===2){source-=2;continue;}return source;}throw Error('Measure repeat does not terminate.');}
@@ -262,11 +263,11 @@ function frequency(pitch,accidental='',key='C',carry={}){
 // A document has one main score and optional embedded instrument parts.
 function joinSections(sheet){
  const {sections=[],...score}=sheet.score;if(!sections.length)return {...sheet,score};
- const measures=[];
+ const measures=[];let displaySymbol='';
  for(const[index,section]of [score,...sections].entries()){
   const bars=trimmedMeasures({metadata:sheet.metadata,score:section});
   if(!bars.length)bars.push(clone(section.measures[0]||{notes:[],preserve:true}));
-  bars.forEach((bar,i)=>{if(index&&i===0){bar.time??=sheet.metadata.time;bar.key??=sheet.metadata.key;bar.tempo??={mode:'instant',bpm:sheet.metadata.bpm};bar.clefs??=Object.fromEntries(staves(sheet.metadata).map((staff,n)=>[n+1,staff.clef]));}measures.push(bar);});
+  bars.forEach((bar,i)=>{if(index&&i===0){const time=bar.time||sheet.metadata.time,previous=effectiveTime({...sheet,score:{measures}},measures.length-1),symbol=bar.timeSymbol||'';if(time===previous&&(!symbol||symbol===displaySymbol)){delete bar.time;delete bar.timeSymbol;}else bar.time=time;bar.key??=sheet.metadata.key;bar.tempo??={mode:'instant',bpm:sheet.metadata.bpm};bar.clefs??=Object.fromEntries(staves(sheet.metadata).map((staff,n)=>[n+1,staff.clef]));}if(bar.time||bar.timeSymbol)displaySymbol=bar.timeSymbol||'';measures.push(bar);});
  }
  return {...sheet,score:{...score,measures}};
 }

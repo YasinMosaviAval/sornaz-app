@@ -35,17 +35,24 @@ function accidental(value){
  if(value==='bk'||value==='#o')return glyph(value==='bk'?'accidentalFlat':'accidentalSharp',10,23,26)+glyph(value==='bk'?'accidentalKoron':'accidentalSori',26,23,26);
  return names[value]?glyph(names[value],18,23,34)||text(value):text(({d:'¼♭','+':'¼♯'})[value]||value);
 }
-function keySignature(value){
+function keySignature(value,scaleType=''){
+ const signature=root.NotationModel?.iranianSignature(scaleType,value);
+ if(signature){
+  const names={b:'accidentalFlat','#':'accidentalSharp',n:'accidentalNatural',bb:'accidentalDoubleFlat','##':'accidentalDoubleSharp',k:'accidentalKoron',o:'accidentalSori'},count=signature.accidentals.reduce((n,item)=>n+(['bk','#o'].includes(item.accidental)?2:1),0),width=Math.max(48,count*7+10),lines='<path opacity=".3" d="M3 10h'+(width-6)+'M3 15h'+(width-6)+'M3 20h'+(width-6)+'M3 25h'+(width-6)+'M3 30h'+(width-6)+'"/>';let content=lines,x=6;
+  for(const item of signature.accidentals){const lower=item.alter<0,order=lower?'BEADGCF':'FCGDAEB',positions=lower?[19,10,22,13,25,16,28]:[10,19,7,16,25,13,22],parts=item.accidental==='bk'?['b','k']:item.accidental==='#o'?['#','o']:[item.accidental];for(const part of parts){content+=glyph(names[part],x,positions[order.indexOf(item.letter)],20);x+=7;}}
+  return {content,width};
+ }
+
  const major={C:0,G:1,D:2,A:3,E:4,B:5,'F#':6,'C#':7,F:-1,Bb:-2,Eb:-3,Ab:-4,Db:-5,Gb:-6,Cb:-7};
  const minor={Am:0,Em:1,Bm:2,'F#m':3,'C#m':4,'G#m':5,'D#m':6,'A#m':7,Dm:-1,Gm:-2,Cm:-3,Fm:-4,Bbm:-5,Ebm:-6,Abm:-7};
  const count=major[value]??minor[value]??0,code=count<0?'accidentalFlat':'accidentalSharp',positions=count<0?[19,10,22,13,25,16,28]:[10,19,7,16,25,13,22];let content=staff;
- if(!count)return content+glyph('accidentalNatural',21,22,22);
+ if(!count)return content;
  for(let index=0;index<Math.abs(count);index++)content+=glyph(code,5+index*5.3,positions[index],20);
  return content;
 }
 function hairpin(value){return value==='stop'?'<path d="M9 10v20M39 10v20"/><path d="m14 12 20 8-20 8"/>':value==='diminuendo'?'<path d="m8 10 31 10L8 30"/>':'<path d="m39 10-31 10 31 10"/>';}
 function octave(value){return text(value==='stop'?'8':value||'8va',21,18,15,'font-style="italic"')+'<path d="M5 25h36v7" stroke-dasharray="3 3"/>'+(value==='stop'?'<path d="m33 9 9 9m0-9-9 9"/>':'');}
-function symbol(key,value){
+function symbol(key,value,context={}){
  if(key==='timeTop'||key==='timeBottom')return svg(text(value,24,29,24));
  if(key==='time'&&value==='manual')return svg(text('N',24,17,16)+text('D',24,37,16)+'<path d="M14 21h20"/>');
  if(/^clef[12]$/.test(key)||key==='clef-change'||key==='clef')return clef(value);
@@ -53,7 +60,7 @@ function symbol(key,value){
  if(key==='rehearsal')return svg('<rect x="12" y="5" width="24" height="29" rx="1"/>'+text(value||'A',24,27,22));
  if(key==='text'||key==='note-lyric')return svg(note+text('la',35,35,13)+'<path d="M9 38h31"/>');
  if(key==='note-chord-symbol')return svg(text(value||'C7',24,17,18)+'<path opacity=".3" d="M3 25h42M3 30h42M3 35h42"/>');
- if(key==='key')return svg(keySignature(value||'G'));
+ if(key==='key'){const signature=keySignature(value||'G',context.scaleType);return typeof signature==='string'?svg(signature):svg(signature.content,'0 0 '+signature.width+' 40');}
  if(key==='tempoBpm')return svg(note+text(value||'♩',36,22,12));
  if(key==='tempoMode')return svg(({ritardando:text('rit.',24,22,20,'font-style="italic"')+'<path d="M5 31h38" stroke-dasharray="3 3"/>',accelerando:text('accel.',24,22,15,'font-style="italic"')+'<path d="M5 31h38" stroke-dasharray="3 3"/>',aTempo:text('a tempo',24,24,12,'font-style="italic"'),instant:note+text('=',35,20,17)})[value]||note+'<path d="M32 7v20m-4-16 4-4 4 4"/>');
  if(key==='time')return svg(/^\d+\/\d+$/.test(value)?text(value.split('/')[0],24,18,18)+text(value.split('/')[1],24,36,18):text('4',24,18,18)+text('4',24,36,18));
@@ -87,11 +94,11 @@ function symbol(key,value){
  if(key==='tuplet')return svg('<path d="M5 31V11h38v20"/>'+text((value||'3:2').split(':')[0],24,27,18));
  return svg(note);
 }
-function field(key,value=''){return symbol(key,String(value));}
-function option(key,value,label=''){
+function field(key,value='',context={}){return symbol(key,String(value),context);}
+function option(key,value,label='',context={}){
  const raw=String(value??'');if(raw===''&&!['note-size','barline','timeSymbol'].includes(key))return svg(no);
  if(key==='note-tremolo'&&raw==='0')return svg(no);
- return symbol(key,raw);
+ return symbol(key,raw,context);
 }
 root.NotationGlyphs={field,option};
 })(globalThis);

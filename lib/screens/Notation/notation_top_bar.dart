@@ -28,13 +28,13 @@ class NotationTopBar extends StatelessWidget implements PreferredSizeWidget {
           (data['canWrite'] == true || editable) &&
           data['practiceDraft'] != true) ...[
         _action(
-          Icons.post_add,
+          Icons.add,
           'add-section',
           socialText(context, 'افزودن بخش', 'Add section'),
           true,
         ),
         _action(
-          Icons.add,
+          Icons.post_add,
           'add-part',
           socialText(context, 'افزودن پارت', 'Add part'),
           true,

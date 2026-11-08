@@ -4,6 +4,7 @@ import 'package:sornaz/components/scroll_aware_scaffold.dart';
 import 'notation_top_bar.dart';
 import 'notation_settings.dart';
 import 'notation_list_dialog.dart';
+import 'notation_delete_confirmation.dart';
 import 'package:sornaz/components/main_tabs.dart';
 import 'package:sornaz/components/join_community.dart';
 import 'package:sornaz/components/home_top_bar.dart';
@@ -287,6 +288,12 @@ window.addEventListener('message',(event)=>{
         result = await chooseList();
       } else if (action == 'rename-dialog') {
         result = await renameSheet('${data['current'] ?? ''}');
+      } else if (action == 'confirm-structure-delete') {
+        if (!mounted) return;
+        result = await confirmNotationStructureDelete(
+          context,
+          '${data['kind']}',
+        );
       } else if ([
         'export',
         'download',

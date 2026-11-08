@@ -249,7 +249,7 @@ class _AppPianoKeyboardState extends State<AppPianoKeyboard> {
             borderRadius: key.isWhite
                 ? null
                 : BorderRadius.vertical(
-                    bottom: Radius.circular(key.accidental == 'b' ? 4 : radius),
+                    bottom: Radius.circular(radius),
                   ),
           ),
           padding: const EdgeInsets.only(bottom: 4),

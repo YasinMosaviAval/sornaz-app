@@ -2,7 +2,7 @@
 (function (global) {
 'use strict';
 if (global.NotationControls) return;
-let scope, locale='en', popup=null, help=null, hoverTimer, touchTimer, touch=null, suppressedUntil=0, suppressedTarget=null, serial=0;
+let scope, locale='en', scaleType='', popup=null, help=null, hoverTimer, touchTimer, touch=null, suppressedUntil=0, suppressedTarget=null, serial=0;
 const fields={
  displayNumber:['شماره میزان','Measure number','شماره‌ای که کنار میزان در پارتیتور و خروجی چاپ می‌شود؛ ترتیب میزان‌ها یا زمان پخش را عوض نمی‌کند. خالی‌بودن یعنی شماره‌گذاری خودکار.','The printed measure number. It does not reorder measures or change playback. Leave it empty for automatic numbering.'],
  rehearsal:['علامت تمرین','Rehearsal mark','حرف یا شماره‌ای مانند A یا B در یک کادر بالای میزان نمایش می‌دهد تا نوازندگان محل شروع تمرین را سریع پیدا کنند. اثری بر صدا ندارد.','Places a boxed letter or number, such as A or B, above this measure so musicians can find a rehearsal point. It does not change the sound.'],
@@ -112,8 +112,8 @@ function annotate(node,info){
  if(!node.getAttribute('aria-label'))node.setAttribute('aria-label',info.name);
  if(node.hasAttribute('title'))node.removeAttribute('title');
 }
-function glyph(key,value,label){return global.NotationGlyphs?.option(key,value,label)||global.NotationSymbols?.tool('note')||'';}
-function fieldGlyph(key,value=''){return global.NotationGlyphs?.field(key,value)||global.NotationSymbols?.tool('note')||'';}
+function glyph(key,value,label){return global.NotationGlyphs?.option(key,value,label,{scaleType})||global.NotationSymbols?.tool('note')||'';}
+function fieldGlyph(key,value=''){return global.NotationGlyphs?.field(key,value,{scaleType})||global.NotationSymbols?.tool('note')||'';}
 function actionGlyph(button){
  const action=button.dataset.action,field=button.dataset.field;
  if((action==='note-mark'||action==='tone-tie')&&['tieNext','tiePrevious','slurStart','slurEnd'].includes(field)){
@@ -183,8 +183,8 @@ function showHelp(node,source='focus',point=null){
 function closePicker(focus=false){if(!popup)return;const {box,button}=popup;if(help&&box.contains(help.node))hideHelp();popup=null;removeTopLayer(box);button.setAttribute('aria-expanded','false');button.removeAttribute('aria-controls');if(focus&&button.isConnected)button.focus({preventScroll:true});}
 function openPicker(button,select){
  if(select.disabled)return;if(popup?.button===button){closePicker(true);return;}closePicker();hideHelp();
- const key=keyOf(select),info=controlInfo(select),textChoices=key==='beamPattern'||select.closest('#metadata')||select.matches('[data-choice],[data-tuplet]'),box=document.createElement('div');box.className='notation-symbol-popup'+(textChoices?' notation-text-options':'')+(select.matches('[data-measure-choice]')?' notation-measure-options':'');box.dataset.controlKey=key;if(key==='beamPattern')box.style.fontSize=getComputedStyle(button).fontSize;box.id='notation-choices-'+(++serial);box.setAttribute('role','listbox');box.setAttribute('aria-label',info.name);box.dir=locale==='fa'?'rtl':'ltr';
- for(const option of select.options){const choice=document.createElement('button');choice.type='button';choice.className='notation-symbol-option';choice.dataset.notationOption=option.value;choice.setAttribute('role','option');choice.setAttribute('aria-label',option.textContent||tr('بدون علامت','No marking'));choice.setAttribute('aria-selected',String(option.selected));choice.disabled=option.disabled;if(textChoices){const check=document.createElement('span');check.className='notation-option-check';check.setAttribute('aria-hidden','true');check.textContent=option.selected?'\u2611':'\u2610';const label=document.createElement('span');label.textContent=option.textContent;choice.append(check,label);}else choice.innerHTML=glyph(key,option.value,option.textContent);annotate(choice,{name:choice.getAttribute('aria-label'),text:info.text+(option.dataset.disabledReason?' '+option.dataset.disabledReason:'')});choice.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();if(choice.disabled)return;const value=option.value;closePicker(true);select.value=value;select.dispatchEvent(new Event('change',{bubbles:true}));});box.append(choice);}
+ const key=keyOf(select),info=controlInfo(select),symbolicForm=!!select.closest('#metadata')&&['time','clef','key'].includes(key),textChoices=key==='beamPattern'||select.closest('#metadata')&&!symbolicForm||select.matches('[data-choice],[data-tuplet]'),box=document.createElement('div');box.className='notation-symbol-popup'+(textChoices?' notation-text-options':'')+(select.matches('[data-measure-choice]')||symbolicForm?' notation-measure-options':'');box.dataset.controlKey=key;if(key==='beamPattern')box.style.fontSize=getComputedStyle(button).fontSize;box.id='notation-choices-'+(++serial);box.setAttribute('role','listbox');box.setAttribute('aria-label',info.name);box.dir=locale==='fa'?'rtl':'ltr';
+ for(const option of select.options){const choice=document.createElement('button');choice.type='button';choice.className='notation-symbol-option';choice.dataset.notationOption=option.value;choice.setAttribute('role','option');choice.setAttribute('aria-label',option.textContent||tr('بدون علامت','No marking'));choice.setAttribute('aria-selected',String(option.selected));choice.disabled=option.disabled;if(textChoices){const check=document.createElement('span');check.className='notation-option-check';check.setAttribute('aria-hidden','true');check.textContent=option.selected?'\u2611':'\u2610';const label=document.createElement('span');label.textContent=option.textContent;choice.append(check,label);}else{choice.innerHTML=glyph(key,option.value,option.textContent);if(key==='key'){const name=document.createElement('span');name.className='notation-signature-name';name.textContent=option.textContent;choice.append(name);}}annotate(choice,{name:choice.getAttribute('aria-label'),text:info.text+(option.dataset.disabledReason?' '+option.dataset.disabledReason:'')});choice.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();if(choice.disabled)return;const value=option.value;closePicker(true);select.value=value;select.dispatchEvent(new Event('change',{bubbles:true}));});box.append(choice);}
  popup={box,button,select};button.setAttribute('aria-expanded','true');button.setAttribute('aria-controls',box.id);topLayer(box);position(box,button);const selected=box.querySelector('[aria-selected=true]:not(:disabled)')||box.querySelector('button:not(:disabled)');selected?.focus({preventScroll:true});
 }
 function helpTarget(event){const node=event.target instanceof Element?event.target.closest('[data-notation-help],button,input,select,textarea,summary,[data-pitch],#score [data-note]'):null;if(node&&!node.dataset.notationHelp)annotate(node,controlInfo(node));return node;}
@@ -215,7 +215,7 @@ function keys(event){
  else if(event.key==='Home')next=0;else if(event.key==='End')next=choices.length-1;else if(event.key==='Tab'){closePicker();return;}
  if(next!==undefined){event.preventDefault();event.stopPropagation();hideHelp();choices[next]?.focus({preventScroll:true});}
 }
-function decorate(root,options={}){
+function decorate(root,options={}){scaleType=options.scaleType||'';
  scope=root;locale=options.locale||document.documentElement.lang||'en';helpEnabled=options.showHelp!==false;
  if(touch){const live=refind(touch.node);if(live)touch.node=live;else{clearTimeout(touchTimer);touch=null;}}
  for(const select of root.querySelectorAll(pickSelector+',#metadata select:not([name=tempo_unit])'))enhanceSelect(select);

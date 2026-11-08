@@ -91,8 +91,8 @@ function renderRow(target,bars,start,options){
  const ctx=renderer.getContext(),engraved=[],octaveNotes=[];
  const svg=target.querySelector('svg');svg.setAttribute('viewBox',`0 0 ${width} ${height}`);svg.setAttribute('width','100%');svg.setAttribute('height',String(options.printing?(grand?215:86):height*options.pixels/width));
  svg.style.display='block';svg.style.maxWidth='100%';if(!options.printing)svg.style.width='100%';svg.dataset.baseHeight=String(height);svg.dataset.legacyHeight=String(grand?300:120);svg.dataset.screenScale=String(options.pixels/width);svg.dataset.staffStep=String(staffStep);
- const leftInset=grand?30:4,repeatInfo=bars.map((_,i)=>measureRepeatAt(options.sheet.score.measures,start+i)),widths=repeatInfo.map(info=>info?repeatWidths[info.count]/info.count:0);
- const firstRepeat=repeatInfo[0];if(firstRepeat){const prefix=2*(70+signatureReserve(options.sheet));for(let i=0;i<Math.min(firstRepeat.count,widths.length);i++)widths[i]+=prefix/firstRepeat.count;}
+ const leftInset=options.leftInset??(grand?30:4),repeatInfo=bars.map((_,i)=>measureRepeatAt(options.sheet.score.measures,start+i)),widths=options.measureWidths?.slice()||repeatInfo.map(info=>info?repeatWidths[info.count]/info.count:0);
+ const firstRepeat=repeatInfo[0];if(firstRepeat&&!options.measureWidths){const prefix=2*(70+signatureReserve(options.sheet));for(let i=0;i<Math.min(firstRepeat.count,widths.length);i++)widths[i]+=prefix/firstRepeat.count;}
  const flexible=widths.filter(w=>!w).length,remaining=width-leftInset-4-widths.reduce((a,b)=>a+b,0);for(let i=0;i<widths.length;i++)if(!widths[i])widths[i]=remaining/flexible;
  let barX=leftInset;
  bars.forEach((bar,col)=>{
@@ -199,7 +199,7 @@ function renderRow(target,bars,start,options){
   if(!options.printing){
    const hit=(attributes)=>{const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');for(const[k,v]of Object.entries({fill:'transparent',stroke:'none','class':'note-hit',...attributes}))rect.setAttribute(k,String(v));svg.append(rect);};
    staves.forEach((stave,lane)=>hit({x,y:stave.getY()+10,width:barWidth,height:grand?Math.min(100,staffStep-12):100,'data-bar':index,'data-staff':lane+1}));
-   engravedNotes.forEach((note,i)=>{const box=note?.getBoundingBox();if(box)hit({x:box.getX()-4,y:box.getY()-6,width:Math.max(22,box.getW()+8),height:Math.max(38,box.getH()+12),'data-bar':index,'data-staff':M.staffOf(bar.notes[i]),'data-note':i});});
+   engravedNotes.forEach((note,i)=>{const box=note?.getBoundingBox();if(box)hit({x:box.getX()-4,y:box.getY()-6,width:Math.max(22,box.getW()+8),height:Math.max(38,box.getH()+12),'data-bar':index,'data-staff':M.staffOf(bar.notes[i]),'data-note':i,'data-note-selected':options.selectedNotes?.has(index+':'+i)?'true':'false'});});
   }
  });
  // Brackets continue over adjacent notes and bars, with a fresh label on each row.
@@ -298,6 +298,22 @@ function draw(element,sheet,options={}){
   engraved.push(...renderRow(row,bars,index,{...options,sheet,metadata:sheet.metadata,width,pixels}));index+=bars.length;
  }ties(sheet,engraved);slurs(sheet,engraved);pedalLines(sheet,engraved);hairpins(sheet,engraved);octaveLines(sheet,engraved);slides(sheet,engraved);fitDecorations(engraved,false);
 }
+// One horizontal system per instrument; all systems share physical bar widths.
+function drawEnsemble(element,parts,options={}){
+ const scrollLeft=element.scrollLeft;element.replaceChildren();element.classList.add('notation-ensemble');
+ const count=Math.max(...parts.map(part=>Math.max(1,M.trimmedMeasures(part).length))),prefix=Math.max(...parts.map(signatureReserve))*2+170;
+ const measureWidths=Array.from({length:count},(_,index)=>Math.max(210,...parts.map(part=>part.score.measures[index]?estimate(part.score.measures[index],0,part,index):210))+(index===0?prefix:0));
+ const width=measureWidths.reduce((a,b)=>a+b,0)+38,pixels=width*.68;
+ for(const[partIndex,part]of parts.entries()){
+  const sheet=M.clone(part),written=M.trimmedMeasures(sheet);sheet.score.measures=Array.from({length:count},(_,index)=>written[index]||{notes:[],preserve:true});
+  const lane=document.createElement('section');lane.className='notation-ensemble-part';lane.dataset.part=partIndex;lane.style.width=pixels+'px';
+  const label=document.createElement('div');label.className='notation-ensemble-label';label.textContent=options.instrumentName?options.instrumentName(sheet.metadata):sheet.metadata.instrument;lane.append(label);
+  const row=document.createElement('div');row.className='staff-row';lane.append(row);element.append(lane);
+  const active=options.activeNotes?.[partIndex],engraved=renderRow(row,sheet.score.measures,0,{...options,sheet,metadata:sheet.metadata,width,pixels,measureWidths,leftInset:30,lastWritten:written.length-1,activeBar:active?.bar??-1,activeNote:active?.note??-1,selectedNotes:new Set()});
+  ties(sheet,engraved);slurs(sheet,engraved);pedalLines(sheet,engraved);hairpins(sheet,engraved);octaveLines(sheet,engraved);slides(sheet,engraved);fitDecorations(engraved,false);
+ }
+ element.scrollLeft=scrollLeft;
+}
 function printDocument(sheet,locale='en',symbols={}){
  if(sheet.score.sections?.length)return printDocument(M.joinSections(sheet),locale,symbols);
  if(sheet.score.parts?.length){const documents=M.parts(sheet).map(part=>printDocument({...part,printPart:true},locale,symbols)),body=documents.map(html=>new DOMParser().parseFromString(html,'text/html').body.innerHTML).join('');return documents[0].replace(/<body>[\s\S]*<\/body>/,()=>'<body>'+body+'</body>');}
@@ -317,5 +333,5 @@ function printDocument(sheet,locale='en',symbols={}){
  return `<!doctype html><html lang="${locale}"><head><meta charset="utf-8"><style>@font-face{font-family:Sornaz;src:url('../fonts/iran_sansx_fa/regular.ttf')}@page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;background:white;color:black;font:12px Sornaz,Arial,sans-serif}.print-page{width:210mm;height:297mm;padding:8mm;break-after:page;overflow:hidden}.print-page:last-child{break-after:auto}.print-page header{height:40mm}h1{text-align:center;font-size:20px;margin:0 0 4px}.subtitle{text-align:center;margin:0}.score-meta{display:flex;direction:rtl;justify-content:space-between;align-items:center;gap:12px}.credits{text-align:right;direction:${locale==='fa'?'rtl':'ltr'}}.credits p{margin:2px 0}.part-instrument{flex-basis:100%;text-align:center}.tempo{display:flex;flex-wrap:wrap;gap:12px;direction:ltr;align-items:center}.print-staff{height:${M.staves(sheet.metadata).length===2?53:23}mm}.print-page:not(:first-child){padding-top:9mm}svg{width:100%;height:100%}</style></head><body>${pages.map(p=>p.outerHTML).join('')}</body></html>`;
  }finally{host.remove();}
 }
-root.NotationRenderer={draw,printDocument,groups,ottava,beamPattern:renderingBeamPattern,measureAccidentals};
+root.NotationRenderer={draw,drawEnsemble,printDocument,groups,ottava,beamPattern:renderingBeamPattern,measureAccidentals};
 })(globalThis);

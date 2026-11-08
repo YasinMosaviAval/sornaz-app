@@ -199,7 +199,7 @@ svg[data-music-font=Bravura],svg[data-music-font=Bravura] text{direction:ltr!imp
 /* Keep metadata selectors aligned with adjacent inputs and the beat picker. */
 #metadata .field:not(.field-wide){display:grid!important;grid-template-rows:minmax(18px,1fr) 46px;align-content:stretch;align-self:stretch;row-gap:2px!important}
 #metadata .field:not(.field-wide)>span{min-height:18px!important;margin:0!important}
-.piano .black.split-black,.piano .black-flat{border-radius:0 0 4px 4px!important}
+.piano .black.split-black,.piano .black-flat{border-radius:0 0 var(--app-corner-radius,4px) var(--app-corner-radius,4px)!important}
 .notation-symbol-popup[data-control-key=beamPattern] .notation-symbol-option{font-size:inherit;min-height:28px}
 
 .notation-part-tabs{position:sticky;top:0;z-index:6;background:var(--bg);display:flex;gap:4px;overflow-x:auto;padding:4px 12px;flex:0 0 auto;scrollbar-width:thin}
@@ -212,3 +212,39 @@ svg[data-music-font=Bravura],svg[data-music-font=Bravura] text{direction:ltr!imp
 
 .website-panel .editor-actions .web-editor-action{flex:0 0 auto}
 .editor-header .notation-top-tools{flex-shrink:0}
+
+/* Only an already selected note owns the immediate range-selection gesture. */
+#score [data-note-selected=true]{touch-action:none}
+.notation-tab-row{position:sticky;z-index:6;background:var(--bg);min-width:0;flex:0 0 auto;min-height:40px}
+.notation-tab-row>.notation-part-tabs{position:static;margin-inline-end:44px}
+.notation-structure-delete{position:absolute;inset-inline-end:8px;top:4px;width:32px;height:32px;min-width:32px;min-height:32px;padding:4px;display:flex;align-items:center;justify-content:center;color:#dc2626;background:var(--bg);z-index:1}
+.notation-structure-delete[hidden]{display:none!important}
+.notation-structure-delete svg{width:22px;height:22px}
+
+/* Selection pitch controls and synchronized instrument overview. */
+.score-transpose{position:fixed;left:50%!important;right:auto!important;top:45%!important;transform:translate(-50%,-50%);display:flex;flex-direction:row;gap:4px;z-index:12;background:var(--bg);border:1px solid var(--line);border-radius:var(--app-corner-radius,4px);padding:4px;box-shadow:0 2px 8px #0002}
+.score-transpose .icon{width:32px;height:32px;min-width:32px;min-height:32px;font-size:calc(22px * var(--font-scale,1));color:var(--accent)}
+#score:not(.notation-ensemble){touch-action:pan-y pinch-zoom}
+#score [data-note-selected=true]{touch-action:none}
+#score.notation-ensemble{direction:ltr;overflow-x:auto;overscroll-behavior-x:contain;touch-action:pan-x pan-y;max-width:100%}
+.notation-ensemble-part{min-width:100%;border-bottom:1px solid var(--line)}
+.notation-ensemble-label{position:sticky;left:4px;width:max-content;max-width:220px;padding:4px;font-size:inherit;color:var(--ink)}
+
+body.writing{overscroll-behavior-x:none}
+.score-title{touch-action:pan-y}
+
+.editor-header .editor-actions{min-width:0;max-width:calc(100vw - 60px);overflow-x:auto;flex-shrink:1}
+.editor-header .editor-actions>button{flex-shrink:0}
+
+/* Compact sheet list; retain the outer tab inset without an inner gutter. */
+.sheet-list .sheet button.open strong{font-size:calc(10px * var(--font-scale,1))}
+.sheet-list .sheet .open small,.sheet-list .sheet>.sheet-status{font-size:calc(8px * var(--font-scale,1))}
+.sheet-list .sheet .icon svg{width:24px;height:24px}
+.sheet-list .sheet .sheet-menu summary,.sheet-list .sheet .list-icon{font-size:24px}
+.tabs{padding-inline:0}
+.tabs button{padding-inline:0}
+.notation-tab-row{margin-inline:12px}
+.notation-tab-row>.notation-part-tabs{padding-inline:0}
+
+.notation-measure-options[data-control-key=key] .notation-symbol-option{flex-direction:column;gap:2px}
+.notation-signature-name{font-size:calc(12px * var(--font-scale,1));font-family:inherit;line-height:1.2;text-align:center;white-space:normal}

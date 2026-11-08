@@ -7,6 +7,7 @@ import 'package:sornaz/screens/Players/services/player_settings.dart';
 import 'package:sornaz/helpers/app_colors.dart';
 import 'notation_settings.dart';
 import 'notation_list_dialog.dart';
+import 'notation_delete_confirmation.dart';
 import 'notation_top_bar.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:file_picker/file_picker.dart';
@@ -498,6 +499,12 @@ class _NotationHostState extends State<_NotationHost>
         }
       } else if (action == 'rename-dialog') {
         result = await _renameSheet('${data['current'] ?? ''}');
+      } else if (action == 'confirm-structure-delete') {
+        if (!mounted) return;
+        result = await confirmNotationStructureDelete(
+          context,
+          '${data['kind']}',
+        );
       } else if (action == 'pdf') {
         final html = data['html'];
         if (html is! String || html.length > 8000000)
