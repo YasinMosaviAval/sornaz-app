@@ -10,7 +10,7 @@ const validPitch=M.validPitch;
 const maxChordTones=M.maxChordTones;
 const accidentalValues=new Set(['','#','b','n','##','bb','+','d','k','o','bk','#o']);
 const markingValues={dynamic:new Set(['','ppp','pp','p','mp','mf','f','ff','fff','sf','sff','sfff','sfz','sffz','sfffz','fz','ffz','fffz','fp']),articulation:new Set(['','staccato','accent','tenuto','marcato','staccatissimo','fermata','breath','caesura']),ornament:new Set(['','trill','mordent','invertedMordent','turn','invertedTurn'])};
-const knownBar=new Set(['notes','preserve','time','timeSymbol','length','barline','repeat','clefs','clefChanges','key','tempo','rehearsal','text','displayNumber','multiRest','beamPattern']);
+const knownBar=new Set(['notes','preserve','time','timeSymbol','length','barline','repeat','clefs','clefChanges','key','tempo','tempo_unit','rehearsal','text','displayNumber','multiRest','beamPattern']);
 const knownMeta=new Set(['title','subtitle','composer','arranger','lyricist','tempo_text','instrument','key','tempo_note','clef','time','staves','bpm','scale_type','tempo_dots']);
 const knownNote=new Set(['pitch','duration','dots','rest','accidental','staff','voice','at','tuplet','pitches','cautionary','tieNext','tiePrevious','slurStart','slurEnd','pedal','crossBeam','beamGroup','dynamic','articulation','bow','ornament','finger','ornamentUpperAccidental','ornamentLowerAccidental','slide','lyric','hairpin','chordSymbol','tremolo','graces','octaveShift','noteSize','harmonic','arpeggio']);
 const knownTone=new Set(['pitch','accidental','tieNext','tiePrevious','cautionary','finger']);
@@ -28,6 +28,7 @@ function validate(raw,embeddedPart=false){
  sheet.score.measures=[];let count=0,rests=0,chords=0;
  for(const source of bars){
   if(!object(source)||hasUnknown(source,knownBar)||!Array.isArray(source.notes)||source.notes.length>128)fail('Invalid measure.');
+  if(source.tempo_unit!==undefined&&(typeof source.tempo_unit!=='string'||!/^(w|h|q|8|16|32|64|128|256):[0-2]$/.test(source.tempo_unit)))fail('Invalid tempo unit.');
   const bar=M.clone(source);bar.notes=[];bar.preserve=true;sheet.score.measures.push(bar);
   try{const capacity=M.barUnits(sheet,sheet.score.measures.length-1);if(!Number.isInteger(capacity)||capacity<=0||capacity>M.wholeUnits*4)fail('Invalid measure length.');}catch(_){fail('Invalid measure length.');}
   const cursors=new Map();
@@ -89,7 +90,7 @@ function fromMusicXml(content,name){
    if(item.localName==='backup'||item.localName==='forward'){const d=Number(value(item,'duration'));if(!Number.isInteger(d)||d<0)fail('Invalid MusicXML timing.');cursor+=(item.localName==='backup'?-1:1)*d;continue;}
    if(item.localName==='direction'){
     const mark=one(item,'direction-type'),metronome=one(mark,'metronome');
-    if(sheet.score.measures.length===1&&metronome){const bpm=Number(value(metronome,'per-minute'));if(!Number.isInteger(bpm)||bpm<20||bpm>300)fail('Invalid MusicXML tempo.');sheet.metadata.bpm=bpm;sheet.metadata.tempo_text=value(mark,'words')||'';const beat={whole:'w',half:'h',quarter:'q',eighth:'8','16th':'16'}[value(metronome,'beat-unit')];if(beat)sheet.metadata.tempo_note=beat;sheet.metadata.tempo_dots=children(metronome,'beat-unit-dot').length;continue;}
+    if(metronome){const bpm=Number(value(metronome,'per-minute')),dots=children(metronome,'beat-unit-dot').length,beat={whole:'w',half:'h',quarter:'q',eighth:'8','16th':'16','32nd':'32','64th':'64','128th':'128','256th':'256'}[value(metronome,'beat-unit')];if(!Number.isInteger(bpm)||bpm<20||bpm>300||!beat||dots>2)fail('Invalid MusicXML tempo.');if(sheet.score.measures.length===1){sheet.metadata.bpm=bpm;sheet.metadata.tempo_text=value(mark,'words')||'';sheet.metadata.tempo_note=beat;sheet.metadata.tempo_dots=dots;}else{bar.tempo={mode:'instant',bpm};bar.tempo_unit=beat+':'+dots;}continue;}
     fail('Unsupported MusicXML notation.');
    }
    if(item.localName==='barline'||item.localName==='harmony')fail('Unsupported MusicXML notation.');

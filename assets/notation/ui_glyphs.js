@@ -96,7 +96,7 @@ function symbol(key,value,context={}){
 }
 function field(key,value='',context={}){return symbol(key,String(value),context);}
 function option(key,value,label='',context={}){
- const raw=String(value??'');if(raw===''&&!['note-size','barline','timeSymbol'].includes(key))return svg(no);
+ const raw=String(value??'');if(key==='timeSymbol'&&raw===''&&/^\d+\/\d+$/.test(label))return symbol('time',label,context);if(raw===''&&!['note-size','barline','timeSymbol'].includes(key))return svg(no);
  if(key==='note-tremolo'&&raw==='0')return svg(no);
  return symbol(key,raw,context);
 }

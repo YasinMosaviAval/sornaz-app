@@ -41,7 +41,7 @@ function completedVoice(source,sheet,index,staff,voice){
 }
 function renderingBeamPattern(sheet,index){
  if(sheet.score.measures[index]?.beamPattern)return M.beamPattern(sheet,index);
- const m=sheet.metadata;if(!M.durations[m.tempo_note])return M.beamPattern(sheet,index);
+ const m=M.effectiveTempoUnit(sheet,index);if(!M.durations[m.tempo_note])return M.beamPattern(sheet,index);
  const beat=M.units({duration:m.tempo_note,dots:Number(m.tempo_dots)||0}),length=M.barUnits(sheet,index),parts=[];for(let at=0;at<length;at+=beat)parts.push(Math.min(beat,length-at));return {parts,denominator:M.wholeUnits};
 }
 // Beam groups choose a common stem direction, including pitches across the middle line.
@@ -66,7 +66,7 @@ function previewNote(ctx,stave,n,x){
 const estimate=(bar,repeatCount=bar.repeat?.measure||0,sheet=null,index=0)=>{
  if(repeatCount)return repeatWidths[repeatCount]/repeatCount;
  const lanes=[1,2].map(staff=>{const saved=bar.notes.map((n,i)=>({...n,at:M.positionOf(bar,i)})).filter(n=>M.staffOf(n)===staff),extra=sheet?[...new Set(saved.map(M.voiceOf))].reduce((sum,voice)=>sum+completedVoice(saved.filter(n=>M.voiceOf(n)===voice).sort((a,b)=>a.at-b.at),sheet,index,staff,voice).filter(n=>n.synthetic).length*24,0):0;return saved.reduce((width,n)=>width+38+(n.accidental?18:0)+(n.cautionary?10:0)+(n.pitches||[]).filter(tone=>tone.accidental).length*12+(n.graces?.length||0)*13+(n.chordSymbol?30:0),extra);});
- const prefix=(bar.time||bar.timeSymbol?32:0)+(bar.key?35:0)+(bar.clefs?38:0)+(bar.repeat?.start?18:0);
+ const prefix=((bar.time||bar.timeSymbol)&&(!sheet||index===0||M.effectiveTime(sheet,index)!==M.effectiveTime(sheet,index-1))?32:0)+(bar.key?35:0)+(bar.clefs?38:0)+(bar.repeat?.start?18:0);
  return Math.max(150,Math.max(...lanes)+100+prefix+(bar.clefChanges?.length||0)*24);
 };
 function ottava(pitch,rest=false){
@@ -96,10 +96,10 @@ function renderRow(target,bars,start,options){
  const flexible=widths.filter(w=>!w).length,remaining=width-leftInset-4-widths.reduce((a,b)=>a+b,0);for(let i=0;i<widths.length;i++)if(!widths[i])widths[i]=remaining/flexible;
  let barX=leftInset;
  bars.forEach((bar,col)=>{
-  const index=start+col,x=barX,barWidth=widths[col],repeatRegion=repeatInfo[col],barTime=M.effectiveTime(options.sheet,index),barKey=M.effectiveKey(options.sheet,index),clefs=layout.map((_,lane)=>M.effectiveClef(options.sheet,index,lane+1)),staves=layout.map((entry,lane)=>new VF.Stave(x,6+lane*staffStep,barWidth)),multiRest=M.multiRestAt(options.sheet.score.measures,index);
+  const index=start+col,x=barX,barWidth=widths[col],repeatRegion=repeatInfo[col],barTime=M.effectiveTime(options.sheet,index),barKey=M.effectiveKey(options.sheet,index),clefs=layout.map((_,lane)=>M.effectiveClef(options.sheet,index,lane+1)),staves=layout.map((entry,lane)=>new VF.Stave(x,6+lane*staffStep,barWidth)),multiRest=M.multiRestAt(options.sheet.score.measures,index),selectedHint=!options.printing&&options.sheet.editable&&options.measureSelected&&index===options.activeBar&&index>0,tempoTargets=[];
   if(!options.printing&&index===options.activeBar){ctx.save();ctx.setFillStyle(options.accent+'14');ctx.openGroup('notation-active-background');staves.forEach(stave=>ctx.fillRect(x,stave.getY()+15,barWidth,94));ctx.closeGroup();ctx.restore();}
   staves.forEach((stave,lane)=>{
-   if(col===0||bar.clefs?.[lane+1]||bar.time||bar.timeSymbol||bar.key){if(col===0||bar.clefs?.[lane+1])stave.addClef(clefs[lane].split('_')[0],undefined,clefs[lane].split('_')[1]);if(options.continuousSignatures?(index===0||!M.sameKeySignature(options.sheet,barKey,M.effectiveKey(options.sheet,index-1))):(col===0||bar.key)){const signature=M.iranianSignature?.(m.scale_type,barKey);if(signature)stave.addModifier(new IranianKeySignature(signature,clefs[lane].split('_')[0],index>0?M.iranianSignature(m.scale_type,M.effectiveKey(options.sheet,index-1)):null));else stave.addKeySignature(barKey,index>0?M.effectiveKey(options.sheet,index-1):undefined);}if(index===0||bar.time||bar.timeSymbol)stave.addTimeSignature(bar.timeSymbol==='common'?'C':bar.timeSymbol==='cut'?'C|':barTime);
+   if(col===0||bar.clefs?.[lane+1]||bar.time||bar.timeSymbol||bar.key||selectedHint){if(col===0||bar.clefs?.[lane+1])stave.addClef(clefs[lane].split('_')[0],undefined,clefs[lane].split('_')[1]);if(options.continuousSignatures?(index===0||!M.sameKeySignature(options.sheet,barKey,M.effectiveKey(options.sheet,index-1))):(col===0||bar.key)){const signature=M.iranianSignature?.(m.scale_type,barKey);if(signature)stave.addModifier(new IranianKeySignature(signature,clefs[lane].split('_')[0],index>0?M.iranianSignature(m.scale_type,M.effectiveKey(options.sheet,index-1)):null));else stave.addKeySignature(barKey,index>0?M.effectiveKey(options.sheet,index-1):undefined);}if(index===0||barTime!==M.effectiveTime(options.sheet,index-1)||selectedHint){stave.addTimeSignature(bar.timeSymbol==='common'?'C':bar.timeSymbol==='cut'?'C|':barTime);if(selectedHint&&barTime===M.effectiveTime(options.sheet,index-1))stave.getModifiers().find(mod=>mod.getCategory()==='TimeSignature')?.setStyle({fillStyle:'#c4c4c4',strokeStyle:'#c4c4c4'});}
    }
    if(lane===0&&(bar.displayNumber||index>0)){ctx.save();ctx.setFillStyle('#666');ctx.setFont('Arial',5.5);ctx.fillText(String(bar.displayNumber||index+1),x+9,35);ctx.restore();}
    if(bar.repeat?.start)stave.setBegBarType(VF.Barline.type.REPEAT_BEGIN);
@@ -135,8 +135,15 @@ function renderRow(target,bars,start,options){
   }
   if(bar.rehearsal)addLabel(bar.rehearsal,staves[0].getY()-53,12);
   if(bar.text)addLabel(bar.text,staves[0].getY()-66,10);
-  if(bar.tempo){const label=document.createElementNS('http://www.w3.org/2000/svg','text');for(const[key,value]of Object.entries({x:noteStart,y:staves[0].getY()-22,'text-anchor':'start','font-family':'NotationTheme, Arial','font-size':10,fill:'#111','class':'notation-tempo-change','data-bar':index}))label.setAttribute(key,String(value));label.textContent=({instant:metronomeUnit(m)+' = ',ritardando:'rit. → ',accelerando:'accel. → ',aTempo:'a tempo'})[bar.tempo.mode]+(bar.tempo.mode==='aTempo'?'':bar.tempo.bpm);svg.append(label);}
-  const previewTargets=[],generatedRests=[],engravedNotes=Array(bar.notes.length),voices=[],beams=[],tuplets=[],crossGroups=new Map(),crossCounts=new Map(),manualGroups=new Map(),manualCounts=new Map();
+  const currentUnit=M.effectiveTempoUnit(options.sheet,index),previousUnit=M.effectiveTempoUnit(options.sheet,index-1),unitChanged=currentUnit.tempo_note!==previousUnit.tempo_note||currentUnit.tempo_dots!==previousUnit.tempo_dots,segment=M.tempoSegment(options.sheet,index),previousBpm=index?M.tempoSegment(options.sheet,index-1).final:Number(m.bpm),tempoChanged=!!bar.tempo&&(segment.initial!==previousBpm||segment.final!==segment.initial);
+  if((unitChanged||tempoChanged||selectedHint)&&!(index===0&&(!bar.tempo||bar.tempo.mode==='instant'))){
+   const ns='http://www.w3.org/2000/svg',label=document.createElementNS(ns,'g'),scale=options.pixels/width,reference=target.closest('.shell')?.querySelector('.score-title .metronome-mark'),font=reference?parseFloat(getComputedStyle(reference).fontSize):10,fontSize=font/scale;let offset=0;
+   for(const[key,value]of Object.entries({'font-family':'NotationTheme, Arial','font-size':fontSize,fill:'#111','class':'notation-tempo-change','data-bar':index,'data-staff-top':staves[0].getYForLine(0),'data-note-start':noteStart}))label.setAttribute(key,String(value));svg.append(label);
+   const unit=M.effectiveTempoUnit(options.sheet,index),bpm=bar.tempo?.mode==='aTempo'?m.bpm:bar.tempo?.bpm||M.tempoSegment(options.sheet,index).initial,part=(text,field,faint)=>{const span=document.createElementNS(ns,'text');span.textContent=text;span.setAttribute('x',String(offset));span.setAttribute('y','0');span.setAttribute('fill',faint?'#c4c4c4':'#111');span.setAttribute('class','notation-measure-'+field);label.append(span);offset+=span.getBBox().width;if(field)tempoTargets.push({span,field});};
+   if(!bar.tempo||bar.tempo.mode==='instant'||selectedHint){if(options.printing){part(metronomeUnit(unit),'tempo_unit',false);}else{const holder=document.createElement('div');holder.innerHTML=root.NotationSymbols.note(unit.tempo_note);const icon=holder.firstElementChild,w=(reference?.querySelector('.note-glyph')?.getBoundingClientRect().width||14)/scale,h=(reference?.querySelector('.note-glyph')?.getBoundingClientRect().height||19)/scale,group=document.createElementNS(ns,'g');group.setAttribute('class','notation-measure-tempo_unit');group.setAttribute('color',selectedHint&&!bar.tempo_unit?'#c4c4c4':'#111');group.setAttribute('fill',selectedHint&&!bar.tempo_unit?'#c4c4c4':'#111');icon.setAttribute('width',String(w));icon.setAttribute('height',String(h));icon.setAttribute('y',String(-h/2-fontSize/3));icon.style.width=w+'px';icon.style.height=h+'px';group.append(icon);label.append(group);offset=w;if(unit.tempo_dots){const dots=document.createElementNS(ns,'text');dots.setAttribute('x',String(w-4/scale));dots.textContent='·'.repeat(unit.tempo_dots);dots.setAttribute('fill',selectedHint&&!bar.tempo_unit?'#c4c4c4':'#111');group.append(dots);offset=Math.max(offset,dots.getBBox().x+dots.getBBox().width);}tempoTargets.push({span:group,field:'tempo_unit'});}offset+=4/scale;part('= '+bpm,'tempoBpm',selectedHint&&!bar.tempo);}else{part(({ritardando:'rit. \u2192 ',accelerando:'accel. \u2192 ',aTempo:'a tempo'})[bar.tempo.mode],'',false);if(bar.tempo.mode!=='aTempo')part(String(bpm),'tempoBpm',false);}
+   label.setAttribute('transform','translate('+noteStart+' '+(staves[0].getYForLine(0)-14/scale-label.getBBox().y-label.getBBox().height)+')');
+  }
+  const previewTargets=[],generatedRests=[],fingerings=[],engravedNotes=Array(bar.notes.length),voices=[],beams=[],tuplets=[],crossGroups=new Map(),crossCounts=new Map(),manualGroups=new Map(),manualCounts=new Map();
   bar.notes.forEach(note=>{if(note.crossBeam&&!note.rest&&M.staffOf(note)<=layout.length)crossCounts.set(note.crossBeam,(crossCounts.get(note.crossBeam)||0)+1);});
   bar.notes.forEach(note=>{if(note.beamGroup&&!note.rest&&M.staffOf(note)<=layout.length)manualCounts.set(note.beamGroup,(manualCounts.get(note.beamGroup)||0)+1);});
   staves.forEach((stave,lane)=>{
@@ -169,8 +176,7 @@ function renderRow(target,bars,start,options){
     if(n.tremolo)v.addModifier(new VF.Tremolo(n.tremolo),0);
     if(n.harmonic?.kind==='natural')v.addModifier(new VF.Annotation('○').setFont('NotationTheme',16).setVerticalJustification(VF.Annotation.VerticalJustify.TOP),0);
     if(n.arpeggio&&n.pitches?.length)v.addModifier(new VF.Stroke(n.arpeggio==='down'?VF.Stroke.Type.ROLL_DOWN:VF.Stroke.Type.ROLL_UP),0);
-    if(n.finger)v.addModifier(new VF.FretHandFinger(n.finger).setPosition(VF.Modifier.Position.ABOVE),0);
-    (n.pitches||[]).forEach((tone,index)=>{if(tone.finger)v.addModifier(new VF.FretHandFinger(tone.finger).setPosition(VF.Modifier.Position.ABOVE),index+1);});
+    if(!n.rest&&[n,...(n.pitches||[])].some(tone=>tone.finger))fingerings.push({note:v,n,stave,staff});
     if(n.bow)v.addModifier(new VF.Annotation(n.bow==='up'?'∨':'⊓').setFont('Arial',13).setVerticalJustification(VF.Annotation.VerticalJustify.TOP),0);
     if(n.dynamic)v.addModifier(new VF.Annotation(n.dynamic).setFont('Times',12,'italic').setVerticalJustification(VF.Annotation.VerticalJustify.BOTTOM),0);
     if(n.lyric)v.addModifier(new VF.Annotation(n.lyric).setFont('NotationTheme',11).setVerticalJustification(VF.Annotation.VerticalJustify.BOTTOM),0);
@@ -192,6 +198,13 @@ function renderRow(target,bars,start,options){
   // Attach manual beams before formatting/drawing so their notes suppress standalone flags.
   for(const group of [...crossGroups.values(),...manualGroups.values()])if(group.length>1)beams.push(new VF.Beam(group.sort((a,b)=>a.at-b.at).map(item=>item.note)));
   if(voices.length){const formatter=new VF.Formatter();staves.forEach(stave=>{const same=voices.filter(v=>v.stave===stave).map(v=>v.voice);if(same.length)formatter.joinVoices(same);});formatter.format(voices.map(v=>v.voice),Math.max(20,staves[0].getNoteEndX()-noteStart-12));voices.forEach(({voice,stave})=>{ctx.openGroup('notation-staff-'+(staves.indexOf(stave)+1));voice.draw(ctx,stave);ctx.closeGroup();});beams.forEach(beam=>beam.setContext(ctx).draw());tuplets.forEach(tuplet=>tuplet.setContext(ctx).draw());}
+  // Place fingering after beam drawing, when the final stem endpoints are known.
+  for(const {note,n,stave,staff}of fingerings){
+   const top=stave.getYForLine(0),spacing=stave.getYForLine(1)-top,gap=4*width/options.pixels,stemTop=note.hasStem()?Math.min(note.getStemExtents().topY,note.getStemExtents().baseY):top;
+   const bottom=note.getStemDirection()===VF.Stem.UP&&stemTop<top?stemTop-gap:top-spacing,center=(note.getNoteHeadBeginX()+note.getNoteHeadEndX())/2,group=note.getSVGElement?.()||svg;
+   const tones=[n,...(n.pitches||[])].map((tone,index)=>({tone,index})).filter(({tone})=>tone.finger);
+   tones.forEach(({tone,index},lane)=>{const text=document.createElementNS('http://www.w3.org/2000/svg','text');for(const[key,value]of Object.entries({x:center,y:0,'text-anchor':'middle','font-family':'NotationTheme, Arial','font-size':12,fill:options.printing?'#111':note.getStyle()?.fillStyle||'#111','class':'notation-fingering','data-bar':start+bars.indexOf(bar),'data-note':n.index,'data-tone':index,'data-spacing-staff':staff}))text.setAttribute(key,String(value));text.textContent=tone.finger;group.append(text);const box=text.getBBox();text.setAttribute('y',String(bottom-lane*14-box.y-box.height));});
+  }
   for(const [i,note]of engravedNotes.entries()){const group=note?.getSVGElement?.()||note&&svg.querySelector('#vf-'+note.getAttribute('id'));if(group){group.dataset.playbackBar=String(index);group.dataset.playbackNote=String(i);}}
   for(const {note,n} of generatedRests){const group=note.getSVGElement?.()||svg.querySelector('#vf-'+note.getAttribute('id'));if(group){group.classList.add('notation-auto-rest');for(const[k,value]of Object.entries({'data-bar':index,'data-staff':n.staff,'data-voice':n.voice,'data-at':n.at,'data-units':M.units(n),'data-duration':n.duration,'data-dots':n.dots||0}))group.setAttribute(k,String(value));}}
   for(const item of previewTargets)previewNote(ctx,item.stave,item.n,item.x||item.anchor.getAbsoluteX()+14);
@@ -201,6 +214,9 @@ function renderRow(target,bars,start,options){
    const hit=(attributes)=>{const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');for(const[k,v]of Object.entries({fill:'transparent',stroke:'none','class':'note-hit',...attributes}))rect.setAttribute(k,String(v));svg.append(rect);};
    staves.forEach((stave,lane)=>hit({x,y:stave.getY()+10,width:barWidth,height:grand?Math.min(100,staffStep-12):100,'data-bar':index,'data-staff':lane+1}));
    engravedNotes.forEach((note,i)=>{const box=note?.getBoundingBox();if(box)hit({x:box.getX()-4,y:box.getY()-6,width:Math.max(22,box.getW()+8),height:Math.max(38,box.getH()+12),'data-bar':index,'data-staff':M.staffOf(bar.notes[i]),'data-note':i,'data-note-selected':options.selectedNotes?.has(index+':'+i)?'true':'false'});});
+   if(options.sheet.editable&&!options.continuousSignatures)for(const {span,field} of tempoTargets){const box=span.getBBox();hit({x:box.x-3,y:box.y-4,width:Math.max(12,box.width+6),height:box.height+8,'class':'notation-signature-hit','data-tempo-hit':index,'data-signature-field':field,'data-bar':index,'data-staff':1,role:'button',tabindex:0,'aria-haspopup':'dialog','aria-expanded':'false'});}
+   if(options.sheet.editable&&!options.continuousSignatures)staves.forEach((stave,lane)=>{for(const modifier of stave.getModifiers()){const category=modifier.getCategory();if(!['Clef','KeySignature','TimeSignature'].includes(category))continue;hit({x:modifier.getX()-2,y:stave.getYForLine(0)-24,width:Math.max(10,modifier.getWidth()+4),height:88,'class':'notation-signature-hit','data-signature-field':category==='Clef'?'clef'+(lane+1):category==='TimeSignature'?'time':'key','data-signature-value':category==='Clef'?clefs[lane]:category==='TimeSignature'?barTime:barKey,'data-bar':index,'data-staff':lane+1,role:'button',tabindex:0,'aria-haspopup':'listbox','aria-expanded':'false'});}});
+
   }
  });
  // Brackets continue over adjacent notes and bars, with a fresh label on each row.
@@ -284,7 +300,7 @@ function fitDecorations(engraved,printing){for(const svg of new Set(engraved.map
  if(!svg)continue;const previous=svg.viewBox.baseVal;
  if(printing){const bounds=svg.getBBox(),top=Math.min(previous.y,bounds.y-5),bottom=Math.max(previous.y+previous.height,bounds.y+bounds.height+5),height=bottom-top;if(height>previous.height+.1)svg.setAttribute('viewBox',`0 ${top} ${previous.width} ${height}`);continue;}
  // Selection backgrounds and generous hit targets must not reserve blank space.
- const targets=[...svg.querySelectorAll('.note-hit,[class*="notation-active-background"]')],display=targets.map(n=>n.style.display);let bounds;
+ const targets=[...svg.querySelectorAll('.note-hit,.notation-signature-hit,[class*="notation-active-background"]')],display=targets.map(n=>n.style.display);let bounds;
  try{targets.forEach(n=>n.style.display='none');bounds=svg.getBBox();}finally{targets.forEach((n,i)=>n.style.display=display[i]);}
  const base=Number(svg.dataset.baseHeight),scale=Number(svg.dataset.screenScale),letterbox=Number(svg.dataset.legacyHeight)*(1/scale-1),frameTop=-letterbox/2,frameBottom=base+letterbox/2,inkBottom=bounds.y+bounds.height,topBlank=Math.max(0,bounds.y-frameTop),bottomBlank=Math.max(0,frameBottom-inkBottom);
  const top=Math.min(bounds.y-5,frameTop+topBlank/2),bottom=Math.max(inkBottom+5,frameBottom-bottomBlank/2),height=bottom-top;
@@ -292,12 +308,19 @@ function fitDecorations(engraved,printing){for(const svg of new Set(engraved.map
  svg.setAttribute('viewBox',`0 ${top} ${previous.width} ${height}`);svg.setAttribute('height',String(height*scale));svg.style.height=height*scale+'px';
 }}
 
+function alignMeasureTempos(element){
+ const reference=element.closest('.shell')?.querySelector('.score-title .metronome-mark'),first=element.querySelector('svg');if(!reference||!first)return;const matrix=first.getScreenCTM();if(!matrix)return;const gap=Math.max(0,matrix.f+46*matrix.d-reference.getBoundingClientRect().bottom)/3;
+ for(const label of element.querySelectorAll('.notation-tempo-change')){const svg=label.ownerSVGElement,scale=svg.getScreenCTM()?.d;if(!scale)continue;const box=label.getBBox(),x=Number(label.dataset.noteStart),y=Number(label.dataset.staffTop)-gap/scale-box.y-box.height;label.setAttribute('transform','translate('+x+' '+y+')');for(const hit of svg.querySelectorAll('[data-tempo-hit="'+label.dataset.bar+'"]')){hit.setAttribute('transform','translate('+x+' '+y+')');}}
+}
+function fitMeasureTempos(element){
+ for(let pass=0;pass<10;pass++){alignMeasureTempos(element);let changed=false;for(const svg of element.querySelectorAll('.staff-row>svg')){const marks=[...svg.querySelectorAll('.notation-tempo-change')];if(!marks.length)continue;const frame=svg.viewBox.baseVal,min=Math.min(...marks.map(mark=>mark.getBBox().y+(mark.transform.baseVal.consolidate()?.matrix.f||0)))-6;if(min<frame.y-.1){const scale=svg.getScreenCTM()?.d||.68,height=frame.height+frame.y-min;svg.setAttribute('viewBox',[frame.x,min,frame.width,height].join(' '));svg.setAttribute('height',String(height*scale));svg.style.height=height*scale+'px';changed=true;}}if(!changed)break;}
+}
 function draw(element,sheet,options={}){
  element.replaceChildren();const pixels=Math.max(280,element.clientWidth),width=pixels/.68,measures=sheet.score.measures,engraved=[];
  let index=0;for(const bars of groups(measures,width,false,signatureReserve(sheet),sheet)){
   const row=document.createElement('div');row.className='staff-row';element.append(row);
   engraved.push(...renderRow(row,bars,index,{...options,sheet,metadata:sheet.metadata,width,pixels}));index+=bars.length;
- }ties(sheet,engraved);slurs(sheet,engraved);pedalLines(sheet,engraved);hairpins(sheet,engraved);octaveLines(sheet,engraved);slides(sheet,engraved);fitDecorations(engraved,false);
+ }ties(sheet,engraved);slurs(sheet,engraved);pedalLines(sheet,engraved);hairpins(sheet,engraved);octaveLines(sheet,engraved);slides(sheet,engraved);fitDecorations(engraved,false);fitMeasureTempos(element);const firstSvg=element.querySelector('svg');document.fonts?.ready.then(()=>{if(element.querySelector('svg')===firstSvg)fitMeasureTempos(element);});
 }
 // One horizontal system per instrument; all systems share physical bar widths.
 function drawEnsemble(element,parts,options={}){
@@ -334,7 +357,7 @@ function printDocument(sheet,locale='en',symbols={}){
  const host=document.createElement('div');host.style.cssText='position:absolute;left:-10000px;top:0;visibility:hidden';document.body.append(host);
  try{
  for(let cursor=0;cursor<rows.length;){
-  const page=document.createElement('section');page.className='print-page';const first=pages.length===0,m=sheet.metadata;
+  const page=document.createElement('section');page.className='print-page';const first=pages.length===0,m={...sheet.metadata,...M.effectiveTempoUnit(sheet,0),bpm:M.tempoSegment(sheet,0).initial};
   host.append(page);
   if(first)page.innerHTML=`<header><h1>${escape(m.title)}</h1>${m.subtitle?`<p class="subtitle">${escape(m.subtitle)}</p>`:''}<div class="score-meta"><div class="credits">${m.lyricist?`<p>${locale==='fa'?'ترانه‌سرا':'Lyricist'}: ${escape(m.lyricist)}</p>`:''}${m.composer?`<p>${locale==='fa'?'آهنگساز':'Composer'}: ${escape(m.composer)}</p>`:''}${m.arranger?`<p>${locale==='fa'?'تنظیم‌کننده':'Arranger'}: ${escape(m.arranger)}</p>`:''}</div><div class="tempo">${sheet.printPart?'<span class="part-instrument">'+escape(printInstrument)+'</span>':''}<span>${escape(m.tempo_text)}</span><span>${escape(metronomeUnit(m,symbols))} = ${m.bpm}</span></div></div></header>`;
   if(!first&&sheet.printPart)page.innerHTML='<div class="print-part-heading">'+escape(printInstrument)+'</div>';

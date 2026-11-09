@@ -48,18 +48,6 @@ class NotationTopBar extends StatelessWidget implements PreferredSizeWidget {
           true,
         ),
         _action(
-          Icons.view_week_outlined,
-          'tool-measure',
-          socialText(context, 'ابزار میزان', 'Measure tools'),
-          true,
-        ),
-        _action(
-          Icons.music_note_outlined,
-          'tool-palette',
-          socialText(context, 'ابزار نت', 'Notation tools'),
-          true,
-        ),
-        _action(
           Icons.save_outlined,
           'save',
           data['practiceDraft'] == true
