@@ -390,6 +390,15 @@ setInterval(async()=>{
         );
         return;
       }
+      if (request.method == 'GET' &&
+          ['api/instruments', 'api/scales'].contains(path)) {
+        response.headers.contentType = ContentType.json;
+        final data = await _api.request(path.split('/').last, {
+          'refresh': request.uri.queryParameters['refresh'] == '1',
+        });
+        response.write(jsonEncode({'success': true, 'data': data}));
+        return;
+      }
       final route = RegExp(
         r'^api(?:/(-?\d+)(?:/(delete|bookmark|upload))?)?$',
       ).firstMatch(path);

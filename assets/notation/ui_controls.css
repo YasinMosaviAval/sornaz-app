@@ -232,6 +232,9 @@ svg[data-music-font=Bravura],svg[data-music-font=Bravura] text{direction:ltr!imp
 
 body.writing{overscroll-behavior-x:none}
 .score-title{touch-action:pan-y}
+.notation-section-motion{position:fixed;overflow:hidden;pointer-events:none;z-index:35;background:var(--bg,#fff);contain:layout paint}
+.notation-section-motion-page{position:absolute;inset:0;will-change:transform;background:var(--bg,#fff);color:var(--ink,#111)}
+.notation-section-preview-score{overflow:hidden}
 
 .editor-header .editor-actions{min-width:0;max-width:calc(100vw - 60px);overflow-x:auto;flex-shrink:1}
 .editor-header .editor-actions>button{flex-shrink:0}
@@ -248,3 +251,11 @@ body.writing{overscroll-behavior-x:none}
 
 .notation-measure-options[data-control-key=key] .notation-symbol-option{flex-direction:column;gap:2px}
 .notation-signature-name{font-size:calc(12px * var(--font-scale,1));font-family:inherit;line-height:1.2;text-align:center;white-space:normal}
+
+.notation-tool-sheet .palette-group>div>label:has([data-measure-text="text"]){grid-column:1/-1}
+
+.notation-print-preview header .icon{display:inline-flex;align-items:center;justify-content:center;width:38px;min-width:38px;padding:6px}
+.notation-print-preview header .icon svg{width:24px;height:24px}
+
+.notation-form-options .notation-signature-name{font-size:calc(8px * var(--font-scale,1))}
+.notation-form-options[data-control-key=time] .notation-control-glyph text{font-size:calc(10.666667px * var(--font-scale,1))}

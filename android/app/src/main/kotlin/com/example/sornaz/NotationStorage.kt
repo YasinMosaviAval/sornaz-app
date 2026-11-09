@@ -34,23 +34,37 @@ class NotationStorage(private val activity:Activity,messenger:BinaryMessenger) {
     if(content.toByteArray().size>(if(call.method=="pdf")8000000 else 1000000)){result.error("NOTATION_STORAGE","File is too large.",null);return@setMethodCallHandler}
     if(call.method in listOf("save","share")&&runCatching{JSONObject(content).optString("format")}.getOrNull()!="sornaz-notation"){result.error("NOTATION_STORAGE","Invalid music sheet.",null);return@setMethodCallHandler}
     if(call.method=="pdf"){
-     NotationPdf(activity).open(content,name,{result.success("print-dialog")},{result.error("NOTATION_STORAGE","Could not open PDF export.",null)})
+     ensure(fixed=true) { ok ->
+      if(!ok)result.error("NOTATION_STORAGE","No folder was selected.",null)
+      else NotationPdf(activity).write(content,name,{file ->
+       worker.execute { try { val bytes=file.readBytes();write(name,bytes,"application/pdf",result,"PDF",fixed=true) } catch(_:Exception) { main.post{result.error("NOTATION_STORAGE","Could not save the music sheet.",null)} } finally { file.delete() } }
+      },{result.error("NOTATION_STORAGE","Could not create PDF export.",null)})
+     }
      return@setMethodCallHandler
     }
     if(call.method=="share"){
      val directory=File(activity.cacheDir,"notation-exports").apply{mkdirs()};val file=File(directory,name.replace(Regex("[^\\p{L}\\p{N}._ -]"),"_").take(100)).apply{writeText(content)}
      val uri=FileProvider.getUriForFile(activity,"${activity.packageName}.apkprovider",file);val intent=Intent(Intent.ACTION_SEND).apply{type="application/json";putExtra(Intent.EXTRA_STREAM,uri);clipData=ClipData.newRawUri("Sornaz notation",uri);addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)};activity.startActivity(Intent.createChooser(intent,"Sornaz"));result.success("shared");return@setMethodCallHandler
     }
-    ensure { ok ->
+    val fixed=call.method in listOf("sibelius","musicxml")
+    ensure(fixed=fixed) { ok ->
      if(!ok){result.error("NOTATION_STORAGE","No folder was selected.",null)}
-     else write(name,content.toByteArray(Charsets.UTF_8),if(call.method in listOf("sibelius","musicxml"))"application/vnd.recordare.musicxml+xml" else "application/json",result)
+     else write(name,content.toByteArray(Charsets.UTF_8),if(call.method in listOf("sibelius","musicxml"))"application/vnd.recordare.musicxml+xml" else "application/json",result,fixed=fixed)
     }
    }
    else->result.notImplemented()
   }
  }}
  private fun location():String {val tree=prefs.getString("directory",null)?:return "Sornaz/Music Sheets";return runCatching{DocumentsContract.getDocumentId(Uri.parse(tree)).replaceFirst("primary:","")}.getOrDefault(tree)}
- private fun ensure(done:(Boolean)->Unit){
+ private fun ensure(fixed:Boolean=false,done:(Boolean)->Unit){
+  if(fixed){
+   val direct=Build.VERSION.SDK_INT<30||Environment.isExternalStorageManager()
+   if(direct&&runCatching{defaultFolder.mkdirs();defaultFolder.isDirectory&&defaultFolder.canWrite()}.getOrDefault(false)){done(true);return}
+   val directory=prefs.getString("directory",null)
+   val expected=directory!=null&&runCatching{DocumentsContract.getDocumentId(Uri.parse(directory)).substringAfter(':')=="Sornaz/Music Sheets"}.getOrDefault(false)
+   if(expected&&prefs.getString("tree",null)!=null){done(true);return}
+   choose(true,done);return
+  }
   val tree=prefs.getString("tree",null)
   if(tree!=null){done(true);return}
   val direct=Build.VERSION.SDK_INT<30||Environment.isExternalStorageManager()
@@ -70,16 +84,24 @@ class NotationStorage(private val activity:Activity,messenger:BinaryMessenger) {
   try{
    activity.contentResolver.takePersistableUriPermission(selected,data.flags and (Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION))
    var directory=DocumentsContract.buildDocumentUriUsingTree(selected,DocumentsContract.getTreeDocumentId(selected))
-   if(defaultSelection&&DocumentsContract.getTreeDocumentId(selected).substringAfterLast('/').substringAfterLast(':')=="Sornaz"){
-    val children=DocumentsContract.buildChildDocumentsUriUsingTree(selected,DocumentsContract.getTreeDocumentId(selected));var existing:Uri?=null
-    activity.contentResolver.query(children,arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID,DocumentsContract.Document.COLUMN_DISPLAY_NAME),null,null,null)?.use{c->while(c.moveToNext())if(c.getString(1)=="Music Sheets")existing=DocumentsContract.buildDocumentUriUsingTree(selected,c.getString(0))}
-    directory=existing?:DocumentsContract.createDocument(activity.contentResolver,directory,DocumentsContract.Document.MIME_TYPE_DIR,"Music Sheets")?:error("Folder")
+   if(defaultSelection){
+    when(DocumentsContract.getDocumentId(directory).substringAfter(':')){
+     "" -> {directory=childDirectory(directory,"Sornaz");directory=childDirectory(directory,"Music Sheets")}
+     "Sornaz" -> directory=childDirectory(directory,"Music Sheets")
+     "Sornaz/Music Sheets" -> Unit
+     else -> error("Select Sornaz or Music Sheets")
+    }
    }
    prefs.edit().putString("tree",selected.toString()).putString("directory",directory.toString()).apply();callback?.invoke(true)
   }catch(_:Exception){callback?.invoke(false)}
   return true
  }
- private fun write(rawName:String,bytes:ByteArray,mime:String,result:MethodChannel.Result){worker.execute{
+ private fun childDirectory(parent:Uri,name:String):Uri {
+  val children=DocumentsContract.buildChildDocumentsUriUsingTree(parent,DocumentsContract.getDocumentId(parent))
+  activity.contentResolver.query(children,arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID,DocumentsContract.Document.COLUMN_DISPLAY_NAME,DocumentsContract.Document.COLUMN_MIME_TYPE),null,null,null)?.use{c->while(c.moveToNext())if(c.getString(1)==name&&c.getString(2)==DocumentsContract.Document.MIME_TYPE_DIR)return DocumentsContract.buildDocumentUriUsingTree(parent,c.getString(0))}
+  return DocumentsContract.createDocument(activity.contentResolver,parent,DocumentsContract.Document.MIME_TYPE_DIR,name)?:error("Folder")
+ }
+ private fun write(rawName:String,bytes:ByteArray,mime:String,result:MethodChannel.Result,subfolder:String?=null,fixed:Boolean=false){worker.execute{
   try{
    val extension=when(mime){
     "application/pdf"->"pdf"
@@ -87,15 +109,18 @@ class NotationStorage(private val activity:Activity,messenger:BinaryMessenger) {
     else->"json"
    }
    val name=rawName.substringBeforeLast('.',rawName).replace(Regex("[^\\p{L}\\p{N} _-]"),"").take(80).ifBlank{"score"}+"."+extension
-   val directory=prefs.getString("directory",null)
+   val directory=if(fixed&&(Build.VERSION.SDK_INT<30||Environment.isExternalStorageManager()))null else prefs.getString("directory",null)
    val saved=if(directory!=null){
-    val uri=DocumentsContract.createDocument(activity.contentResolver,Uri.parse(directory),mime,name)?:error("File")
+    val base=Uri.parse(directory)
+    val destination=if(subfolder==null)base else childDirectory(base,subfolder)
+    val uri=DocumentsContract.createDocument(activity.contentResolver,destination,mime,name)?:error("File")
     try{activity.contentResolver.openOutputStream(uri,"w")!!.use{it.write(bytes)}}catch(e:Exception){DocumentsContract.deleteDocument(activity.contentResolver,uri);throw e};uri.toString()
    }else{
-    val folder=defaultFolder.canonicalFile;require(folder.isDirectory)
+    val folder=(if(subfolder==null)defaultFolder else File(defaultFolder,subfolder)).canonicalFile;require(folder.mkdirs()||folder.isDirectory)
     var file=File(folder,name).canonicalFile;require(file.parentFile==folder)
-    if(file.exists())file=File(folder,name.substringBeforeLast('.')+"-"+System.currentTimeMillis()+"."+extension)
-    file.writeBytes(bytes);file.absolutePath
+    var suffix=1
+    while(!file.createNewFile()){suffix++;file=File(folder,name.substringBeforeLast('.')+"-"+suffix+"."+extension).canonicalFile;require(file.parentFile==folder)}
+    try{file.writeBytes(bytes)}catch(error:Exception){file.delete();throw error};file.absolutePath
    }
    main.post{result.success(saved)}
   }catch(_:Exception){main.post{result.error("NOTATION_STORAGE","Could not save the music sheet.",null)}}

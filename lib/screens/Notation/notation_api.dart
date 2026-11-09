@@ -14,6 +14,8 @@ class NotationApi {
   final int userId;
   final Map<int, Map<String, dynamic>> _fetched = {};
   final http.Client _client;
+  final Map<String, Future<List<dynamic>?>> _catalogJobs = {};
+  final Set<String> _catalogChecked = {};
   String get _storageKey => 'notation_local_v3_$userId';
   String get _backupStorageKey => 'notation_local_v3_backup_$userId';
   String get _listsStorageKey => 'notation_lists_v1_$userId';
@@ -138,7 +140,17 @@ class NotationApi {
   }
 
   Future<dynamic> request(String action, Map<String, dynamic> message) async {
-    if (action == 'instruments') return _instruments();
+    if (action == 'instruments') {
+      return _instruments(refresh: message['refresh'] == true);
+    }
+    if (action == 'scales') {
+      return _catalog(
+        'scales',
+        'notation_scales_v1',
+        null,
+        refresh: message['refresh'] == true,
+      );
+    }
     if (action == 'list') {
       final local = await _local();
       final mode = message['mode'];
@@ -368,8 +380,7 @@ class NotationApi {
     return _summary(sheet);
   }
 
-  Future<dynamic> _instruments() async {
-    final prefs = await SharedPreferences.getInstance();
+  Future<dynamic> _instruments({bool refresh = false}) async {
     const bundled = [
       {
         'id': 'piano',
@@ -384,9 +395,12 @@ class NotationApi {
       {'id': 'violin', 'fa': 'ویولن', 'en': 'Violin'},
       {'id': 'voice', 'fa': 'آواز', 'en': 'Voice'},
     ];
-    final cached = prefs.getString('notation_instruments_v1');
-    unawaited(_refreshInstruments(prefs));
-    return cached == null ? bundled : _instrumentLayouts(jsonDecode(cached));
+    return _catalog(
+      'instruments',
+      'notation_instruments_v1',
+      bundled,
+      refresh: refresh,
+    );
   }
 
   List<dynamic> _instrumentLayouts(dynamic items) => [
@@ -403,16 +417,68 @@ class NotationApi {
         },
   ];
 
-  Future<void> _refreshInstruments(SharedPreferences prefs) async {
+  bool _validCatalog(dynamic value, {bool scales = false}) =>
+      value is List &&
+      value.every(
+        (item) =>
+            item is Map &&
+            (item['id'] is String || item['id'] is int) &&
+            (!scales ||
+                item['id'] is String &&
+                    RegExp(
+                      r'^[a-z][a-z0-9_]{0,63}$',
+                    ).hasMatch(item['id'] as String)) &&
+            item['fa'] is String &&
+            item['en'] is String,
+      ) &&
+      value.map((item) => item['id'].toString()).toSet().length == value.length;
+
+  Future<dynamic> _catalog(
+    String action,
+    String key,
+    dynamic fallback, {
+    bool refresh = false,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    List<dynamic>? cached;
     try {
-      final value = await _requestRemote('instruments', {});
-      if (value is List) {
-        await prefs.setString(
-          'notation_instruments_v1',
-          jsonEncode(_instrumentLayouts(value)),
-        );
+      final value = jsonDecode(prefs.getString(key) ?? 'null');
+      if (_validCatalog(value, scales: action == 'scales')) {
+        cached = action == 'instruments'
+            ? _instrumentLayouts(value)
+            : List<dynamic>.from(value);
       }
     } catch (_) {}
+    if (refresh || !_catalogChecked.contains(action)) {
+      final job = _catalogJobs.putIfAbsent(
+        action,
+        () => _refreshCatalog(action, key, prefs),
+      );
+      if (refresh) return await job ?? cached ?? fallback;
+      unawaited(job);
+    }
+    return cached ?? fallback;
+  }
+
+  Future<List<dynamic>?> _refreshCatalog(
+    String action,
+    String key,
+    SharedPreferences prefs,
+  ) async {
+    try {
+      final value = await _requestRemote(action, {});
+      if (!_validCatalog(value, scales: action == 'scales')) return null;
+      final items = action == 'instruments'
+          ? _instrumentLayouts(value)
+          : List<dynamic>.from(value);
+      if (!await prefs.setString(key, jsonEncode(items))) return null;
+      _catalogChecked.add(action);
+      return items;
+    } catch (_) {
+      return null;
+    } finally {
+      _catalogJobs.remove(action);
+    }
   }
 
   Future<dynamic> _requestRemote(
@@ -420,13 +486,14 @@ class NotationApi {
     Map<String, dynamic> message,
   ) async {
     final id = message['sheetId'];
-    if (!['list', 'get', 'save', 'instruments'].contains(action)) {
+    if (!['list', 'get', 'save', 'instruments', 'scales'].contains(action)) {
       throw const FormatException('Invalid operation.');
     }
-    if (!['list', 'instruments'].contains(action) && (id is! int || id < 0)) {
+    if (!['list', 'instruments', 'scales'].contains(action) &&
+        (id is! int || id < 0)) {
       throw const FormatException('Invalid sheet.');
     }
-    var suffix = action == 'instruments' ? '/instruments' : '';
+    var suffix = ['instruments', 'scales'].contains(action) ? '/$action' : '';
     if (action == 'list') {
       final page = (message['page'] as num?)?.toInt() ?? 1;
       final mode = message['mode'] == 'mine' ? 'mine' : 'all';

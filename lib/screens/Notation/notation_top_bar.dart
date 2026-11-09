@@ -79,7 +79,7 @@ class NotationTopBar extends StatelessWidget implements PreferredSizeWidget {
         _action(
           Icons.print_outlined,
           'print-preview',
-          socialText(context, 'پیش‌نمایش چاپ / PDF', 'Print preview / PDF'),
+          socialText(context, 'پیش‌نمایش چاپ', 'Print preview'),
           true,
         ),
       if (editor)

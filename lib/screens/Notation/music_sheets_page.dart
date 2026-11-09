@@ -418,6 +418,15 @@ class _NotationHostState extends State<_NotationHost>
       final data = jsonDecode(message.message) as Map<String, dynamic>;
       requestId = data['id'] as int?;
       final action = data['action'] as String;
+      if (const ['pdf', 'musicxml', 'sibelius'].contains(action)) {
+        const storage = MethodChannel('sornaz/notation_storage');
+        final sdk = await storage.invokeMethod<int>('sdk') ?? 29;
+        if (sdk < 29 && !await Permission.storage.request().isGranted) {
+          throw const SocialException(
+            'Storage permission is required to download this sheet.',
+          );
+        }
+      }
       if (action == 'practice-save' || action == 'practice-cancel') {
         if (widget.onDraftSaved == null || _draftFinished) return;
         final value = action == 'practice-save'
@@ -576,6 +585,13 @@ class _NotationHostState extends State<_NotationHost>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_ready && state == AppLifecycleState.resumed) {
+      unawaited(
+        _controller
+            .runJavaScript('window.Notation.refreshCatalogs();')
+            .catchError((_) {}),
+      );
+    }
     if (_ready && state != AppLifecycleState.resumed) {
       unawaited(
         _controller

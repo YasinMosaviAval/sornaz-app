@@ -27,8 +27,14 @@ const units=n=>{const base=Math.round(ticks(n)*unitPerLegacyTick),t=n.tuplet;if(
 const measureUnits=(meta,bar={})=>{const[a,b]=String(bar.time||meta.time).split('/').map(Number);if(!Number.isInteger(a)||a<1||a>32||![1,2,4,8,16,32,64,128,256].includes(b))throw Error('Invalid time signature.');const full=a*wholeUnits/b;return Number.isInteger(bar.length)?bar.length:full;};
 const effectiveTime=(sheet,index)=>{let time=sheet.metadata.time;for(let i=0;i<=index&&i<sheet.score.measures.length;i++)if(sheet.score.measures[i].time)time=sheet.score.measures[i].time;return time;};
 const effectiveKey=(sheet,index)=>{let key=sheet.metadata.key;for(let i=0;i<=index&&i<sheet.score.measures.length;i++)if(sheet.score.measures[i].key)key=sheet.score.measures[i].key;return key;};
+function sameKeySignature(sheet,a,b){
+ if(a===b)return true;const first=iranianSignature(sheet.metadata.scale_type,a),second=iranianSignature(sheet.metadata.scale_type,b);
+ if(first&&second)return [...'CDEFGAB'].every(letter=>first.alterations[letter]===second.alterations[letter]);
+ const left=keys.indexOf(a),right=keys.indexOf(b);return left>=0&&right>=0&&left%15===right%15;
+}
+function endingBpm(sheet,index){let bpm=Number(sheet.metadata.bpm);for(let i=0;i<=index;i++){const marker=sheet.score.measures[i]?.tempo;if(marker)bpm=marker.mode==='aTempo'?Number(sheet.metadata.bpm):Number(marker.bpm);}return bpm;}
 function tempoSegment(sheet,index){
- let bpm=Number(sheet.metadata.bpm);for(let i=0;i<index;i++){const marker=sheet.score.measures[i].tempo;if(marker)bpm=marker.mode==='aTempo'?Number(sheet.metadata.bpm):Number(marker.bpm);}
+ const bpm=endingBpm(sheet,index-1);
  const marker=sheet.score.measures[index]?.tempo,initial=marker&&marker.mode==='instant'?Number(marker.bpm):marker?.mode==='aTempo'?Number(sheet.metadata.bpm):bpm;
  const final=marker&&['ritardando','accelerando'].includes(marker.mode)?Number(marker.bpm):initial,limit=barUnits(sheet,index),beat=units({duration:sheet.metadata.tempo_note,dots:sheet.metadata.tempo_dots||0});
  if(!Number.isFinite(initial)||!Number.isFinite(final)||initial<20||final<20||initial>300||final>300)throw Error('Invalid tempo.');
@@ -267,12 +273,13 @@ function joinSections(sheet){
  for(const[index,section]of [score,...sections].entries()){
   const bars=trimmedMeasures({metadata:sheet.metadata,score:section});
   if(!bars.length)bars.push(clone(section.measures[0]||{notes:[],preserve:true}));
-  bars.forEach((bar,i)=>{if(index&&i===0){const time=bar.time||sheet.metadata.time,previous=effectiveTime({...sheet,score:{measures}},measures.length-1),symbol=bar.timeSymbol||'';if(time===previous&&(!symbol||symbol===displaySymbol)){delete bar.time;delete bar.timeSymbol;}else bar.time=time;bar.key??=sheet.metadata.key;bar.tempo??={mode:'instant',bpm:sheet.metadata.bpm};bar.clefs??=Object.fromEntries(staves(sheet.metadata).map((staff,n)=>[n+1,staff.clef]));}if(bar.time||bar.timeSymbol)displaySymbol=bar.timeSymbol||'';measures.push(bar);});
+  bars.forEach((bar,i)=>{if(index&&i===0){const time=bar.time||sheet.metadata.time,previous=effectiveTime({...sheet,score:{measures}},measures.length-1),symbol=bar.timeSymbol||'';if(time===previous&&(!symbol||symbol===displaySymbol)){delete bar.time;delete bar.timeSymbol;}else bar.time=time;const previousSheet={...sheet,score:{measures}},key=bar.key||effectiveKey(previousSheet,measures.length-1);if(sameKeySignature(sheet,key,effectiveKey(previousSheet,measures.length-1)))delete bar.key;else bar.key=key;
+ const previousBpm=endingBpm(previousSheet,measures.length-1),tempo=bar.tempo||{mode:'instant',bpm:sheet.metadata.bpm},target=tempo.mode==='aTempo'?Number(sheet.metadata.bpm):Number(tempo.bpm);if(['instant','aTempo'].includes(tempo.mode)&&target===previousBpm)delete bar.tempo;else bar.tempo=tempo;bar.clefs??=Object.fromEntries(staves(sheet.metadata).map((staff,n)=>[n+1,staff.clef]));}if(bar.time||bar.timeSymbol)displaySymbol=bar.timeSymbol||'';measures.push(bar);});
  }
  return {...sheet,score:{...score,measures}};
 }
 function parts(sheet){const {parts:extra=[],...score}=sheet.score;return [{...sheet,score},...extra.map(part=>({...sheet,metadata:part.metadata,score:part.score}))].map(joinSections);}
 function ensembleTimeline(sheet){const timelines=parts(sheet).map(part=>timeline(part));return {events:timelines.flatMap((line,part)=>line.events.map(event=>({...event,part}))).sort((a,b)=>a.start-b.start||a.part-b.part),duration:Math.max(0,...timelines.map(line=>line.duration))};}
-const api={joinSections,parts,ensembleTimeline,iranianScales,iranianTonics,iranianIntervals,iranianSignature,durations,keys,wholeUnits,maxChordTones,validPitch,units,measureUnits,effectiveTime,effectiveKey,tempoSegment,effectiveClef,clefAt,barUnits,beamPattern,positionOf,voiceOf,normalizeBar,clone,ticks,capacity,staves,staffOf,lane,used,fresh,add,insert,copySelection,pasteSelection,moveSelectionToStaff,trimmedMeasures,validMultiRest,multiRestAt,asRest,compactDelete,prepare,measureSource,performanceOrder,timeline,frequency};if(typeof module==='object')module.exports=api;
+const api={sameKeySignature,joinSections,parts,ensembleTimeline,iranianScales,iranianTonics,iranianIntervals,iranianSignature,durations,keys,wholeUnits,maxChordTones,validPitch,units,measureUnits,effectiveTime,effectiveKey,tempoSegment,effectiveClef,clefAt,barUnits,beamPattern,positionOf,voiceOf,normalizeBar,clone,ticks,capacity,staves,staffOf,lane,used,fresh,add,insert,copySelection,pasteSelection,moveSelectionToStaff,trimmedMeasures,validMultiRest,multiRestAt,asRest,compactDelete,prepare,measureSource,performanceOrder,timeline,frequency};if(typeof module==='object')module.exports=api;
 root.NotationModel=api;
 })(globalThis);
