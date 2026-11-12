@@ -6,7 +6,7 @@ import 'app_delete_dialog_test.dart' show host;
 
 void main() {
   for (final locale in ['fa', 'en']) {
-    for (final kind in ['part', 'section']) {
+    for (final kind in ['part', 'section', 'subsection']) {
       testWidgets('notation removal confirms and cancels: $locale/$kind', (
         tester,
       ) async {

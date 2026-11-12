@@ -37,6 +37,13 @@ void main() {
       final save = tester.widget<TextButton>(find.byType(TextButton).first);
       expect(save.style!.backgroundColor!.resolve({}), colors.primary);
       expect(save.style!.foregroundColor!.resolve({}), colors.onPrimary);
+      final cancel = tester.widget<TextButton>(find.byType(TextButton).last);
+      expect(
+        cancel.style!.foregroundColor!.resolve({}),
+        Theme.of(tester.element(find.byType(PlayerDialog))).disabledColor,
+      );
+      expect(cancel.style!.backgroundColor!.resolve({}), Colors.transparent);
+      expect(cancel.onPressed, isNotNull);
       expect(tester.takeException(), isNull);
     });
   }

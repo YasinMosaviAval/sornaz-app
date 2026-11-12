@@ -28,7 +28,7 @@ class PlayerDialogButton extends StatelessWidget {
     return TextButton(
       onPressed: onPressed,
       style: TextButton.styleFrom(
-        foregroundColor: primary ? colors.onPrimary : colors.onSurfaceVariant,
+        foregroundColor: primary ? colors.onPrimary : theme.disabledColor,
         backgroundColor: primary ? colors.primary : Colors.transparent,
         shape: theme.cardTheme.shape as OutlinedBorder?,
         textStyle: theme.textTheme.labelLarge,

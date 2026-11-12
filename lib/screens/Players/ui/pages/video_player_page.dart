@@ -5,6 +5,7 @@ import 'package:sornaz/helpers/app_platform.dart';
 import 'package:sornaz/helpers/app_appearance.dart';
 import 'package:sornaz/components/page_source_info.dart';
 import '../components/music_playback_entry.dart';
+import '../components/player_dialog.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
@@ -666,7 +667,7 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
         var draft = current;
         name = await showDialog<String>(
           context: context,
-          builder: (c) => AlertDialog(
+          builder: (c) => PlayerDialog(
             title: Text(t('تغییر نام', 'Rename')),
             content: TextFormField(
               initialValue: current,
@@ -674,11 +675,12 @@ class _VideoLibraryPageState extends State<VideoLibraryPage>
               maxLength: 180,
             ),
             actions: [
-              TextButton(
+              PlayerDialogButton(
+                primary: false,
                 onPressed: () => Navigator.pop(c),
                 child: Text(t('انصراف', 'Cancel')),
               ),
-              TextButton(
+              PlayerDialogButton(
                 onPressed: () => Navigator.pop(c, draft.trim()),
                 child: Text(t('ذخیره', 'Save')),
               ),

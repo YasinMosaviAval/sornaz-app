@@ -36,10 +36,10 @@ function endingBpm(sheet,index){let bpm=Number(sheet.metadata.bpm);for(let i=0;i
 function effectiveTempoUnit(sheet,index){let unit={tempo_note:sheet.metadata.tempo_note,tempo_dots:Number(sheet.metadata.tempo_dots)||0};for(let i=0;i<=index&&i<sheet.score.measures.length;i++){const value=sheet.score.measures[i].tempo_unit;if(value){const [duration,dots]=String(value).split(':');if(!durations[duration]||!/[0-2]/.test(dots)||dots.length!==1)throw Error('Invalid tempo unit.');unit={tempo_note:duration,tempo_dots:Number(dots)};}}return unit;}
 function tempoSegment(sheet,index){
  const bpm=endingBpm(sheet,index-1);
- const marker=sheet.score.measures[index]?.tempo,initial=marker&&marker.mode==='instant'?Number(marker.bpm):marker?.mode==='aTempo'?Number(sheet.metadata.bpm):bpm;
+ const marker=sheet.score.measures[index]?.tempo,initial=marker&&marker.mode==='instant'?Number(marker.bpm):marker?.mode==='aTempo'?Number(sheet.metadata.bpm):marker&&['ritardando','accelerando'].includes(marker.mode)&&Number.isFinite(marker._initialBpm)?marker._initialBpm:bpm;
  const final=marker&&['ritardando','accelerando'].includes(marker.mode)?Number(marker.bpm):initial,limit=barUnits(sheet,index),beat=units({duration:effectiveTempoUnit(sheet,index).tempo_note,dots:effectiveTempoUnit(sheet,index).tempo_dots});
  if(!Number.isFinite(initial)||!Number.isFinite(final)||initial<20||final<20||initial>300||final>300)throw Error('Invalid tempo.');
- if(marker?.mode==='ritardando'&&final>=bpm||marker?.mode==='accelerando'&&final<=bpm)throw Error('Invalid tempo direction.');
+ if(marker?.mode==='ritardando'&&final>=initial||marker?.mode==='accelerando'&&final<=initial)throw Error('Invalid tempo direction.');
  const secondsAt=offset=>{const at=Math.max(0,Math.min(limit,offset)),delta=final-initial;return Math.abs(delta)<1e-9?60*at/(beat*initial):60*limit*Math.log((initial+delta*at/limit)/initial)/(beat*delta);};
  return {initial,final,secondsAt,duration:secondsAt(limit)};
 }
@@ -56,6 +56,16 @@ const used=(bar,staff,voice=1)=>lane(bar,staff,voice).reduce((sum,n)=>sum+units(
 function positionOf(bar,noteIndex){const cursors=new Map();for(let i=0;i<=noteIndex;i++){const n=bar.notes[i],key=staffOf(n)+':'+voiceOf(n),at=Number.isInteger(n.at)?n.at:cursors.get(key)||0;cursors.set(key,Math.max(cursors.get(key)||0,at+units(n)));if(i===noteIndex)return at;}return 0;}
 function normalizeBar(bar){const cursors=new Map();for(const n of bar.notes){const key=staffOf(n)+':'+voiceOf(n),at=Number.isInteger(n.at)?n.at:cursors.get(key)||0;n.at=at;n.voice=voiceOf(n);cursors.set(key,Math.max(cursors.get(key)||0,at+units(n)));}return bar;}
 function fresh(){return {id:0,version:0,editable:true,visibility:'private',metadata:{title:'',subtitle:'',composer:'',arranger:'',lyricist:'',instrument:'Tar',scale_type:'major',key:'C',time:'4/4',tempo_text:'Allegro',tempo_note:'q',tempo_dots:0,bpm:100,clef:'treble'},score:{measures:[{notes:[]}]}};}
+// Explicit written notes take precedence over a measure-repeat shorthand.
+// Clear only the shorthand; repeat barlines, text, notes and other marks survive.
+function clearWrittenMeasureRepeats(bars,index){
+ if(!bars[index]?.notes?.length)return 0;let repaired=0;
+ for(const start of [index,index-1]){const repeat=bars[start]?.repeat;if(!repeat||!(start===index?[1,2].includes(repeat.measure):repeat.measure===2))continue;delete repeat.measure;if(!Object.keys(repeat).length)delete bars[start].repeat;repaired++;}
+ return repaired;
+}
+function repairMeasureRepeats(sheet){
+ let repaired=0;const visit=score=>{for(let i=0;i<(score.measures||[]).length;i++)repaired+=clearWrittenMeasureRepeats(score.measures,i);for(const child of [...(score.sections||[]),...(score.subsections||[])])visit(child);for(const part of score.parts||[])visit(part.score);};visit(sheet.score);return repaired;
+}
 function add(sheet,bar,note){
  if(!sheet.editable)throw Error('This sheet is read-only.');
  if(!validPitch(note.pitch))throw Error('Invalid note.');
@@ -64,28 +74,29 @@ function add(sheet,bar,note){
  const intervals=lane(measure,staff,voice).map(n=>{const i=measure.notes.indexOf(n),start=positionOf(measure,i);return [start,start+units(n)];});
  const at=Number.isInteger(note.at)?note.at:Math.max(0,...intervals.map(([,end])=>end));
  if(at<0||at+length>barUnits(sheet,bar)||intervals.some(([start,end])=>at<end&&at+length>start))throw Error('This measure is full.');
- measure.notes.push({...clone(note),staff,voice,at});return measure.notes.length-1;
+ measure.notes.push({...clone(note),staff,voice,at});clearWrittenMeasureRepeats(sheet.score.measures,bar);return measure.notes.length-1;
 }
-function copySelection(sheet,selected){
- const items=[];for(const key of selected){const[bar,index]=key.split(':').map(Number),note=sheet.score.measures[bar]?.notes[index];if(note)items.push({bar,at:positionOf(sheet.score.measures[bar],index),note:clone(note)});}
- if(!items.length)return [];
- const firstBar=Math.min(...items.map(item=>item.bar)),firstStaff=Math.min(...items.map(item=>staffOf(item.note))),firstAt=Math.min(...items.filter(item=>item.bar===firstBar).map(item=>item.at));
- return items.map(item=>({bar:item.bar-firstBar,at:item.at-(item.bar===firstBar?firstAt:0),staff:staffOf(item.note)-firstStaff,note:item.note,offset:item.at-firstAt+Array.from({length:item.bar-firstBar},(_,i)=>barUnits(sheet,firstBar+i)).reduce((sum,length)=>sum+length,0)}));
+function copySelection(sheet,selected,measureBar=null){
+ const bars=sheet.score.measures,items=[];for(const key of selected){const[bar,index]=key.split(':').map(Number),note=bars[bar]?.notes[index];if(note)items.push({bar,at:positionOf(bars[bar],index),note:clone(note)});}
+ if(!items.length&&!Number.isInteger(measureBar))return [];
+ let firstBar=items.length?Math.min(...items.map(item=>item.bar)):measureBar,lastBar=items.length?Math.max(...items.map(item=>item.bar)):measureBar;
+ let whole=Number.isInteger(measureBar)||bars.slice(firstBar,lastBar+1).every((bar,i)=>bar.notes.every((_,n)=>selected.has((firstBar+i)+':'+n))),all=items.length&&bars.every((bar,i)=>bar.notes.every((_,n)=>selected.has(i+':'+n)));
+ if(all){firstBar=0;lastBar=Math.max(0,trimmedMeasures(sheet).length-1);}if(Number.isInteger(measureBar)){firstBar=measureBar;lastBar=measureBar;}whole=whole&&(Number.isInteger(measureBar)||bars.slice(firstBar,lastBar+1).some(bar=>Object.keys(bar).some(key=>!['notes','preserve'].includes(key)))||staves(sheet.metadata).some((_,staff)=>used(bars[firstBar],staff+1)*wholeUnits/64>=barUnits(sheet,firstBar)));
+ if(whole){for(let i=firstBar;i<=lastBar;i++){const bar=bars[i];if(!bar)throw Error('Invalid measure.');lastBar=Math.min(bars.length-1,Math.max(lastBar,i+(bar.multiRest||1)-1,i+(bar.repeat?.measure===2?1:0)));}const firstStaff=1,result=[];for(let i=firstBar;i<=lastBar;i++){const {notes,...measure}=clone(bars[i]);if(i===firstBar&&!measure.multiRest){measure.time??=effectiveTime(sheet,i);measure.key??=effectiveKey(sheet,i);measure.tempo??={mode:'instant',bpm:tempoSegment(sheet,i).initial};const unit=effectiveTempoUnit(sheet,i);measure.tempo_unit??=unit.tempo_note+':'+unit.tempo_dots;measure.clefs??=Object.fromEntries(staves(sheet.metadata).map((_,staff)=>[staff+1,effectiveClef(sheet,i,staff+1)]));}result.push({bar:i-firstBar,measure,staff:0});for(let n=0;n<notes.length;n++){if(Number.isInteger(measureBar)||selected.has(i+':'+n))result.push({bar:i-firstBar,at:positionOf(bars[i],n),staff:staffOf(notes[n])-firstStaff,note:notes[n]});}}return result;}
+ const firstStaff=Math.min(...items.map(item=>staffOf(item.note))),firstAt=Math.min(...items.filter(item=>item.bar===firstBar).map(item=>item.at));return items.map(item=>({bar:item.bar-firstBar,at:item.at-(item.bar===firstBar?firstAt:0),staff:staffOf(item.note)-firstStaff,note:item.note,offset:item.at-firstAt+Array.from({length:item.bar-firstBar},(_,i)=>barUnits(sheet,firstBar+i)).reduce((sum,length)=>sum+length,0)}));
 }
 function pasteSelection(sheet,items,targetBar,targetStaff,targetAt=0){
- if(!Array.isArray(items)||!items.length)throw Error('Nothing to paste.');
- const draft=clone(sheet),locations=[];
- for(const item of items){let bar=targetBar+item.bar,at=item.at+targetAt,staff=targetStaff+item.staff;
-  if(Number.isInteger(item.offset)){bar=targetBar;at=targetAt+item.offset;}
-  if(bar<0||bar>=64||staff<1||staff>staves(sheet.metadata).length||!Number.isInteger(at)||at<0)throw Error('Paste target is outside the score.');
-  while(true){
-   while(draft.score.measures.length<=bar)draft.score.measures.push({notes:[],preserve:true});
-   const length=barUnits(draft,bar);if(at<length)break;
-   at-=length;if(++bar>=64)throw Error('Paste target is outside the score.');
-  }
-  const index=add(draft,bar,{...clone(item.note),staff,at});locations.push(bar+':'+index);
- }
- sheet.score=draft.score;return new Set(locations);
+ if(!Array.isArray(items)||!items.length)throw Error('Nothing to paste.');const draft=clone(sheet),locations=[],whole=items.some(item=>item.measure);
+ if(whole){targetStaff=1;if(targetAt>0){targetBar++;targetAt=0;}}
+ for(const item of items.filter(item=>item.measure)){const bar=targetBar+item.bar;if(bar<0||bar>=64)throw Error('Paste target is outside the score.');while(draft.score.measures.length<=bar)draft.score.measures.push({notes:[],preserve:true});if(draft.score.measures[bar].notes.length)throw Error('This measure is full.');const measure=clone(item.measure);if(measure.clefs)measure.clefs=Object.fromEntries(Object.entries(measure.clefs).map(([staff,value])=>[Number(staff)+targetStaff-1,value]));for(const event of measure.clefChanges||[])event.staff+=targetStaff-1;draft.score.measures[bar]={...measure,notes:[],preserve:true};}
+ for(const item of items){if(!item.note)continue;let bar=targetBar+item.bar,at=item.at+targetAt,staff=targetStaff+item.staff;if(Number.isInteger(item.offset)){bar=targetBar;at=targetAt+item.offset;}if(bar<0||bar>=64||staff<1||staff>staves(sheet.metadata).length||!Number.isInteger(at)||at<0)throw Error('Paste target is outside the score.');while(true){while(draft.score.measures.length<=bar)draft.score.measures.push({notes:[],preserve:true});const length=barUnits(draft,bar);if(at<length)break;at-=length;if(++bar>=64)throw Error('Paste target is outside the score.');}const index=add(draft,bar,{...clone(item.note),staff,at});locations.push(bar+':'+index);}
+ for(let i=0;i<draft.score.measures.length;i++)if(draft.score.measures[i].multiRest&&!validMultiRest(draft.score.measures,i,draft.score.measures[i].multiRest))throw Error('Invalid multi-measure rest.');
+ for(let i=0;i<draft.score.measures.length;i++)if(draft.score.measures[i].repeat?.measure||draft.score.measures[i-1]?.repeat?.measure===2)measureSource(draft,i);performanceOrder(draft);sheet.score=draft.score;return new Set(locations);
+}
+function defaultAccidental(sheet,index,pitch,staff,at=Infinity,exclude=-1){
+ const key=effectiveKey(sheet,index),signature=iranianSignature(sheet.metadata.scale_type,key),keyValue=signature?.alterations||key,carry={},bar=sheet.score.measures[index];
+ bar.notes.map((n,i)=>({n,i,at:positionOf(bar,i)})).filter(item=>item.i!==exclude&&staffOf(item.n)===staff&&item.at<at).sort((a,b)=>a.at-b.at).forEach(({n})=>{if(!n.rest)for(const tone of [...(n.graces||[]),n,...(n.pitches||[])])frequency(tone.pitch,tone.accidental||'',keyValue,carry);});
+ const expected=frequency(pitch,'',keyValue),current=frequency(pitch,'',keyValue,carry);if(Math.abs(expected-current)<.00001)return '';const alter=Math.round(24*Math.log2(expected/frequency(pitch,'','C')))/2;return ({0:'n',1:'#','-1':'b',2:'##','-2':'bb',0.5:'o','-0.5':'k',1.5:'#o','-1.5':'bk'})[alter];
 }
 // Move notes without changing their musical time. The score is replaced only after
 // every destination has been checked, so a collision cannot partially move a chord.
@@ -127,7 +138,7 @@ function insert(sheet,bar,note,replaceIndex=null){
   }
   for(const n of output){if(n._inserted)lastBar=bar;delete n._inserted;}
   const other=(measures[bar]?.notes||[]).filter(n=>staffOf(n)!==staff||voiceOf(n)!==voice);
-  measures[bar]={...(measures[bar]||{}),notes:staff===1&&voice===1?[...output,...other]:[...other,...output]};bar++;
+  measures[bar]={...(measures[bar]||{}),notes:staff===1&&voice===1?[...output,...other]:[...other,...output]};clearWrittenMeasureRepeats(measures,bar);bar++;
   if(queue.length)queue.push(...(measures[bar]?.notes||[]).filter(n=>staffOf(n)===staff&&voiceOf(n)===voice));
  }
  sheet.score.measures=measures;return lastBar;
@@ -269,18 +280,19 @@ function frequency(pitch,accidental='',key='C',carry={}){
 }
 // A document has one main score and optional embedded instrument parts.
 function joinSections(sheet){
- const {sections=[],...score}=sheet.score;if(!sections.length)return {...sheet,score};
+ const {sections=[],subsections=[],...score}=sheet.score;if(!sections.length&&!subsections.length)return {...sheet,score};const leaves=[{...score,subsections},...sections].flatMap(parent=>{const{subsections=[],...base}=parent;return [base,...subsections];});
  const measures=[];let displaySymbol='';
- for(const[index,section]of [score,...sections].entries()){
+ for(const[index,section]of leaves.entries()){
   const bars=trimmedMeasures({metadata:sheet.metadata,score:section});
   if(!bars.length)bars.push(clone(section.measures[0]||{notes:[],preserve:true}));
   bars.forEach((bar,i)=>{if(index&&i===0){const time=bar.time||sheet.metadata.time,previous=effectiveTime({...sheet,score:{measures}},measures.length-1),symbol=bar.timeSymbol||'';if(time===previous&&(!symbol||symbol===displaySymbol)){delete bar.time;delete bar.timeSymbol;}else bar.time=time;const previousSheet={...sheet,score:{measures}},key=bar.key||effectiveKey(previousSheet,measures.length-1);if(sameKeySignature(sheet,key,effectiveKey(previousSheet,measures.length-1)))delete bar.key;else bar.key=key;
- const previousBpm=endingBpm(previousSheet,measures.length-1),tempo=bar.tempo||{mode:'instant',bpm:sheet.metadata.bpm},target=tempo.mode==='aTempo'?Number(sheet.metadata.bpm):Number(tempo.bpm);if(['instant','aTempo'].includes(tempo.mode)&&target===previousBpm)delete bar.tempo;else bar.tempo=tempo;bar.clefs??=Object.fromEntries(staves(sheet.metadata).map((staff,n)=>[n+1,staff.clef]));}if(bar.time||bar.timeSymbol)displaySymbol=bar.timeSymbol||'';measures.push(bar);});
+ const previousBpm=endingBpm(previousSheet,measures.length-1),tempo=bar.tempo||{mode:'instant',bpm:sheet.metadata.bpm},target=tempo.mode==='aTempo'?Number(sheet.metadata.bpm):Number(tempo.bpm);// A gradual change at a new section starts from that section's base tempo.
+ if(['ritardando','accelerando'].includes(tempo.mode))bar.tempo={...tempo,_initialBpm:Number(sheet.metadata.bpm)};else if(['instant','aTempo'].includes(tempo.mode)&&target===previousBpm)delete bar.tempo;else bar.tempo=tempo;bar.clefs??=Object.fromEntries(staves(sheet.metadata).map((staff,n)=>[n+1,staff.clef]));}if(bar.time||bar.timeSymbol)displaySymbol=bar.timeSymbol||'';measures.push(bar);});
  }
  return {...sheet,score:{...score,measures}};
 }
 function parts(sheet){const {parts:extra=[],...score}=sheet.score;return [{...sheet,score},...extra.map(part=>({...sheet,metadata:part.metadata,score:part.score}))].map(joinSections);}
 function ensembleTimeline(sheet){const timelines=parts(sheet).map(part=>timeline(part));return {events:timelines.flatMap((line,part)=>line.events.map(event=>({...event,part}))).sort((a,b)=>a.start-b.start||a.part-b.part),duration:Math.max(0,...timelines.map(line=>line.duration))};}
-const api={effectiveTempoUnit,sameKeySignature,joinSections,parts,ensembleTimeline,iranianScales,iranianTonics,iranianIntervals,iranianSignature,durations,keys,wholeUnits,maxChordTones,validPitch,units,measureUnits,effectiveTime,effectiveKey,tempoSegment,effectiveClef,clefAt,barUnits,beamPattern,positionOf,voiceOf,normalizeBar,clone,ticks,capacity,staves,staffOf,lane,used,fresh,add,insert,copySelection,pasteSelection,moveSelectionToStaff,trimmedMeasures,validMultiRest,multiRestAt,asRest,compactDelete,prepare,measureSource,performanceOrder,timeline,frequency};if(typeof module==='object')module.exports=api;
+const api={repairMeasureRepeats,defaultAccidental,effectiveTempoUnit,sameKeySignature,joinSections,parts,ensembleTimeline,iranianScales,iranianTonics,iranianIntervals,iranianSignature,durations,keys,wholeUnits,maxChordTones,validPitch,units,measureUnits,effectiveTime,effectiveKey,tempoSegment,effectiveClef,clefAt,barUnits,beamPattern,positionOf,voiceOf,normalizeBar,clone,ticks,capacity,staves,staffOf,lane,used,fresh,add,insert,copySelection,pasteSelection,moveSelectionToStaff,trimmedMeasures,validMultiRest,multiRestAt,asRest,compactDelete,prepare,measureSource,performanceOrder,timeline,frequency};if(typeof module==='object')module.exports=api;
 root.NotationModel=api;
 })(globalThis);

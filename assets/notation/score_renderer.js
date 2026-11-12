@@ -350,7 +350,7 @@ function updatePlayback(element,events,accent){
 }
 function metronomeUnit(metadata,symbols={}){const notes={w:'\u{1D15D}',h:'\u{1D15E}',q:'\u2669','8':'\u266A','16':'\u{1D161}','32':'\u{1D162}','64':'\u{1D163}','128':'\u{1D164}','256':'\u{1D165}'};return (symbols[metadata.tempo_note]||notes[metadata.tempo_note]||metadata.tempo_note)+'\u00b7'.repeat(Math.max(0,Math.min(2,Number(metadata.tempo_dots)||0)));}
 function printDocument(sheet,locale='en',symbols={}){
- if(sheet.score.sections?.length)return printDocument(M.joinSections(sheet),locale,symbols);
+ if(sheet.score.sections?.length||sheet.score.subsections?.length)return printDocument(M.joinSections(sheet),locale,symbols);
  if(sheet.score.parts?.length){const documents=M.parts(sheet).map((part,printPartIndex)=>printDocument({...part,printPart:true,printPartIndex},locale,symbols)),body=documents.map(html=>new DOMParser().parseFromString(html,'text/html').body.innerHTML).join('');return documents[0].replace(/<body>[\s\S]*<\/body>/,()=>'<body>'+body+'</body>');}
  const trimmed=M.trimmedMeasures(sheet),measures=trimmed.length?trimmed:[sheet.score.measures[0]||{notes:[]}],rows=groups(measures,1000,true,signatureReserve(sheet),sheet),pages=[],engraved=[];let index=0;
  const printInstrument=symbols.instrumentName?symbols.instrumentName(sheet.metadata,sheet.printPartIndex):sheet.metadata.instrument+' '+((sheet.printPartIndex||0)+1);

@@ -360,7 +360,7 @@ class NotationApi {
       'payload': {
         'metadata': sheet['metadata'],
         'score': sheet['score'],
-        'notation_schema': 2,
+        'notation_schema': 3,
         'visibility': sheet['visibility'] ?? 'private',
         if (remoteId != 0) 'version': sheet['remote_version'] ?? 0,
       },

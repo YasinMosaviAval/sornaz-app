@@ -30,7 +30,13 @@ class NotationTopBar extends StatelessWidget implements PreferredSizeWidget {
         _action(
           Icons.add,
           'add-section',
-          socialText(context, 'افزودن بخش', 'Add section'),
+          socialText(context, 'افزودن قسمت', 'Add section'),
+          true,
+        ),
+        _action(
+          Icons.playlist_add,
+          'add-subsection',
+          socialText(context, 'افزودن بخش', 'Add subsection'),
           true,
         ),
         _action(
