@@ -17,7 +17,8 @@ import UIKit
         result("\(version) (\(build))")
       } else { result(FlutterMethodNotImplemented) }
     }
-    notationStorage = NotationStorage(messenger: registrar(forPlugin: "NotationStorage")!.messenger())
+    let notationRegistrar = registrar(forPlugin: "NotationStorage")!
+    notationStorage = NotationStorage(messenger: notationRegistrar.messenger(), assetKey: { notationRegistrar.lookupKey(forAsset: $0) })
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }

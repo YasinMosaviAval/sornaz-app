@@ -1,4 +1,5 @@
 import 'package:sornaz/components/main_tabs.dart';
+import 'package:sornaz/screens/Notation/music_sheets_page.dart';
 import 'package:sornaz/components/home_top_bar.dart';
 import '../components/app_drawer.dart';
 import 'package:flutter/material.dart';
@@ -30,6 +31,12 @@ class MusicToolsPage extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 24),
             children: [
               for (final item in [
+                (
+                  Icons.music_note_outlined,
+                  'نت‌نویسی',
+                  'Notation',
+                  const MusicSheetsPage(),
+                ),
                 (
                   Icons.library_music_outlined,
                   'پخش موسیقی',

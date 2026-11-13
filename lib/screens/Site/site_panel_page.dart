@@ -1,3 +1,4 @@
+import 'package:sornaz/screens/Notation/music_sheets_page.dart';
 import 'dart:async';
 import 'panel_navigation.dart';
 
@@ -239,7 +240,9 @@ class _NativePanelState extends State<NativePanel> {
         title: Text(panelLabel(context, section)),
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => section['destination'] == 'website-example'
+            builder: (_) => section['destination'] == 'notation'
+                ? const MusicSheetsPage()
+                : section['destination'] == 'website-example'
                 ? _WebsitePanelExample(section: section)
                 : PanelResourcePage(
                     api: api,

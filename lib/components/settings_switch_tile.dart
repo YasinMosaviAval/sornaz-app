@@ -14,6 +14,7 @@ class SettingsSwitchTile extends StatelessWidget {
 
   final IconData? leadingIcon;
   final ValueChanged<bool> onChanged;
+  final Widget? _widgetTitle, _widgetSubtitle;
 
   const SettingsSwitchTile({
     super.key,
@@ -25,10 +26,34 @@ class SettingsSwitchTile extends StatelessWidget {
     this.leadingIcon,
     this.enabled = true,
     this.horizontalPadding,
-  });
+  }) : _widgetTitle = null,
+       _widgetSubtitle = null;
+
+  const SettingsSwitchTile.widgets({
+    super.key,
+    required Widget title,
+    Widget? subtitle,
+    required this.value,
+    required this.onChanged,
+  }) : _widgetTitle = title,
+       _widgetSubtitle = subtitle,
+       title = '',
+       subtitle = '',
+       isDark = false,
+       enabled = true,
+       horizontalPadding = null,
+       leadingIcon = null;
 
   @override
   Widget build(BuildContext context) {
+    if (_widgetTitle != null) {
+      return SwitchListTile(
+        title: _widgetTitle,
+        subtitle: _widgetSubtitle,
+        value: value,
+        onChanged: enabled ? onChanged : null,
+      );
+    }
     final effectiveTitleColor = !enabled
         ? AppColors.settings_switch_tile_not_enabled_title_color(isDark: isDark)
         : AppColors.settings_switch_tile_enabled_title_color(isDark: isDark);

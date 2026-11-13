@@ -165,8 +165,7 @@ List<Json> websitePanelNavigation(Json response) {
             'comments',
             'pages',
           ].contains(node['section']) &&
-          node['destination'] != 'settings' &&
-          node['destination'] != 'notation')
+          node['destination'] != 'settings')
         if (node['children'] is List)
           {...node, 'children': resolve(objects(node['children']))}
         else if (['notation', 'website-example'].contains(node['destination']))

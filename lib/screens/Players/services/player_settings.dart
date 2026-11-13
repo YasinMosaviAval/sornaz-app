@@ -4,7 +4,14 @@ import 'last_playback_position.dart';
 
 enum ListEndAction { restart, nextList, stop }
 
-enum PlaybackInterruption { leavePlayer, exitApp, recording, metronome, tuner }
+enum PlaybackInterruption {
+  leavePlayer,
+  exitApp,
+  recording,
+  metronome,
+  tuner,
+  notation,
+}
 
 class PlayerSettings extends ChangeNotifier {
   static final instance = PlayerSettings();

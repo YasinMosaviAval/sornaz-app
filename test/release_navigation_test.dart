@@ -14,7 +14,7 @@ import 'drawer_accounts_test.dart' as fixture;
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   test(
-    'release panel excludes experimental notation and keeps authorized posts',
+    'release panel includes notation and keeps authorized posts',
     () {
       final menu = websitePanelNavigation({
         'navigationVersion': 1,
@@ -30,8 +30,8 @@ void main() {
           {'key': 'settings', 'destination': 'settings'},
         ],
       });
-      expect(menu.map((item) => item['key']), ['posts']);
-      expect(menu.single['pageTabs'], hasLength(1));
+      expect(menu.map((item) => item['key']), ['notation', 'posts']);
+      expect(menu.last['pageTabs'], hasLength(1));
       expect(
         () => websitePanelNavigation({'sections': []}),
         throwsA(isA<PanelNavigationUnavailable>()),
