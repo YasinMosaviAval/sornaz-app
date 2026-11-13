@@ -54,6 +54,20 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byType(AppPianoKeyboard), findsNWidgets(2));
+    final upper = tester.widget<Container>(
+      find.byKey(const ValueKey('piano-C4:#')).first,
+    );
+    final lower = tester.widget<Container>(
+      find.byKey(const ValueKey('piano-D4:b')).first,
+    );
+    expect(
+      (lower.decoration as BoxDecoration).borderRadius,
+      (upper.decoration as BoxDecoration).borderRadius,
+    );
+    final split = tester.widget<SizedBox>(
+      find.byKey(const ValueKey('piano-black-C4')).first,
+    );
+    expect(split.child, isA<Column>());
     for (final entry in {
       'C4:': (60, 180.0),
       'C4:#': (40, 65.0),

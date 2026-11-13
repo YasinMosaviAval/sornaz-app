@@ -93,10 +93,25 @@ function pasteSelection(sheet,items,targetBar,targetStaff,targetAt=0){
  for(let i=0;i<draft.score.measures.length;i++)if(draft.score.measures[i].multiRest&&!validMultiRest(draft.score.measures,i,draft.score.measures[i].multiRest))throw Error('Invalid multi-measure rest.');
  for(let i=0;i<draft.score.measures.length;i++)if(draft.score.measures[i].repeat?.measure||draft.score.measures[i-1]?.repeat?.measure===2)measureSource(draft,i);performanceOrder(draft);sheet.score=draft.score;return new Set(locations);
 }
+// Preserve the sounding pitches of older notes before changing an accidental.
+function pinAccidentals(sheet,index){
+ const bar=sheet.score.measures[index],key=effectiveKey(sheet,index),keyValue=iranianSignature(sheet.metadata.scale_type,key)?.alterations||key;
+ for(const staff of [...new Set(bar.notes.map(staffOf))]){
+  const carry={};
+  for(const {n} of bar.notes.map((n,i)=>({n,i,at:positionOf(bar,i)})).filter(({n})=>!n.rest&&staffOf(n)===staff).sort((a,b)=>a.at-b.at||a.i-b.i)){
+   for(const tone of [...(n.graces||[]),n,...(n.pitches||[])]){
+    const hz=frequency(tone.pitch,tone.accidental||'',keyValue,carry),alter=Math.round(24*Math.log2(hz/frequency(tone.pitch,'','C')))/2;
+    tone.accidental=({0:'n',1:'#','-1':'b',2:'##','-2':'bb',0.5:'o','-0.5':'k',1.5:'#o','-1.5':'bk'})[alter];
+   }
+  }
+ }
+}
+// Store the intended pitch explicitly; engraving decides whether its sign is visible.
+// Otherwise editing an earlier note can silently change a later key-signature tone.
 function defaultAccidental(sheet,index,pitch,staff,at=Infinity,exclude=-1){
- const key=effectiveKey(sheet,index),signature=iranianSignature(sheet.metadata.scale_type,key),keyValue=signature?.alterations||key,carry={},bar=sheet.score.measures[index];
- bar.notes.map((n,i)=>({n,i,at:positionOf(bar,i)})).filter(item=>item.i!==exclude&&staffOf(item.n)===staff&&item.at<at).sort((a,b)=>a.at-b.at).forEach(({n})=>{if(!n.rest)for(const tone of [...(n.graces||[]),n,...(n.pitches||[])])frequency(tone.pitch,tone.accidental||'',keyValue,carry);});
- const expected=frequency(pitch,'',keyValue),current=frequency(pitch,'',keyValue,carry);if(Math.abs(expected-current)<.00001)return '';const alter=Math.round(24*Math.log2(expected/frequency(pitch,'','C')))/2;return ({0:'n',1:'#','-1':'b',2:'##','-2':'bb',0.5:'o','-0.5':'k',1.5:'#o','-1.5':'bk'})[alter];
+ const key=effectiveKey(sheet,index),signature=iranianSignature(sheet.metadata.scale_type,key),keyValue=signature?.alterations||key;
+ const expected=frequency(pitch,'',keyValue),alter=Math.round(24*Math.log2(expected/frequency(pitch,'','C')))/2;
+ return ({0:'n',1:'#','-1':'b',2:'##','-2':'bb',0.5:'o','-0.5':'k',1.5:'#o','-1.5':'bk'})[alter];
 }
 // Move notes without changing their musical time. The score is replaced only after
 // every destination has been checked, so a collision cannot partially move a chord.
@@ -148,7 +163,7 @@ function trimmedMeasures(sheet){const measures=clone(sheet.score.measures);while
 function multiRestCompatible(bar,first=false){return !!bar&&!bar.notes.length&&!bar.time&&!bar.timeSymbol&&!bar.length&&!bar.barline&&!bar.repeat&&!bar.clefs&&!bar.clefChanges&&!bar.key&&!bar.tempo&&!bar.tempo_unit&&!bar.rehearsal&&!bar.text&&(!bar.displayNumber||first)&&(!bar.multiRest||first);}
 function validMultiRest(bars,start,count){return Number.isInteger(count)&&count>=2&&count<=8&&start+count<=bars.length&&bars.slice(start,start+count).every((bar,offset)=>multiRestCompatible(bar,offset===0));}
 function multiRestAt(bars,index){for(let start=index;start>=Math.max(0,index-7);start--){const count=bars[start]?.multiRest;if(count&&validMultiRest(bars,start,count)&&index<start+count)return {start,count,end:start+count-1};}return null;}
-function asRest(note){const rest={...clone(note),pitch:'B4',rest:true,accidental:'',cautionary:false,dynamic:'',articulation:'',bow:'',finger:'',ornament:'',tieNext:false,tiePrevious:false,slurStart:false,slurEnd:false};delete rest.pitches;delete rest.pedal;delete rest.beamGroup;delete rest.crossBeam;delete rest.lyric;delete rest.hairpin;delete rest.chordSymbol;delete rest.tremolo;delete rest.graces;delete rest.octaveShift;delete rest.arpeggio;delete rest.slide;delete rest.noteSize;delete rest.harmonic;delete rest.ornamentUpperAccidental;delete rest.ornamentLowerAccidental;return rest;}
+function asRest(note){const rest={...clone(note),pitch:'B4',rest:true,accidental:'',cautionary:false,dynamic:'',articulation:'',bow:'',finger:'',ornament:'',tieNext:false,tiePrevious:false,slurStart:false,slurEnd:false};delete rest.showAccidental;delete rest.pitches;delete rest.pedal;delete rest.beamGroup;delete rest.crossBeam;delete rest.lyric;delete rest.hairpin;delete rest.chordSymbol;delete rest.tremolo;delete rest.graces;delete rest.octaveShift;delete rest.arpeggio;delete rest.slide;delete rest.noteSize;delete rest.harmonic;delete rest.ornamentUpperAccidental;delete rest.ornamentLowerAccidental;return rest;}
 // Ripple within each selected measure/staff/voice without creating replacement rests.
 function compactDelete(sheet,selected){
  if(!sheet.editable)throw Error('This sheet is read-only.');
@@ -287,12 +302,14 @@ function joinSections(sheet){
   if(!bars.length)bars.push(clone(section.measures[0]||{notes:[],preserve:true}));
   bars.forEach((bar,i)=>{if(index&&i===0){const time=bar.time||sheet.metadata.time,previous=effectiveTime({...sheet,score:{measures}},measures.length-1),symbol=bar.timeSymbol||'';if(time===previous&&(!symbol||symbol===displaySymbol)){delete bar.time;delete bar.timeSymbol;}else bar.time=time;const previousSheet={...sheet,score:{measures}},key=bar.key||effectiveKey(previousSheet,measures.length-1);if(sameKeySignature(sheet,key,effectiveKey(previousSheet,measures.length-1)))delete bar.key;else bar.key=key;
  const previousBpm=endingBpm(previousSheet,measures.length-1),tempo=bar.tempo||{mode:'instant',bpm:sheet.metadata.bpm},target=tempo.mode==='aTempo'?Number(sheet.metadata.bpm):Number(tempo.bpm);// A gradual change at a new section starts from that section's base tempo.
- if(['ritardando','accelerando'].includes(tempo.mode))bar.tempo={...tempo,_initialBpm:Number(sheet.metadata.bpm)};else if(['instant','aTempo'].includes(tempo.mode)&&target===previousBpm)delete bar.tempo;else bar.tempo=tempo;bar.clefs??=Object.fromEntries(staves(sheet.metadata).map((staff,n)=>[n+1,staff.clef]));}if(bar.time||bar.timeSymbol)displaySymbol=bar.timeSymbol||'';measures.push(bar);});
+ if(['ritardando','accelerando'].includes(tempo.mode))bar.tempo={...tempo,_initialBpm:Number(sheet.metadata.bpm)};else if(['instant','aTempo'].includes(tempo.mode)&&target===previousBpm)delete bar.tempo;else bar.tempo=tempo;const incomingClefs=bar.clefs??Object.fromEntries(staves(sheet.metadata).map((staff,n)=>[n+1,staff.clef])),changedClefs={};
+ for(const [staff,clef]of Object.entries(incomingClefs))if(clef!==clefAt(previousSheet,measures.length-1,Number(staff),Infinity))changedClefs[staff]=clef;
+ if(Object.keys(changedClefs).length)bar.clefs=changedClefs;else delete bar.clefs;}if(bar.time||bar.timeSymbol)displaySymbol=bar.timeSymbol||'';measures.push(bar);});
  }
  return {...sheet,score:{...score,measures}};
 }
 function parts(sheet){const {parts:extra=[],...score}=sheet.score;return [{...sheet,score},...extra.map(part=>({...sheet,metadata:part.metadata,score:part.score}))].map(joinSections);}
 function ensembleTimeline(sheet){const timelines=parts(sheet).map(part=>timeline(part));return {events:timelines.flatMap((line,part)=>line.events.map(event=>({...event,part}))).sort((a,b)=>a.start-b.start||a.part-b.part),duration:Math.max(0,...timelines.map(line=>line.duration))};}
-const api={repairMeasureRepeats,defaultAccidental,effectiveTempoUnit,sameKeySignature,joinSections,parts,ensembleTimeline,iranianScales,iranianTonics,iranianIntervals,iranianSignature,durations,keys,wholeUnits,maxChordTones,validPitch,units,measureUnits,effectiveTime,effectiveKey,tempoSegment,effectiveClef,clefAt,barUnits,beamPattern,positionOf,voiceOf,normalizeBar,clone,ticks,capacity,staves,staffOf,lane,used,fresh,add,insert,copySelection,pasteSelection,moveSelectionToStaff,trimmedMeasures,validMultiRest,multiRestAt,asRest,compactDelete,prepare,measureSource,performanceOrder,timeline,frequency};if(typeof module==='object')module.exports=api;
+const api={pinAccidentals,repairMeasureRepeats,defaultAccidental,effectiveTempoUnit,sameKeySignature,joinSections,parts,ensembleTimeline,iranianScales,iranianTonics,iranianIntervals,iranianSignature,durations,keys,wholeUnits,maxChordTones,validPitch,units,measureUnits,effectiveTime,effectiveKey,tempoSegment,effectiveClef,clefAt,barUnits,beamPattern,positionOf,voiceOf,normalizeBar,clone,ticks,capacity,staves,staffOf,lane,used,fresh,add,insert,copySelection,pasteSelection,moveSelectionToStaff,trimmedMeasures,validMultiRest,multiRestAt,asRest,compactDelete,prepare,measureSource,performanceOrder,timeline,frequency};if(typeof module==='object')module.exports=api;
 root.NotationModel=api;
 })(globalThis);

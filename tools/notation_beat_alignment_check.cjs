@@ -1,0 +1,19 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const root=path.resolve(__dirname,'..'),web=process.argv.includes('--web-assets'),assets=process.env.NOTATION_ASSETS?path.resolve(process.env.NOTATION_ASSETS):(web?path.resolve(root,'../../../web/sornaz/assets/notation'):path.join(root,'assets/notation'));
+const {chromium}=require(path.resolve(root,'../../../web/sornaz/storage/notation-browser-check/package'));
+(async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});try{
+for(const nativePiano of web?[false]:[false,true]){
+const page=await browser.newPage({viewport:{width:Number(process.env.NOTATION_TEST_WIDTH||1280),height:844}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+const sheet={metadata:{title:'Shur D',instrument:'Piano',clef:'treble',scale_type:'iran_shur',key:'D',time:'4/4',tempo_note:'q',tempo_dots:1,bpm:100},score:{measures:[{notes:[{pitch:'B4',duration:'q',accidental:'n'}]},{tempo_unit:'8:1',notes:[{pitch:'B4',duration:'q',accidental:'b'}]}]}};
+await page.route('http://notation.test/**',route=>{const u=new URL(route.request().url());if(u.pathname==='/')return route.fulfill({contentType:'text/html',body:`<html><meta charset="utf-8"><link rel="stylesheet" href="/notation.css"><link rel="stylesheet" href="/ui_controls.css"><body><main id="app"></main><div id="toast"></div><script>window.NOTATION_BOOT=${JSON.stringify({locale:'fa',practiceDraft:true,initialDraft:sheet,embedded:true,userId:1,durationMode:2,nativePiano})};window.SornazNotation={postMessage(raw){const d=JSON.parse(raw);if(!d.id)return;if(d.action==='export')window.saved=JSON.parse(d.content);queueMicrotask(()=>Notation.receive(d.id,d.action==='instruments'?[]:true,null));}};</script>${['vendor/vexflow.js','piano_style.js','model.js','ui_symbols.js','ui_glyphs.js','score_renderer.js','ui_controls.js','notation.js'].map(s=>'<script src="/'+s+'"></script>').join('')}`});const file=path.resolve(assets,'.'+u.pathname);return file.startsWith(assets+path.sep)&&fs.existsSync(file)?route.fulfill({path:file}):route.fulfill({status:404,body:''});});
+
+
+await page.goto('http://notation.test/');await page.waitForFunction(()=>Notation.ready);await page.locator('#score svg').first().waitFor();
+const geometry=await page.evaluate(()=>{
+ const check=(scope)=>[...scope.querySelectorAll('.metronome-dot,.notation-tempo-dot')].map(dot=>{const glyph=dot.parentElement.querySelector('text'),head=new DOMPoint(0,0).matrixTransform(glyph.getScreenCTM());const point=new DOMPoint(Number(dot.getAttribute('cx')),Number(dot.getAttribute('cy'))).matrixTransform(dot.getScreenCTM());return Math.abs(point.y-head.y);});
+ const host=document.createElement('div');document.body.append(host);const variants=[];for(const unit of ['w','h','q','8','16','32','64','128','256'])for(const dots of [1,2]){host.innerHTML=NotationSymbols.beat(unit,dots);variants.push(...check(host));}host.remove();return {title:check(document.querySelector('.score-title')),measure:check(document.querySelector('#score')),variants};});
+assert.equal(geometry.title.length,1);assert.equal(geometry.measure.length,1);assert.ok([...geometry.title,...geometry.measure,...geometry.variants].every(delta=>delta<.1),JSON.stringify(geometry));
+const print=await page.evaluate(()=>{const s=window.NOTATION_BOOT.initialDraft;const doc=new DOMParser().parseFromString(NotationRenderer.printDocument(s),'text/html');return {title:doc.querySelectorAll('header .metronome-dot').length,measure:doc.querySelectorAll('.notation-tempo-dot').length};});assert.equal(print.title,1);assert.equal(print.measure,1);
+assert.deepEqual(errors,[]);console.log((web?'web':'app')+' '+(nativePiano?'native':'HTML')+' metronome dots align with noteheads in title, measures, all durations and print passed');await page.close();
+}
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

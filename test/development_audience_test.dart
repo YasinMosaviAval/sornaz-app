@@ -11,7 +11,6 @@ import 'package:sornaz/screens/Authentication/models/auth_user.dart';
 import 'package:sornaz/screens/Authentication/services/auth_api_service.dart';
 import 'package:sornaz/screens/Home/ui/pages/music_tools.dart';
 import 'package:sornaz/screens/Home/ui/pages/solfege_practice_page.dart';
-import 'package:sornaz/screens/Notation/music_sheets_page.dart';
 import 'package:sornaz/screens/Home/ui/pages/rhythm_practice_page.dart';
 import 'package:sornaz/screens/Notation/music_analysis_test_page.dart';
 import 'package:sornaz/screens/Notation/omr_review_page.dart';
@@ -89,7 +88,7 @@ void main() {
       );
       expect(find.text('تمرین ریتم'), id == 1 ? findsOneWidget : findsNothing);
       expect(find.text('تمرین سولفژ'), id == 1 ? findsOneWidget : findsNothing);
-      expect(find.text('نت‌نویسی'), id == 1 ? findsOneWidget : findsNothing);
+      expect(find.text('نت‌نویسی'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
     testWidgets(
@@ -185,7 +184,6 @@ void main() {
         OmrReviewPage(imageBytes: Uint8List(0)),
         const RhythmPracticePage(),
         const IranianIntervalScreen(),
-        const MusicSheetsPage(),
         const SolfegePracticePage(),
       ]) {
         await tester.pumpWidget(host(session, page));

@@ -87,10 +87,10 @@ void main() {
       expect(find.byIcon(Icons.file_download_outlined), findsNothing);
       expect(find.byIcon(Icons.picture_as_pdf_outlined), findsNothing);
       for (final icon in [
+        Icons.add,
+        Icons.playlist_add,
         Icons.save_outlined,
         Icons.multitrack_audio,
-        Icons.view_week_outlined,
-        Icons.music_note_outlined,
         Icons.play_arrow,
         Icons.edit_outlined,
       ]) {
@@ -104,10 +104,10 @@ void main() {
       expect(find.byIcon(Icons.undo), findsNothing);
       expect(find.byIcon(Icons.redo), findsNothing);
       expect(actions, [
+        'add-subsection',
+        'add-section',
         'save',
         'tool-voices',
-        'tool-measure',
-        'tool-palette',
         'play',
         'metadata',
       ]);

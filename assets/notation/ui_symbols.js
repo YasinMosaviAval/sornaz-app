@@ -30,6 +30,11 @@ const toolPaths={
 function tool(kind){return '<svg class="notation-tool-icon" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+(toolPaths[kind]||toolPaths.note)+'</svg>';}
 // Official Bravura 1.480 SMuFL codepoints and glyph bounds (OFL-1.1).
 const bravuraGlyphs={"note:w":{"code":57810,"box":[-2,-7.44,22.36,14.92],"name":"noteWhole"},"rest:w":{"code":58595,"box":[-2,-2.36,15.28,9.76],"name":"restWhole"},"note:h":{"code":57811,"box":[-2,-37,17.64,44.8],"name":"noteHalfUp"},"rest:h":{"code":58596,"box":[-2,-7.68,15.28,9.76],"name":"restHalf"},"note:q":{"code":57813,"box":[-2,-37,17.28,44.64],"name":"noteQuarterUp"},"rest:q":{"code":58597,"box":[-1.96,-16.92,14.76,33.92],"name":"restQuarter"},"note:8":{"code":57815,"box":[-2,-36.92,26.64,44.44],"name":"note8thUp"},"rest:8":{"code":58598,"box":[-2,-8.96,13.88,21],"name":"rest8th"},"note:16":{"code":57817,"box":[-2,-36.92,27.24,44.44],"name":"note16thUp"},"rest:16":{"code":58599,"box":[-2,-9.16,16.8,31.16],"name":"rest16th"},"note:32":{"code":57819,"box":[-2,-42.92,26.52,50.44],"name":"note32ndUp"},"rest:32":{"code":58600,"box":[-2,-19.04,18.52,41.04],"name":"rest32nd"},"note:64":{"code":57821,"box":[-2,-50.88,26.52,58.4],"name":"note64thUp"},"rest:64":{"code":58601,"box":[-2,-19.2,20.92,51.32],"name":"rest64th"},"note:128":{"code":57823,"box":[-2,-58.32,26.52,65.84],"name":"note128thUp"},"rest:128":{"code":58602,"box":[-2,-29.56,23.4,61.56],"name":"rest128th"},"note:256":{"code":57825,"box":[-2,-65.2,26.64,72.72],"name":"note256thUp"},"rest:256":{"code":58603,"box":[-2,-29.84,25.64,71.84],"name":"rest256th"}};
+// Keep augmentation dots in the same coordinate system as the notehead (y=0).
+function beat(value,dots=0){
+ const glyph=bravuraGlyphs['note:'+value]||bravuraGlyphs['note:q'],box=[...glyph.box],count=Math.max(0,Math.min(2,Number(dots)||0)),right=box[0]+box[2];box[2]+=count?count*5+2:0;
+ return '<svg class="metronome-note" direction="ltr" data-music-font="Bravura" viewBox="'+box.join(' ')+'" style="width:'+19*box[2]/box[3]+'px;height:19px;flex:none;overflow:visible" aria-hidden="true"><text class="bravura-symbol" x="0" y="0" font-size="40" fill="currentColor">'+String.fromCodePoint(glyph.code)+'</text>'+Array.from({length:count},(_,i)=>'<circle class="metronome-dot" cx="'+(right+3+i*5)+'" cy="0" r="1.7" fill="currentColor"/>').join('')+'</svg>';
+}
 function musicGlyph(kind,value){const glyph=bravuraGlyphs[kind+':'+value]||bravuraGlyphs[kind+':q'],reference=kind==='rest'&&['w','h'].includes(value),box=reference?[-4,glyph.box[1],20,glyph.box[3]]:glyph.box;return '<svg class="'+(kind==='note'?'note-glyph':'rest-glyph')+'" direction="ltr" data-music-font="Bravura" data-glyph="'+glyph.name+'" viewBox="'+box.join(' ')+'" aria-hidden="true">'+(reference?'<path class="rest-reference-line" d="M-3 0H15" stroke="currentColor" stroke-width=".8" fill="none"/>':'')+'<text class="bravura-symbol" direction="ltr" text-anchor="start" x="0" y="0" font-size="40" fill="currentColor" stroke="none">'+String.fromCodePoint(glyph.code)+'</text></svg>';}
 function note(value){return musicGlyph('note',value);}
 function rest(value){return musicGlyph('rest',value);}
@@ -43,5 +48,5 @@ function center(scope){
   svg.setAttribute('viewBox',[box.x+box.width/2-width/2,box.y+box.height/2-height/2,width,height].join(' '));
  }
 }
-root.NotationSymbols={icon,tool,note,rest,tempos,center};
+root.NotationSymbols={beat,icon,tool,note,rest,tempos,center};
 })(globalThis);

@@ -81,6 +81,11 @@ final class NotationStorage: NSObject, UIDocumentPickerDelegate {
          let font = try? Data(contentsOf: URL(fileURLWithPath: path)) {
         printable = content.replacingOccurrences(of: "../fonts/iran_sansx_fa/regular.ttf", with: "data:font/ttf;base64," + font.base64EncodedString())
       }
+      let musicKey = assetKey("assets/notation/fonts/Bravura.otf")
+      if let path = Bundle.main.path(forResource: musicKey, ofType: nil),
+         let font = try? Data(contentsOf: URL(fileURLWithPath: path)) {
+        printable = printable.replacingOccurrences(of: "fonts/Bravura.otf", with: "data:font/otf;base64," + font.base64EncodedString())
+      }
       printController.printFormatter = UIMarkupTextPrintFormatter(markupText: printable)
       let shown: Bool
       if UIDevice.current.userInterfaceIdiom == .pad {

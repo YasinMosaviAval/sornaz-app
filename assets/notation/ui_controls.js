@@ -243,5 +243,12 @@ document.addEventListener('contextmenu',event=>{if(performance.now()<suppressedU
 document.addEventListener('focusout',event=>{if(help?.node===helpTarget(event))hideHelp();},true);
 function viewportChanged(){closePicker();if(help){if(!visibleAnchor(help.node)||(help.source==='hover'&&!underPointer(help.node,help.point)))hideHelp();else position(help.box,help.node);}}
 global.addEventListener('resize',viewportChanged);global.addEventListener('scroll',event=>{if(popup?.box.contains(event.target)||help?.box.contains(event.target))return;viewportChanged();},{capture:true,passive:true});
-global.NotationControls={decorate,dispose,openPicker,close:()=>{closePicker();hideHelp();}};
+// Shared modal for note/rest duration and all metronome beat-unit fields.
+function durationPicker({values,selected={},rest=false,label='',onSelect,onClose=()=>{}}){
+ const dialog=document.createElement('dialog'),options=document.createElement('div');dialog.className='duration-picker'+(rest?' rest-duration-picker':' note-duration-picker');dialog.setAttribute('aria-label',label);options.className='duration-options rest-duration-options';let closed=false;
+ const close=()=>{if(closed)return;closed=true;dialog.close();dialog.remove();onClose();};
+ for(const value of values){const button=document.createElement('button');button.type='button';button.dataset.duration=value.duration;button.dataset.dots=String(value.dots);button.dataset.tempoUnit=value.duration+':'+value.dots;if(rest){button.dataset.restDuration=value.duration;button.dataset.restDots=String(value.dots);}button.setAttribute('aria-label',label+' '+value.duration+' '+value.dots);button.innerHTML=(rest?NotationSymbols.rest(value.duration):NotationSymbols.note(value.duration))+'<span class="duration-dots">'+('\u00b7'.repeat(value.dots))+'</span>';if(value.duration===selected.duration&&value.dots===selected.dots)button.className='active';button.onclick=()=>{close();onSelect(value);};options.append(button);}
+ dialog.append(options);dialog.addEventListener('cancel',event=>{event.preventDefault();close();});dialog.addEventListener('close',close,{once:true});dialog.addEventListener('click',event=>{if(event.target!==dialog)return;const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)close();});document.body.append(dialog);dialog.showModal();(dialog.querySelector('.active')||options.firstElementChild)?.focus({preventScroll:true});return {dialog,close};
+}
+global.NotationControls={durationPicker,decorate,dispose,openPicker,close:()=>{closePicker();hideHelp();}};
 })(globalThis);

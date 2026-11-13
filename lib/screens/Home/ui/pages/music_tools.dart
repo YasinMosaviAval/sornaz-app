@@ -33,13 +33,12 @@ class MusicToolsPage extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 24),
             children: [
               for (final item in [
-                if (DevelopmentAccess.watch(context))
-                  (
-                    Icons.music_note_outlined,
-                    'نت‌نویسی',
-                    'Notation',
-                    const MusicSheetsPage(),
-                  ),
+                (
+                  Icons.music_note_outlined,
+                  'نت‌نویسی',
+                  'Notation',
+                  const MusicSheetsPage(),
+                ),
                 (
                   Icons.library_music_outlined,
                   'پخش موسیقی',

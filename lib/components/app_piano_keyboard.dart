@@ -248,9 +248,7 @@ class _AppPianoKeyboardState extends State<AppPianoKeyboard> {
                 : null,
             borderRadius: key.isWhite
                 ? null
-                : BorderRadius.vertical(
-                    bottom: Radius.circular(radius),
-                  ),
+                : BorderRadius.vertical(bottom: Radius.circular(radius)),
           ),
           padding: const EdgeInsets.only(bottom: 4),
           child: Column(
@@ -294,24 +292,21 @@ class _AppPianoKeyboardState extends State<AppPianoKeyboard> {
     key: ValueKey('piano-black-${AppPianoKey(midi, '#').pitch}'),
     width: PianoKeyboardSpec.blackWidth,
     height: PianoKeyboardSpec.blackHeight,
-    child: ColoredBox(
-      color: const Color(PianoKeyboardSpec.blackColor),
-      child: Column(
-        children: [
-          _key(
-            context,
-            AppPianoKey(midi, '#'),
-            PianoKeyboardSpec.blackWidth,
-            PianoKeyboardSpec.blackHeight / 2,
-          ),
-          _key(
-            context,
-            AppPianoKey(midi, 'b'),
-            PianoKeyboardSpec.blackWidth,
-            PianoKeyboardSpec.blackHeight / 2,
-          ),
-        ],
-      ),
+    child: Column(
+      children: [
+        _key(
+          context,
+          AppPianoKey(midi, '#'),
+          PianoKeyboardSpec.blackWidth,
+          PianoKeyboardSpec.blackHeight / 2,
+        ),
+        _key(
+          context,
+          AppPianoKey(midi, 'b'),
+          PianoKeyboardSpec.blackWidth,
+          PianoKeyboardSpec.blackHeight / 2,
+        ),
+      ],
     ),
   );
 

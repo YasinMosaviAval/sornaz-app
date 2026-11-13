@@ -47,17 +47,10 @@ class MusicSheetsPage extends StatelessWidget {
   final bool questionEditor;
   final Map<String, dynamic>? initialDraft;
   @override
-  Widget build(BuildContext context) => questionEditor
-      ? MusicPlaybackEntry(
-          reason: PlaybackInterruption.notation,
-          child: _content(context),
-        )
-      : DevelopmentGate(
-          builder: (context) => MusicPlaybackEntry(
-            reason: PlaybackInterruption.notation,
-            child: _content(context),
-          ),
-        );
+  Widget build(BuildContext context) => MusicPlaybackEntry(
+    reason: PlaybackInterruption.notation,
+    child: _content(context),
+  );
   Widget _content(BuildContext context) {
     final session = context.watch<AuthSession>();
     if (kIsWeb)
@@ -244,34 +237,32 @@ class _NotationHostState extends State<_NotationHost>
         .toList();
     return showModalBottomSheet<String>(
       context: context,
-      builder: (sheetContext) => !DevelopmentAccess.watch(sheetContext)
-          ? const SizedBox.shrink()
-          : SafeArea(
-              child: ListView(
-                shrinkWrap: true,
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.playlist_add),
-                    title: Text(socialText(context, 'لیست جدید', 'New list')),
-                    onTap: () => Navigator.pop(sheetContext, '__new__'),
-                  ),
-                  for (final item in items)
-                    ListTile(
-                      leading: Icon(
-                        item['favorite'] == true
-                            ? Icons.favorite_border
-                            : Icons.queue_music,
-                      ),
-                      title: Text(
-                        item['favorite'] == true
-                            ? socialText(context, 'علاقه‌مندی', 'Favorite')
-                            : '${item['title']}',
-                      ),
-                      onTap: () => Navigator.pop(sheetContext, '${item['id']}'),
-                    ),
-                ],
-              ),
+      builder: (sheetContext) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.playlist_add),
+              title: Text(socialText(context, 'لیست جدید', 'New list')),
+              onTap: () => Navigator.pop(sheetContext, '__new__'),
             ),
+            for (final item in items)
+              ListTile(
+                leading: Icon(
+                  item['favorite'] == true
+                      ? Icons.favorite_border
+                      : Icons.queue_music,
+                ),
+                title: Text(
+                  item['favorite'] == true
+                      ? socialText(context, 'علاقه‌مندی', 'Favorite')
+                      : '${item['title']}',
+                ),
+                onTap: () => Navigator.pop(sheetContext, '${item['id']}'),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
