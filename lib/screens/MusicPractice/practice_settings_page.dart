@@ -11,9 +11,8 @@ class MusicPracticeSettingsPage extends StatefulWidget {
   static const listModeKey = 'music.practice.admin.listMode';
   static const hierarchyModeKey = 'music.practice.admin.hierarchyMode';
   static Future<bool> hierarchyMode(int? actor) async =>
-      actor != 1 ||
-      ((await SharedPreferences.getInstance()).getBool(hierarchyModeKey) ??
-          true);
+      actor == 1 &&
+      (await SharedPreferences.getInstance()).getBool(hierarchyModeKey) == true;
   static Future<bool> listMode(int? actor) async =>
       actor == 1 &&
       (await SharedPreferences.getInstance()).getBool(listModeKey) == true;
@@ -24,7 +23,7 @@ class MusicPracticeSettingsPage extends StatefulWidget {
 
 class _MusicPracticeSettingsPageState extends State<MusicPracticeSettingsPage> {
   final audio = IntervalAudioSettings();
-  bool listMode = false, hierarchyMode = true, ready = false;
+  bool listMode = false, hierarchyMode = false, ready = false;
   @override
   void initState() {
     super.initState();

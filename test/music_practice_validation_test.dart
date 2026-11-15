@@ -10,7 +10,7 @@ import 'social_widget_test.dart' as fixture;
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
   testWidgets(
-    'new section suggests an English address and preserves a manual override',
+    'editing a section preserves its address when titles change and accepts manual edits',
     (tester) async {
       final repo = MusicPracticeRepository(
         userId: 1,
@@ -22,8 +22,23 @@ void main() {
           MusicPracticeEditPage(
             repository: repo,
             kind: 'nodes',
+            item: const {
+              'id': 9,
+              'version': 1,
+              'parentId': 1,
+              'slug': 'existing-address',
+            },
             catalog: {
-              'nodes': [],
+              'nodes': [
+                {
+                  'id': 1,
+                  'parentId': null,
+                  'depth': 1,
+                  'published': true,
+                  'titleFa': 'والد',
+                  'titleEn': 'Parent',
+                },
+              ],
               'exams': [],
               'capabilities': {'publish': true},
             },
@@ -40,7 +55,7 @@ void main() {
       );
       expect(
         tester.widget<PracticeFormField>(address).controller.text,
-        'ear-training',
+        'existing-address',
       );
       final addressInput = find.descendant(
         of: address,

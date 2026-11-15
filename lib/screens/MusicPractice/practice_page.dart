@@ -46,8 +46,10 @@ class _MusicPracticePageState extends State<MusicPracticePage>
   MusicPracticeRepository? repository;
   int? account;
   bool listMode = false;
-  bool hierarchyMode = true;
+  bool hierarchyMode = false;
   final expandedNodes = <int>{};
+  final publishingItems = <String>{};
+  final deletingItems = <String>{};
   bool initialized = false, loading = true, uploading = false, opening = false;
   PracticeJson? catalog;
   PracticeJson? managementCatalog;
@@ -93,9 +95,9 @@ class _MusicPracticePageState extends State<MusicPracticePage>
       managementCatalog = null;
       proposals = [];
       listMode = false;
-      hierarchyMode = true;
+      hierarchyMode = false;
       expandedNodes.clear();
-      repository?.dispose();
+      if (widget.repository == null) repository?.dispose();
       repository =
           widget.repository ??
           MusicPracticeRepository(
@@ -268,6 +270,12 @@ class _MusicPracticePageState extends State<MusicPracticePage>
     );
   }
 
+  Widget fittedStars({required int count}) => FittedBox(
+    fit: BoxFit.scaleDown,
+    alignment: AlignmentDirectional.centerStart,
+    child: IntervalStars(count: count),
+  );
+
   String groupTitle(int? nodeId) {
     final nodes = (catalog?['nodes'] as List? ?? [])
         .map((n) => Map<String, dynamic>.from(n as Map))
@@ -345,7 +353,7 @@ class _MusicPracticePageState extends State<MusicPracticePage>
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      IntervalStars(
+                      fittedStars(
                         count: PracticeJourney(levels, progress).stars,
                       ),
                       TextButton.icon(
@@ -430,7 +438,7 @@ class _MusicPracticePageState extends State<MusicPracticePage>
                       )
                     : socialText(context, 'رایگان', 'Free'),
               ),
-            IntervalStars(count: stars),
+            fittedStars(count: stars),
             if ((exam['config'] as Map?)?['kind'] == 'interval')
               Text(
                 '${IntervalText(context)('interval.${(exam['config'] as Map)['direction']}')} - ${IntervalText(context)((exam['config'] as Map)['variableRoot'] == true ? 'interval.variableRoot' : 'interval.fixedRoot')} - ${IntervalText(context)('interval.count', {'count': IntervalText(context).number(((exam['config'] as Map)['quarterSteps'] as List).length)})} - ${IntervalText(context)(done >= (exam['stageCount'] as int)
@@ -494,8 +502,78 @@ class _MusicPracticePageState extends State<MusicPracticePage>
     ),
   );
 
+  Future<void> changeVisibility(PracticeJson item, {bool exam = false}) async {
+    final key = '${exam ? 'exam' : 'node'}-${item['id']}';
+    if (!publishingItems.add(key)) return;
+    setState(() {});
+    try {
+      await repository!.request('publish', {
+        'kind': exam ? 'exam' : 'node',
+        'id': item['id'],
+        'version': item['version'],
+        'published': item['published'] != true,
+      });
+      if (mounted) await load();
+    } catch (e) {
+      if (mounted) setState(() => recordError(e));
+    } finally {
+      publishingItems.remove(key);
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> deleteItem(PracticeJson item, {bool exam = false}) async {
+    final key = '${exam ? 'exam' : 'node'}-${item['id']}';
+    if (!deletingItems.add(key)) return;
+    setState(() {});
+    try {
+      final confirmed = await showDeleteConfirmation(
+        context,
+        title: socialText(context, 'حذف سطح؟', 'Delete level?'),
+        message: socialText(
+          context,
+          'نتایج و خریدهای قبلی حفظ می‌شوند.',
+          'Existing results and purchases will be preserved.',
+        ),
+      );
+      if (!mounted || confirmed != true) return;
+      await repository!.request(exam ? 'exams/delete' : 'nodes/delete', {
+        'id': item['id'],
+        'version': item['version'],
+      });
+      if (mounted) await load();
+    } catch (e) {
+      if (mounted) setState(() => recordError(e));
+    } finally {
+      deletingItems.remove(key);
+      if (mounted) setState(() {});
+    }
+  }
+
+  Widget itemIcon(
+    String key,
+    String fa,
+    String en,
+    IconData icon,
+    VoidCallback? action, {
+    Color? color,
+  }) => SizedBox(
+    width: 36,
+    height: 44,
+    child: IconButton(
+      key: ValueKey(key),
+      tooltip: socialText(context, fa, en),
+      padding: EdgeInsets.zero,
+      color: color,
+      onPressed: action,
+      icon: Icon(icon),
+    ),
+  );
+
   Widget cardActions(PracticeJson item, {bool exam = false}) {
-    if (managementCatalog == null) return const SizedBox.shrink();
+    if (managementCatalog == null || repository?.offline == true) {
+      return const SizedBox.shrink();
+    }
     final caps = catalog?['capabilities'] as Map? ?? {};
     final tree = PracticeTree(
       (managementCatalog?['nodes'] as List? ?? []).map(
@@ -505,35 +583,11 @@ class _MusicPracticePageState extends State<MusicPracticePage>
     final enabled = tree.available(
       exam ? item['nodeId'] as int? : item['parentId'] as int?,
     );
-    return actionMenu('${exam ? 'exam' : 'node'}-${item['id']}', [
-      if (!exam && caps['create'] == true && (item['depth'] as int? ?? 3) < 3)
-        menuAction(
-          'افزودن زیرسطح',
-          'Add subsection',
-          () => editItem('nodes', {'parentId': item['id']}),
-          enabled: tree.available(item['id'] as int),
-        ),
-      if (caps['edit'] == true && (exam || item['canManage'] == true))
-        menuAction(
-          'ویرایش',
-          'Edit',
-          () => editItem(exam ? 'exams' : 'nodes', item),
-          enabled: enabled,
-        ),
-      if (caps['publish'] == true && (exam || item['canManage'] == true))
-        menuAction('تغییر انتشار', 'Change visibility', () async {
-          try {
-            await repository!.request('publish', {
-              'kind': exam ? 'exam' : 'node',
-              'id': item['id'],
-              'version': item['version'],
-              'published': item['published'] != true,
-            });
-            if (mounted) await load();
-          } catch (e) {
-            if (mounted) setState(() => recordError(e));
-          }
-        }, enabled: enabled),
+    final publicControl =
+        caps['publish'] == true && (exam || item['canManage'] == true);
+    final key = '${exam ? 'exam' : 'node'}-${item['id']}';
+    final canManage = exam || item['canManage'] == true;
+    final menuItems = <PopupMenuEntry<VoidCallback>>[
       if (caps['create'] == true) ...[
         menuAction(
           'افزودن آزمون',
@@ -552,51 +606,54 @@ class _MusicPracticePageState extends State<MusicPracticePage>
           }),
         ),
       ],
-      if (!exam &&
-          caps['edit'] == true &&
-          groupExams(item['id'] as int).isNotEmpty)
-        menuAction('سطح‌های آزمون', 'Test levels', () async {
-          await socialPush(
-            context,
-            MusicPracticePage(
-              nodeId: item['id'] as int,
-              nodeTitle: title(item),
-              showLevels: true,
-            ),
-          );
-          if (mounted) await load();
-        }, enabled: enabled),
       if (exam && caps['approvePlans'] == true)
         menuAction(
           'سهم درآمد',
           'Revenue share',
           () => editItem('shares', item),
         ),
-      if (caps['delete'] == true &&
-          (exam || item['canManage'] == true) &&
-          catalog?[exam ? 'levelDeletion' : 'nodeDeletion'] == true)
-        menuAction('حذف سطح', 'Delete level', () async {
-          final confirmed = await showDeleteConfirmation(
-            context,
-            title: socialText(context, 'حذف سطح؟', 'Delete level?'),
-            message: socialText(
-              context,
-              'نتایج و خریدهای قبلی حفظ می‌شوند.',
-              'Existing results and purchases will be preserved.',
-            ),
-          );
-          if (confirmed != true) return;
-          try {
-            await repository!.request(exam ? 'exams/delete' : 'nodes/delete', {
-              'id': item['id'],
-              'version': item['version'],
-            });
-            if (mounted) await load();
-          } catch (e) {
-            if (mounted) setState(() => recordError(e));
-          }
-        }, destructive: true),
-    ]);
+    ];
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (publicControl)
+          itemIcon(
+            'practice-visibility-${exam ? 'exam-' : ''}${item['id']}',
+            item['published'] == true ? 'عدم نمایش عمومی' : 'نمایش عمومی',
+            item['published'] == true ? 'Hide from public' : 'Show publicly',
+            item['published'] == true
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
+            enabled && !publishingItems.contains(key)
+                ? () => changeVisibility(item, exam: exam)
+                : null,
+          ),
+        if (caps['edit'] == true && canManage)
+          itemIcon(
+            'practice-edit-$key',
+            'ویرایش',
+            'Edit',
+            Icons.edit_outlined,
+            enabled ? () => editItem(exam ? 'exams' : 'nodes', item) : null,
+          ),
+        if (caps['delete'] == true &&
+            canManage &&
+            catalog?[exam ? 'levelDeletion' : 'nodeDeletion'] == true &&
+            (exam || catalog?['levelDeletion'] == true))
+          itemIcon(
+            'practice-delete-$key',
+            'حذف سطح',
+            'Delete level',
+            Icons.delete_outline,
+            enabled && !deletingItems.contains(key)
+                ? () => deleteItem(item, exam: exam)
+                : null,
+            color: Colors.red,
+          ),
+        if (menuItems.isNotEmpty)
+          SizedBox(width: 36, height: 44, child: actionMenu(key, menuItems)),
+      ],
+    );
   }
 
   Widget proposalControls(int id) => Column(
@@ -643,7 +700,7 @@ class _MusicPracticePageState extends State<MusicPracticePage>
     final hasChildren = (catalog?['nodes'] as List? ?? []).any(
       (n) => n['parentId'] == node['id'],
     );
-    if (!listMode && exams.isNotEmpty && !hasChildren) {
+    if (!listMode && exams.isNotEmpty && !hasChildren && node['depth'] == 3) {
       await openJourney(exams, groupTitle(node['id'] as int));
       return;
     }
@@ -651,7 +708,11 @@ class _MusicPracticePageState extends State<MusicPracticePage>
     try {
       await socialPush(
         context,
-        MusicPracticePage(nodeId: node['id'] as int, nodeTitle: title(node)),
+        MusicPracticePage(
+          nodeId: node['id'] as int,
+          nodeTitle: title(node),
+          repository: widget.repository,
+        ),
       );
     } finally {
       if (mounted) {
@@ -845,7 +906,7 @@ class _MusicPracticePageState extends State<MusicPracticePage>
     generation++;
     timer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
-    repository?.dispose();
+    if (widget.repository == null) repository?.dispose();
     super.dispose();
   }
 
@@ -947,7 +1008,7 @@ class _MusicPracticePageState extends State<MusicPracticePage>
                     children: [
                       groupExams(node['id'] as int).isEmpty
                           ? const SizedBox.shrink()
-                          : IntervalStars(
+                          : fittedStars(
                               count: PracticeJourney(
                                 groupExams(node['id'] as int),
                                 progress,
@@ -977,7 +1038,7 @@ class _MusicPracticePageState extends State<MusicPracticePage>
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      IntervalStars(
+                      fittedStars(
                         count: PracticeJourney(exams, progress).stars,
                       ),
                       proposalControls(widget.nodeId ?? 0),
@@ -994,7 +1055,7 @@ class _MusicPracticePageState extends State<MusicPracticePage>
                 ),
               ),
             for (final exam
-                in listMode || (widget.showLevels && managementCatalog != null)
+                in listMode || managementCatalog != null
                     ? exams
                     : <PracticeJson>[])
               examTile(exam),

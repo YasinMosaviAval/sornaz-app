@@ -117,6 +117,7 @@ class SyncPracticeRepository extends WidgetPracticeRepository {
 
 class TreePracticeRepository extends WidgetPracticeRepository {
   int examNode = 3;
+  bool examPublished = true;
   final writes = <PracticeJson>[];
   final tree = <PracticeJson>[
     for (final row in [
@@ -155,7 +156,7 @@ class TreePracticeRepository extends WidgetPracticeRepository {
         'nodeId': examNode,
         'titleFa': 'سطح اول',
         'titleEn': 'First level',
-        'published': true,
+        'published': examPublished,
         'audience': 'public',
       },
     ],
@@ -172,8 +173,12 @@ class TreePracticeRepository extends WidgetPracticeRepository {
     if (path == 'plans') return {'plans': [], 'revenue': []};
     writes.add({'path': path, ...?payload});
     if (path == 'publish') {
-      tree.firstWhere((n) => n['id'] == payload!['id'])['published'] =
-          payload!['published'];
+      if (payload!['kind'] == 'exam') {
+        examPublished = payload['published'] == true;
+      } else {
+        tree.firstWhere((n) => n['id'] == payload['id'])['published'] =
+            payload['published'];
+      }
     }
     return {'id': 99};
   }
@@ -524,15 +529,24 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('practice-menu-exam-10')));
-      await tester.pumpAndSettle();
-      expect(
-        tester.widget<Text>(find.text('حذف سطح')).style?.color,
-        Colors.red,
-      );
-      await tester.tap(find.text('حذف سطح'));
+      final trash = find.byKey(const ValueKey('practice-delete-exam-10'));
+      expect(tester.widget<IconButton>(trash).color, Colors.red);
+      await tester.tap(trash);
       await tester.pumpAndSettle();
       expect(repo.writes, isEmpty);
+      expect(tester.widget<IconButton>(trash).onPressed, isNull);
+      await tester.tap(
+        find
+            .descendant(
+              of: find.byType(AlertDialog),
+              matching: find.byType(TextButton),
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
+      expect(repo.writes, isEmpty);
+      await tester.tap(trash);
+      await tester.pumpAndSettle();
       final confirmation = find.byType(AlertDialog);
       await tester.tap(
         find
@@ -613,23 +627,29 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(TabBar), findsNothing);
     expect(find.byIcon(Icons.edit_note), findsNothing);
-    expect(find.byIcon(Icons.edit_outlined), findsNothing);
+    expect(find.byKey(const ValueKey('practice-edit-node-3')), findsOneWidget);
     expect(find.byIcon(Icons.card_membership), findsNothing);
     expect(find.byIcon(Icons.playlist_add), findsNothing);
     expect(find.byType(Card), findsNothing);
     await tester.tap(find.byKey(const ValueKey('practice-menu-node-3')));
     await tester.pumpAndSettle();
+    for (final label in [
+      'افزودن زیرسطح',
+      'سطح‌های آزمون',
+      'ویرایش',
+      'حذف سطح',
+    ]) {
+      expect(find.text(label), findsNothing);
+    }
     await tester.tap(find.text('افزودن آزمون'));
     await tester.pumpAndSettle();
     expect(
       tester
-          .widgetList<DropdownButtonFormField<String>>(
-            find.byType(DropdownButtonFormField<String>),
-          )
-          .first
-          .initialValue,
-      '3',
+          .widget<MusicPracticeEditPage>(find.byType(MusicPracticeEditPage))
+          .item?['nodeId'],
+      3,
     );
+    expect(find.text('بخش والد'), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
   });
   testWidgets(

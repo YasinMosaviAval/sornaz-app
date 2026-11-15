@@ -43,6 +43,20 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
   bool slugAutomatic = true;
   String? error;
   PracticeJson get old => widget.item ?? {};
+  bool get creatingNode =>
+      widget.kind == 'nodes' && (int.tryParse('${old['id']}') ?? 0) == 0;
+  bool get creatingExam =>
+      widget.kind == 'exams' && (int.tryParse('${old['id']}') ?? 0) == 0;
+  bool get singleTitle => creatingNode || creatingExam;
+  PracticeJson? get parentNode {
+    for (final node in widget.catalog['nodes'] as List) {
+      if (node['id'] == parent) return Map<String, dynamic>.from(node as Map);
+    }
+    return null;
+  }
+
+  int get nodeDepth =>
+      parent == 0 ? 1 : (parentNode?['depth'] as int? ?? 3) + 1;
   TextEditingController controller(String name, Object? initial) =>
       fields.putIfAbsent(
         name,
@@ -68,17 +82,14 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
     subscriptionDays = int.tryParse('${old['days']}') ?? 30;
     if (subscriptionDays <= 0) subscriptionDays = 30;
     slugAutomatic = old['id'] == null && (old['slug'] ?? '').toString().isEmpty;
-    final config = Map<String, dynamic>.from(old['config'] as Map? ?? {}),
-        nodes = widget.catalog['nodes'] as List;
+    final config = Map<String, dynamic>.from(old['config'] as Map? ?? {});
     parent =
         (old['nodeId'] ??
                 old['parentId'] ??
                 (old['exam_id'] == null
                     ? null
                     : int.parse(old['exam_id'].toString())) ??
-                (widget.kind == 'exams' && nodes.isNotEmpty
-                    ? nodes.first['id']
-                    : 0))
+                0)
             as int;
     engine = config['kind']?.toString() ?? 'interval';
     audience = old['audience']?.toString() ?? 'public';
@@ -158,6 +169,7 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
     bool number = false,
     int lines = 1,
     bool required = true,
+    bool readOnly = false,
   }) => Padding(
     padding: const EdgeInsets.only(bottom: 12),
     child: PracticeFormField(
@@ -166,10 +178,17 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
       controller: controller(name, initial),
       lines: lines,
       required: required,
+      digitsOnly:
+          widget.kind == 'exams' &&
+          ['position', 'stageCount', 'requiredWins'].contains(name),
+      showGuidance:
+          widget.kind != 'exams' ||
+          !['position', 'stageCount', 'requiredWins'].contains(name),
       readOnly:
+          readOnly ||
           name == 'teacherPercent' &&
-          widget.kind == 'plans/approve' &&
-          old['exam_id'] != null,
+              widget.kind == 'plans/approve' &&
+              old['exam_id'] != null,
       extraValidator: name == 'slug'
           ? (value) {
               final duplicate = (widget.catalog['nodes'] as List).any(
@@ -187,7 +206,7 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
             }
           : null,
       onChanged: (value) {
-        if (widget.kind != 'nodes') return;
+        if (widget.kind != 'nodes' || creatingNode) return;
         if (name == 'slug') slugAutomatic = value.trim().isEmpty;
         if (name == 'titleEn' && slugAutomatic) {
           controller('slug', old['slug']).text =
@@ -228,6 +247,20 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
     ),
   );
   int integer(String name) => int.parse(fields[name]!.text.trim());
+  Widget pairedFields(List<Widget> children) => LayoutBuilder(
+    builder: (context, constraints) => Wrap(
+      spacing: 8,
+      children: [
+        for (final child in children)
+          SizedBox(
+            width: child is Padding || child is SettingsSwitchTile
+                ? (constraints.maxWidth - 8) / 2
+                : constraints.maxWidth,
+            child: child,
+          ),
+      ],
+    ),
+  );
   Widget userPicker() {
     final selected = controller(
       'userIds',
@@ -279,6 +312,12 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
                 focusNode: focus,
                 onFieldSubmitted: (_) => submitted(),
                 decoration: InputDecoration(
+                  labelStyle: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontSize: 12),
+                  hintStyle: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontSize: 12),
                   labelText: socialText(
                     context,
                     'جست‌وجوی نام کاربری مخاطبان',
@@ -340,13 +379,21 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
           'version': int.parse(old['version'].toString()),
       };
       if (widget.kind == 'nodes') {
+        final titleKey = Localizations.localeOf(context).languageCode == 'en'
+            ? 'titleEn'
+            : 'titleFa';
         body.addAll({
           'parentId': parent,
-          'slug': text('slug'),
-          'titleFa': text('titleFa'),
-          'titleEn': text('titleEn'),
+          if (creatingNode) ...{
+            if (parent == 0) 'firstLevel': true else 'level': nodeDepth,
+            titleKey: text(titleKey),
+          } else ...{
+            'slug': text('slug'),
+            'titleFa': text('titleFa'),
+            'titleEn': text('titleEn'),
+            'published': published,
+          },
           'position': integer('position'),
-          'published': published,
           if (widget.catalog['nodeIcons'] == true)
             'iconKey': iconKey.isEmpty ? null : iconKey,
         });
@@ -395,12 +442,22 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
         }
         body.addAll({
           'nodeId': parent,
-          'titleFa': text('titleFa'),
-          'titleEn': text('titleEn'),
+          if (creatingExam)
+            (Localizations.localeOf(context).languageCode == 'en'
+                ? 'titleEn'
+                : 'titleFa'): text(
+              Localizations.localeOf(context).languageCode == 'en'
+                  ? 'titleEn'
+                  : 'titleFa',
+            )
+          else ...{
+            'titleFa': text('titleFa'),
+            'titleEn': text('titleEn'),
+          },
           'position': integer('position'),
           'stageCount': integer('stageCount'),
           'requiredWins': integer('requiredWins'),
-          'published': published,
+          if (!creatingExam) 'published': published,
           'audience': audience,
           'userIds': text('userIds')
               .split(',')
@@ -478,48 +535,58 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
             if (saving) const LinearProgressIndicator(),
             if (error != null) Text(error!),
             if (widget.kind == 'nodes' || widget.kind == 'exams') ...[
-              input('titleFa', 'عنوان فارسی', 'Persian title', old['titleFa']),
-              input(
-                'titleEn',
-                'عنوان انگلیسی',
-                'English title',
-                old['titleEn'],
-              ),
-              input(
-                'position',
-                'ترتیب',
-                'Order',
-                old['position'] ?? 0,
-                number: true,
-              ),
-              dropdown(
-                socialText(context, 'بخش والد', 'Parent section'),
-                '$parent',
-                [
-                  if (widget.kind == 'nodes')
-                    ('0', socialText(context, 'سطح اول', 'First level')),
-                  for (final node in nodes)
-                    if (widget.kind != 'nodes' ||
-                        (node['depth'] as int) < 3 && node['id'] != old['id'])
-                      (
+              if (!singleTitle || !en)
+                input(
+                  'titleFa',
+                  'عنوان فارسی',
+                  'Persian title',
+                  old['titleFa'],
+                ),
+              if (!singleTitle || en)
+                input(
+                  'titleEn',
+                  'عنوان انگلیسی',
+                  'English title',
+                  old['titleEn'],
+                ),
+              if (widget.kind != 'exams')
+                input(
+                  'position',
+                  'ترتیب',
+                  'Order',
+                  old['position'] ?? 0,
+                  number: true,
+                ),
+              if (!creatingNode && !creatingExam)
+                dropdown(
+                  socialText(context, 'بخش والد', 'Parent section'),
+                  '$parent',
+                  [
+                    if (widget.kind == 'nodes')
+                      ('0', socialText(context, 'سطح اول', 'First level')),
+                    for (final node in nodes)
+                      if (widget.kind != 'nodes' ||
+                          (node['depth'] as int) < 3 && node['id'] != old['id'])
+                        (
+                          '${node['id']}',
+                          '${'  ' * ((node['depth'] as int? ?? 1) - 1)}${(en ? node['titleEn'] : node['titleFa'])}',
+                        ),
+                  ],
+                  (v) => parent = int.parse(v),
+                  disabledValues: {
+                    for (final node in nodes)
+                      if (!PracticeTree(nodes).available(node['id'] as int))
                         '${node['id']}',
-                        '${'  ' * ((node['depth'] as int? ?? 1) - 1)}${(en ? node['titleEn'] : node['titleFa'])}',
-                      ),
-                ],
-                (v) => parent = int.parse(v),
-                disabledValues: {
-                  for (final node in nodes)
-                    if (!PracticeTree(nodes).available(node['id'] as int))
-                      '${node['id']}',
-                },
-              ),
-              SettingsSwitchTile.widgets(
-                title: Text(socialText(context, 'انتشار', 'Published')),
-                value: published,
-                onChanged: caps['publish'] == true
-                    ? (v) => setState(() => published = v)
-                    : null,
-              ),
+                  },
+                ),
+              if (!creatingNode && !creatingExam)
+                SettingsSwitchTile.widgets(
+                  title: Text(socialText(context, 'انتشار', 'Published')),
+                  value: published,
+                  onChanged: caps['publish'] == true
+                      ? (v) => setState(() => published = v)
+                      : null,
+                ),
             ],
             if (widget.kind == 'nodes' && widget.catalog['nodeIcons'] == true)
               Padding(
@@ -562,7 +629,7 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
                       : (v) => setState(() => iconKey = v ?? ''),
                 ),
               ),
-            if (widget.kind == 'nodes')
+            if (widget.kind == 'nodes' && !creatingNode)
               input(
                 'slug',
                 'نشانی کوتاه انگلیسی',
@@ -570,19 +637,42 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
                 old['slug'],
               ),
             if (widget.kind == 'exams') ...[
-              input(
-                'stageCount',
-                'تعداد مراحل',
-                'Number of stages',
-                old['stageCount'] ?? 5,
-                number: true,
-              ),
-              input(
-                'requiredWins',
-                'پاسخ درست پیاپی برای هر مرحله',
-                'Consecutive correct answers per stage',
-                old['requiredWins'] ?? 10,
-                number: true,
+              IntrinsicHeight(
+                child: Row(
+                  key: const ValueKey('practice-exam-numbers'),
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: input(
+                        'position',
+                        'ترتیب',
+                        'Order',
+                        old['position'] ?? 0,
+                        number: true,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: input(
+                        'stageCount',
+                        'تعداد مراحل',
+                        'Number of stages',
+                        old['stageCount'] ?? 5,
+                        number: true,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: input(
+                        'requiredWins',
+                        'پاسخ درست پیاپی',
+                        'Consecutive correct answers',
+                        old['requiredWins'] ?? 10,
+                        number: true,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               dropdown(socialText(context, 'مخاطبان', 'Audience'), audience, [
                 ('public', socialText(context, 'عمومی', 'Public')),
@@ -607,7 +697,10 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
                   socialText(context, 'مشترکان مدرس', 'Teacher’s subscribers'),
                 ),
               ], (v) => audience = v),
-              userPicker(),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: userPicker(),
+              ),
               dropdown(
                 socialText(context, 'حالت سطح آزمون', 'Level mode'),
                 ['choice', 'notation'].contains(engine) ? 'written' : 'audio',
@@ -620,248 +713,262 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
                     ? {}
                     : {'written'},
               ),
-              dropdown(
-                socialText(context, 'نوع تمرین', 'Practice type'),
-                engine,
-                [
-                  if (!['choice', 'notation'].contains(engine)) ...[
-                    (
-                      'interval',
-                      socialText(
-                        context,
-                        'تشخیص فاصله',
-                        'Interval recognition',
-                      ),
-                    ),
-                    (
-                      'rhythm',
-                      socialText(context, 'تشخیص ریتم', 'Rhythm recognition'),
-                    ),
-                  ] else ...[
-                    (
-                      'notation',
-                      socialText(
-                        context,
-                        'نت‌نویسی با پاسخ ضبط‌شده',
-                        'Notation with recorded response',
-                      ),
-                    ),
-                    (
-                      'choice',
-                      socialText(
-                        context,
-                        'چندگزینه‌ای متنی',
-                        'Text multiple choice',
-                      ),
-                    ),
-                  ],
-                ],
-                (v) => engine = v,
-              ),
-              if (engine == 'notation') ...[
+              pairedFields([
                 dropdown(
-                  socialText(
-                    context,
-                    'ارزیابی پاسخ صوتی',
-                    'Recorded response assessment',
-                  ),
-                  assessment,
+                  socialText(context, 'نوع تمرین', 'Practice type'),
+                  engine,
                   [
-                    (
-                      'pitch_rhythm',
+                    if (!['choice', 'notation'].contains(engine)) ...[
+                      (
+                        'interval',
+                        socialText(
+                          context,
+                          'تشخیص فاصله',
+                          'Interval recognition',
+                        ),
+                      ),
+                      (
+                        'rhythm',
+                        socialText(context, 'تشخیص ریتم', 'Rhythm recognition'),
+                      ),
+                    ] else ...[
+                      (
+                        'notation',
+                        socialText(
+                          context,
+                          'نت‌نویسی با پاسخ ضبط‌شده',
+                          'Notation with recorded response',
+                        ),
+                      ),
+                      (
+                        'choice',
+                        socialText(
+                          context,
+                          'چندگزینه‌ای متنی',
+                          'Text multiple choice',
+                        ),
+                      ),
+                    ],
+                  ],
+                  (v) => engine = v,
+                ),
+                if (engine == 'notation') ...[
+                  dropdown(
+                    socialText(
+                      context,
+                      'ارزیابی پاسخ صوتی',
+                      'Recorded response assessment',
+                    ),
+                    assessment,
+                    [
+                      (
+                        'pitch_rhythm',
+                        socialText(
+                          context,
+                          'نت و ریتم؛ نت‌خوانی / سولفژ',
+                          'Pitch and rhythm; solfege',
+                        ),
+                      ),
+                      (
+                        'rhythm',
+                        socialText(
+                          context,
+                          'فقط ریتم؛ وزن‌خوانی',
+                          'Rhythm only',
+                        ),
+                      ),
+                    ],
+                    (v) => assessment = v,
+                  ),
+                  Text(
+                    socialText(
+                      context,
+                      'صورت سؤال را با نت‌نویسی بسازید. هنرجو پاسخ را ضبط می‌کند و نت و زمان‌بندی خودکار بررسی می‌شوند. ملودی تک‌صدایی، حداکثر ۸ میزان و ۳۰ ثانیه؛ کشش هر نت حداقل ۰٫۱۵ ثانیه.',
+                      'Compose the question. The student records a response for automatic pitch and timing assessment. Single melody, up to 8 measures and 30 seconds; each note at least 0.15 seconds.',
+                    ),
+                  ),
+                  for (final (index, q) in notationQuestions.indexed)
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          children: [
+                            PracticeNotationPreview(
+                              svg: q['preview'] as String,
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  socialText(
+                                    context,
+                                    'پرسش ${index + 1}',
+                                    'Question ${index + 1}',
+                                  ),
+                                ),
+                                const Spacer(),
+                                IconButton(
+                                  tooltip: socialText(
+                                    context,
+                                    'ویرایش صورت سؤال',
+                                    'Edit question',
+                                  ),
+                                  onPressed: () => composeQuestion(index),
+                                  icon: const Icon(Icons.edit_outlined),
+                                ),
+                                IconButton(
+                                  tooltip: socialText(
+                                    context,
+                                    'حذف پرسش',
+                                    'Remove question',
+                                  ),
+                                  onPressed: () => setState(
+                                    () => notationQuestions.removeAt(index),
+                                  ),
+                                  icon: const Icon(Icons.delete_outline),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  OutlinedButton.icon(
+                    onPressed: notationQuestions.length < 20
+                        ? composeQuestion
+                        : null,
+                    icon: const Icon(Icons.add),
+                    label: Text(
                       socialText(
                         context,
-                        'نت و ریتم؛ نت‌خوانی / سولفژ',
-                        'Pitch and rhythm; solfege',
+                        'افزودن صورت سؤال با نت‌نویسی',
+                        'Compose a question',
                       ),
+                    ),
+                  ),
+                ] else if (engine == 'interval') ...[
+                  input(
+                    'quarterSteps',
+                    'فاصله‌ها با واحد ربع‌پرده و ویرگول',
+                    'Quarter-tone distances separated by commas',
+                    (config['quarterSteps'] as List? ?? [14, 24]).join(','),
+                  ),
+                  dropdown(socialText(context, 'جهت', 'Direction'), direction, [
+                    (
+                      'ascending',
+                      socialText(context, 'بالارونده', 'Ascending'),
                     ),
                     (
-                      'rhythm',
-                      socialText(context, 'فقط ریتم؛ وزن‌خوانی', 'Rhythm only'),
+                      'descending',
+                      socialText(context, 'پایین‌رونده', 'Descending'),
                     ),
-                  ],
-                  (v) => assessment = v,
-                ),
-                Text(
-                  socialText(
-                    context,
-                    'صورت سؤال را با نت‌نویسی بسازید. هنرجو پاسخ را ضبط می‌کند و نت و زمان‌بندی خودکار بررسی می‌شوند. ملودی تک‌صدایی، حداکثر ۸ میزان و ۳۰ ثانیه؛ کشش هر نت حداقل ۰٫۱۵ ثانیه.',
-                    'Compose the question. The student records a response for automatic pitch and timing assessment. Single melody, up to 8 measures and 30 seconds; each note at least 0.15 seconds.',
-                  ),
-                ),
-                for (final (index, q) in notationQuestions.indexed)
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        children: [
-                          PracticeNotationPreview(svg: q['preview'] as String),
-                          Row(
-                            children: [
-                              Text(
-                                socialText(
-                                  context,
-                                  'پرسش ${index + 1}',
-                                  'Question ${index + 1}',
-                                ),
-                              ),
-                              const Spacer(),
-                              IconButton(
-                                tooltip: socialText(
-                                  context,
-                                  'ویرایش صورت سؤال',
-                                  'Edit question',
-                                ),
-                                onPressed: () => composeQuestion(index),
-                                icon: const Icon(Icons.edit_outlined),
-                              ),
-                              IconButton(
-                                tooltip: socialText(
-                                  context,
-                                  'حذف پرسش',
-                                  'Remove question',
-                                ),
-                                onPressed: () => setState(
-                                  () => notationQuestions.removeAt(index),
-                                ),
-                                icon: const Icon(Icons.delete_outline),
-                              ),
-                            ],
-                          ),
-                        ],
+                  ], (v) => direction = v),
+                  SettingsSwitchTile.widgets(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      socialText(
+                        context,
+                        'نت پایهٔ متغیر',
+                        'Variable starting note',
                       ),
                     ),
+                    value: variableRoot,
+                    onChanged: (v) => setState(() => variableRoot = v),
                   ),
-                OutlinedButton.icon(
-                  onPressed: notationQuestions.length < 20
-                      ? composeQuestion
-                      : null,
-                  icon: const Icon(Icons.add),
-                  label: Text(
-                    socialText(
-                      context,
-                      'افزودن صورت سؤال با نت‌نویسی',
-                      'Compose a question',
-                    ),
-                  ),
-                ),
-              ] else if (engine == 'interval') ...[
-                input(
-                  'quarterSteps',
-                  'فاصله‌ها با واحد ربع‌پرده و ویرگول',
-                  'Quarter-tone distances separated by commas',
-                  (config['quarterSteps'] as List? ?? [14, 24]).join(','),
-                ),
-                dropdown(socialText(context, 'جهت', 'Direction'), direction, [
-                  ('ascending', socialText(context, 'بالارونده', 'Ascending')),
-                  (
-                    'descending',
-                    socialText(context, 'پایین‌رونده', 'Descending'),
-                  ),
-                ], (v) => direction = v),
-                SettingsSwitchTile.widgets(
-                  title: Text(
-                    socialText(
-                      context,
-                      'نت پایهٔ متغیر',
-                      'Variable starting note',
-                    ),
-                  ),
-                  value: variableRoot,
-                  onChanged: (v) => setState(() => variableRoot = v),
-                ),
-              ] else ...[
-                for (final q in questions)
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        children: [
-                          for (final field in [
-                            'promptFa',
-                            'promptEn',
-                            'choices',
-                            'correct',
-                            if (engine == 'rhythm') ...['beats', 'bpm'],
-                          ])
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: PracticeFormField(
-                                name: field,
-                                controller: q[field]!,
-                                lines: field == 'choices' ? 4 : 1,
-                                choiceCount: q['choices']!.text
-                                    .split('\n')
-                                    .where((v) => v.trim().isNotEmpty)
-                                    .length,
-                                label: switch (field) {
-                                  'promptFa' => socialText(
-                                    context,
-                                    'پرسش فارسی',
-                                    'Persian question',
+                ] else ...[
+                  for (final q in questions)
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          children: [
+                            pairedFields([
+                              for (final field in [
+                                'promptFa',
+                                'promptEn',
+                                'choices',
+                                'correct',
+                                if (engine == 'rhythm') ...['beats', 'bpm'],
+                              ])
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: PracticeFormField(
+                                    name: field,
+                                    controller: q[field]!,
+                                    lines: field == 'choices' ? 4 : 1,
+                                    choiceCount: q['choices']!.text
+                                        .split('\n')
+                                        .where((v) => v.trim().isNotEmpty)
+                                        .length,
+                                    label: switch (field) {
+                                      'promptFa' => socialText(
+                                        context,
+                                        'پرسش فارسی',
+                                        'Persian question',
+                                      ),
+                                      'promptEn' => socialText(
+                                        context,
+                                        'پرسش انگلیسی',
+                                        'English question',
+                                      ),
+                                      'choices' => socialText(
+                                        context,
+                                        'گزینه‌ها؛ هر گزینه در یک سطر',
+                                        'Choices, one per line',
+                                      ),
+                                      'correct' => socialText(
+                                        context,
+                                        'شماره گزینهٔ درست (از صفر)',
+                                        'Correct choice index (starting at zero)',
+                                      ),
+                                      'beats' => socialText(
+                                        context,
+                                        'کشش ضرب‌ها با ویرگول',
+                                        'Beat lengths, comma-separated',
+                                      ),
+                                      _ => socialText(
+                                        context,
+                                        'ضرب در دقیقه',
+                                        'Beats per minute',
+                                      ),
+                                    },
+                                    onChanged: field == 'choices'
+                                        ? (_) => setState(() {})
+                                        : null,
                                   ),
-                                  'promptEn' => socialText(
-                                    context,
-                                    'پرسش انگلیسی',
-                                    'English question',
-                                  ),
-                                  'choices' => socialText(
-                                    context,
-                                    'گزینه‌ها؛ هر گزینه در یک سطر',
-                                    'Choices, one per line',
-                                  ),
-                                  'correct' => socialText(
-                                    context,
-                                    'شماره گزینهٔ درست (از صفر)',
-                                    'Correct choice index (starting at zero)',
-                                  ),
-                                  'beats' => socialText(
-                                    context,
-                                    'کشش ضرب‌ها با ویرگول',
-                                    'Beat lengths, comma-separated',
-                                  ),
-                                  _ => socialText(
-                                    context,
-                                    'ضرب در دقیقه',
-                                    'Beats per minute',
-                                  ),
-                                },
-                                onChanged: field == 'choices'
-                                    ? (_) => setState(() {})
-                                    : null,
+                                ),
+                            ]),
+                            IconButton(
+                              tooltip: socialText(
+                                context,
+                                'حذف پرسش',
+                                'Remove question',
                               ),
+                              onPressed: () => setState(() {
+                                questions.remove(q);
+                                for (final c in q.values) {
+                                  c.dispose();
+                                }
+                              }),
+                              icon: const Icon(Icons.delete_outline),
                             ),
-                          IconButton(
-                            tooltip: socialText(
-                              context,
-                              'حذف پرسش',
-                              'Remove question',
-                            ),
-                            onPressed: () => setState(() {
-                              questions.remove(q);
-                              for (final c in q.values) {
-                                c.dispose();
-                              }
-                            }),
-                            icon: const Icon(Icons.delete_outline),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      textStyle: Theme.of(
+                        context,
+                      ).textTheme.labelLarge?.copyWith(fontSize: 10),
+                    ),
+                    onPressed: () => setState(() => addQuestion()),
+                    icon: const Icon(Icons.add),
+                    label: Text(
+                      socialText(context, 'افزودن پرسش', 'Add question'),
+                    ),
                   ),
-                OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    textStyle: Theme.of(
-                      context,
-                    ).textTheme.labelLarge?.copyWith(fontSize: 10),
-                  ),
-                  onPressed: () => setState(() => addQuestion()),
-                  icon: const Icon(Icons.add),
-                  label: Text(
-                    socialText(context, 'افزودن پرسش', 'Add question'),
-                  ),
-                ),
-              ],
+                ],
+              ]),
             ],
             if (widget.kind == 'plans/propose') ...[
               dropdown(
@@ -979,7 +1086,11 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
       'nodes' =>
         editing
             ? ('ویرایش سطح', 'Edit section')
-            : ('افزودن سطح', 'Add section'),
+            : switch (nodeDepth) {
+                1 => ('افزودن سطح اول آزمون', 'Add first test level'),
+                2 => ('افزودن سطح دوم آزمون', 'Add second test level'),
+                _ => ('افزودن سطح سوم آزمون', 'Add third test level'),
+              },
       'exams' =>
         editing ? ('ویرایش آزمون', 'Edit test') : ('افزودن آزمون', 'Add test'),
       'plans/propose' =>

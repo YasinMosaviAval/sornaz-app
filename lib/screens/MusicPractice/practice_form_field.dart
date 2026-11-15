@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../Social/social_widgets.dart';
 
 class PracticeFieldValidation {
@@ -169,11 +170,13 @@ class PracticeFormField extends StatefulWidget {
     this.choiceCount = 0,
     this.onChanged,
     this.extraValidator,
+    this.digitsOnly = false,
+    this.showGuidance = true,
   });
   final String name, label;
   final TextEditingController controller;
   final int lines, choiceCount;
-  final bool required, readOnly;
+  final bool required, readOnly, digitsOnly, showGuidance;
   final ValueChanged<String>? onChanged;
   final String? Function(String)? extraValidator;
   @override
@@ -233,7 +236,12 @@ class _PracticeFormFieldState extends State<PracticeFormField> {
       controller: widget.controller,
       focusNode: focus,
       readOnly: widget.readOnly,
-      keyboardType: PracticeFieldValidation.ranges.containsKey(widget.name)
+      inputFormatters: widget.digitsOnly
+          ? [FilteringTextInputFormatter.allow(RegExp('[0-9۰-۹٠-٩]'))]
+          : null,
+      keyboardType: widget.digitsOnly
+          ? TextInputType.number
+          : PracticeFieldValidation.ranges.containsKey(widget.name)
           ? const TextInputType.numberWithOptions(decimal: true)
           : TextInputType.multiline,
       maxLines: widget.lines,
@@ -243,7 +251,9 @@ class _PracticeFormFieldState extends State<PracticeFormField> {
         labelStyle: theme.textTheme.bodyMedium?.copyWith(fontSize: 12),
         helperMaxLines: 5,
         errorMaxLines: 5,
-        helperText: focus.hasFocus
+        helperText: !widget.showGuidance
+            ? null
+            : focus.hasFocus
             ? (error ??
                   socialText(
                     context,

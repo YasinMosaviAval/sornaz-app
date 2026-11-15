@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sornaz/screens/MusicPractice/practice_icons.dart';
 import 'package:sornaz/screens/MusicPractice/practice_manage_page.dart';
+import 'package:sornaz/screens/MusicPractice/practice_form_field.dart';
 import 'package:sornaz/screens/MusicPractice/practice_page.dart';
 import 'package:sornaz/screens/MusicPractice/practice_repository.dart';
 import 'package:sornaz/screens/MusicPractice/practice_settings_page.dart';
@@ -44,6 +45,37 @@ class PublicCatalog extends TreePracticeRepository {
   };
 }
 
+class ItemActionCatalog extends TreePracticeRepository {
+  ItemActionCatalog({
+    this.owned = true,
+    this.allowed = true,
+    this.deletionReady = true,
+    this.levelDeletionReady = true,
+  });
+  final bool owned, allowed, deletionReady, levelDeletionReady;
+  @override
+  Future<PracticeJson> catalog({
+    bool manage = false,
+    bool allowCached = true,
+  }) async {
+    final data = await super.catalog(manage: manage, allowCached: allowCached);
+    return {
+      ...data,
+      'nodes': [
+        for (final node in tree) {...node, 'canManage': owned},
+      ],
+      'exams': <PracticeJson>[],
+      'nodeDeletion': deletionReady,
+      'levelDeletion': deletionReady && levelDeletionReady,
+      'capabilities': {
+        ...data['capabilities'] as Map,
+        'edit': allowed,
+        'delete': allowed,
+      },
+    };
+  }
+}
+
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
@@ -72,12 +104,12 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        for (final label in ['Section 1', 'Section 2', 'Section 3']) {
+        for (final label in ['Section 1', 'Section 2']) {
           await tester.ensureVisible(find.text(label));
           await tester.tap(find.text(label));
           await tester.pumpAndSettle();
         }
-        expect(find.text('First level'), findsOneWidget);
+        expect(find.text('Section 3'), findsOneWidget);
         expect(find.byIcon(Icons.more_vert), findsNothing);
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox.shrink());
@@ -86,21 +118,25 @@ void main() {
   }
 
   test(
-    'tree mode defaults on and only founder can retain page-by-page mode',
+    'page-by-page defaults for everyone; only founder can opt into tree mode',
     () async {
-      expect(await MusicPracticeSettingsPage.hierarchyMode(1), isTrue);
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(MusicPracticeSettingsPage.hierarchyModeKey, false);
       expect(await MusicPracticeSettingsPage.hierarchyMode(1), isFalse);
-      expect(await MusicPracticeSettingsPage.hierarchyMode(3), isTrue);
-      expect(await MusicPracticeSettingsPage.hierarchyMode(null), isTrue);
+      expect(await MusicPracticeSettingsPage.hierarchyMode(3), isFalse);
+      expect(await MusicPracticeSettingsPage.hierarchyMode(null), isFalse);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(MusicPracticeSettingsPage.hierarchyModeKey, true);
+      expect(await MusicPracticeSettingsPage.hierarchyMode(1), isTrue);
+      expect(await MusicPracticeSettingsPage.hierarchyMode(3), isFalse);
+      expect(await MusicPracticeSettingsPage.hierarchyMode(null), isFalse);
     },
   );
 
-  for (final actor in [1, 3]) {
+  for (final actor in [1]) {
     testWidgets('tree expands all depths on one page for actor $actor', (
       tester,
     ) async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(MusicPracticeSettingsPage.hierarchyModeKey, true);
       final repo = TreePracticeRepository();
       final auth = AuthSession()
         ..token = 'test'
@@ -206,7 +242,7 @@ void main() {
         final repo = TreePracticeRepository();
         final data = await repo.catalog(manage: true);
         final label = switch (kind) {
-          'nodes' => editing ? 'ویرایش سطح' : 'افزودن سطح',
+          'nodes' => editing ? 'ویرایش سطح' : 'افزودن سطح اول آزمون',
           'exams' => editing ? 'ویرایش آزمون' : 'افزودن آزمون',
           _ => editing ? 'ویرایش پیشنهاد اشتراک' : 'پیشنهاد اشتراک',
         };
@@ -232,6 +268,451 @@ void main() {
       });
     }
   }
+
+  for (final depth in [1, 2, 3]) {
+    for (final language in ['fa', 'en']) {
+      for (final dark in [false, true]) {
+        testWidgets('level $depth form uses $language only, dark=$dark', (
+          tester,
+        ) async {
+          tester.view.physicalSize = const Size(320, 900);
+          tester.view.devicePixelRatio = 1;
+          addTearDown(tester.view.resetPhysicalSize);
+          addTearDown(tester.view.resetDevicePixelRatio);
+          final repo = TreePracticeRepository();
+          final data = await repo.catalog(manage: true);
+          final en = language == 'en';
+          await tester.pumpWidget(
+            ChangeNotifierProvider(
+              create: (_) => AppData()..toggleDarkMode(dark),
+              child: MaterialApp(
+                locale: Locale(language),
+                supportedLocales: const [Locale('fa'), Locale('en')],
+                localizationsDelegates: const [
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
+                theme: dark ? ThemeData.dark() : ThemeData.light(),
+                home: MusicPracticeEditPage(
+                  repository: repo,
+                  catalog: data,
+                  kind: 'nodes',
+                  item: depth == 1 ? null : {'parentId': depth - 1},
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(
+            find.text(
+              en
+                  ? 'Add ${['first', 'second', 'third'][depth - 1]} test level'
+                  : 'افزودن سطح ${['اول', 'دوم', 'سوم'][depth - 1]} آزمون',
+            ),
+            findsOneWidget,
+          );
+          expect(
+            find.text(en ? 'Persian title' : 'عنوان انگلیسی'),
+            findsNothing,
+          );
+          final parentField = find.byWidgetPredicate(
+            (w) =>
+                w is TextField &&
+                w.decoration?.labelText == (en ? 'Parent section' : 'بخش والد'),
+          );
+          expect(parentField, findsNothing);
+          expect(find.text(en ? 'Published' : 'انتشار'), findsNothing);
+          expect(
+            find.text(en ? 'Short English address' : 'نشانی کوتاه انگلیسی'),
+            findsNothing,
+          );
+          await tester.enterText(
+            find.byType(TextFormField).first,
+            en ? 'First test' : 'آزمون اول',
+          );
+          await tester.tap(find.byTooltip(en ? 'Save' : 'ذخیره'));
+          await tester.pumpAndSettle();
+          expect(repo.writes.single['parentId'], depth - 1);
+          if (depth == 1) {
+            expect(repo.writes.single['firstLevel'], true);
+          } else {
+            expect(repo.writes.single['level'], depth);
+          }
+          expect(
+            repo.writes.single[en ? 'titleEn' : 'titleFa'],
+            en ? 'First test' : 'آزمون اول',
+          );
+          for (final key in [en ? 'titleFa' : 'titleEn', 'published', 'slug']) {
+            expect(repo.writes.single.containsKey(key), false);
+          }
+          expect(tester.takeException(), isNull);
+          await tester.pumpWidget(const SizedBox.shrink());
+          repo.dispose();
+        });
+      }
+    }
+  }
+
+  for (final depth in [1, 2, 3]) {
+    testWidgets(
+      'level $depth eye toggles public visibility without opening its menu',
+      (tester) async {
+        tester.view.physicalSize = const Size(320, 900);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final repo = TreePracticeRepository();
+        final auth = AuthSession()
+          ..token = 'test'
+          ..user = AuthUser(id: 1, username: 'admin', fullName: 'Admin');
+        await tester.pumpWidget(
+          ChangeNotifierProvider.value(
+            value: auth,
+            child: fixture.host(
+              MusicPracticePage(
+                repository: repo,
+                nodeId: depth == 1 ? null : depth - 1,
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final eye = find.byKey(ValueKey('practice-visibility-$depth'));
+        expect(
+          find.descendant(
+            of: eye,
+            matching: find.byIcon(Icons.visibility_outlined),
+          ),
+          findsOneWidget,
+        );
+        await tester.tap(eye);
+        await tester.pumpAndSettle();
+        expect(repo.writes.last, {
+          'path': 'publish',
+          'kind': 'node',
+          'id': depth,
+          'version': 1,
+          'published': false,
+        });
+        expect(
+          find.descendant(
+            of: eye,
+            matching: find.byIcon(Icons.visibility_off_outlined),
+          ),
+          findsOneWidget,
+        );
+        await tester.tap(eye);
+        await tester.pumpAndSettle();
+        expect(repo.writes.last['published'], true);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+        auth.dispose();
+      },
+    );
+  }
+
+  testWidgets(
+    'page-by-page top bar creates only the next level under its current parent',
+    (tester) async {
+      final repo = TreePracticeRepository()..examNode = 99;
+      await tester.pumpWidget(
+        fixture.host(MusicPracticePage(repository: repo)),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(AppHierarchyRow), findsNothing);
+      for (final depth in [2, 3]) {
+        await tester.tap(find.text(depth == 2 ? 'تمرین سولفژ' : 'تشخیص فاصله'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byTooltip('افزودن سطح'));
+        await tester.pumpAndSettle();
+        expect(
+          find.text(
+            depth == 2 ? 'افزودن سطح دوم آزمون' : 'افزودن سطح سوم آزمون',
+          ),
+          findsOneWidget,
+        );
+        final title = find.byWidgetPredicate(
+          (w) => w is TextField && w.decoration?.labelText == 'عنوان فارسی',
+        );
+        await tester.enterText(title, 'سطح تازه');
+        await tester.tap(find.byTooltip('ذخیره'));
+        await tester.pumpAndSettle();
+        expect(repo.writes.last['parentId'], depth - 1);
+        expect(repo.writes.last['level'], depth);
+      }
+      await tester.tap(find.text('موسیقی ایرانی'));
+      await tester.pumpAndSettle();
+      expect(find.byTooltip('افزودن سطح'), findsNothing);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      repo.dispose();
+    },
+  );
+
+  for (final language in ['fa', 'en']) {
+    for (final dark in [false, true]) {
+      testWidgets(
+        'new exam binds its section, uses one title and equal digit fields $language/$dark',
+        (tester) async {
+          tester.view.physicalSize = const Size(320, 900);
+          tester.view.devicePixelRatio = 1;
+          addTearDown(tester.view.resetPhysicalSize);
+          addTearDown(tester.view.resetDevicePixelRatio);
+          final repo = TreePracticeRepository(),
+              data = await repo.catalog(manage: true),
+              en = language == 'en';
+          await tester.pumpWidget(
+            ChangeNotifierProvider(
+              create: (_) => AppData()..toggleDarkMode(dark),
+              child: MaterialApp(
+                locale: Locale(language),
+                supportedLocales: const [Locale('fa'), Locale('en')],
+                localizationsDelegates: const [
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
+                theme: dark ? ThemeData.dark() : ThemeData.light(),
+                home: MusicPracticeEditPage(
+                  repository: repo,
+                  catalog: data,
+                  kind: 'exams',
+                  item: const {'nodeId': 3},
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(
+            find.text(en ? 'Persian title' : 'عنوان انگلیسی'),
+            findsNothing,
+          );
+          expect(find.text(en ? 'Parent section' : 'بخش والد'), findsNothing);
+          expect(find.text(en ? 'Published' : 'انتشار'), findsNothing);
+          final title = find.byWidgetPredicate(
+            (w) =>
+                w is PracticeFormField &&
+                w.name == (en ? 'titleEn' : 'titleFa'),
+          );
+          await tester.enterText(
+            find.descendant(of: title, matching: find.byType(TextField)),
+            en ? 'New test' : 'آزمون تازه',
+          );
+          final rectangles = <Rect>[];
+          for (final name in ['position', 'stageCount', 'requiredWins']) {
+            final field = find.byWidgetPredicate(
+              (w) => w is PracticeFormField && w.name == name,
+            );
+            final input = find.descendant(
+              of: field,
+              matching: find.byType(TextField),
+            );
+            expect(
+              tester.widget<TextField>(input).decoration?.helperText,
+              isNull,
+            );
+            expect(
+              tester.widget<TextField>(input).keyboardType,
+              TextInputType.number,
+            );
+            rectangles.add(tester.getRect(input));
+            await tester.enterText(input, '۱x٢.۳-');
+            await tester.pumpAndSettle();
+            expect(tester.widget<TextField>(input).controller!.text, '123');
+            await tester.enterText(input, '2');
+            await tester.pumpAndSettle();
+            expect(
+              tester.widget<TextField>(input).decoration?.helperText,
+              isNull,
+            );
+          }
+          for (final rect in rectangles.skip(1)) {
+            expect(rect.width, closeTo(rectangles.first.width, .01));
+            expect(rect.height, closeTo(rectangles.first.height, .01));
+            expect(rect.top, closeTo(rectangles.first.top, .01));
+          }
+          final search = find.byWidgetPredicate(
+            (w) =>
+                w is TextField &&
+                w.decoration?.labelText ==
+                    (en
+                        ? 'Search audience usernames'
+                        : 'جست‌وجوی نام کاربری مخاطبان'),
+          );
+          await tester.ensureVisible(search);
+          await tester.pumpAndSettle();
+          final textField = tester.widget<TextField>(search);
+          expect(
+            textField.decoration?.labelStyle?.fontSize,
+            textField.style?.fontSize,
+          );
+          expect(
+            textField.decoration?.hintStyle?.fontSize,
+            textField.style?.fontSize,
+          );
+          FocusManager.instance.primaryFocus?.unfocus();
+          await tester.pumpAndSettle();
+          Finder decoration(String label) => find.byWidgetPredicate(
+            (w) => w is InputDecorator && w.decoration.labelText == label,
+          );
+          final mode = decoration(en ? 'Level mode' : 'حالت سطح آزمون');
+          await tester.ensureVisible(mode);
+          await tester.pumpAndSettle();
+          expect(
+            tester.getTopLeft(mode).dy - tester.getBottomLeft(search).dy,
+            closeTo(12, .1),
+          );
+          final type = decoration(en ? 'Practice type' : 'نوع تمرین');
+          final distances = find.byWidgetPredicate(
+            (w) => w is PracticeFormField && w.name == 'quarterSteps',
+          );
+          await tester.ensureVisible(distances);
+          await tester.pumpAndSettle();
+          expect(tester.getTopLeft(type).dy, tester.getTopLeft(distances).dy);
+          expect(
+            tester.getSize(type).width,
+            closeTo(tester.getSize(distances).width, .1),
+          );
+          await tester.tap(find.byTooltip(en ? 'Save' : 'ذخیره'));
+          await tester.pumpAndSettle();
+          expect(repo.writes.single['nodeId'], 3);
+          expect(
+            repo.writes.single[en ? 'titleEn' : 'titleFa'],
+            en ? 'New test' : 'آزمون تازه',
+          );
+          expect(
+            repo.writes.single.containsKey(en ? 'titleFa' : 'titleEn'),
+            false,
+          );
+          expect(repo.writes.single.containsKey('published'), false);
+          for (final name in ['position', 'stageCount', 'requiredWins']) {
+            expect(repo.writes.single[name], 2);
+          }
+          expect(tester.takeException(), isNull);
+          await tester.pumpWidget(const SizedBox.shrink());
+          repo.dispose();
+        },
+      );
+    }
+  }
+  for (final engine in ['choice', 'rhythm']) {
+    testWidgets(
+      '$engine question fields use two columns and preserve saved answers',
+      (tester) async {
+        tester.view.physicalSize = const Size(320, 900);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final repo = TreePracticeRepository(),
+            data = await repo.catalog(manage: true);
+        data['notationQuestions'] = true;
+        await tester.pumpWidget(
+          fixture.host(
+            MusicPracticeEditPage(
+              repository: repo,
+              catalog: data,
+              kind: 'exams',
+              item: {
+                'id': 7,
+                'version': 1,
+                'nodeId': 3,
+                'titleFa': 'پرسش',
+                'titleEn': 'Question',
+                'config': {
+                  'kind': engine,
+                  'questions': [
+                    {
+                      'promptFa': 'پرسش فارسی',
+                      'promptEn': 'Question',
+                      'choices': ['A', 'B'],
+                      'correct': 0,
+                      if (engine == 'rhythm') ...{
+                        'beats': [1, .5],
+                        'bpm': 80,
+                      },
+                    },
+                  ],
+                },
+              },
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        for (final names in [
+          ['promptFa', 'promptEn'],
+          ['choices', 'correct'],
+          if (engine == 'rhythm') ['beats', 'bpm'],
+        ]) {
+          final left = find.byWidgetPredicate(
+            (w) => w is PracticeFormField && w.name == names[0],
+          );
+          final right = find.byWidgetPredicate(
+            (w) => w is PracticeFormField && w.name == names[1],
+          );
+          await tester.scrollUntilVisible(
+            left,
+            200,
+            scrollable: find.byType(Scrollable).first,
+          );
+          expect(
+            tester.getTopLeft(left).dy,
+            closeTo(tester.getTopLeft(right).dy, .1),
+          );
+          expect(
+            tester.getSize(left).width,
+            closeTo(tester.getSize(right).width, .1),
+          );
+        }
+        await tester.tap(find.byTooltip('ذخیره'));
+        await tester.pumpAndSettle();
+        expect(repo.writes.single['config']['kind'], engine);
+        expect(repo.writes.single['config']['questions'][0]['choices'], [
+          'A',
+          'B',
+        ]);
+        expect(repo.writes.single['config']['questions'][0]['correct'], 0);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+        repo.dispose();
+      },
+    );
+  }
+  testWidgets('exam visibility uses its own eye and publication endpoint', (
+    tester,
+  ) async {
+    final repo = TreePracticeRepository();
+    await tester.pumpWidget(
+      fixture.host(
+        MusicPracticePage(repository: repo, nodeId: 3, showLevels: true),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final eye = find.byKey(const ValueKey('practice-visibility-exam-10'));
+    await tester.ensureVisible(eye);
+    await tester.tap(eye);
+    await tester.pumpAndSettle();
+    expect(repo.writes.last, {
+      'path': 'publish',
+      'kind': 'exam',
+      'id': 10,
+      'version': 1,
+      'published': false,
+    });
+    expect(
+      find.descendant(
+        of: eye,
+        matching: find.byIcon(Icons.visibility_off_outlined),
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(eye);
+    await tester.pumpAndSettle();
+    expect(repo.writes.last['published'], true);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    repo.dispose();
+  });
 
   for (final depth in [1, 2, 3]) {
     testWidgets('creator can choose and save a music icon at depth $depth', (
@@ -284,19 +765,168 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(Card), findsNothing);
       expect(find.byIcon(Icons.headphones_outlined), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('practice-menu-node-3')));
-      await tester.pumpAndSettle();
-      final edit = tester.widget<PopupMenuItem<VoidCallback>>(
-        find.ancestor(
-          of: find.text('ویرایش'),
-          matching: find.byType(PopupMenuItem<VoidCallback>),
-        ),
+      final edit = tester.widget<IconButton>(
+        find.byKey(const ValueKey('practice-edit-node-3')),
       );
-      expect(edit.enabled, isFalse);
+      expect(edit.onPressed, isNull);
+      expect(
+        tester
+            .widget<IconButton>(
+              find.byKey(const ValueKey('practice-delete-node-3')),
+            )
+            .onPressed,
+        isNull,
+      );
       expect(repo.writes, isEmpty);
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
+
+  for (final language in ['fa', 'en']) {
+    for (final level in [1, 2, 3, 0]) {
+      testWidgets(
+        'item $level has pencil/trash outside its menu at 320px ($language)',
+        (tester) async {
+          tester.view.physicalSize = const Size(320, 900);
+          tester.view.devicePixelRatio = 1;
+          addTearDown(tester.view.resetPhysicalSize);
+          addTearDown(tester.view.resetDevicePixelRatio);
+          final repo = TreePracticeRepository(),
+              isExam = level == 0,
+              id = isExam ? 10 : level;
+          final kind = isExam ? 'exam' : 'node', itemKey = '$kind-$id';
+          await tester.pumpWidget(
+            ChangeNotifierProvider(
+              create: (_) => AppData(),
+              child: MaterialApp(
+                locale: Locale(language),
+                supportedLocales: const [Locale('fa'), Locale('en')],
+                localizationsDelegates: const [
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
+                theme: language == 'en' ? ThemeData.dark() : ThemeData.light(),
+                home: MusicPracticePage(
+                  repository: repo,
+                  nodeId: isExam
+                      ? 3
+                      : level == 1
+                      ? null
+                      : level - 1,
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          final pencil = find.byKey(ValueKey('practice-edit-$itemKey')),
+              trash = find.byKey(ValueKey('practice-delete-$itemKey'));
+          expect(pencil, findsOneWidget);
+          expect(trash, findsOneWidget);
+          expect(tester.widget<IconButton>(trash).color, Colors.red);
+          await tester.ensureVisible(pencil);
+          await tester.tap(pencil);
+          await tester.pumpAndSettle();
+          final editor = tester.widget<MusicPracticeEditPage>(
+            find.byType(MusicPracticeEditPage),
+          );
+          expect(editor.item?['id'], id);
+          expect(editor.kind, isExam ? 'exams' : 'nodes');
+          Navigator.of(
+            tester.element(find.byType(MusicPracticeEditPage)),
+          ).pop();
+          await tester.pumpAndSettle();
+          await tester.tap(find.byKey(ValueKey('practice-menu-$itemKey')));
+          await tester.pumpAndSettle();
+          for (final label in [
+            'افزودن زیرسطح',
+            'سطح‌های آزمون',
+            'ویرایش',
+            'حذف سطح',
+            'Add subsection',
+            'Test levels',
+            'Edit',
+            'Delete level',
+          ]) {
+            expect(find.text(label), findsNothing);
+          }
+          await tester.tapAt(const Offset(1, 1));
+          await tester.pumpAndSettle();
+          await tester.tap(trash);
+          await tester.pumpAndSettle();
+          expect(find.byType(AlertDialog), findsOneWidget);
+          await tester.tap(
+            find
+                .descendant(
+                  of: find.byType(AlertDialog),
+                  matching: find.byType(TextButton),
+                )
+                .first,
+          );
+          await tester.pumpAndSettle();
+          expect(repo.writes, isEmpty);
+          expect(tester.takeException(), isNull);
+          await tester.pumpWidget(const SizedBox.shrink());
+          repo.dispose();
+        },
+      );
+    }
+  }
+  for (final scenario in [
+    'permission',
+    'ownership',
+    'schema',
+    'partial-schema',
+  ]) {
+    testWidgets('item edit/delete obey $scenario restrictions', (tester) async {
+      final repo = ItemActionCatalog(
+        allowed: scenario != 'permission',
+        owned: scenario != 'ownership',
+        deletionReady: scenario != 'schema',
+        levelDeletionReady: scenario != 'partial-schema',
+      );
+      await tester.pumpWidget(
+        fixture.host(MusicPracticePage(repository: repo, nodeId: 2)),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('practice-delete-node-3')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('practice-edit-node-3')),
+        ['schema', 'partial-schema'].contains(scenario)
+            ? findsOneWidget
+            : findsNothing,
+      );
+      expect(repo.writes, isEmpty);
+      await tester.pumpWidget(const SizedBox.shrink());
+      repo.dispose();
+    });
+  }
+  testWidgets('node trash confirms the existing node deletion endpoint', (
+    tester,
+  ) async {
+    final repo = TreePracticeRepository()..examNode = 99;
+    await tester.pumpWidget(
+      fixture.host(MusicPracticePage(repository: repo, nodeId: 2)),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('practice-delete-node-3')));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byType(AlertDialog),
+            matching: find.byType(TextButton),
+          )
+          .last,
+    );
+    await tester.pumpAndSettle();
+    expect(repo.writes.single, {'path': 'nodes/delete', 'id': 3, 'version': 1});
+    await tester.pumpWidget(const SizedBox.shrink());
+    repo.dispose();
+  });
 
   test('unknown server icon falls back safely', () {
     expect(
