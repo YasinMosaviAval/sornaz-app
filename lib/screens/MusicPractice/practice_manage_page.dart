@@ -171,9 +171,10 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
     bool required = true,
     bool readOnly = false,
   }) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.only(bottom: 16),
     child: PracticeFormField(
       name: name,
+      footerErrors: true,
       label: socialText(context, fa, en),
       controller: controller(name, initial),
       lines: lines,
@@ -222,17 +223,12 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
     ValueChanged<String> change, {
     Set<String> disabledValues = const {},
   }) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.only(bottom: 16),
     child: DropdownButtonFormField<String>(
       isExpanded: true,
       style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 12),
       initialValue: value,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: Theme.of(
-          context,
-        ).textTheme.bodyMedium?.copyWith(fontSize: 12),
-      ),
+      decoration: practiceInputDecoration(context, label),
       items: [
         for (final o in options)
           DropdownMenuItem(
@@ -247,20 +243,23 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
     ),
   );
   int integer(String name) => int.parse(fields[name]!.text.trim());
-  Widget pairedFields(List<Widget> children) => LayoutBuilder(
-    builder: (context, constraints) => Wrap(
-      spacing: 8,
-      children: [
-        for (final child in children)
-          SizedBox(
-            width: child is Padding || child is SettingsSwitchTile
-                ? (constraints.maxWidth - 8) / 2
-                : constraints.maxWidth,
-            child: child,
-          ),
-      ],
-    ),
-  );
+  Widget pairedFields(List<Widget> children, {bool fullWidth = false}) =>
+      LayoutBuilder(
+        builder: (context, constraints) => Wrap(
+          spacing: 16,
+          children: [
+            for (final child in children)
+              SizedBox(
+                width:
+                    !fullWidth &&
+                        (child is Padding || child is SettingsSwitchTile)
+                    ? (constraints.maxWidth - 16) / 2
+                    : constraints.maxWidth,
+                child: child,
+              ),
+          ],
+        ),
+      );
   Widget userPicker() {
     final selected = controller(
       'userIds',
@@ -311,14 +310,9 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
                 controller: search,
                 focusNode: focus,
                 onFieldSubmitted: (_) => submitted(),
-                decoration: InputDecoration(
-                  labelStyle: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontSize: 12),
-                  hintStyle: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontSize: 12),
-                  labelText: socialText(
+                decoration: practiceInputDecoration(
+                  context,
+                  socialText(
                     context,
                     'جست‌وجوی نام کاربری مخاطبان',
                     'Search audience usernames',
@@ -353,7 +347,12 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
 
   String text(String name) => fields[name]!.text.trim();
   Future<void> save() async {
-    if (saving || !key.currentState!.validate()) return;
+    if (saving) return;
+    final invalid = key.currentState!.validateGranularly();
+    if (invalid.isNotEmpty) {
+      setState(() => error = invalid.first.errorText);
+      return;
+    }
     if (widget.kind == 'exams' &&
         engine == 'notation' &&
         (notationQuestions.isEmpty ||
@@ -371,7 +370,10 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
       );
       return;
     }
-    setState(() => saving = true);
+    setState(() {
+      saving = true;
+      error = null;
+    });
     try {
       final body = <String, dynamic>{
         'id': int.tryParse((old['id'] ?? 0).toString()) ?? 0,
@@ -423,8 +425,15 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
             'questions': [
               for (final q in questions)
                 {
-                  'promptFa': q['promptFa']!.text.trim(),
-                  'promptEn': q['promptEn']!.text.trim(),
+                  for (final name in ['promptFa', 'promptEn'])
+                    if (engine != 'choice' ||
+                        name ==
+                            (Localizations.localeOf(context).languageCode ==
+                                    'en'
+                                ? 'promptEn'
+                                : 'promptFa') ||
+                        q[name]!.text.trim().isNotEmpty)
+                      name: q[name]!.text.trim(),
                   'choices': q['choices']!.text
                       .split('\n')
                       .where((s) => s.trim().isNotEmpty)
@@ -517,15 +526,46 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
         config = Map<String, dynamic>.from(old['config'] as Map? ?? {}),
         en = Localizations.localeOf(context).languageCode == 'en';
     return Scaffold(
-      appBar: SornazAppBar(
-        title: pageTitle(context),
-        actions: [
-          IconButton(
-            tooltip: socialText(context, 'ذخیره', 'Save'),
-            onPressed: saving ? null : save,
-            icon: const Icon(Icons.save_outlined),
+      appBar: SornazAppBar(title: pageTitle(context)),
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(context).bottom,
+        ),
+        child: SafeArea(
+          top: false,
+          minimum: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (error != null) ...[
+                Text(
+                  error!,
+                  key: const ValueKey('practice-form-error'),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.red,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              Tooltip(
+                message: socialText(context, 'ذخیره', 'Save'),
+                child: FilledButton(
+                  key: const ValueKey('practice-save'),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(46),
+                    textStyle: Theme.of(
+                      context,
+                    ).textTheme.labelLarge?.copyWith(fontSize: 14),
+                  ),
+                  onPressed: saving ? null : save,
+                  child: Text(socialText(context, 'ذخیره', 'Save')),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
       body: Form(
         key: key,
@@ -533,7 +573,6 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
           padding: const EdgeInsets.all(12),
           children: [
             if (saving) const LinearProgressIndicator(),
-            if (error != null) Text(error!),
             if (widget.kind == 'nodes' || widget.kind == 'exams') ...[
               if (!singleTitle || !en)
                 input(
@@ -590,14 +629,17 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
             ],
             if (widget.kind == 'nodes' && widget.catalog['nodeIcons'] == true)
               Padding(
-                padding: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.only(bottom: 16),
                 child: DropdownButtonFormField<String>(
                   key: const ValueKey('practice-icon-picker'),
                   initialValue: iconKey,
                   isExpanded: true,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  decoration: InputDecoration(
-                    labelText: socialText(context, 'آیکن سطح', 'Section icon'),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontSize: 12),
+                  decoration: practiceInputDecoration(
+                    context,
+                    socialText(context, 'آیکن سطح', 'Section icon'),
                   ),
                   items: [
                     DropdownMenuItem(
@@ -613,7 +655,7 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
                               entry.value.$1,
                               color: Theme.of(context).colorScheme.primary,
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 16),
                             Flexible(
                               child: Text(
                                 en ? entry.value.$3 : entry.value.$2,
@@ -651,7 +693,7 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
                         number: true,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: input(
                         'stageCount',
@@ -661,7 +703,7 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
                         number: true,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: input(
                         'requiredWins',
@@ -698,7 +740,7 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
                 ),
               ], (v) => audience = v),
               Padding(
-                padding: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.only(bottom: 16),
                 child: userPicker(),
               ),
               dropdown(
@@ -883,16 +925,17 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
                           children: [
                             pairedFields([
                               for (final field in [
-                                'promptFa',
-                                'promptEn',
+                                if (engine != 'choice' || !en) 'promptFa',
+                                if (engine != 'choice' || en) 'promptEn',
                                 'choices',
                                 'correct',
                                 if (engine == 'rhythm') ...['beats', 'bpm'],
                               ])
                                 Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
+                                  padding: const EdgeInsets.only(bottom: 16),
                                   child: PracticeFormField(
                                     name: field,
+                                    footerErrors: true,
                                     controller: q[field]!,
                                     lines: field == 'choices' ? 4 : 1,
                                     choiceCount: q['choices']!.text
@@ -968,7 +1011,7 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
                     ),
                   ),
                 ],
-              ]),
+              ], fullWidth: ['choice', 'notation'].contains(engine)),
             ],
             if (widget.kind == 'plans/propose') ...[
               dropdown(
@@ -1065,15 +1108,6 @@ class _MusicPracticeEditPageState extends State<MusicPracticeEditPage> {
                 (v) => status = v,
               ),
             ],
-            FilledButton(
-              style: FilledButton.styleFrom(
-                textStyle: Theme.of(
-                  context,
-                ).textTheme.labelLarge?.copyWith(fontSize: 10),
-              ),
-              onPressed: saving ? null : save,
-              child: Text(socialText(context, 'ذخیره', 'Save')),
-            ),
           ],
         ),
       ),

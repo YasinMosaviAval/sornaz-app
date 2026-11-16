@@ -244,28 +244,26 @@ class _MusicPracticePageState extends State<MusicPracticePage>
           .toList();
   Widget groupHeading(String label, Iterable<PracticeJson> levels) {
     final plan = PracticeJourney(levels, progress);
-    return Row(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          child: Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(fontSize: 14),
-          ),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: 14),
         ),
-        if (plan.exams.isNotEmpty) ...[
-          const SizedBox(width: 8),
+        if (plan.exams.isNotEmpty)
           Directionality(
             textDirection: TextDirection.ltr,
             child: Text(
               '${plan.currentLevel}/${plan.exams.length}',
+              textAlign: TextAlign.center,
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(fontSize: 12),
             ),
           ),
-        ],
       ],
     );
   }
@@ -342,6 +340,10 @@ class _MusicPracticePageState extends State<MusicPracticePage>
           AppHierarchyRow(
             key: ValueKey('practice-tree-node-$id'),
             depth: depth,
+            iconColor: Colors.black,
+            titleAlignment: ListTileTitleAlignment.center,
+            horizontalTitleGap: 8,
+            minLeadingWidth: 0,
             icon: PracticeIcons.forNode(node, expanded: expanded),
             title: groupHeading(title(node), levels),
             expanded: expanded,
@@ -357,8 +359,14 @@ class _MusicPracticePageState extends State<MusicPracticePage>
                         count: PracticeJourney(levels, progress).stars,
                       ),
                       TextButton.icon(
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.black,
+                        ),
                         key: ValueKey('practice-start-$id'),
-                        icon: const Icon(Icons.play_circle_outline),
+                        icon: const Icon(
+                          Icons.play_circle_outline,
+                          color: Colors.black,
+                        ),
                         label: Text(
                           socialText(
                             context,
@@ -411,6 +419,8 @@ class _MusicPracticePageState extends State<MusicPracticePage>
       padding: const EdgeInsets.only(bottom: 4),
       child: ListTile(
         contentPadding: const EdgeInsetsDirectional.only(start: 12),
+        horizontalTitleGap: 8,
+        minLeadingWidth: 0,
         shape: RoundedRectangleBorder(borderRadius: appRadius(context)),
         leading: Icon(
           exam['access'] == true
@@ -418,7 +428,7 @@ class _MusicPracticePageState extends State<MusicPracticePage>
                     ? Icons.check_circle
                     : Icons.play_circle_outline
               : Icons.lock_outline,
-          color: Theme.of(context).colorScheme.primary,
+          color: Colors.black,
         ),
         title: Text(
           title(exam),
@@ -479,7 +489,7 @@ class _MusicPracticePageState extends State<MusicPracticePage>
       key: ValueKey('practice-menu-$id'),
       padding: EdgeInsets.zero,
       tooltip: socialText(context, 'گزینه‌ها', 'Options'),
-      icon: const Icon(Icons.more_vert),
+      icon: const Icon(Icons.more_vert, color: Colors.black),
       onSelected: (action) => action(),
       itemBuilder: (_) => items,
     );
@@ -564,7 +574,7 @@ class _MusicPracticePageState extends State<MusicPracticePage>
       key: ValueKey(key),
       tooltip: socialText(context, fa, en),
       padding: EdgeInsets.zero,
-      color: color,
+      color: color ?? Colors.black,
       onPressed: action,
       icon: Icon(icon),
     ),
@@ -931,7 +941,7 @@ class _MusicPracticePageState extends State<MusicPracticePage>
           nodes.any((n) => groupExams(n['id'] as int).isNotEmpty))
         IconButton(
           tooltip: socialText(context, 'تنظیمات', 'Settings'),
-          icon: const Icon(Icons.settings, size: 24),
+          icon: const Icon(Icons.settings, size: 24, color: Colors.black),
           onPressed: openSettings,
         ),
       if (widget.nodeId == null ||
@@ -951,7 +961,7 @@ class _MusicPracticePageState extends State<MusicPracticePage>
                   height: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Icon(Icons.upload),
+              : const Icon(Icons.upload, color: Colors.black),
         ),
       if (managementCatalog != null &&
           capabilities['create'] == true &&
@@ -961,7 +971,7 @@ class _MusicPracticePageState extends State<MusicPracticePage>
               )))
         IconButton(
           tooltip: socialText(context, 'افزودن سطح', 'Add section'),
-          icon: const Icon(Icons.add),
+          icon: const Icon(Icons.add, color: Colors.black),
           onPressed:
               PracticeTree(
                 (displayCatalog?['nodes'] as List? ?? []).map(
@@ -998,25 +1008,37 @@ class _MusicPracticePageState extends State<MusicPracticePage>
                   ),
                   contentPadding: const EdgeInsetsDirectional.only(start: 12),
                   leading: Icon(PracticeIcons.forNode(node)),
-                  iconColor: Theme.of(context).colorScheme.primary,
+                  horizontalTitleGap: 8,
+                  minLeadingWidth: 0,
+                  iconColor: Colors.black,
                   title: groupHeading(
                     title(node),
                     groupExams(node['id'] as int),
                   ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      groupExams(node['id'] as int).isEmpty
-                          ? const SizedBox.shrink()
-                          : fittedStars(
-                              count: PracticeJourney(
-                                groupExams(node['id'] as int),
-                                progress,
-                              ).stars,
-                            ),
-                      proposalControls(node['id'] as int),
-                    ],
-                  ),
+                  titleAlignment: ListTileTitleAlignment.center,
+                  subtitle:
+                      groupExams(node['id'] as int).isEmpty &&
+                          !proposals.any(
+                            (p) =>
+                                p['exam_id'] == null &&
+                                (int.tryParse('${p['node_id']}') ?? 0) ==
+                                    node['id'],
+                          )
+                      ? null
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            groupExams(node['id'] as int).isEmpty
+                                ? const SizedBox.shrink()
+                                : fittedStars(
+                                    count: PracticeJourney(
+                                      groupExams(node['id'] as int),
+                                      progress,
+                                    ).stars,
+                                  ),
+                            proposalControls(node['id'] as int),
+                          ],
+                        ),
                   trailing: cardActions(node),
                   onTap:
                       opening ||
@@ -1035,6 +1057,8 @@ class _MusicPracticePageState extends State<MusicPracticePage>
                 child: ListTile(
                   contentPadding: const EdgeInsetsDirectional.only(start: 12),
                   title: groupHeading(name, exams),
+                  horizontalTitleGap: 8,
+                  minLeadingWidth: 0,
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1045,7 +1069,10 @@ class _MusicPracticePageState extends State<MusicPracticePage>
                     ],
                   ),
                   trailing: nodeActions(widget.nodeId),
-                  leading: const Icon(Icons.play_circle_outline),
+                  leading: const Icon(
+                    Icons.play_circle_outline,
+                    color: Colors.black,
+                  ),
                   onTap: opening || exams.isEmpty
                       ? null
                       : () => openJourney(

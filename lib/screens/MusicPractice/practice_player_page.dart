@@ -20,6 +20,13 @@ import '../IntervalRecognition/settings.dart';
 import '../IntervalRecognition/text.dart';
 import 'practice_repository.dart';
 
+String promptText(PracticeJson question, bool en) {
+  final primary = question[en ? 'promptEn' : 'promptFa']?.toString() ?? '';
+  return primary.trim().isNotEmpty
+      ? primary
+      : question[en ? 'promptFa' : 'promptEn']?.toString() ?? '';
+}
+
 class MusicPracticePlayerPage extends StatefulWidget {
   const MusicPracticePlayerPage({
     super.key,
@@ -498,10 +505,15 @@ class _MusicPracticePlayerPageState extends State<MusicPracticePlayerPage> {
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 12),
                                 child: Text(
-                                  ((c['questions'] as List)[question['question']
+                                  promptText(
+                                    Map<String, dynamic>.from(
+                                      (c['questions']
+                                              as List)[question['question']
                                               as int]
-                                          as Map)[en ? 'promptEn' : 'promptFa']
-                                      .toString(),
+                                          as Map,
+                                    ),
+                                    en,
+                                  ),
                                   style: theme.textTheme.bodyLarge?.copyWith(
                                     fontSize: 12,
                                   ),

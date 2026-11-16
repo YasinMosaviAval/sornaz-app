@@ -561,7 +561,7 @@ void main() {
           await tester.pumpAndSettle();
           expect(
             tester.getTopLeft(mode).dy - tester.getBottomLeft(search).dy,
-            closeTo(12, .1),
+            closeTo(16, .1),
           );
           final type = decoration(en ? 'Practice type' : 'نوع تمرین');
           final distances = find.byWidgetPredicate(
@@ -640,8 +640,11 @@ void main() {
         );
         await tester.pumpAndSettle();
         for (final names in [
-          ['promptFa', 'promptEn'],
-          ['choices', 'correct'],
+          if (engine == 'rhythm') ...[
+            ['promptFa', 'promptEn'],
+            ['choices', 'correct'],
+          ] else
+            ['promptFa', 'choices'],
           if (engine == 'rhythm') ['beats', 'bpm'],
         ]) {
           final left = find.byWidgetPredicate(
@@ -823,8 +826,20 @@ void main() {
               trash = find.byKey(ValueKey('practice-delete-$itemKey'));
           expect(pencil, findsOneWidget);
           expect(trash, findsOneWidget);
+          expect(tester.widget<IconButton>(pencil).color, Colors.black);
           expect(tester.widget<IconButton>(trash).color, Colors.red);
           await tester.ensureVisible(pencil);
+          final tile = tester.widget<ListTile>(
+            find.ancestor(of: pencil, matching: find.byType(ListTile)).first,
+          );
+          final iconRect = tester.getRect(find.byWidget(tile.leading!));
+          final titleRect = tester.getRect(find.byWidget(tile.title!));
+          expect(
+            language == 'en'
+                ? titleRect.left - iconRect.right
+                : iconRect.left - titleRect.right,
+            closeTo(8, .01),
+          );
           await tester.tap(pencil);
           await tester.pumpAndSettle();
           final editor = tester.widget<MusicPracticeEditPage>(

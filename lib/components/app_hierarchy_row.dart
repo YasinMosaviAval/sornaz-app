@@ -13,11 +13,18 @@ class AppHierarchyRow extends StatelessWidget {
     this.expanded = false,
     this.expandable = false,
     this.enabled = true,
+    this.iconColor,
+    this.titleAlignment,
+    this.horizontalTitleGap,
+    this.minLeadingWidth,
   });
   final int depth;
   final Widget title;
   final Widget? subtitle, actions;
   final IconData icon;
+  final Color? iconColor;
+  final ListTileTitleAlignment? titleAlignment;
+  final double? horizontalTitleGap, minLeadingWidth;
   final VoidCallback? onTap;
   final bool expanded, expandable, enabled;
 
@@ -35,11 +42,16 @@ class AppHierarchyRow extends StatelessWidget {
   Widget build(BuildContext context) => Material(
     color: background(context, depth),
     child: ListTile(
+      titleAlignment: titleAlignment,
+      horizontalTitleGap: horizontalTitleGap,
+      minLeadingWidth: minLeadingWidth,
       enabled: enabled,
       contentPadding: EdgeInsetsDirectional.only(start: 12 + depth * 12.0),
       leading: Icon(
         icon,
-        color: expanded ? Theme.of(context).colorScheme.primary : null,
+        color:
+            iconColor ??
+            (expanded ? Theme.of(context).colorScheme.primary : null),
       ),
       title: title,
       subtitle: subtitle,
@@ -47,7 +59,10 @@ class AppHierarchyRow extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (expandable)
-            Icon(expanded ? Icons.expand_less : Icons.expand_more),
+            Icon(
+              expanded ? Icons.expand_less : Icons.expand_more,
+              color: iconColor,
+            ),
           ?actions,
         ],
       ),

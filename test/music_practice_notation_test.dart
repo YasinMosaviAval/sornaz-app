@@ -264,6 +264,19 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
+        for (final label in ['نوع تمرین', 'ارزیابی پاسخ صوتی']) {
+          final field = find.byWidgetPredicate(
+            (widget) =>
+                widget is InputDecorator &&
+                widget.decoration.labelText == label,
+          );
+          await tester.scrollUntilVisible(
+            field,
+            160,
+            scrollable: find.byType(Scrollable).first,
+          );
+          expect(tester.getSize(field).width, closeTo(296, 1));
+        }
         await tester.scrollUntilVisible(
           find.byTooltip('ویرایش صورت سؤال'),
           300,

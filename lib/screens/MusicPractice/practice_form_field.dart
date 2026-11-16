@@ -2,6 +2,38 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../Social/social_widgets.dart';
+import '../../helpers/app_appearance.dart';
+
+InputDecoration practiceInputDecoration(BuildContext context, String label) {
+  final theme = Theme.of(context);
+  final border = OutlineInputBorder(
+    borderRadius: appRadius(context),
+    borderSide: const BorderSide(color: Color(0xff999999)),
+  );
+  return InputDecoration(
+    labelText: label,
+    labelStyle: theme.textTheme.bodyMedium?.copyWith(fontSize: 12),
+    hintStyle: theme.textTheme.bodyMedium?.copyWith(fontSize: 12),
+    filled: true,
+    fillColor: theme.brightness == Brightness.dark
+        ? const Color(0xff111111)
+        : const Color(0xfff7f7f7),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+    constraints: const BoxConstraints(minHeight: 46),
+    border: border,
+    enabledBorder: border,
+    disabledBorder: border,
+    focusedBorder: border.copyWith(
+      borderSide: BorderSide(color: theme.colorScheme.primary),
+    ),
+    errorBorder: border.copyWith(
+      borderSide: const BorderSide(color: Colors.red),
+    ),
+    focusedErrorBorder: border.copyWith(
+      borderSide: const BorderSide(color: Colors.red),
+    ),
+  );
+}
 
 class PracticeFieldValidation {
   static const ranges = <String, (num, num)>{
@@ -172,11 +204,12 @@ class PracticeFormField extends StatefulWidget {
     this.extraValidator,
     this.digitsOnly = false,
     this.showGuidance = true,
+    this.footerErrors = false,
   });
   final String name, label;
   final TextEditingController controller;
   final int lines, choiceCount;
-  final bool required, readOnly, digitsOnly, showGuidance;
+  final bool required, readOnly, digitsOnly, showGuidance, footerErrors;
   final ValueChanged<String>? onChanged;
   final String? Function(String)? extraValidator;
   @override
@@ -246,20 +279,20 @@ class _PracticeFormFieldState extends State<PracticeFormField> {
           : TextInputType.multiline,
       maxLines: widget.lines,
       style: theme.textTheme.bodyMedium?.copyWith(fontSize: 12),
-      decoration: InputDecoration(
-        labelText: widget.label,
-        labelStyle: theme.textTheme.bodyMedium?.copyWith(fontSize: 12),
+      decoration: practiceInputDecoration(context, widget.label).copyWith(
         helperMaxLines: 5,
         errorMaxLines: 5,
         helperText: !widget.showGuidance
             ? null
             : focus.hasFocus
-            ? (error ??
-                  socialText(
-                    context,
-                    'مقدار واردشده قابل قبول است.',
-                    'This value is acceptable.',
-                  ))
+            ? (error != null && widget.footerErrors
+                  ? null
+                  : error ??
+                        socialText(
+                          context,
+                          'مقدار واردشده قابل قبول است.',
+                          'This value is acceptable.',
+                        ))
             : PracticeFieldValidation.hint(widget.name, en),
         helperStyle: theme.textTheme.bodySmall?.copyWith(
           color: color,
@@ -267,6 +300,9 @@ class _PracticeFormFieldState extends State<PracticeFormField> {
         ),
       ),
       validator: (value) => validate(value ?? ''),
+      errorBuilder: widget.footerErrors
+          ? (context, error) => const SizedBox.shrink()
+          : null,
       autovalidateMode: AutovalidateMode.onUserInteraction,
       onChanged: (value) {
         final normalized = PracticeFieldValidation.normalize(
