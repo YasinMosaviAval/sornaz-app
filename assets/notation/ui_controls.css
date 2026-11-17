@@ -393,3 +393,6 @@ body.writing{overscroll-behavior-x:none}
 #metadata button.beat-picker{width:100%;height:46px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:var(--app-corner-radius,4px);background:var(--panel);padding:5px 8px}#metadata button.beat-picker .beat-preview{position:static!important;display:flex;align-items:center;justify-content:center;flex:1;direction:ltr}
 
 .piano .black.split-black{background:transparent!important;box-shadow:none}.piano .black-sharp,.piano .black-flat{border-radius:0 0 var(--app-corner-radius,4px) var(--app-corner-radius,4px)!important}
+
+.notation-form-options[data-control-key=time] [data-notation-option=free]{grid-column:1/-1;gap:8px}
+.notation-form-options[data-control-key=time] [data-notation-option=free] .notation-signature-name{font-size:calc(12px * var(--font-scale,1))}

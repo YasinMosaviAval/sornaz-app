@@ -54,6 +54,7 @@ function hairpin(value){return value==='stop'?'<path d="M9 10v20M39 10v20"/><pat
 function octave(value){return text(value==='stop'?'8':value||'8va',21,18,15,'font-style="italic"')+'<path d="M5 25h36v7" stroke-dasharray="3 3"/>'+(value==='stop'?'<path d="m33 9 9 9m0-9-9 9"/>':'');}
 function symbol(key,value,context={}){
  if(key==='timeTop'||key==='timeBottom')return svg(text(value,24,29,24));
+ if(key==='time'&&value==='free')return svg('<path d="M24 20C18 8 6 8 6 20s12 12 18 0 18-12 18 0-12 12-18 0"/>');
  if(key==='time'&&value==='manual')return svg(text('N',24,17,16)+text('D',24,37,16)+'<path d="M14 21h20"/>');
  if(/^clef[12]$/.test(key)||key==='clef-change'||key==='clef')return clef(value);
  if(key==='displayNumber')return svg(staff+text(value||'12',24,8,10)+'<path d="M10 13v20M38 13v20"/>');

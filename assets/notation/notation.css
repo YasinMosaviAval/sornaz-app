@@ -141,3 +141,10 @@ h1,h2,h3,h4,h5,h6,strong,b{font-weight:var(--app-font-weight,400)}
 @media(max-width:480px){.notation-top-tools{gap:6px;padding-inline:4px}.notation-control-group,.notation-top-tools>.staff-picker{flex:1 1 145px;padding:6px}.notation-group-buttons>.notation-tool-button{flex:1 1 auto;padding-inline:6px}.measure-tools{margin-inline:4px}}
 
 @font-face{font-family:Bravura;src:url("fonts/Bravura.otf") format("opentype");font-style:normal;font-weight:400;font-display:block}.bravura-symbol{font-family:Bravura!important;font-style:normal!important;font-weight:400!important}.rest-glyph{width:24px;height:34px;display:block;flex-shrink:0}
+
+.shell.form .form-row.tempo-row[hidden]{display:none!important}
+.free-duration-picker{width:min(340px,calc(100vw - 24px));padding:16px}
+.free-duration-picker form{display:grid;gap:12px}
+.free-duration-picker p{margin:0;font-size:calc(12px * var(--font-scale,1));line-height:1.8}
+.free-duration-picker input{width:100%;font:inherit;font-size:calc(14px * var(--font-scale,1))}
+.free-duration-button{font:inherit;font-size:calc(12px * var(--font-scale,1));white-space:nowrap;min-height:40px}

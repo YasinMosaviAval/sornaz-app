@@ -34,6 +34,7 @@ const gapDurations=Object.keys(M.durations).flatMap(duration=>[0,1,2].map(dots=>
 function spacingNotes(length){const notes=[];while(length>0){const part=gapDurations.find(item=>item.value<=length);if(!part)break;notes.push(new VF.GhostNote({duration:part.duration,dots:part.dots}));length-=part.value;}return notes;}
 // Render-only rests never enter the score, undo history, export or playback.
 function completedVoice(source,sheet,index,staff,voice){
+ if(M.isFree(sheet,index))return source;
  const end=M.barUnits(sheet,index),pattern=M.beamPattern(sheet,index),boundaries=[];let boundary=0;
  if(pattern)for(const part of pattern.parts){boundary+=part*M.wholeUnits/pattern.denominator;boundaries.push(boundary);}
  const ratios=[...new Map(source.filter(n=>n.tuplet).map(n=>[n.tuplet.actual+':'+n.tuplet.normal,n.tuplet])).values()];
@@ -45,6 +46,7 @@ function completedVoice(source,sheet,index,staff,voice){
  for(const note of source){fill(Math.min(note.at,end));result.push(note);cursor=Math.max(cursor,note.at+M.units(note));}fill(end);return result;
 }
 function renderingBeamPattern(sheet,index){
+ if(M.isFree(sheet,index))return null;
  const m=M.effectiveTempoUnit(sheet,index);if(!M.durations[m.tempo_note])return M.beamPattern(sheet,index);
  const beat=M.units({duration:m.tempo_note,dots:Number(m.tempo_dots)||0}),length=M.barUnits(sheet,index),parts=[];for(let at=0;at<length;at+=beat)parts.push(Math.min(beat,length-at));return {parts,denominator:M.wholeUnits};
 }
@@ -64,6 +66,7 @@ function notationBeam(notes){
 }
 // Beam groups choose a common stem direction, including pitches across the middle line.
 function rhythmicBeams(notes,positions,sheet,index){
+ if(M.isFree(sheet,index))return [];
  const pattern=renderingBeamPattern(sheet,index);if(!pattern)return VF.Beam.generateBeams(notes,{maintain_stem_directions:false});
  const bounds=[];let end=0;for(const part of pattern.parts){end+=part*M.wholeUnits/pattern.denominator;bounds.push(end);}
  const beams=[];let run=[],previousEnd=-1,previousGroup=-1;const flush=()=>{if(run.length>1)beams.push(notationBeam(run));run=[];};
@@ -120,11 +123,12 @@ function renderRow(target,bars,start,options){
    // Keep the clef context even when its repeated visual modifier is omitted.
    stave.clef=clefs[lane].split('_')[0];
    const changedClef=index===0||clefs[lane]!==M.clefAt(options.sheet,index-1,lane+1,Infinity);
-   if(col===0||bar.clefs?.[lane+1]||bar.time||bar.timeSymbol||bar.key||selectedHint){if(col===0||bar.clefs?.[lane+1]&&(!options.continuousSignatures||changedClef))stave.addClef(clefs[lane].split('_')[0],undefined,clefs[lane].split('_')[1]);if(options.continuousSignatures?(index===0||!M.sameKeySignature(options.sheet,barKey,M.effectiveKey(options.sheet,index-1))):(col===0||bar.key)){const signature=M.iranianSignature?.(m.scale_type,barKey);if(signature)stave.addModifier(new IranianKeySignature(signature,clefs[lane].split('_')[0],index>0?M.iranianSignature(m.scale_type,M.effectiveKey(options.sheet,index-1)):null));else stave.addKeySignature(barKey,index>0?M.effectiveKey(options.sheet,index-1):undefined);}if(index===0||barTime!==M.effectiveTime(options.sheet,index-1)||selectedHint){stave.addTimeSignature(bar.timeSymbol==='common'?'C':bar.timeSymbol==='cut'?'C|':barTime);if(selectedHint&&barTime===M.effectiveTime(options.sheet,index-1))stave.getModifiers().find(mod=>mod.getCategory()==='TimeSignature')?.setStyle({fillStyle:'#c4c4c4',strokeStyle:'#c4c4c4'});}
+   if(col===0||bar.clefs?.[lane+1]||bar.time||bar.timeSymbol||bar.key||selectedHint){if(col===0||bar.clefs?.[lane+1]&&(!options.continuousSignatures||changedClef))stave.addClef(clefs[lane].split('_')[0],undefined,clefs[lane].split('_')[1]);if(options.continuousSignatures?(index===0||!M.sameKeySignature(options.sheet,barKey,M.effectiveKey(options.sheet,index-1))):(col===0||bar.key)){const signature=M.iranianSignature?.(m.scale_type,barKey);if(signature)stave.addModifier(new IranianKeySignature(signature,clefs[lane].split('_')[0],index>0?M.iranianSignature(m.scale_type,M.effectiveKey(options.sheet,index-1)):null));else stave.addKeySignature(barKey,index>0?M.effectiveKey(options.sheet,index-1):undefined);}if(!M.isFree(options.sheet,index)&&(index===0||barTime!==M.effectiveTime(options.sheet,index-1)||selectedHint)){stave.addTimeSignature(bar.timeSymbol==='common'?'C':bar.timeSymbol==='cut'?'C|':barTime);if(selectedHint&&barTime===M.effectiveTime(options.sheet,index-1))stave.getModifiers().find(mod=>mod.getCategory()==='TimeSignature')?.setStyle({fillStyle:'#c4c4c4',strokeStyle:'#c4c4c4'});}
    }
-   if(lane===0&&(bar.displayNumber||index>0)){ctx.save();ctx.setFillStyle('#666');ctx.setFont('Arial',5.5);ctx.fillText(String(bar.displayNumber||index+1),x+9,35);ctx.restore();}
+   if(!M.isFree(options.sheet,index)&&lane===0&&(bar.displayNumber||index>0)){ctx.save();ctx.setFillStyle('#666');ctx.setFont('Arial',5.5);ctx.fillText(String(bar.displayNumber||index+1),x+9,35);ctx.restore();}
    if(bar.repeat?.start)stave.setBegBarType(VF.Barline.type.REPEAT_BEGIN);
-   if(multiRest&&index<multiRest.end)stave.setEndBarType(VF.Barline.type.NONE);
+   if(M.isFree(options.sheet,index)){stave.setBegBarType(VF.Barline.type.NONE);stave.setEndBarType(VF.Barline.type.NONE);}
+   else if(multiRest&&index<multiRest.end)stave.setEndBarType(VF.Barline.type.NONE);
    else if(bar.repeat?.end)stave.setEndBarType(VF.Barline.type.REPEAT_END);
    else if(bar.barline==='double')stave.setEndBarType(VF.Barline.type.DOUBLE);
    else if(bar.barline==='final'||index===options.lastWritten)stave.setEndBarType(VF.Barline.type.END);
@@ -135,7 +139,7 @@ function renderRow(target,bars,start,options){
   const noteStart=Math.max(...staves.map(stave=>stave.getNoteStartX()))+12;
   staves.forEach(stave=>stave.setNoteStartX(noteStart));
   if(grand){
-   for(const type of [VF.StaveConnector.type.SINGLE_LEFT,...(col===0?[VF.StaveConnector.type.BRACE]:[]),VF.StaveConnector.type.SINGLE_RIGHT])
+   for(const type of [...(M.isFree(options.sheet,index)?[]:[VF.StaveConnector.type.SINGLE_LEFT,VF.StaveConnector.type.SINGLE_RIGHT]),...(col===0?[VF.StaveConnector.type.BRACE]:[])])
     new VF.StaveConnector(staves[0],staves[1]).setType(type).setContext(ctx).draw();
   }
   const addLabel=(label,y,size=12)=>{const element=document.createElementNS('http://www.w3.org/2000/svg','text');for(const[key,value]of Object.entries({x:x+barWidth/2,y,'text-anchor':'middle','font-family':'NotationTheme, Arial','font-size':size,fill:'#111'}))element.setAttribute(key,value);element.textContent=label;svg.append(element);};
@@ -157,7 +161,7 @@ function renderRow(target,bars,start,options){
   if(bar.rehearsal)addLabel(bar.rehearsal,staves[0].getY()-53,12);
   if(bar.text)addLabel(bar.text,staves[0].getY()-66,10);
   const currentUnit=M.effectiveTempoUnit(options.sheet,index),previousUnit=M.effectiveTempoUnit(options.sheet,index-1),unitChanged=currentUnit.tempo_note!==previousUnit.tempo_note||currentUnit.tempo_dots!==previousUnit.tempo_dots,segment=M.tempoSegment(options.sheet,index),previousBpm=index?M.tempoSegment(options.sheet,index-1).final:Number(m.bpm),tempoChanged=!!bar.tempo&&(segment.initial!==previousBpm||segment.final!==segment.initial);
-  if((unitChanged||tempoChanged||selectedHint)&&!(index===0&&(!bar.tempo||bar.tempo.mode==='instant'))){
+  if(!M.isFree(options.sheet,index)&&(unitChanged||tempoChanged||selectedHint)&&!(index===0&&(!bar.tempo||bar.tempo.mode==='instant'))){
    const ns='http://www.w3.org/2000/svg',label=document.createElementNS(ns,'g'),scale=options.pixels/width,reference=target.closest('.shell')?.querySelector('.score-title .metronome-mark'),font=reference?parseFloat(getComputedStyle(reference).fontSize):10,fontSize=font/scale;let offset=0;
    for(const[key,value]of Object.entries({'font-family':'NotationTheme, Arial','font-size':fontSize,fill:'#111','class':'notation-tempo-change','data-bar':index,'data-staff-top':staves[0].getYForLine(0),'data-note-start':noteStart}))label.setAttribute(key,String(value));svg.append(label);
    const unit=M.effectiveTempoUnit(options.sheet,index),bpm=bar.tempo?.mode==='aTempo'?m.bpm:bar.tempo?.bpm||M.tempoSegment(options.sheet,index).initial,part=(text,field,faint)=>{const span=document.createElementNS(ns,'text');span.textContent=text;span.setAttribute('x',String(offset));span.setAttribute('y','0');span.setAttribute('fill',faint?'#c4c4c4':'#111');span.setAttribute('class','notation-measure-'+field);label.append(span);offset+=span.getBBox().width;if(field)tempoTargets.push({span,field});};
@@ -170,7 +174,7 @@ function renderRow(target,bars,start,options){
   staves.forEach((stave,lane)=>{
    if(multiRest||repeatRegion)return;
    const staff=lane+1,all=bar.notes.map((n,i)=>({...n,index:i,at:M.positionOf(bar,i)})).filter(n=>M.staffOf(n)===staff),voiceIds=[...new Set(all.map(M.voiceOf))];
-   if(!all.length)centeredGlyph(ctx,svg,'restWhole',(stave.getNoteStartX()+stave.getNoteEndX())/2,stave.getYForLine(1),'notation-measure-rest',{'data-bar':index,'data-staff':staff,'data-units':M.barUnits(options.sheet,index)},true);
+   if(!all.length&&!M.isFree(options.sheet,index))centeredGlyph(ctx,svg,'restWhole',(stave.getNoteStartX()+stave.getNoteEndX())/2,stave.getYForLine(1),'notation-measure-rest',{'data-bar':index,'data-staff':staff,'data-units':M.barUnits(options.sheet,index)},true);
    const displayAccidentals=measureAccidentals(options.sheet,index,staff);
    const ghost=!options.printing&&index===options.ghostBar&&options.ghost&&M.staffOf(options.ghost)===staff?options.ghost:null;
    if(ghost&&!voiceIds.length)previewTargets.push({stave,n:ghost,x:stave.getNoteStartX()+12});
@@ -185,6 +189,7 @@ function renderRow(target,bars,start,options){
     const keys=n.rest?[restKey]:tones.map(tone=>{const shifted=ottava(tone.pitch);return shifted.pitch[0].toLowerCase()+'/'+shifted.pitch.slice(1);});
     const NoteClass=n.noteSize&&!n.rest?SmallStaveNote:VF.StaveNote;
     const v=new NoteClass({clef:noteClef.split('_')[0],keys,duration:n.duration+(n.rest?'r':''),dots:n.dots||0,auto_stem:true});
+    if(n._seconds!==undefined)v.addModifier(new VF.Annotation(n._seconds.toFixed(2)+' s').setFont('NotationTheme',11*(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--font-scale'))||1),getComputedStyle(document.documentElement).getPropertyValue('--app-font-weight').trim()||'400').setVerticalJustification(VF.Annotation.VerticalJustify.TOP),0);
     if(n.graces?.length){const graceNotes=n.graces.map((grace,graceIndex)=>{const p=ottava(grace.pitch).pitch,small=new VF.GraceNote({clef:noteClef.split('_')[0],keys:[p[0].toLowerCase()+'/'+p.slice(1)],duration:grace.duration||'8',slash:grace.kind==='acciaccatura'});if(displayAccidentals.get(n.index)?.graces[graceIndex])for(const value of accidentalParts(displayAccidentals.get(n.index).graces[graceIndex]))small.addModifier(new VF.Accidental(value),0);return small;});v.addModifier(new VF.GraceNoteGroup(graceNotes,true).beamNotes(),0);}
     octaveNotes.push({note:v,staff,...display});
     if(!n.rest)v.setStemDirection(v.getKeyProps()[0].line<=3?VF.Stem.UP:VF.Stem.DOWN);
@@ -213,7 +218,7 @@ function renderRow(target,bars,start,options){
     if(ratio){tupletRatio=ratio;tupletGroup.push(v);if(tupletGroup.length===n.tuplet.actual)finishTuplet();}
    });
    finishTuplet();
-   if(notes.length){const[beats,beatValue]=barTime.split('/').map(Number),voice=new VF.Voice({num_beats:beats,beat_value:beatValue}).setStrict(false);voice.addTickables(notes);voices.push({voice,stave});beams.push(...rhythmicBeams(actual,noteTimes,options.sheet,index));}
+   if(notes.length){const[beats,beatValue]=(M.isFree(options.sheet,index)?'4/4':barTime).split('/').map(Number),voice=new VF.Voice({num_beats:beats,beat_value:beatValue}).setStrict(false);voice.addTickables(notes);voices.push({voice,stave});beams.push(...rhythmicBeams(actual,noteTimes,options.sheet,index));}
    }
   });
   // Attach manual beams before formatting/drawing so their notes suppress standalone flags.
@@ -337,7 +342,36 @@ function alignMeasureTempos(element){
 function fitMeasureTempos(element){
  for(let pass=0;pass<10;pass++){alignMeasureTempos(element);let changed=false;for(const svg of element.querySelectorAll('.staff-row>svg')){const marks=[...svg.querySelectorAll('.notation-tempo-change')];if(!marks.length)continue;const frame=svg.viewBox.baseVal,min=Math.min(...marks.map(mark=>mark.getBBox().y+(mark.transform.baseVal.consolidate()?.matrix.f||0)))-6;if(min<frame.y-.1){const scale=svg.getScreenCTM()?.d||.68,height=frame.height+frame.y-min;svg.setAttribute('viewBox',[frame.x,min,frame.width,height].join(' '));svg.setAttribute('height',String(height*scale));svg.style.height=height*scale+'px';changed=true;}}if(!changed)break;}
 }
+// Layout fragments are temporary, invisible and never written to the score.
+// Four onset columns per fragment keep a long unmetered phrase readable on mobile.
+function freeLayout(sheet){
+ const layout=M.clone(sheet);layout._freeLayout=true;layout.score.measures=[];
+ sheet.score.measures.forEach((bar,b)=>{
+  if(!M.isFree(sheet,b)){layout.score.measures.push({...M.clone(bar),_sourceBar:b,notes:bar.notes.map((note,i)=>({...M.clone(note),_sourceNote:i}))});return;}
+  const entries=bar.notes.map((n,i)=>({n,i,at:M.positionOf(bar,i)})).sort((a,c)=>a.at-c.at||a.i-c.i),onsets=[...new Set(entries.map(e=>e.at))];
+  for(let start=0;start<Math.max(1,onsets.length);start+=4){
+   const times=onsets.slice(start,start+4),fragment={notes:[],_sourceBar:b,time:'free'};
+   if(start===0){if(b===0||bar.key)fragment.key=M.effectiveKey(sheet,b);if(b===0||bar.clefs||sheet.score.measures[b-1]?.clefChanges)fragment.clefs=Object.fromEntries(M.staves(sheet.metadata).map((_,staff)=>[staff+1,M.effectiveClef(sheet,b,staff+1)]));}
+   for(const event of bar.clefChanges||[])if(times.length&&event.at>=times[0]&&(start+4>=onsets.length||event.at<onsets[start+4])){fragment.clefChanges??=[];fragment.clefChanges.push({...event,at:Math.max(0,times.findIndex(time=>time>=event.at))*M.wholeUnits/4});}
+   for(const {n,i,at}of entries.filter(e=>times.includes(e.at))){const copy={...M.clone(n),duration:'q',dots:0,at:times.indexOf(at)*M.wholeUnits/4,_seconds:n.durationSeconds,_sourceNote:i};delete copy.durationSeconds;delete copy.tuplet;fragment.notes.push(copy);}
+   layout.score.measures.push(fragment);
+  }
+ });return layout;
+}
+function remapFreeHits(element,layout){
+ for(const node of element.querySelectorAll('[data-bar],[data-playback-bar]')){
+  const playback=node.dataset.playbackBar!==undefined,bar=layout.score.measures[Number(playback?node.dataset.playbackBar:node.dataset.bar)];if(!bar)continue;
+  const note=playback?node.dataset.playbackNote:node.dataset.note;
+  node.setAttribute(playback?'data-playback-bar':'data-bar',String(bar._sourceBar));
+  if(note!==undefined)node.setAttribute(playback?'data-playback-note':'data-note',String(bar.notes[Number(note)]._sourceNote));
+ }
+}
 function draw(element,sheet,options={}){
+ if(M.hasFree(sheet)&&!sheet._freeLayout){
+  const layout=freeLayout(sheet),selectedNotes=new Set();let activeBar=-1,activeNote=-1;
+  layout.score.measures.forEach((bar,b)=>bar.notes.forEach((n,i)=>{if(options.selectedNotes?.has(bar._sourceBar+':'+n._sourceNote))selectedNotes.add(b+':'+i);if(bar._sourceBar===options.activeBar&&n._sourceNote===options.activeNote){activeBar=b;activeNote=i;}}));
+  draw(element,layout,{...options,selectedNotes,activeBar,activeNote,ghost:null,measureSelected:false});remapFreeHits(element,layout);return;
+ }
  element.replaceChildren();const pixels=Math.max(280,element.clientWidth),width=pixels/.68,measures=sheet.score.measures,engraved=[];
  let index=0;for(const bars of groups(measures,width,false,signatureReserve(sheet),sheet)){
   const row=document.createElement('div');row.className='staff-row';element.append(row);
@@ -346,6 +380,7 @@ function draw(element,sheet,options={}){
 }
 // One horizontal system per instrument; all systems share physical bar widths.
 function drawEnsemble(element,parts,options={}){
+ if(parts.some(part=>M.hasFree(part))){element.replaceChildren();element.classList.add('notation-ensemble');for(const[partIndex,part]of parts.entries()){const lane=document.createElement('section');lane.className='notation-ensemble-part';lane.dataset.part=partIndex;const label=document.createElement('div');label.className='notation-ensemble-label';label.textContent=options.instrumentName?options.instrumentName(part.metadata,partIndex):part.metadata.instrument+' '+(partIndex+1);const score=document.createElement('div');lane.append(label,score);element.append(lane);draw(score,part,options);}return;}
  const scrollLeft=element.scrollLeft;element.replaceChildren();element.classList.add('notation-ensemble');
  const count=Math.max(...parts.map(part=>Math.max(1,M.trimmedMeasures(part).length))),prefix=Math.max(...parts.map(signatureReserve))*2+170;
  const measureWidths=Array.from({length:count},(_,index)=>Math.max(210,...parts.map(part=>part.score.measures[index]?estimate(part.score.measures[index],0,part,index):210))+(index===0?prefix:0));
@@ -374,6 +409,7 @@ function metronomeUnit(metadata,symbols={}){const notes={w:'\u{1D15D}',h:'\u{1D1
 function printDocument(sheet,locale='en',symbols={}){
  if(sheet.score.sections?.length||sheet.score.subsections?.length)return printDocument(M.joinSections(sheet),locale,symbols);
  if(sheet.score.parts?.length){const documents=M.parts(sheet).map((part,printPartIndex)=>printDocument({...part,printPart:true,printPartIndex},locale,symbols)),body=documents.map(html=>new DOMParser().parseFromString(html,'text/html').body.innerHTML).join(''),combined=new DOMParser().parseFromString(body,'text/html');combined.querySelectorAll('.print-page-number').forEach((node,i)=>node.textContent=String(i+1));return documents[0].replace(/<body>[\s\S]*<\/body>/,()=>'<body>'+combined.body.innerHTML+'</body>');}
+ if(M.hasFree(sheet)&&!sheet._freeLayout)return printDocument(freeLayout(sheet),locale,symbols);
  const trimmed=M.trimmedMeasures(sheet),measures=trimmed.length?trimmed:[sheet.score.measures[0]||{notes:[]}],rows=groups(measures,1000,true,signatureReserve(sheet),sheet),pages=[],engraved=[];let index=0;
  const printInstrument=symbols.instrumentName?symbols.instrumentName(sheet.metadata,sheet.printPartIndex):sheet.metadata.instrument+' '+((sheet.printPartIndex||0)+1);
  const host=document.createElement('div');host.style.cssText='position:absolute;left:-10000px;top:0;visibility:hidden';document.body.append(host);
@@ -381,7 +417,7 @@ function printDocument(sheet,locale='en',symbols={}){
  for(let cursor=0;cursor<rows.length;){
   const page=document.createElement('section');page.className='print-page';const first=pages.length===0,m={...sheet.metadata,...M.effectiveTempoUnit(sheet,0),bpm:M.tempoSegment(sheet,0).initial};
   host.append(page);
-  if(first)page.innerHTML=`<header><h1>${escape(m.title)}</h1>${m.subtitle?`<p class="subtitle">${escape(m.subtitle)}</p>`:''}<div class="score-meta"><div class="credits">${m.lyricist?`<p>${locale==='fa'?'ترانه‌سرا':'Lyricist'}: ${escape(m.lyricist)}</p>`:''}${m.composer?`<p>${locale==='fa'?'آهنگساز':'Composer'}: ${escape(m.composer)}</p>`:''}${m.arranger?`<p>${locale==='fa'?'تنظیم‌کننده':'Arranger'}: ${escape(m.arranger)}</p>`:''}</div><div class="tempo">${sheet.printPart?'<span class="part-instrument">'+escape(printInstrument)+'</span>':''}<span>${escape(m.tempo_text)}</span><span>${root.NotationSymbols.beat(m.tempo_note,m.tempo_dots)} = ${m.bpm}</span></div></div></header>`;
+  if(first)page.innerHTML=`<header><h1>${escape(m.title)}</h1>${m.subtitle?`<p class="subtitle">${escape(m.subtitle)}</p>`:''}<div class="score-meta"><div class="credits">${m.lyricist?`<p>${locale==='fa'?'ترانه‌سرا':'Lyricist'}: ${escape(m.lyricist)}</p>`:''}${m.composer?`<p>${locale==='fa'?'آهنگساز':'Composer'}: ${escape(m.composer)}</p>`:''}${m.arranger?`<p>${locale==='fa'?'تنظیم‌کننده':'Arranger'}: ${escape(m.arranger)}</p>`:''}</div><div class="tempo">${sheet.printPart?'<span class="part-instrument">'+escape(printInstrument)+'</span>':''}<span>${M.isFree(sheet)?(locale==='fa'?'\u0645\u062a\u0631 \u0622\u0632\u0627\u062f': 'Free meter'):escape(m.tempo_text)}</span><span>${M.isFree(sheet)?'':root.NotationSymbols.beat(m.tempo_note,m.tempo_dots)+' = '+m.bpm}</span></div></div></header>`;
   if(!first&&sheet.printPart)page.innerHTML='<div class="print-part-heading">'+escape(printInstrument)+'</div>';
  const pageNumber=document.createElement('div');pageNumber.className='print-page-number';pageNumber.textContent=String(pages.length+1);page.prepend(pageNumber);
  const grand=M.staves(m).length===2,count=grand?(first?4:5):(first?10:12);
@@ -390,7 +426,7 @@ function printDocument(sheet,locale='en',symbols={}){
    engraved.push(...renderRow(row,bars,index,{sheet,metadata:m,width:1000,pixels:730,printing:true,continuousSignatures:true,lastWritten:measures.length-1}));index+=bars.length;
   }cursor+=count;pages.push(page);
  }ties({...sheet,score:{measures}},engraved);slurs({...sheet,score:{measures}},engraved);pedalLines({...sheet,score:{measures}},engraved);hairpins({...sheet,score:{measures}},engraved);octaveLines({...sheet,score:{measures}},engraved);slides({...sheet,score:{measures}},engraved);fitDecorations(engraved,true);
- return `<!doctype html><html lang="${locale}"><head><meta charset="utf-8"><style>@font-face{font-family:Sornaz;src:url('../fonts/iran_sansx_fa/regular.ttf')}@font-face{font-family:Bravura;src:url('fonts/Bravura.otf')}.bravura-symbol{font-family:Bravura!important}@page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;background:white;color:black;font:12px Sornaz,Arial,sans-serif}.print-page{position:relative;width:210mm;height:297mm;padding:8mm;break-after:page;overflow:hidden}.print-page-number{position:absolute;top:2mm;left:8mm;direction:ltr;text-align:left;font-size:10px;line-height:1}.print-page:last-child{break-after:auto}.print-page header{height:auto;margin-bottom:0}.print-page header+.print-staff{margin-top:-4mm}.print-part-heading{position:absolute;top:2mm;left:8mm;right:8mm;text-align:center;font-size:12px}h1{text-align:center;font-size:20px;margin:0 0 4px}.subtitle{text-align:center;margin:0}.score-meta{display:flex;direction:rtl;justify-content:space-between;align-items:flex-end;gap:12px}.credits{text-align:right;direction:${locale==='fa'?'rtl':'ltr'}}.credits p{margin:2px 0}.part-instrument{flex-basis:100%;text-align:center}.tempo{display:flex;flex-wrap:wrap;gap:12px;direction:ltr;align-items:center}.print-staff{height:${M.staves(sheet.metadata).length===2?53:23}mm}.print-page:not(:first-child){padding-top:9mm}svg{width:100%;height:100%}</style></head><body>${pages.map(p=>p.outerHTML).join('')}</body></html>`;
+ return `<!doctype html><html lang="${locale}"><head><meta charset="utf-8"><style>${M.isFree(sheet)?document.getElementById('notation-theme-font')?.textContent||'':''}@font-face{font-family:Sornaz;src:url('../fonts/iran_sansx_fa/regular.ttf')}@font-face{font-family:Bravura;src:url('fonts/Bravura.otf')}.bravura-symbol{font-family:Bravura!important}@page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;background:white;color:black;font:12px Sornaz,Arial,sans-serif}.print-page{position:relative;width:210mm;height:297mm;padding:8mm;break-after:page;overflow:hidden}.print-page-number{position:absolute;top:2mm;left:8mm;direction:ltr;text-align:left;font-size:10px;line-height:1}.print-page:last-child{break-after:auto}.print-page header{height:auto;margin-bottom:0}.print-page header+.print-staff{margin-top:-4mm}.print-part-heading{position:absolute;top:2mm;left:8mm;right:8mm;text-align:center;font-size:12px}h1{text-align:center;font-size:20px;margin:0 0 4px}.subtitle{text-align:center;margin:0}.score-meta{display:flex;direction:rtl;justify-content:space-between;align-items:flex-end;gap:12px}.credits{text-align:right;direction:${locale==='fa'?'rtl':'ltr'}}.credits p{margin:2px 0}.part-instrument{flex-basis:100%;text-align:center}.tempo{display:flex;flex-wrap:wrap;gap:12px;direction:ltr;align-items:center}.print-staff{height:${M.staves(sheet.metadata).length===2?53:23}mm}.print-page:not(:first-child){padding-top:9mm}svg{width:100%;height:100%}</style></head><body>${pages.map(p=>p.outerHTML).join('')}</body></html>`;
  }finally{host.remove();}
 }
 root.NotationRenderer={updatePlayback,draw,drawEnsemble,printDocument,groups,ottava,beamPattern:renderingBeamPattern,measureAccidentals};

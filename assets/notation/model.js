@@ -17,15 +17,21 @@ function iranianSignature(mode,tonic){
 const durations={w:64,h:32,q:16,'8':8,'16':4,'32':2,'64':1,'128':.5,'256':.25};
 // A whole note has 967680 units: exact for double dots and common 3/5/7/9 tuplets.
 const wholeUnits=967680,unitPerLegacyTick=wholeUnits/64;
+// One centisecond is an exact quarter-note unit; no floating-point positions.
+const secondUnits=wholeUnits*25,freeCapacity=128*5*secondUnits;
+const scoreTime=sheet=>sheet.score.time||sheet.metadata.time;
+const isFree=(sheet,index=0)=>effectiveTime(sheet,index)==='free';
+const hasFree=sheet=>sheet.score.measures.some((_,index)=>isFree(sheet,index));
+function secondsUnits(value){if(typeof value!=='number'||!Number.isFinite(value)||value<.01||value>5||Math.abs(value*100-Math.round(value*100))>1e-8)throw Error('Duration must be between 0.01 and 5 seconds in steps of 0.01.');return Math.round(value*100)*(wholeUnits/4);}
 const maxChordTones=7;
 const validPitch=pitch=>typeof pitch==='string'&&/^(?:[A-G][1-7]|[AB]0|C8)$/.test(pitch);
 const tuplets={'3:2':true,'5:4':true,'7:4':true,'4:3':true,'6:4':true,'9:8':true};
 const keys=['C','G','D','A','E','B','F#','C#','F','Bb','Eb','Ab','Db','Gb','Cb','Am','Em','Bm','F#m','C#m','G#m','D#m','A#m','Dm','Gm','Cm','Fm','Bbm','Ebm','Abm'];
 const clone=v=>JSON.parse(JSON.stringify(v));
 const ticks=n=>durations[n.duration]*(2-Math.pow(.5,n.dots||0));
-const units=n=>{const base=Math.round(ticks(n)*unitPerLegacyTick),t=n.tuplet;if(!t)return base;const key=t.actual+':'+t.normal;if(!tuplets[key])throw Error('Invalid tuplet.');const value=base*t.normal/t.actual;if(!Number.isInteger(value))throw Error('Tuplet duration is not integral.');return value;};
-const measureUnits=(meta,bar={})=>{const[a,b]=String(bar.time||meta.time).split('/').map(Number);if(!Number.isInteger(a)||a<1||a>32||![1,2,4,8,16,32,64,128,256].includes(b))throw Error('Invalid time signature.');const full=a*wholeUnits/b;return Number.isInteger(bar.length)?bar.length:full;};
-const effectiveTime=(sheet,index)=>{let time=sheet.metadata.time;for(let i=0;i<=index&&i<sheet.score.measures.length;i++)if(sheet.score.measures[i].time)time=sheet.score.measures[i].time;return time;};
+const units=n=>{if(n.durationSeconds!==undefined)return secondsUnits(n.durationSeconds);const base=Math.round(ticks(n)*unitPerLegacyTick),t=n.tuplet;if(!t)return base;const key=t.actual+':'+t.normal;if(!tuplets[key])throw Error('Invalid tuplet.');const value=base*t.normal/t.actual;if(!Number.isInteger(value))throw Error('Tuplet duration is not integral.');return value;};
+const measureUnits=(meta,bar={})=>{if((bar.time||meta.time)==='free')return freeCapacity;const[a,b]=String(bar.time||meta.time).split('/').map(Number);if(!Number.isInteger(a)||a<1||a>32||![1,2,4,8,16,32,64,128,256].includes(b))throw Error('Invalid time signature.');const full=a*wholeUnits/b;return Number.isInteger(bar.length)?bar.length:full;};
+const effectiveTime=(sheet,index)=>{let time=scoreTime(sheet);for(let i=0;i<=index&&i<sheet.score.measures.length;i++)if(sheet.score.measures[i].time)time=sheet.score.measures[i].time;return time;};
 const effectiveKey=(sheet,index)=>{let key=sheet.metadata.key;for(let i=0;i<=index&&i<sheet.score.measures.length;i++)if(sheet.score.measures[i].key)key=sheet.score.measures[i].key;return key;};
 function sameKeySignature(sheet,a,b){
  if(a===b)return true;const first=iranianSignature(sheet.metadata.scale_type,a),second=iranianSignature(sheet.metadata.scale_type,b);
@@ -35,6 +41,7 @@ function sameKeySignature(sheet,a,b){
 function endingBpm(sheet,index){let bpm=Number(sheet.metadata.bpm);for(let i=0;i<=index;i++){const marker=sheet.score.measures[i]?.tempo;if(marker)bpm=marker.mode==='aTempo'?Number(sheet.metadata.bpm):Number(marker.bpm);}return bpm;}
 function effectiveTempoUnit(sheet,index){let unit={tempo_note:sheet.metadata.tempo_note,tempo_dots:Number(sheet.metadata.tempo_dots)||0};for(let i=0;i<=index&&i<sheet.score.measures.length;i++){const value=sheet.score.measures[i].tempo_unit;if(value){const [duration,dots]=String(value).split(':');if(!durations[duration]||!/[0-2]/.test(dots)||dots.length!==1)throw Error('Invalid tempo unit.');unit={tempo_note:duration,tempo_dots:Number(dots)};}}return unit;}
 function tempoSegment(sheet,index){
+ if(isFree(sheet,index)){const bar=sheet.score.measures[index],length=Math.max(0,...(bar?.notes||[]).map((n,i)=>positionOf(bar,i)+units(n)));return {initial:Number(sheet.metadata.bpm)||100,final:Number(sheet.metadata.bpm)||100,secondsAt:offset=>offset/secondUnits,duration:length/secondUnits};}
  const bpm=endingBpm(sheet,index-1);
  const marker=sheet.score.measures[index]?.tempo,initial=marker&&marker.mode==='instant'?Number(marker.bpm):marker?.mode==='aTempo'?Number(sheet.metadata.bpm):marker&&['ritardando','accelerando'].includes(marker.mode)&&Number.isFinite(marker._initialBpm)?marker._initialBpm:bpm;
  const final=marker&&['ritardando','accelerando'].includes(marker.mode)?Number(marker.bpm):initial,limit=barUnits(sheet,index),beat=units({duration:effectiveTempoUnit(sheet,index).tempo_note,dots:effectiveTempoUnit(sheet,index).tempo_dots});
@@ -44,7 +51,7 @@ function tempoSegment(sheet,index){
  return {initial,final,secondsAt,duration:secondsAt(limit)};
 }
 const barUnits=(sheet,index)=>measureUnits({...sheet.metadata,time:effectiveTime(sheet,index)},sheet.score.measures[index]||{});
-function beamPattern(sheet,index){const raw=sheet.score.measures[index]?.beamPattern,[numerator,denominator]=effectiveTime(sheet,index).split('/').map(Number);if(!raw)return denominator===8&&numerator>=6&&numerator%3===0?{parts:Array(numerator/3).fill(3),denominator}:null;const parts=String(raw).split('+').map(Number);if(parts.length<2||parts.length>16||parts.some(part=>!Number.isInteger(part)||part<1)||parts.reduce((sum,part)=>sum+part,0)!==numerator)throw Error('Beam grouping must match the time signature.');return {parts,denominator};}
+function beamPattern(sheet,index){if(isFree(sheet,index))return null;const raw=sheet.score.measures[index]?.beamPattern,[numerator,denominator]=effectiveTime(sheet,index).split('/').map(Number);if(!raw)return denominator===8&&numerator>=6&&numerator%3===0?{parts:Array(numerator/3).fill(3),denominator}:null;const parts=String(raw).split('+').map(Number);if(parts.length<2||parts.length>16||parts.some(part=>!Number.isInteger(part)||part<1)||parts.reduce((sum,part)=>sum+part,0)!==numerator)throw Error('Beam grouping must match the time signature.');return {parts,denominator};}
 const capacity=(meta,bar={})=>measureUnits(meta,bar)/unitPerLegacyTick;
 const staves=m=>Array.isArray(m.staves)&&m.staves.length===2?m.staves.map(s=>({clef:s.clef||'treble'})):[{clef:m.clef||'treble'}];
 const effectiveClef=(sheet,index,staff)=>{let clef=staves(sheet.metadata)[staff-1]?.clef||'treble';for(let i=0;i<=index&&i<sheet.score.measures.length;i++){const bar=sheet.score.measures[i];clef=bar.clefs?.[staff]||clef;if(i<index)for(const event of [...(bar.clefChanges||[])].sort((a,b)=>a.at-b.at))if(event.staff===staff)clef=event.clef;}return clef;};
@@ -68,9 +75,11 @@ function repairMeasureRepeats(sheet){
 }
 function add(sheet,bar,note){
  if(!sheet.editable)throw Error('This sheet is read-only.');
+ if(isFree(sheet,bar))secondsUnits(note.durationSeconds);else if(note.durationSeconds!==undefined)throw Error('Seconds require free meter.');
  if(!validPitch(note.pitch))throw Error('Invalid note.');
  if(note.pitches!==undefined&&(!Array.isArray(note.pitches)||note.pitches.length>maxChordTones||note.pitches.some(tone=>!validPitch(tone.pitch))))throw Error('Invalid chord.');
  const measure=sheet.score.measures[bar],staff=staffOf(note),voice=voiceOf(note),length=units(note);
+ if(isFree(sheet,bar)&&measure.notes.length>=128)throw Error('This measure is full.');
  const intervals=lane(measure,staff,voice).map(n=>{const i=measure.notes.indexOf(n),start=positionOf(measure,i);return [start,start+units(n)];});
  const at=Number.isInteger(note.at)?note.at:Math.max(0,...intervals.map(([,end])=>end));
  if(at<0||at+length>barUnits(sheet,bar)||intervals.some(([start,end])=>at<end&&at+length>start))throw Error('This measure is full.');
@@ -78,6 +87,7 @@ function add(sheet,bar,note){
 }
 function copySelection(sheet,selected,measureBar=null){
  const bars=sheet.score.measures,items=[];for(const key of selected){const[bar,index]=key.split(':').map(Number),note=bars[bar]?.notes[index];if(note)items.push({bar,at:positionOf(bars[bar],index),note:clone(note)});}
+ if(isFree(sheet)){if(!items.length)return [];const first=Math.min(...items.map(item=>item.bar)),firstAt=Math.min(...items.filter(item=>item.bar===first).map(item=>item.at)),staff=Math.min(...items.map(item=>staffOf(item.note)));return items.map(item=>({bar:0,at:item.at,staff:staffOf(item.note)-staff,note:item.note,offset:item.at-firstAt+bars.slice(first,item.bar).reduce((sum,_,i)=>sum+Math.round(tempoSegment(sheet,first+i).duration*secondUnits),0)}));}
  if(!items.length&&!Number.isInteger(measureBar))return [];
  let firstBar=items.length?Math.min(...items.map(item=>item.bar)):measureBar,lastBar=items.length?Math.max(...items.map(item=>item.bar)):measureBar;
  let whole=Number.isInteger(measureBar)||bars.slice(firstBar,lastBar+1).every((bar,i)=>bar.notes.every((_,n)=>selected.has((firstBar+i)+':'+n))),all=items.length&&bars.every((bar,i)=>bar.notes.every((_,n)=>selected.has(i+':'+n)));
@@ -89,7 +99,7 @@ function pasteSelection(sheet,items,targetBar,targetStaff,targetAt=0){
  if(!Array.isArray(items)||!items.length)throw Error('Nothing to paste.');const draft=clone(sheet),locations=[],whole=items.some(item=>item.measure);
  if(whole){targetStaff=1;if(targetAt>0){targetBar++;targetAt=0;}}
  for(const item of items.filter(item=>item.measure)){const bar=targetBar+item.bar;if(bar<0||bar>=64)throw Error('Paste target is outside the score.');while(draft.score.measures.length<=bar)draft.score.measures.push({notes:[],preserve:true});if(draft.score.measures[bar].notes.length)throw Error('This measure is full.');const measure=clone(item.measure);if(measure.clefs)measure.clefs=Object.fromEntries(Object.entries(measure.clefs).map(([staff,value])=>[Number(staff)+targetStaff-1,value]));for(const event of measure.clefChanges||[])event.staff+=targetStaff-1;draft.score.measures[bar]={...measure,notes:[],preserve:true};}
- for(const item of items){if(!item.note)continue;let bar=targetBar+item.bar,at=item.at+targetAt,staff=targetStaff+item.staff;if(Number.isInteger(item.offset)){bar=targetBar;at=targetAt+item.offset;}if(bar<0||bar>=64||staff<1||staff>staves(sheet.metadata).length||!Number.isInteger(at)||at<0)throw Error('Paste target is outside the score.');while(true){while(draft.score.measures.length<=bar)draft.score.measures.push({notes:[],preserve:true});const length=barUnits(draft,bar);if(at<length)break;at-=length;if(++bar>=64)throw Error('Paste target is outside the score.');}const index=add(draft,bar,{...clone(item.note),staff,at});locations.push(bar+':'+index);}
+ for(const item of items){if(!item.note)continue;let bar=targetBar+item.bar,at=item.at+targetAt,staff=targetStaff+item.staff;if(Number.isInteger(item.offset)){bar=targetBar;at=targetAt+item.offset;}if(bar<0||bar>=64||staff<1||staff>staves(sheet.metadata).length||!Number.isInteger(at)||at<0)throw Error('Paste target is outside the score.');while(true){while(draft.score.measures.length<=bar)draft.score.measures.push({notes:[],preserve:true});const length=isFree(draft)&&draft.score.measures[bar].notes.length>=128?Math.round(tempoSegment(draft,bar).duration*secondUnits):barUnits(draft,bar);if(at<length)break;at-=length;if(++bar>=64)throw Error('Paste target is outside the score.');}const index=add(draft,bar,{...clone(item.note),staff,at});locations.push(bar+':'+index);}
  for(let i=0;i<draft.score.measures.length;i++)if(draft.score.measures[i].multiRest&&!validMultiRest(draft.score.measures,i,draft.score.measures[i].multiRest))throw Error('Invalid multi-measure rest.');
  for(let i=0;i<draft.score.measures.length;i++)if(draft.score.measures[i].repeat?.measure||draft.score.measures[i-1]?.repeat?.measure===2)measureSource(draft,i);performanceOrder(draft);sheet.score=draft.score;return new Set(locations);
 }
@@ -133,6 +143,8 @@ function moveSelectionToStaff(sheet,selected,targetStaff,{reassignVoice=false}={
 // Plan the complete insertion before mutating, including overflow into later bars.
 function insert(sheet,bar,note,replaceIndex=null){
  if(!sheet.editable)throw Error('This sheet is read-only.');
+ if(isFree(sheet,bar))return insertFree(sheet,bar,note,replaceIndex);
+ if(note.durationSeconds!==undefined)throw Error('Seconds require free meter.');
  const measures=clone(sheet.score.measures),values=Object.keys(durations).flatMap(duration=>[0,1,2].map(dots=>({duration,dots,value:units({duration,dots})}))).sort((a,b)=>b.value-a.value);
  const inserted={...clone(note),_inserted:true};delete inserted.tieNext;delete inserted.tiePrevious;
  const staff=staffOf(note),voice=voiceOf(note),initial=measures[bar]?.notes||[];
@@ -140,7 +152,7 @@ function insert(sheet,bar,note,replaceIndex=null){
  if(replaceIndex===null)queue.push(inserted);else{const preceding=initial.slice(0,replaceIndex).filter(n=>staffOf(n)===staff&&voiceOf(n)===voice).length;queue.splice(preceding,1,inserted);}
  while(queue.length){
   if(bar>=64)throw Error('At most 64 measures.');
-  const output=[],cap=measureUnits({...sheet.metadata,time:effectiveTime({...sheet,score:{measures}},bar)},measures[bar]||{});let cursor=0;
+  const output=[],cap=measureUnits({...sheet.metadata,time:effectiveTime({...sheet,score:{...sheet.score,measures}},bar)},measures[bar]||{});let cursor=0;
   while(queue.length&&cursor<cap){
    const n=queue.shift(),at=Math.max(cursor,Number.isInteger(n.at)?n.at:cursor),length=units(n),room=cap-at;
    if(room<=0){delete n.at;queue.unshift(n);break;}
@@ -157,6 +169,18 @@ function insert(sheet,bar,note,replaceIndex=null){
   if(queue.length)queue.push(...(measures[bar]?.notes||[]).filter(n=>staffOf(n)===staff&&voiceOf(n)===voice));
  }
  sheet.score.measures=measures;return lastBar;
+}
+
+function insertFree(sheet,bar,note,replaceIndex){
+ secondsUnits(note.durationSeconds);if(!validPitch(note.pitch))throw Error('Invalid note.');if(note.pitches!==undefined&&(!Array.isArray(note.pitches)||note.pitches.length>maxChordTones||note.pitches.some(tone=>!validPitch(tone.pitch))))throw Error('Invalid chord.');if(note.tuplet)throw Error('Invalid tuplet.');
+ const draft=clone(sheet),bars=draft.score.measures;
+ if(!bars[bar])throw Error('Invalid measure.');
+ if(replaceIndex===null&&bars[bar].notes.length>=128){if(bars.length>=64)throw Error('At most 64 measures.');bars.splice(++bar,0,{notes:[]});}
+ const notes=bars[bar].notes,staff=staffOf(note),voice=voiceOf(note);
+ if(replaceIndex===null)notes.push({...clone(note),staff,voice});else{if(!notes[replaceIndex])throw Error('No notes selected.');notes[replaceIndex]={...clone(note),staff,voice};}
+ // Editing a duration ripples subsequent notes in that voice only.
+ const ordered=notes.map((n,i)=>({n,i,at:positionOf(bars[bar],i)})).sort((a,b)=>a.at-b.at||a.i-b.i),cursors=new Map();for(const {n} of ordered){const key=staffOf(n)+':'+voiceOf(n);n.at=cursors.get(key)||0;cursors.set(key,n.at+units(n));}
+ sheet.score=draft.score;return bar;
 }
 
 function trimmedMeasures(sheet){const measures=clone(sheet.score.measures);while(measures.length&&measures.at(-2)?.repeat?.measure!==2&&!measures.at(-1).notes.length&&!measures.at(-1).preserve&&!measures.at(-1).time&&!measures.at(-1).timeSymbol&&!measures.at(-1).length&&!measures.at(-1).barline&&!measures.at(-1).repeat&&!measures.at(-1).clefs&&!measures.at(-1).clefChanges&&!measures.at(-1).key&&!measures.at(-1).tempo&&!measures.at(-1).tempo_unit&&!measures.at(-1).rehearsal&&!measures.at(-1).text&&!measures.at(-1).displayNumber&&!measures.at(-1).multiRest&&!measures.at(-1).beamPattern)measures.pop();return measures;}
@@ -182,7 +206,7 @@ function compactDelete(sheet,selected){
 function prepare(sheet){
  const measures=trimmedMeasures(sheet);
  for(let index=0;index<measures.length;index++)if(measures[index].multiRest&&!validMultiRest(measures,index,measures[index].multiRest))delete measures[index].multiRest;
- const full=measures.length&&staves(sheet.metadata).some((_,i)=>used(measures.at(-1),i+1)>=barUnits({...sheet,score:{measures}},measures.length-1)/unitPerLegacyTick);
+ const full=measures.length&&!isFree({...sheet,score:{...sheet.score,measures}},measures.length-1)&&staves(sheet.metadata).some((_,i)=>used(measures.at(-1),i+1)>=barUnits({...sheet,score:{...sheet.score,measures}},measures.length-1)/unitPerLegacyTick);
  const last=measures.at(-1),repeated=last?.repeat?.measure===1||measures.at(-2)?.repeat?.measure===2;
  if(sheet.editable&&(!measures.length||(full||repeated)&&last?.barline!=='final')&&measures.length<64)measures.push({notes:[]});
  sheet.score.measures=measures;return sheet;
@@ -226,7 +250,7 @@ function timeline(sheet){
  const events=[],pedals=[],meta=sheet.metadata,lastByVoice=new Map(),voiceDynamics=new Map(),octaveShifts=new Map();let elapsed=0,previousSource=-1;
  performanceOrder(sheet).forEach(({bar:barIndex,sourceBar})=>{const bar=sheet.score.measures[sourceBar];if(previousSource>=0&&sourceBar!==previousSource+1){lastByVoice.clear();octaveShifts.clear();}previousSource=sourceBar;
   const segment=tempoSegment(sheet,sourceBar),keySignature=iranianSignature(meta.scale_type,effectiveKey(sheet,sourceBar))?.alterations||effectiveKey(sheet,sourceBar);
-  const pauseMap=new Map();bar.notes.forEach((note,index)=>{const seconds=note.articulation==='fermata'?Math.min(3,segment.secondsAt(positionOf(bar,index)+units(note))-segment.secondsAt(positionOf(bar,index)))*.5:note.articulation==='caesura'?.5:note.articulation==='breath'?.2:0;if(seconds){const at=positionOf(bar,index)+units(note);pauseMap.set(at,Math.max(pauseMap.get(at)||0,seconds));}});
+  const pauseMap=new Map();bar.notes.forEach((note,index)=>{const seconds=isFree(sheet,sourceBar)?0:note.articulation==='fermata'?Math.min(3,segment.secondsAt(positionOf(bar,index)+units(note))-segment.secondsAt(positionOf(bar,index)))*.5:note.articulation==='caesura'?.5:note.articulation==='breath'?.2:0;if(seconds){const at=positionOf(bar,index)+units(note);pauseMap.set(at,Math.max(pauseMap.get(at)||0,seconds));}});
   const pauses=[...pauseMap].map(([at,seconds])=>({at,seconds}));
   const pauseBefore=at=>pauses.reduce((sum,item)=>sum+(item.at<=at?item.seconds:0),0);
   for(let staff=1;staff<=staves(meta).length;staff++){
@@ -246,11 +270,11 @@ function timeline(sheet){
      const pitch=typeof tone==='string'?tone:tone.pitch,accidental=typeof tone==='string'?'':tone.accidental;
      const hz=n.rest||n.noteSize==='cue'?0:frequency(pitch,accidental,keySignature,carry)*octaveShift*(toneIndex===0&&n.harmonic?.kind==='natural'?n.harmonic.partial:1);
      const roll=n.arpeggio?Math.min(.035,length/(2*Math.max(2,chordTones.length)))*rollOrder.indexOf(toneIndex):0;
-     const event={bar:barIndex,note:i,tone:toneIndex,staff,voice,start:start+graceTotal+roll,length:length-graceTotal-roll,hz,soundLength:length-graceTotal-roll,velocity,hairpin:toneIndex===0?n.hairpin||'':'',dynamic:n.dynamic||'',ornament:toneIndex===0?n.ornament||'':'',ornamentUpperAccidental:n.ornamentUpperAccidental||'',ornamentLowerAccidental:n.ornamentLowerAccidental||'',tremolo:n.tremolo||0,slide:toneIndex===0?n.slide||'':'',pitch,accidental,keySignature};
+     const event={freeMeter:isFree(sheet,sourceBar),bar:barIndex,note:i,tone:toneIndex,staff,voice,start:start+graceTotal+roll,length:length-graceTotal-roll,hz,soundLength:length-graceTotal-roll,velocity,hairpin:toneIndex===0?n.hairpin||'':'',dynamic:n.dynamic||'',ornament:toneIndex===0?n.ornament||'':'',ornamentUpperAccidental:n.ornamentUpperAccidental||'',ornamentLowerAccidental:n.ornamentLowerAccidental||'',tremolo:n.tremolo||0,slide:toneIndex===0?n.slide||'':'',pitch,accidental,keySignature};
      if(n.articulation==='staccato')event.soundLength*=.5;
      else if(n.articulation==='staccatissimo')event.soundLength*=.25;
      else if(n.articulation==='tenuto')event.soundLength*=.98;
-     else if(n.articulation==='fermata')event.soundLength+=pauses.find(item=>item.at===at+units(n))?.seconds||0;
+     else if(!isFree(sheet,sourceBar)&&n.articulation==='fermata')event.soundLength+=pauses.find(item=>item.at===at+units(n))?.seconds||0;
      if(n.articulation==='accent')event.velocity*=1.2;
      else if(n.articulation==='marcato')event.velocity*=1.35;
      const last=previous.get(pitch);
@@ -261,7 +285,7 @@ function timeline(sheet){
     if(n.rest)previous.clear();
     lastByVoice.set(key,previous);
    }
-   for(const voice of new Set(notes.map(({n})=>voiceOf(n)))){const voiceNotes=notes.filter(({n})=>voiceOf(n)===voice),last=voiceNotes.at(-1);if(last&&last.at+units(last.n)<barUnits(sheet,sourceBar))lastByVoice.delete(staff+':'+voice);}
+   for(const voice of new Set(notes.map(({n})=>voiceOf(n)))){const voiceNotes=notes.filter(({n})=>voiceOf(n)===voice),last=voiceNotes.at(-1);if(last&&last.at+units(last.n)<(isFree(sheet,sourceBar)?segment.duration*secondUnits:barUnits(sheet,sourceBar)))lastByVoice.delete(staff+':'+voice);}
   }
   elapsed+=segment.duration+pauses.reduce((sum,item)=>sum+item.seconds,0);
  });
@@ -300,7 +324,7 @@ function joinSections(sheet){
  for(const[index,section]of leaves.entries()){
   const bars=trimmedMeasures({metadata:sheet.metadata,score:section});
   if(!bars.length)bars.push(clone(section.measures[0]||{notes:[],preserve:true}));
-  bars.forEach((bar,i)=>{if(index&&i===0){const time=bar.time||sheet.metadata.time,previous=effectiveTime({...sheet,score:{measures}},measures.length-1),symbol=bar.timeSymbol||'';if(time===previous&&(!symbol||symbol===displaySymbol)){delete bar.time;delete bar.timeSymbol;}else bar.time=time;const previousSheet={...sheet,score:{measures}},key=bar.key||effectiveKey(previousSheet,measures.length-1);if(sameKeySignature(sheet,key,effectiveKey(previousSheet,measures.length-1)))delete bar.key;else bar.key=key;
+  bars.forEach((bar,i)=>{if(index&&i===0){const time=bar.time||section.time||sheet.metadata.time,previous=effectiveTime({...sheet,score:{...sheet.score,measures}},measures.length-1),symbol=bar.timeSymbol||'';if(time===previous&&(!symbol||symbol===displaySymbol)){delete bar.time;delete bar.timeSymbol;}else bar.time=time;const previousSheet={...sheet,score:{...sheet.score,measures}},key=bar.key||effectiveKey(previousSheet,measures.length-1);if(sameKeySignature(sheet,key,effectiveKey(previousSheet,measures.length-1)))delete bar.key;else bar.key=key;
  const previousBpm=endingBpm(previousSheet,measures.length-1),tempo=bar.tempo||{mode:'instant',bpm:sheet.metadata.bpm},target=tempo.mode==='aTempo'?Number(sheet.metadata.bpm):Number(tempo.bpm);// A gradual change at a new section starts from that section's base tempo.
  if(['ritardando','accelerando'].includes(tempo.mode))bar.tempo={...tempo,_initialBpm:Number(sheet.metadata.bpm)};else if(['instant','aTempo'].includes(tempo.mode)&&target===previousBpm)delete bar.tempo;else bar.tempo=tempo;const incomingClefs=bar.clefs??Object.fromEntries(staves(sheet.metadata).map((staff,n)=>[n+1,staff.clef])),changedClefs={};
  for(const [staff,clef]of Object.entries(incomingClefs))if(clef!==clefAt(previousSheet,measures.length-1,Number(staff),Infinity))changedClefs[staff]=clef;
@@ -310,6 +334,6 @@ function joinSections(sheet){
 }
 function parts(sheet){const {parts:extra=[],...score}=sheet.score;return [{...sheet,score},...extra.map(part=>({...sheet,metadata:part.metadata,score:part.score}))].map(joinSections);}
 function ensembleTimeline(sheet){const timelines=parts(sheet).map(part=>timeline(part));return {events:timelines.flatMap((line,part)=>line.events.map(event=>({...event,part}))).sort((a,b)=>a.start-b.start||a.part-b.part),duration:Math.max(0,...timelines.map(line=>line.duration))};}
-const api={pinAccidentals,repairMeasureRepeats,defaultAccidental,effectiveTempoUnit,sameKeySignature,joinSections,parts,ensembleTimeline,iranianScales,iranianTonics,iranianIntervals,iranianSignature,durations,keys,wholeUnits,maxChordTones,validPitch,units,measureUnits,effectiveTime,effectiveKey,tempoSegment,effectiveClef,clefAt,barUnits,beamPattern,positionOf,voiceOf,normalizeBar,clone,ticks,capacity,staves,staffOf,lane,used,fresh,add,insert,copySelection,pasteSelection,moveSelectionToStaff,trimmedMeasures,validMultiRest,multiRestAt,asRest,compactDelete,prepare,measureSource,performanceOrder,timeline,frequency};if(typeof module==='object')module.exports=api;
+const api={scoreTime,hasFree,isFree,secondsUnits,secondUnits,freeCapacity,pinAccidentals,repairMeasureRepeats,defaultAccidental,effectiveTempoUnit,sameKeySignature,joinSections,parts,ensembleTimeline,iranianScales,iranianTonics,iranianIntervals,iranianSignature,durations,keys,wholeUnits,maxChordTones,validPitch,units,measureUnits,effectiveTime,effectiveKey,tempoSegment,effectiveClef,clefAt,barUnits,beamPattern,positionOf,voiceOf,normalizeBar,clone,ticks,capacity,staves,staffOf,lane,used,fresh,add,insert,copySelection,pasteSelection,moveSelectionToStaff,trimmedMeasures,validMultiRest,multiRestAt,asRest,compactDelete,prepare,measureSource,performanceOrder,timeline,frequency};if(typeof module==='object')module.exports=api;
 root.NotationModel=api;
 })(globalThis);
